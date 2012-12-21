@@ -78,6 +78,7 @@ class ValueProviderResult
 		return jugglers.get(t);
 	}
 
+	// This method checks that the given value matches the expected Type 't' (CType from RTTI)
 	static function _ctypeCheck(value : Dynamic, t : CType)
 	{
 		switch(t)
@@ -114,7 +115,7 @@ class ValueProviderResult
 				{
 					if(!valueFields.remove(field.name))
 						return false;
-					if(!_ctypeCheck(Reflect.field(value, field.name), field.type))
+					if(!_ctypeCheck(Reflect.field(value, field.name), field.t))
 						return false;
 				}
 				if(valueFields.length > 0)
