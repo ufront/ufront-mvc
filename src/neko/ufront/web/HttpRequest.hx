@@ -12,6 +12,7 @@ import ufront.web.IHttpHandler;
 import ufront.web.IHttpUploadHandler;
 import ufront.web.EmptyUploadHandler;
 import ufront.web.UserAgent;
+import haxe.ds.StringMap;
 using Strings;
 using StringTools;
 
@@ -28,14 +29,14 @@ class HttpRequest extends ufront.web.HttpRequest
 		_init();
 	}
 	
-	override function getQueryString()
+	override function get_queryString()
 	{
 		if (null == queryString)
 			queryString = new String(_get_params_string());
 		return queryString;
 	}
 	
-	override function getPostString()
+	override function get_postString()
 	{
 		if (httpMethod == "GET")
 			return "";
@@ -59,7 +60,7 @@ class HttpRequest extends ufront.web.HttpRequest
 		if (_parsed)
 			return;
 		_parsed = true;
-		var post = getPost();
+		var post = get_post();
 		var handler = _uploadHandler;
 		var isFile = false, partName = null, firstData = false, lastWasFile = false;
 		var onPart = function(pn : String, pf : String)
@@ -124,24 +125,24 @@ class HttpRequest extends ufront.web.HttpRequest
 		_parseMultipart();
 	}
 	
-	override function getQuery()
+	override function get_query()
 	{
 		if (null == query)
 			query = getHashFromString(queryString);
 		return query;
 	}
 	
-	override function getUserAgent()
+	override function get_userAgent()
 	{
 		if (null == userAgent)
 			userAgent = UserAgent.fromString(clientHeaders.get("User-Agent"));
 		return userAgent;
 	}
 	
-	override function getPost()
+	override function get_post()
 	{
 		if (httpMethod == "GET")
-			return new Hash();
+			return new StringMap();
 		if (null == post)
 		{
 			post = getHashFromString(postString);
@@ -151,12 +152,12 @@ class HttpRequest extends ufront.web.HttpRequest
 		return post;
 	}
 	
-	override function getCookies()
+	override function get_cookies()
 	{
 		if (null == cookies)
 		{
 			var p = _get_cookies();
-			cookies = new Hash<String>();
+			cookies = new StringMap<String>();
 			var k = "";
 			while( p != null ) {
 				untyped k.__s = p[0];
@@ -167,14 +168,14 @@ class HttpRequest extends ufront.web.HttpRequest
 		return cookies;
 	}
 	
-	override function getHostName()
+	override function get_hostName()
 	{
 		if (null == hostName)
 			hostName = new String(_get_host_name());
 		return hostName;
 	}
 	
-	override function getClientIP()
+	override function get_clientIP()
 	{
 		if (null == clientIP)
 			clientIP = new String(_get_client_ip());
@@ -184,7 +185,7 @@ class HttpRequest extends ufront.web.HttpRequest
 	/**
 	 *  @todo the page processor removal is quite hackish
 	 */
-	override function getUri()
+	override function get_uri()
 	{
 		if (null == uri) {
 			uri = new String(_get_uri()); 
@@ -197,11 +198,11 @@ class HttpRequest extends ufront.web.HttpRequest
 		return uri;
 	}
 	
-	override function getClientHeaders()
+	override function get_clientHeaders()
 	{
 		if (null == clientHeaders)
 		{
-			clientHeaders = new Hash();
+			clientHeaders = new StringMap();
 			var v = _get_client_headers();
 			while( v != null ) {
 				clientHeaders.set(new String(v[0]), new String(v[1]));
@@ -211,7 +212,7 @@ class HttpRequest extends ufront.web.HttpRequest
 		return clientHeaders;
 	}
 	
-	override function getHttpMethod()
+	override function get_httpMethod()
 	{
 		if (null == httpMethod)
 		{
@@ -221,7 +222,7 @@ class HttpRequest extends ufront.web.HttpRequest
 		return httpMethod;
 	}
 	
-	override function getScriptDirectory()
+	override function get_scriptDirectory()
 	{
 		if (null == scriptDirectory)
 		{
@@ -230,7 +231,7 @@ class HttpRequest extends ufront.web.HttpRequest
 		return scriptDirectory;
 	}
 	
-	override function getAuthorization()
+	override function get_authorization()
 	{
 		if (null == authorization)
 		{
@@ -254,7 +255,7 @@ class HttpRequest extends ufront.web.HttpRequest
 	static var paramPattern = ~/^([^=]+)=(.*?)$/;
 	static function getHashFromString(s : String)
 	{
-		var hash = new Hash();
+		var hash = new StringMap();
 		for (part in s.split("&"))
 		{
 			if (!paramPattern.match(part))

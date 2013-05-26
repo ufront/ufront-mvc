@@ -12,6 +12,7 @@ import ufront.web.IHttpHandler;
 import ufront.web.IHttpUploadHandler;
 import ufront.web.EmptyUploadHandler;
 import ufront.web.UserAgent;
+import haxe.ds.StringMap;
 using Strings;
 using StringTools;
 
@@ -27,14 +28,14 @@ class HttpRequest extends ufront.web.HttpRequest
 		_uploadHandler = new EmptyUploadHandler();
 	}
 	
-	override function getQueryString()
+	override function get_queryString()
 	{
 		if (null == queryString)
 			queryString = untyped __var__('_SERVER', 'QUERY_STRING');
 		return queryString;
 	}
 	
-	override function getPostString()
+	override function get_postString()
 	{
 		if (httpMethod == "GET")
 			return "";
@@ -59,7 +60,7 @@ class HttpRequest extends ufront.web.HttpRequest
 		if (_parsed)
 			return;
 		_parsed = true;
-		var post = getPost();
+		var post = get_post();
 		var handler = _uploadHandler;
 		if(!untyped __call__("isset", __php__("$_FILES"))) return;
 		var parts : Array<String> = untyped __call__("new _hx_array",__call__("array_keys", __php__("$_FILES")));
@@ -110,7 +111,7 @@ class HttpRequest extends ufront.web.HttpRequest
 		_parseMultipart();
 	}
 	
-	override function getQuery()
+	override function get_query()
 	{
 		if (null == query)
 		{
@@ -119,10 +120,10 @@ class HttpRequest extends ufront.web.HttpRequest
 		return query;
 	}
 	
-	override function getPost()
+	override function get_post()
 	{
 		if (httpMethod == "GET")
-			return new Hash();
+			return new StringMap();
 		if (null == post)
 		{
 			post = getHashFromString(postString);
@@ -150,35 +151,35 @@ class HttpRequest extends ufront.web.HttpRequest
 		return post;
 	}
 	
-	override function getCookies()
+	override function get_cookies()
 	{
 		if (null == cookies)
 			cookies = Lib.hashOfAssociativeArray(untyped __php__("$_COOKIE"));
 		return cookies;
 	}
 	
-	override function getUserAgent()
+	override function get_userAgent()
 	{
 		if (null == userAgent)
 			userAgent = UserAgent.fromString(clientHeaders.get("User-Agent"));
 		return userAgent;
 	}
 	
-	override function getHostName()
+	override function get_hostName()
 	{
 		if (null == hostName)
 			hostName = untyped __php__("$_SERVER['SERVER_NAME']");
 		return hostName;
 	}
 	
-	override function getClientIP()
+	override function get_clientIP()
 	{
 		if (null == clientIP)
 			clientIP = untyped __php__("$_SERVER['REMOTE_ADDR']");
 		return clientIP;
 	}
 	
-	override function getUri()
+	override function get_uri()
 	{
 		if (null == uri)
 		{
@@ -188,11 +189,11 @@ class HttpRequest extends ufront.web.HttpRequest
 		return uri;
 	}
 	
-	override function getClientHeaders()
+	override function get_clientHeaders()
 	{
 		if (null == clientHeaders)
 		{
-			clientHeaders = new Hash();
+			clientHeaders = new StringMap();
 			var h = Lib.hashOfAssociativeArray(untyped __php__("$_SERVER"));
 			for(k in h.keys()) {
 				if(k.substr(0,5) == "HTTP_") {
@@ -205,7 +206,7 @@ class HttpRequest extends ufront.web.HttpRequest
 		return clientHeaders;
 	}
 	
-	override function getHttpMethod()
+	override function get_httpMethod()
 	{
 		if (null == httpMethod)
 		{
@@ -216,7 +217,7 @@ class HttpRequest extends ufront.web.HttpRequest
 		return httpMethod;
 	}
 	
-	override function getScriptDirectory()
+	override function get_scriptDirectory()
 	{
 		if (null == scriptDirectory)
 		{
@@ -225,7 +226,7 @@ class HttpRequest extends ufront.web.HttpRequest
 		return scriptDirectory;
 	}
 	
-	override function getAuthorization()
+	override function get_authorization()
 	{
 		if (null == authorization)
 		{
@@ -242,7 +243,7 @@ class HttpRequest extends ufront.web.HttpRequest
 	static var paramPattern = ~/^([^=]+)=(.*?)$/;
 	static function getHashFromString(s : String)
 	{
-		var hash = new Hash();
+		var hash = new StringMap();
 		for (part in s.split("&"))
 		{
 			if (!paramPattern.match(part))

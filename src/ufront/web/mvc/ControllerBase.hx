@@ -8,27 +8,30 @@ import hxevents.Dispatcher;
 import ufront.events.ReverseDispatcher;
 
 /**
- * ...
+ * Represents the base class for all MVC controllers. 
  * @author Andreas Soderlund
  */
 
-class ControllerBase implements IController, implements haxe.rtti.Infos
+@:rtti
+class ControllerBase implements IController
 {
 	/**
+	 * Gets or sets the controller context.
 	 * If null, this value is automatically created in execute().
 	 */
 	public var controllerContext : ControllerContext;
 
+	/** Gets or sets the value provider for the controller. */
+	public var valueProvider(get, set) : IValueProvider;
 	var _valueProvider : IValueProvider;
-	public var valueProvider(getValueProvider, setValueProvider) : IValueProvider;
-	private function getValueProvider()
+	private function get_valueProvider()
 	{
 		if (_valueProvider == null)
 			_valueProvider = ValueProviderFactories.factories.getValueProvider(controllerContext);
 
 		return _valueProvider;
 	}
-	private function setValueProvider(valueProvider : IValueProvider)
+	private function set_valueProvider(valueProvider : IValueProvider)
 	{
 		_valueProvider = valueProvider;
 		return _valueProvider;
@@ -36,8 +39,10 @@ class ControllerBase implements IController, implements haxe.rtti.Infos
 
 	public function new(){}
 
+	/** Executes the request. */
 	private function executeCore(async : hxevents.Async) { throw "executeCore() must be overridden in subclass."; }
 
+	/** Executes the specified request context. */
 	public function execute(requestContext : RequestContext, async : hxevents.Async) : Void
 	{
 		NullArgument.throwIfNull(requestContext);

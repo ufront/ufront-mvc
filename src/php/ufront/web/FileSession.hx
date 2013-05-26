@@ -9,9 +9,10 @@ import ufront.web.IHttpSessionState;
 
 import thx.sys.Lib;
 import sys.FileSystem;
+import haxe.ds.StringMap;
 
 import sys.io.File;
-import haxe.BaseCode;
+import haxe.crypto.BaseCode;
 import haxe.Unserializer;
 import haxe.Serializer;
 
@@ -49,19 +50,22 @@ class FileSession implements IHttpSessionState
 
 	private var savePath : String;
 
-	private var content: Hash<Dynamic>;
+	private var content: StringMap<Dynamic>;
 	
 	private var sessionId: String;
 
 	private var sessionStoragePath: String;
 
+	private var expire: Int;
+
 	//added sessionId as parameter to allow authentication not
 	//base on session (not sure it's the best way to do this)
-	public function new(savePath : String,?sessionId:String=null)
+	public function new(savePath : String, ?sessionId:String=null, ?expire:Int = 0)
 	{
 		this.savePath=savePath;
-		this.content=new Hash<Dynamic>();
+		this.content=new StringMap<Dynamic>();
 		this.sessionId=sessionId;
+		this.expire=expire;
 		
 		
 		setupSessionId();
@@ -83,7 +87,7 @@ class FileSession implements IHttpSessionState
 			var cookie=getCookie();
 			if (cookie==null){
 				this.sessionId=getId();
-				add("ufront",this.sessionId,0);
+				add("ufront",this.sessionId,this.expire);
 				
 			} else {
 

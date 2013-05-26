@@ -2,7 +2,9 @@ package ufront.web.mvc.view;
 import ufront.web.mvc.ViewContext;
 using StringTools;
 import ufront.web.mvc.view.UrlHelper;
+import haxe.ds.StringMap;
 
+/** Represents support for rendering HTML controls in a view. */
 class HtmlHelper implements ufront.web.mvc.IViewHelper
 {
 	public var name(default, null) : String;
@@ -13,7 +15,7 @@ class HtmlHelper implements ufront.web.mvc.IViewHelper
 		this.urlHelper = urlHelper;
 	}
 
-	public function register(data : Hash<Dynamic>)
+	public function register(data : StringMap<Dynamic>)
 	{
 		data.set(name, new HtmlHelperInst(urlHelper));
 	}

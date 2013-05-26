@@ -9,14 +9,16 @@ import haxe.io.BytesOutput;
 import haxe.io.Output;
 import thx.collection.HashList;
 import thx.error.NullArgument;
+import thx.error.NotImplemented;
+import haxe.ds.StringMap;
 
 /**
 * @todo remove the singleton
 */
 class HttpResponse
 {
-	public static var instance(getInstance, null) : HttpResponse;
-	static function getInstance() : HttpResponse
+	public static var instance(get, null) : HttpResponse;
+	static function get_instance() : HttpResponse
 	{
 		if(null == instance)
 #if php
@@ -26,7 +28,7 @@ class HttpResponse
 #elseif nodejs
 			instance = null;
 #else
-    	NOT IMPLEMENTED PLATFORM
+    	throw new NotImplemented();
 #end
 		return instance;
 	}
@@ -42,14 +44,14 @@ class HttpResponse
 	static inline var NOT_FOUND = 404;
 	static inline var INTERNAL_SERVER_ERROR = 500;
 
-	public var contentType(getContentType, setContentType) : String;
-	public var redirectLocation(getRedirectLocation, setRedirectLocation) : String;
+	public var contentType(get, set) : String;
+	public var redirectLocation(get, set) : String;
 	public var charset : String;
 	public var status : Int;
 
 	var _buff : StringBuf;
 	var _headers : HashList<String>;
-	var _cookies : Hash<HttpCookie>;
+	var _cookies : StringMap<HttpCookie>;
 
 	public function new()
 	{
@@ -69,7 +71,7 @@ class HttpResponse
 
 	public function clearCookies()
 	{
-		_cookies = new Hash();
+		_cookies = new StringMap();
 	}
 
 	public function clearContent()
@@ -167,12 +169,12 @@ class HttpResponse
 		return status == MOVED_PERMANENTLY;
 	}
 
-	function getContentType()
+	function get_contentType()
 	{
 		return _headers.get(CONTENT_TYPE);
 	}
 
-	function setContentType(v : String)
+	function set_contentType(v : String)
 	{
 		if (null == v)
 			_headers.set(CONTENT_TYPE, DEFAULT_CONTENT_TYPE)
@@ -181,12 +183,12 @@ class HttpResponse
 		return v;
 	}
 
-	function getRedirectLocation()
+	function get_redirectLocation()
 	{
 		return _headers.get(LOCATION);
 	}
 
-	function setRedirectLocation(v : String)
+	function set_redirectLocation(v : String)
 	{
 		if (null == v)
 			_headers.remove(LOCATION)

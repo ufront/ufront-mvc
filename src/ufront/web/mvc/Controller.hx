@@ -8,18 +8,18 @@ import ufront.web.mvc.Controller;
 /**
  * The invoker property (IActionInvoker) must be set to use execute().
  */
-class Controller extends ControllerBase, implements IActionFilter, implements IAuthorizationFilter, implements IResultFilter, implements IExceptionFilter
+class Controller extends ControllerBase implements IActionFilter implements IAuthorizationFilter implements IResultFilter implements IExceptionFilter
 {
 	private var _invoker : IActionInvoker;
-	public var invoker(getInvoker, setInvoker) : IActionInvoker;
-	private function getInvoker()
+	public var invoker(get, set) : IActionInvoker;
+	private function get_invoker()
 	{
 		if (_invoker == null)
 			_invoker = new ControllerActionInvoker(ModelBinders.binders, ControllerBuilder.current, DependencyResolver.current);
 
 		return _invoker;
 	}
-	private function setInvoker(i : IActionInvoker)
+	private function set_invoker(i : IActionInvoker)
 	{
 		_invoker = i;
 		return _invoker;

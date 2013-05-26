@@ -2,11 +2,11 @@ package ufront.web.mvc;
 import ufront.web.mvc.ValueProviderResult;
 
 /**
- * ...
+ * Represents the collection of value-provider objects for the application. 
  * @author Andreas Soderlund
  */
 
-class ValueProviderCollection extends List<IValueProvider>, implements IValueProvider
+class ValueProviderCollection extends List<IValueProvider> implements IValueProvider
 {
 	public function new(?list : Array<IValueProvider>)
 	{
@@ -19,6 +19,7 @@ class ValueProviderCollection extends List<IValueProvider>, implements IValuePro
 		}
 	}
 	
+	/** Determines whether the collection contains the specified prefix. */
 	public function containsPrefix(prefix : String) : Bool 
 	{
 		for (v in this)
@@ -28,6 +29,7 @@ class ValueProviderCollection extends List<IValueProvider>, implements IValuePro
 		return false;
 	}
 	
+	/** Returns a value object using the specified key. */
 	public function getValue(key : String) : ValueProviderResult 
 	{
 		for (v in this)

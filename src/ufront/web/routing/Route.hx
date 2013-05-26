@@ -13,15 +13,24 @@ import thx.error.Error;
 import ufront.web.HttpContext;
 import thx.error.NullArgument;
 import ufront.web.routing.RouteUriParser;
+import haxe.ds.StringMap;
 using StringTools;
 
+/** Provides properties and methods for defining a route and for obtaining information about the route. */
 class Route extends RouteBase
 {
 	public static var parser = new RouteUriParser();
 
-	public var url(getUrl, null) : String;
+	/** Gets or sets the URL pattern for the route. */
+	public var url(get, null) : String;
+
+	/** Gets or sets the object that processes requests for the route. */
 	public var handler(default, null) : IRouteHandler;
-	public var defaults(default, null) : Hash<String>;
+
+	/** Gets or sets the values to use if the URL does not contain all the parameters. */
+	public var defaults(default, null) : StringMap<String>;
+
+	/** Gets or sets a dictionary of expressions that specify valid values for a URL parameter. */
 	public var constraints(default, null) : Array<IRouteConstraint>;
 
 	var extractor : RouteParamExtractor;
@@ -34,7 +43,7 @@ class Route extends RouteBase
 	 * @param	?defaults
 	 * @param	?constraints
 	 */
-	public function new(url : String, handler : IRouteHandler, ?defaults : Hash<String>, ?constraints : Array<IRouteConstraint>)
+	public function new(url : String, handler : IRouteHandler, ?defaults : StringMap<String>, ?constraints : Array<IRouteConstraint>)
 	{
 		NullArgument.throwIfNull(url);
 		if (!url.startsWith("/"))
@@ -43,7 +52,7 @@ class Route extends RouteBase
 		NullArgument.throwIfNull(handler);
 		this.handler = handler;
 		if (null == defaults)
-			this.defaults = new Hash();
+			this.defaults = new StringMap();
 		else
 			this.defaults = defaults;
 		if (null == constraints)
@@ -60,7 +69,7 @@ class Route extends RouteBase
 		return _ast;
 	}
 
-	//added public to match visibility of ROuteBase, the compiler complains on that!
+	/** Gets the Type of the current instance.  */
 	public override function getRouteData(httpContext : HttpContext) : RouteData
 	{
 		var requesturi = httpContext.getRequestUri();
@@ -86,10 +95,10 @@ class Route extends RouteBase
 		}
 	}
 
-	//added public to match visibility of ROuteBase, the compiler complains on that!
-	public override function getPath(httpContext : HttpContext, data : Hash<String>)
+	/** Returns information about the URL that is associated with the route. */
+	public override function getPath(httpContext : HttpContext, data : StringMap<String>)
 	{
-	    var params = null == data ? new Hash() : data;
+	    var params = null == data ? new StringMap() : data;
 		if(!processConstraints(httpContext, params, UrlDirection.UrlGeneration))
 			return null;
 		else {
@@ -122,12 +131,13 @@ class Route extends RouteBase
 		}
 	}
 
-	function getUrl()
+	function get_url()
 	{
 		return url;
 	}
 
-	function processConstraints(httpContext : HttpContext, params : Hash<String>, direction : UrlDirection)
+	/** Determines whether a parameter value matches the constraint for that parameter. */
+	function processConstraints(httpContext : HttpContext, params : StringMap<String>, direction : UrlDirection)
 	{
 		for(constraint in constraints)
 			if(!constraint.match(httpContext, this, params, direction))

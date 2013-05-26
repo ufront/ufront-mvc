@@ -6,38 +6,34 @@
 #if neko
 package neko.ufront.web;
 
-import neko.FileSystem;
+import sys.FileSystem;
 import neko.Lib;
 import neko.Web;
-import neko.Sys;
+import Sys;
 import haxe.io.Bytes;
+import haxe.ds.StringMap;
 
 class NekoSession
 {
 	private static var SID : String = 'NEKOSESSIONID';
 
 	public static var started(default, null) : Bool;
-	public static var id(default, setId) : String;
-	public static var savePath(default, setSavePath) : String;
-	private static var sessionData : Hash<Dynamic>;
-	public static var sessionName(default, setName) : String;
+	public static var id(default, set) : String;
+	public static var savePath(default, set) : String;
+	private static var sessionData : StringMap<Dynamic>;
+	public static var sessionName(default, set) : String;
 	private static var needCommit : Bool;
 
-	public static function setName(name : String)
+	public static function set_sessionName(name : String)
 	{
 		if( started ) throw "Can't set name after Session start.";
 		sessionName=name;
 		return name;
 	}
 
-	public static function getName() : String
-	{
-		return sessionName;
-	}
+	public static function get_id() : String return id;
 
-	public static function getId() : String return id
-
-	public static function setId(_id : String) : String
+	public static function set_id(_id : String) : String
 	{
 		if( started ) throw "Can't set id after Session.start.";
 
@@ -47,22 +43,22 @@ class NekoSession
 		return id;
 	}
 
-	public static function getSavePath() : String return savePath
+	public static function get_savePath() : String return savePath;
 
-	public static function setSavePath(path : String) : String
+	public static function set_savePath(path : String) : String
 	{
 		if(started) throw "You can't set the save path while the session is already in use.";
 		savePath = path;
 		return path;
 	}
 
-	public static function getModule() : String
+	public static function get_module() : String
 	{
 		throw "Not implemented.";
 		return "";
 	}
 
-	public static function setModule(module : String)
+	public static function set_module(module : String)
 	{
 		if(started) throw "You can't set the module while the session is already in use.";
 		throw "Not implemented.";
@@ -88,10 +84,21 @@ class NekoSession
 		sessionData.set(name, value);
 	}
 
-	public static function setCookieParams(?lifetime : Int, ?path : String, ?domain : String, ?secure : Bool, ?httponly : Bool)
+	static var lifetime = 0;
+	static var path = '/'; // TODO: Set cookie path to application path, right now it's global.
+	static var domain = null; 
+	static var secure = false;
+	static var httponly = false;
+
+	public static function setCookieParams(?lifetimeIn : Int, ?pathIn : String, ?domainIn : String, ?secureIn : Bool, ?httponlyIn : Bool)
 	{
 		if(started) throw "You can't set the cookie params while the session is already in use.";
-		throw "Not implemented.";
+
+		if (lifetimeIn != null) lifetime = lifetimeIn;
+		if (pathIn != null) path = pathIn;
+		if (domainIn != null) domain = domainIn;
+		if (secureIn != null) secure = secureIn; 
+		if (httponlyIn != null) httponly = httponlyIn;
 	}
 
 	public static function getCookieParams() :
@@ -127,7 +134,7 @@ class NekoSession
 		if( sessionName == null ) sessionName = SID;
 
 		if( savePath == null )
-			savePath = neko.Sys.getCwd();
+			savePath = Sys.getCwd();
 		else
 		{
 			// Test if savepath exists. Need to remove last slash in path, otherwise FileSystem.exists() throws an exception.
@@ -172,15 +179,15 @@ class NekoSession
 			testValidId(id);
 
 			file = savePath + id + ".sess";
-			if( !neko.FileSystem.exists(file) )
+			if( !sys.FileSystem.exists(file) )
 				id = null;
 			else
 			{
-				fileData = try neko.io.File.getBytes(file) catch ( e:Dynamic ) null;
+				fileData = try sys.io.File.getBytes(file) catch ( e:Dynamic ) null;
 				if( fileData == null )
 				{
 					id = null;
-					try neko.FileSystem.deleteFile(file) catch( e:Dynamic ) null;
+					try sys.FileSystem.deleteFile(file) catch( e:Dynamic ) null;
 				}
 				else
 				{
@@ -191,16 +198,16 @@ class NekoSession
 		if( id==null )
 		{
 			//trace("no id found, creating a new session.");
-			sessionData = new Hash<Dynamic>();
+			sessionData = new StringMap<Dynamic>();
 
 			do
 			{
-				id = haxe.Md5.encode(Std.string(Math.random() + Math.random()));
+				id = haxe.crypto.Md5.encode(Std.string(Math.random() + Math.random()));
 				file = savePath + id + ".sess";
-			} while( neko.FileSystem.exists(file) );
+			} while( sys.FileSystem.exists(file) );
 
-			// TODO: Set cookie path to application path, right now it's global.
-			Web.setCookie(SID, id, null, null, '/');
+			var expire = (lifetime == 0) ? null : DateTools.delta(Date.now(), 1000.0 * lifetime);
+			Web.setCookie(SID, id, expire, domain, path, secure);
 
 			started = true;
 			commit();
@@ -210,7 +217,7 @@ class NekoSession
 
 	public static function clear()
 	{
-		sessionData = new Hash<Dynamic>();
+		sessionData = new StringMap<Dynamic>();
 	}
 
 	private static function commit()
@@ -218,7 +225,7 @@ class NekoSession
 		if( !started ) return;
 		try
 		{
-			var w = neko.io.File.write(savePath + id + ".sess", true),
+			var w = sys.io.File.write(savePath + id + ".sess", true),
 				b = Lib.serialize(sessionData);
 			w.writeBytes(b, 0, b.length);
 			w.close();

@@ -3,9 +3,10 @@ package ufront.web.mvc;
 import haxe.rtti.CType;
 import thx.collection.Set;
 import thx.type.Rttis;
+import haxe.ds.StringMap;
 
 /**
- * ...
+ * Represents the result of binding a value (such as from a form post or query string) to an action-method argument property, or to the argument itself. 
  * @author Franco Ponticelli
  */
 
@@ -13,7 +14,7 @@ class ValueProviderResult
 {
 	static function __init__()
 	{
-		jugglers = new Hash();
+		jugglers = new StringMap();
 
 		registerTypeJuggler("String", function(s : String) return s);
 		registerTypeJuggler("Int",   Std.parseInt);
@@ -32,17 +33,20 @@ class ValueProviderResult
 		});
 
 		// Arrays
-		registerTypeJuggler("Array", callback(arraySplitter, "String"));
-		registerTypeJuggler("Array<String>", callback(arraySplitter, "String"));
-		registerTypeJuggler("Array<Int>", callback(arraySplitter, "Int"));
-		registerTypeJuggler("Array<Float>", callback(arraySplitter, "Float"));
-		registerTypeJuggler("Array<Bool>", callback(arraySplitter, "Bool"));
-		registerTypeJuggler("Array<Date>", callback(arraySplitter, "Date"));
+		registerTypeJuggler("Array", arraySplitter.bind("String"));
+		registerTypeJuggler("Array<String>", arraySplitter.bind("String"));
+		registerTypeJuggler("Array<Int>", arraySplitter.bind("Int"));
+		registerTypeJuggler("Array<Float>", arraySplitter.bind("Float"));
+		registerTypeJuggler("Array<Bool>", arraySplitter.bind("Bool"));
+		registerTypeJuggler("Array<Date>", arraySplitter.bind("Date"));
 	}
 
-	public static var jugglers : Hash<String -> Dynamic>;
+	public static var jugglers : StringMap<String -> Dynamic>;
 
+	/** Gets or set the raw value that is supplied by the value provider. */
 	public var rawValue(default, null) : Dynamic;
+
+	/** Gets or sets the raw value that is converted to a string for display. */
 	public var attemptedValue(default, null) : String;
 
 	public function new(rawValue : Dynamic, attemptedValue : String) // TODO: Culture
@@ -98,7 +102,7 @@ class ValueProviderResult
 				for(param in params)
 					if(_ctypeCheck(values[i++], param))
 						return false;
-			case CClass(name, params):
+			case CClass(name, _):
 				var c = Type.resolveClass(name);
 				if(null == c)
 					return false;
@@ -131,6 +135,8 @@ class ValueProviderResult
 							return false;
 					}
 				}
+			default:
+				return false;
 		}
 		return true;
 	}

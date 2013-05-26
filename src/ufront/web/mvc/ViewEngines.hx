@@ -1,9 +1,11 @@
 package ufront.web.mvc;
 import ufront.web.mvc.IViewEngine;
 
+/** Represents a collection of view engines that are available to the application. */
 class ViewEngines
 {
-	public static var engines(getEngines, null) : ViewEngines;
+	/** Gets the view engines. */
+	public static var engines(get, null) : ViewEngines;
 
 	var _list : List<IViewEngine>;
 
@@ -27,7 +29,7 @@ class ViewEngines
 		return _list.iterator();
 	}
 
-	static function getEngines()
+	static function get_engines()
 	{
 		if(null == engines)
 		{

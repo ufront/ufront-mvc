@@ -3,9 +3,11 @@ import thx.error.Error;
 import ufront.web.mvc.IViewHelper;
 import ufront.web.routing.RequestContext;
 import ufront.web.routing.Route;
+import haxe.ds.StringMap;
 using Types;
 using Hashes;
 
+/** Contains methods to build URLs for Ufront within an application. */
 class UrlHelper implements IViewHelper
 {
     public var name(default, null) : String;
@@ -18,7 +20,7 @@ class UrlHelper implements IViewHelper
 		this.inst = new UrlHelperInst(requestContext);
 	}
 
-	public function register(data : Hash<Dynamic>)
+	public function register(data : StringMap<Dynamic>)
 	{
 		data.set(name, inst);
 	}
@@ -65,8 +67,8 @@ class UrlHelperInst
 	{
 		var hash = null;
 		if(null == data)
-			hash = new Hash();
-		else if (Std.is(data, Hash))
+			hash = new Map();
+		else if (Std.is(data, Map))
 			hash = Hashes.clone(data);
 		else
 			hash = DynamicsT.toHash(data);
@@ -83,7 +85,12 @@ class UrlHelperInst
 
 		for(route in __req.routeData.route.routes.iterator())
 		{
-			var url = route.getPath(__req.httpContext, hash.clone());
+			var map = new StringMap();
+			for (key in hash.keys())
+			{
+				map.set(key, hash.get(key));
+			}
+			var url = route.getPath(__req.httpContext, map);
 			if(null != url)
 				return url;
 		}
