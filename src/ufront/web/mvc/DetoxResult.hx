@@ -2,9 +2,8 @@ package ufront.web.mvc;
 import thx.error.NullArgument;
 import ufront.web.mvc.ActionResult;
 import ufront.web.mvc.ControllerContext;
-
+import dtx.DetoxLayout;
 using Detox;
-import detox.DetoxLayout;
 
 class DetoxResult extends ActionResult
 {
