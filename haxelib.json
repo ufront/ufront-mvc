@@ -5,12 +5,11 @@
   "tags": ["ufront","web","framework","mvc","neko","php"],
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
-  "releasenote": "Initial Release",
-  "version": "1.0.0-beta.1",
+  "releasenote": "Initial Release. For early adopters only at this point, things subject to change.",
+  "version": "1.0.0-alpha.1",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
     "hxevents": "",
-    "thx": "",
     "detox": ""
   }
 }
