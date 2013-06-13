@@ -1,6 +1,7 @@
 {
   "name": "ufront-mvc",
   "license": "MIT",
+  "classPath": "src",
   "tags": ["ufront","web","framework","mvc","neko","php"],
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
@@ -9,6 +10,7 @@
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
     "hxevents": "",
-    "thx": ""
+    "thx": "",
+    "detox": ""
   }
 }
