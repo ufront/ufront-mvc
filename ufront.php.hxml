@@ -5,7 +5,7 @@
 -cp ../utest/src
 -cp ../erazor/src
 -lib hxevents
--lib hxculture
+#-lib hxculture
 -lib hscript
 -lib umock
 -php bin
