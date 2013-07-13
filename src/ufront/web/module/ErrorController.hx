@@ -17,9 +17,11 @@ class ErrorController extends Controller
 	{                               
 		controllerContext.httpContext.response.status = error.code; 
 		
-		var inner = null != error.inner ? '<p>' + error.inner.toString() + '<p>' : "";
-		var items = _errorStack();
-		var stack = showStack && items.length > 0 ? '<div><p><i>error stack:</i></p>\n<ul><li>' + items.join("</li><li>") + '</li></ul></div>' : '';
+		var inner = (null != error.inner) ? '<p>' + error.inner.toString() + '</p>' : "";
+		var exceptionStackItems = _exceptionStack();
+		var exceptionStack = showStack && exceptionStackItems.length > 0 ? '<div><p><i>exception stack:</i></p>\n<ul><li>' + exceptionStackItems.join("</li><li>") + '</li></ul></div>' : '';
+		var callStackItems = _callStack();
+		var callStack = showStack && callStackItems.length > 0 ? '<div><p><i>call stack:</i></p>\n<ul><li>' + callStackItems.join("</li><li>") + '</li></ul></div>' : '';
 		return  	
 '<!doctype html>
 <html>
@@ -37,7 +39,7 @@ span[frown] { transform: rotate(90deg); display:inline-block; color: #bbb; }
 <bofy>
 <details>
   <summary><h1>' + error.toString() + '</h1></summary>  
-  ' + inner + stack + ' 
+  ' + inner + exceptionStack + callStack + ' 
   <p><span frown>:(</p>
 </details>
 </body>
@@ -75,11 +77,20 @@ span[frown] { transform: rotate(90deg); display:inline-block; color: #bbb; }
 			return "local function #" + n;
 		}
 	}
+
+	function _exceptionStack()
+	{
+		return _errorStack(haxe.CallStack.exceptionStack());
+	}
+
+	function _callStack()
+	{
+		return _errorStack(haxe.CallStack.callStack());
+	}
 	
-	function _errorStack() : Array<String>
+	function _errorStack( stack:Array<StackItem> ) : Array<String>
 	{
 		var arr = [];
-		var stack = haxe.CallStack.exceptionStack();
 #if php
 		stack.pop();
 		stack = stack.slice(2);
