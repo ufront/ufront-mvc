@@ -13,6 +13,7 @@ import ufront.web.Dispatch;
 import ufront.web.DispatchModule;
 import ufront.remoting.RemotingApiContext;
 import haxe.ds.StringMap;
+import haxe.web.Dispatch.DispatchConfig;
 using DynamicsT;
 
 /**

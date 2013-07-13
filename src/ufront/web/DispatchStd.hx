@@ -117,7 +117,7 @@ class DispatchStd {
 	static var GET_RULES;
 	public function runtimeGetParams( cfgIndex : Int ) : Dynamic {
 		if( GET_RULES == null )
-			GET_RULES = haxe.Unserializer.run(haxe.rtti.Meta.getType(Dispatch).getParams[0]);
+			GET_RULES = haxe.Unserializer.run(haxe.rtti.Meta.getType(DispatchStd).getParams[0]);
 		return checkParams(GET_RULES[cfgIndex], true);
 	}
 
@@ -209,6 +209,7 @@ class DispatchStd {
 	static inline var PREFIX = "ufront.web.DispatchStd.DispatchRule.";
 
 	static function getType(t,p) {
+			trace (t);
 		switch( Context.follow(t) ) {
 		case TInst(i,_):
 			switch( i.toString() ) {
@@ -237,6 +238,7 @@ class DispatchStd {
 					}
 					csup = csup.t.get().superClass;
 				}
+				trace ("this?");
 				Context.error("Unsupported dispatch type '"+i.toString()+"'",p);
 			}
 		case TEnum(e, _):
@@ -244,6 +246,7 @@ class DispatchStd {
 			case "Bool":
 				return MRBool;
 			default:
+				trace ("this?");
 				Context.error("Unsupported dispatch type "+e.toString(),p);
 			}
 		case TAbstract(a,_):
@@ -255,9 +258,11 @@ class DispatchStd {
 			case "Bool":
 				return MRBool;
 			default:
+				trace ("this?");
 				Context.error("Unsupported dispatch type "+a.toString(),p);
 			}
 		default:
+			trace ("this?");
 			Context.error("Unsupported dispatch type "+Std.string(t),p);
 		}
 		return null;

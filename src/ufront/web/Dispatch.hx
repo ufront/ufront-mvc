@@ -31,6 +31,8 @@ import ufront.web.DispatchStd;
 import haxe.web.Dispatch.DispatchConfig;
 import haxe.web.Dispatch.DispatchError;
 import haxe.web.Dispatch.DispatchRule;
+import ufront.web.HttpContext;
+import ufront.web.mvc.ControllerContext;
 private class Redirect { public function new() {} }
 
 
@@ -42,10 +44,12 @@ private class Redirect { public function new() {} }
 	// Had to change this as there was a part of the macro that wouldn't let us subclass it.  DispatchStd is exactly the same as haxe.Web.dispatch except that you can subclass it and use it for subDispatches
 class Dispatch extends ufront.web.DispatchStd {
 
-	var method:String;
+	public var method:String;
+	public var httpContext:HttpContext;
 
-	public function new(url:String, params, ?method) {
+	public function new(url:String, params, httpContext, ?method) {
 		super (url, params);
+		this.httpContext = httpContext;
 		this.method = (method != null) ? method.toLowerCase() : null;
 	}
 
@@ -70,7 +74,9 @@ class Dispatch extends ufront.web.DispatchStd {
 	// The main difference is that we call resolveNames(), and match against
 	// multiple names, so that we can find post_doSubmit() etc
 	// We also force lower-case the method name, making Dispatch case insensitive.
-	override public function runtimeDispatch( cfg : DispatchConfig ) {
+	// We also have this runtimeReturnDispatch, which returns the function result. 
+	// runtimeDispatch() is still available but just calls this
+	public function runtimeReturnDispatch( cfg : DispatchConfig ):{ result:Dynamic, controllerContext:ControllerContext } {
 		name = parts.shift();
 		if( name == null )
 			name = "doDefault";
@@ -98,15 +104,22 @@ class Dispatch extends ufront.web.DispatchStd {
 		}
 		try {
 			var field = Reflect.field(cfg.obj, name);
-			return Reflect.callMethod(cfg.obj, Reflect.field(cfg.obj, name), args);
+			return {
+				result: Reflect.callMethod(cfg.obj, Reflect.field(cfg.obj, name), args),
+				controllerContext: cfg.obj.controllerContext
+			}
 		} catch( e : Redirect ) {
-			return runtimeDispatch(cfg);
+			return runtimeReturnDispatch(cfg);
 		}
+	}
+
+	override public function runtimeDispatch( cfg : DispatchConfig ) {
+		runtimeReturnDispatch( cfg );
 	}
 
 	// The only differences is building 
 	//  - we return an expression for new ufront.web.Dispatcher instead of haxe.web.Dispatcher
-	//  - and we capture the method too
+	//  - and we capture the HTTP method too
 
 	public static macro function run( url : ExprOf<String>, params : ExprOf<haxe.ds.StringMap<String>>, obj : ExprOf<{}>, ?method : ExprOf<String> ) : ExprOf<Void> {
 		var p = Context.currentPos();

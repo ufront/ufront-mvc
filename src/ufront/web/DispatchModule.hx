@@ -2,7 +2,7 @@ package ufront.web;
 
 #if neko 
 import neko.Web;
-#else if php 
+#elseif php 
 import neko.Web;
 #end
 import ufront.web.error.PageNotFoundError;
@@ -10,11 +10,14 @@ import ufront.web.HttpApplication;
 import ufront.web.routing.RequestContext;
 import ufront.web.IHttpHandler;
 import ufront.web.IHttpModule;
-import ufront.web.Dispatch;
+import haxe.web.Dispatch.DispatchConfig;
+import haxe.web.Dispatch.DispatchError;
+import ufront.web.UfrontDispatch;
+import ufront.web.mvc.*;
 
 /**
  * Gets an IHttpHandler from the routing and executes it in the HttpApplication context.
- * Uses ufront.web.Dispatch to match the URL to a controller action and it's parameters.
+ * Uses ufront.web.UfrontDispatch to match the URL to a controller action and it's parameters.
  * @author Jason O'Neil
  */
 class DispatchModule implements IHttpModule
@@ -43,8 +46,14 @@ class DispatchModule implements IHttpModule
 
 		try 
 		{
-			var d = new Dispatch( httpContext.request.uri, Web.getParams() );
-			d.runtimeDispatch( dispatchConfig );
+			var d = new UfrontDispatch( httpContext.request.uri, Web.getParams(), httpContext );
+			if ( Std.is(dispatchConfig.obj, SimpleController) ) {
+				var firstController:SimpleController = dispatchConfig.obj;
+				firstController.setupControllerContext( httpContext );
+			}
+			var actionReturn = d.runtimeReturnDispatch( dispatchConfig );
+			var result = createActionResult( actionReturn.result );
+			result.executeResult( actionReturn.controllerContext );
 		} 
 		catch ( e : DispatchError )
 		{
@@ -57,9 +66,15 @@ class DispatchModule implements IHttpModule
 				case DETooManyValues: throw "Dispatch: Too Many Values";
 			}
 		}
-		
-		// How can I pass the HTTP context or request context to the controller still?
-		// httpHandler.processRequest(application.httpContext, async);
+	}
+
+	static function createActionResult(actionReturnValue : Dynamic) : ActionResult
+	{
+		if (actionReturnValue == null)
+			return new EmptyResult();
+
+		if (Std.is(actionReturnValue, ActionResult)) return cast actionReturnValue;
+		return new ContentResult(Std.string(actionReturnValue), null);
 	}
 
 	/** Disposes of the resources (other than memory) that are used by the module. */
