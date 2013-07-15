@@ -32,7 +32,7 @@ class CascadeHash<T>
 	}
 	
 	public function get(key : String)
-	{   
+	{
 		for(h in _h)
 			if(h.exists(key))
 				return h.get(key);
@@ -70,5 +70,14 @@ class CascadeHash<T>
 		for (k in keys())
 			arr.push(k + ": " + get(k));
 		return "{" + arr.join(", ") + "}";
+	}
+
+	public function toStringMap()
+	{
+		var sm = new StringMap();
+		for(h in _h)
+			for(k in h.keys())
+				sm[k] = h[k];
+		return sm;
 	}
 }
