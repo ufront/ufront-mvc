@@ -1,6 +1,0 @@
-bin
-.DS_Store
-.tmbuild
-.hgignore
-doc/html
-doc/tmp
