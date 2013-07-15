@@ -1,10 +1,14 @@
-/**
- * ...
- * @author Franco Ponticelli
- */
-
 package ufront.web;
 
+/**
+	A class describing a Http Cookie.
+
+	This does not actually set a cookie.  Use `setCookie()` on a `HttpResponse` object to set the cookie.
+
+	TODO: document further.
+	
+	@author Franco Ponticelli
+**/
 class HttpCookie
 {
 	public var domain : String;

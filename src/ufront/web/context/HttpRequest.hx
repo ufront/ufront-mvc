@@ -1,0 +1,181 @@
+package ufront.web.context;
+import thx.collection.CascadeHash;
+import thx.error.AbstractMethod;
+import haxe.io.Bytes;
+import haxe.ds.StringMap;
+import thx.error.NotImplemented;
+import ufront.web.upload.IHttpUploadHandler;
+
+/**
+	A description of the current HttpRequest.
+
+	This base class is mostly abstract methods, each platform must implement the key details.
+**/
+class HttpRequest
+{
+	/**
+		A singleton instance of the current HttpRequest.
+
+		It will create the request using the underlying platform's constructor.
+	**/
+	public static var instance(get, null) : HttpRequest;
+	static function get_instance() : HttpRequest
+	{
+		if(null == instance)
+			#if php
+				instance = new php.ufront.web.context.HttpRequest();
+			#elseif neko
+				instance = new neko.ufront.web.context.HttpRequest();
+			#else
+				throw new NotImplemented();
+			#end
+		return instance;
+	}
+
+	/**
+		A simple hash of all the parameters supplied in this request.
+
+		The parameters are collected in the following order:
+
+		- query-string parameters
+		- post values
+		- cookies
+	**/
+	public var params(get, null) : CascadeHash<String>;
+	function get_params()
+	{
+		if (null == params)
+			params = new CascadeHash([new StringMap(), query, post, cookies]);
+		return params;
+	}
+
+	/**
+		The GET query parameters
+	**/
+	public var queryString(get, null) : String;
+	function get_queryString() return throw new AbstractMethod();
+
+	/**
+		The POST query parameters
+	**/
+	public var postString(get, null) : String;
+	function get_postString() return throw new AbstractMethod();
+
+	/**
+		The GET query parameters for this request.
+	**/
+	public var query(get, null) : StringMap<String>;
+	function get_query() return throw new AbstractMethod();
+
+	/**
+		The POST parameters for this request.
+	**/
+	public var post(get, null) : StringMap<String>;
+	function get_post() return throw new AbstractMethod();
+
+	/**
+		The Cookie parameters for this request.
+	**/
+	public var cookies(get, null) : StringMap<String>;
+	function get_cookies() return throw new AbstractMethod();
+
+	/**
+		The host name of the current server
+	**/
+	public var hostName(get, null) : String;
+	function get_hostName() return throw new AbstractMethod();
+
+	/**
+		The Client's IP address
+	**/
+	public var clientIP(get, null) : String;
+	function get_clientIP() return throw new AbstractMethod();
+
+	/**
+		The Uri requested in this HTTP request.
+
+		This is the URI before any filters have been applied.
+	**/
+	public var uri(get, null) : String;
+	function get_uri() return throw new AbstractMethod();
+
+	/**
+		The client headers supplied in the request.  
+	**/
+	public var clientHeaders(get, null) : StringMap<String>;
+	function get_clientHeaders() return throw new AbstractMethod();
+
+	/**
+		Information about the user agent that made the request.
+	**/
+	public var userAgent(get, null) : UserAgent;
+	function get_userAgent() return throw new AbstractMethod();
+
+	/**
+		The HTTP method used for the request.
+
+		Usually "get" or "post", but can be other things. 
+
+		Case sensitivity depends on the environement.
+	**/
+	public var httpMethod(get, null) : String;
+	function get_httpMethod() return throw new AbstractMethod();
+
+	/**
+		The path of the currently executing script.
+
+		This is the path to your `index` file, not to the current class or controller.
+
+		It will usually be an absolute path, but depending on the environment it may be relative.
+	**/
+	public var scriptDirectory(get, null) : String;
+	function get_scriptDirectory() return throw new AbstractMethod();
+
+	/**
+		Gives the username and password supplied by the "Authorization" client header.
+
+		If no "Authorization" header was specified, it will return null.
+
+		If "Authorization" header was specified, but it did not have exactly two parameters, it will throw an exception.
+
+		TODO: document how to trigger this authorization header.
+	**/
+	public var authorization(get, null) : { user : String, pass : String };
+	function get_authorization() return throw new AbstractMethod();
+
+	/**
+		TODO: document this.  May need Franco's help to explain it...
+	**/
+	public function setUploadHandler(handler : IHttpUploadHandler) throw new AbstractMethod();
+
+	/**
+		Things not implemented yet but which would be handy:
+	**/
+
+	// urlReferrrer
+	//public var acceptTypes(get, null) : Array<String>;
+	//public var sessionId(get, null) : String;
+
+	/**
+	 * never has trailing slash. If the application is in the server root the path will be emppty ""
+	 */
+	//public var applicationPath(get, null) : String;
+	//public var broswer(get, setBrowser) : HttpBrowserCapabilities;
+	//public var encoding(get, setEncoding) : String;
+	//public var contentLength(get, null) : Int;
+	//public var contentType(get, null) : String;
+	//public var mimeType(get, setMimeType) : String;
+	//public var files(get, null) : List<HttpPostedFile>;
+	//public var httpMethod(get, null) : String;
+	//public var isAuthenticated(get, null) : String;
+	/**
+	 * evaluates to true if the IP address is 127.0.0.1 or the same as the client ip address
+	 */
+	//public var isLocal(get, null) : String;
+	//public var isSecure(get, null) : String;
+
+	//public var userAgent(get, null) : String;
+	//public var userHostAddress(get, null) : String;
+	//public var userHostName(get, null) : String;
+	//public var userLanguages(get, null) : Array<String>;
+}

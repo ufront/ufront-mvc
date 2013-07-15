@@ -1,10 +1,19 @@
 package ufront.web;
 
 /**
- * ...
- * @author Franco Ponticelli
- */
+	UserAgent information detected from the version string.
 
+	This class is fairly outdated, so usefulness may vary.  For example, iOS is listed as a known OS, but Android isn't.
+
+	You can access a pre-filled version for the current request using:
+
+	`myHttpContext.request.userAgent`
+	
+	TODO: update the usefulness
+	TODO: document further
+
+	@author Franco Ponticelli
+**/
 class UserAgent 
 {
 	// info from: http://www.quirksmode.org/js/detect.html
