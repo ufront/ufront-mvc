@@ -1,0 +1,15 @@
+## Neko
+-main TestMain
+-lib munit
+-lib hamcrest
+-cp src
+-cp test
+-lib thx
+-lib hxevents
+-lib erazor
+-lib hscript
+-dce no
+--each
+
+-neko build/neko_test.n
+-xml doc/neko.xml

@@ -1,3 +1,5 @@
 *.zip
 bin
 doc
+build
+report
