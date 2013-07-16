@@ -96,8 +96,7 @@ class HttpApplication
 
 	///// End Events /////
 
-	public function new(?httpContext : HttpContext)
-	{
+	public function new(?httpContext : HttpContext) {
 		this.httpContext = (httpContext == null) ? HttpContext.createWebContext() : httpContext;
 
 		onBeginRequest = new AsyncDispatcher();
@@ -130,9 +129,18 @@ class HttpApplication
 	var _logDispatched : Bool;
 	var _flushed : Bool;
 
-	function _executedLogRequest(_)
-	{
+	function _executedLogRequest(_) {
 		_logDispatched = true;
+	}
+
+	/** 
+		Add a module to this HttpApplication.
+
+		Returns itself so that you can chain methods together.
+	**/
+	public function addModule( module:IHttpModule ) {
+		if (module!=null) modules.add( module );
+		return this;
 	}
 
 	/** 
@@ -161,8 +169,7 @@ class HttpApplication
 		If at any point errors occur, the chain stops, and `onApplicationError` is triggered, followed by running `_conclude()`
 		If at any point this HttpApplication is marked as complete, the chain stops and `_conclude()` is run.
 	**/
-	public function execute()
-	{
+	public function execute() {
 		_flushed = _logDispatched = false;
 		// wire modules
 		for (module in modules)
@@ -184,8 +191,7 @@ class HttpApplication
 	}
 
 	/** Flush the output, fire the onEndRequest event, and close up shop **/
-	function _conclude()
-	{
+	function _conclude() {
 		// flush contents
 		_flush();
 		// this event is always dispatched no matter what
@@ -194,8 +200,7 @@ class HttpApplication
 	}
 
 	/** Flush the response to the output. Catch errors. **/
-	function _flush()
-	{
+	function _flush() {
 		try {
 			if(!_flushed) {
 				response.flush();
@@ -218,8 +223,7 @@ class HttpApplication
 	}
 
 	/** End the request by triggering the final onEndRequest event.  Catch errors **/
-	function _dispatchEnd()
-	{
+	function _dispatchEnd() {
 		try {
 			onEndRequest.dispatch(this);
 		} 
@@ -263,8 +267,7 @@ class HttpApplication
 		If logging hasn't happened, do that so the error is logged.
 		Then either hit up the "onApplicationError" event, or if nothing is listening, simply throw the error.
 	**/
-	function _dispatchError(e : Dynamic)
-	{
+	function _dispatchError(e : Dynamic) {
 		if(!_logDispatched) {
 			_dispatchChain([onLogRequest, onPostLogRequest], _dispatchError.bind(e));
 			return;
