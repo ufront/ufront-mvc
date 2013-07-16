@@ -10,8 +10,8 @@ import ufront.web.result.*;
 import ufront.web.context.*;
 
 /**
-	Gets an IHttpHandler from the routing and executes it in the HttpApplication context.
-	Uses ufront.web.UfrontDispatch to match the URL to a controller action and it's parameters.
+	Uses `ufront.web.Dispatch` to match the URL to a controller action and it's parameters.
+
 	@author Jason O'Neil
 **/
 class DispatchModule implements IHttpModule
@@ -39,7 +39,7 @@ class DispatchModule implements IHttpModule
 
 	/** Initializes a module and prepares it to handle requests. */
 	public function init( application:HttpApplication ) : Void {
-		// TODO: make this async again... may require some cleverness in the controllers?
+		// TODO: make both of these async... may require some cleverness in the controllers?
 		application.onDispatchHandler.add( executeDispatch );
 		application.onRequestResultExecute.add( executeDispatch );
 	}
