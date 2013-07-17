@@ -44,8 +44,8 @@ class HttpResponse
 	public var redirectLocation(get, set) : String;
 	public var charset : String;
 	public var status : Int;
+	public var actionContext : ActionContext;
 	public var actionResult : ActionResult;
-	public var actionResultContext : ActionResultContext;
 
 	var _buff : StringBuf;
 	var _headers : HashList<String>;

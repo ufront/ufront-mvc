@@ -63,29 +63,45 @@ class Dispatch extends haxe.web.Dispatch
 	/** 
 		The controller / API object that was used.
 
-		After a successful `runtimeReturnDispatch`, it will contain the object that the dispatch
-		executed on.  This may be the object passed to Dispatch, or it may be another object, that
+		After a successful `processDispatchRequest`, it will contain the object (controller) to be used
+		for dispatching.  This may be the object passed to Dispatch, or it may be another object, that
 		was used as a sub-dispatch.
 
 		This can be useful to get Controller Information while processing an ActionResult, for example,
 		while trying to find the appropriate View to use for a controller.
 
-		Before a successful `runtimeReturnDispatch`, it will be null.
+		Before a successful `processDispatchRequest`, it will be null.
+
+		This value can be changed, and will affect `executeDispatchRequest()`, do so at your peril.
 	**/
-	public var controller(default,null):Null<{}>;
+	public var controller:Null<{}>;
 	
 	/** 
-		The name of the action that Dispatch executed.
+		The name of the selected action to be used in the dispatch.
 
-		After a successful `runtimeReturnDispatch`, it will contain the name of the action that
-		dispatch executed.  eg. `doSomething` if `doSomething()` was called.
+		After a successful `processDispatchRequest`, it will contain the name of the action that
+		dispatch has chosen to execute.  eg. `doSomething` if `doSomething()` was called.
 
 		This can be useful to get Action Information while processing an ActionResult, for example,
 		while trying to find the appropriate View to use for an action.
 
-		Before a successful `runtimeReturnDispatch`, it will be null.
+		Before a successful `processDispatchRequest`, it will be null.
+
+		This value can be changed, and will affect `executeDispatchRequest()`, do so at your peril.
 	**/
-	public var action(default,null):Null<String>;
+	public var action:Null<String>;
+	
+	/** 
+		The arguments created based on the request.
+
+		After a successful `processDispatchRequest`, it will contain an array of the arguments sent to
+		the given action.
+
+		Before a successful `processDispatchRequest`, it will be null.
+
+		This value can be changed, and will affect `executeDispatchRequest()`, do so at your peril.
+	**/
+	public var arguments:Null<Array<Dynamic>>;
 
 	/**
 		Construct a new Dispatch object, for the given URL, 
@@ -96,16 +112,18 @@ class Dispatch extends haxe.web.Dispatch
 		this.method = (httpContext != null) ? httpContext.request.httpMethod.toLowerCase() : null;
 		this.controller = null;
 		this.action = null;
+		this.arguments = null;
 	}
 
 	/**
 		Same as `haxe.web.Dispatch`, except it uses the ufront version of `makeConfig()`, and will call
-		`runtimeReturnDispatch()`, not `runtimeDispatch()`, meaning that this will return a value.
+		`processDispatchRequest()`, not `runtimeDispatch()`, meaning that this will return a value.
 	**/
 	public macro function returnDispatch( ethis : Expr, obj : ExprOf<{}> ) : ExprOf<Dynamic> {
 		var p = Context.currentPos();
 		var cfg = makeConfig(obj);
-		return { expr : ECall({ expr : EField(ethis, "runtimeReturnDispatch"), pos : p }, [cfg]), pos : p };
+		return { expr : ECall({ expr : EField(ethis, "processDispatchRequest"), pos : p }, [cfg]), pos : p };
+		return macro $ethis.processDispatchRequest($cfg).executeDispatchRequest();
 	}
 
 	/**
@@ -133,20 +151,26 @@ class Dispatch extends haxe.web.Dispatch
 	}
 
 	/**
-		A variation on `runtimeDispatch` that returns a value from the dispatched method.
-	
+		Process the request and find the controller, action and arguments to be used.
+		
+		The logic in processing the request is slightly different to `haxe.web.Dispatch`
+
 		Full list of differences:
 
 		* We call resolveNames(), and match against multiple names, so that we can find 
 		  `post_doSubmit()` etc
-		* We also force lower-case the method name, making Dispatch case insensitive.
-		* When a successful match is found, we populate the "controller" and "action" properties
-		  of the Dispatch object.
-		* We return the function result.  `runtimeDispatch` is still available, and acts as a 
-		  proxy to this, but does not return a result.
+		* We also make the method name lower-case, making Dispatch case insensitive.
+		* When a successful match is found, we populate the "controller" and "action" and 
+		  "argument" properties of the Dispatch object.
+		
+		This function does not execute the result, it merely populates `controller`, `action`
+		and `argument` properties.  Use `executeDispatchRequest` to then execute this request.
+
+		Returns `this`, so that chaining is enabled:
+
+		`new haxe.web.Dispatch(...).processDispatchRequest(...).executeDispatchResult`
 	**/
-	@:access(haxe.web.Dispatch)
-	public function runtimeReturnDispatch( cfg : DispatchConfig ):Dynamic {
+	public function processDispatchRequest( cfg : DispatchConfig ):Void {
 		name = parts.shift();
 		if( name == null )
 			name = "doDefault";
@@ -171,23 +195,41 @@ class Dispatch extends haxe.web.Dispatch
 		if( parts.length > 0 && !subDispatch ) {
 			if( parts.length == 1 && parts[parts.length - 1] == "" ) parts.pop() else throw DETooManyValues;
 		}
+		this.controller = cfg.obj;
+		this.action = name;
+		this.arguments = args;
+	}
+
+	/**
+		Will execute the action, controller and arguments specified by `processDispatchRequest`
+
+		The result of the action will be returned.
+
+		If `processDispatchRequest`has not been run, `DispatchError.DEMissing` will be thrown.
+
+		If `Redirect` is thrown, `processDispatchRequest` and `executeDispatchRequest` will be run again, executing the redirect.
+	**/
+	public function executeDispatchRequest():Dynamic {
+		if ( controller==null || action==null || arguments==null )
+			throw DEMissing;
+		
 		try {
-			this.controller = cfg.obj;
-			this.action = name;
-			var actionMethod = Reflect.field(cfg.obj, name);
-			return Reflect.callMethod(cfg.obj, actionMethod, args);
+			var actionMethod = Reflect.field(controller, action);
+			return Reflect.callMethod(controller, actionMethod, arguments);
 		} catch( e : Redirect ) {
-			return runtimeReturnDispatch(cfg);
+			processDispatchRequest( cfg );
+			return executeDispatchRequest();
 		}
 	}
 
 	/**
-		This simple calls `runtimeReturnDispatch`, but does not return the result.  
+		This simple calls `processDispatchRequest`,followed by `executeDispatchRequest`
 
-		They remain as separate methods as they have different return types.  Their implementation is identical.
+		So the functionality is similar to the `runtimeDispatch` in `haxe.web.Dispatch`, except ufront's processing rules our used.
 	**/
 	override public function runtimeDispatch( cfg : DispatchConfig ) {
-		runtimeReturnDispatch( cfg );
+		processDispatchRequest( cfg );
+		executeDispatchRequest();
 	}
 
 	/**
@@ -195,15 +237,15 @@ class Dispatch extends haxe.web.Dispatch
 		A macro similar to `haxe.web.Dispatch.run()`, with the following differences:
 
 		* We create a new `ufront.web.Dispatch` instead of `haxe.web.Dispatch` instance.
-		* We call `runtimeReturnDispatch` and return a `Dynamic` result.
+		* We call `processDispatchRequest` followed by `executeDispatchRequest`, returning the result of the action called.
 		* We allow you to optionally specify a HttpContext to be passed to the `Dispatch` instance.
 	**/
 	public static macro function run( url : ExprOf<String>, params : ExprOf<haxe.ds.StringMap<String>>, obj : ExprOf<{}>, ?httpContext : ExprOf<HttpContext> ) : ExprOf<Dynamic> {
 		var p = Context.currentPos();
 		var cfg = makeConfig(obj);
 		var args = [url,params];
-		if (method != null) { args.push(method); }
-		return macro new ufront.web.Dispatch(${args}).runtimeReturnDispatch($cfg);
+		if (httpContext != null) { args.push(httpContext); }
+		return macro new ufront.web.Dispatch(${args}).processDispatchRequest($cfg).executeDispatchResult();
 	}
 
 	/**

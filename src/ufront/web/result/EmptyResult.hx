@@ -1,6 +1,6 @@
 package ufront.web.result;
 
-import ufront.web.context.ActionResultContext;
+import ufront.web.context.ActionContext;
 
 /**
  * Represents a result that does nothing, such as a controller action method that returns nothing.
@@ -11,7 +11,7 @@ class EmptyResult extends ActionResult
 {
 	public function new(){}
 	
-	override public function executeResult( actionContext:ActionResultContext ) {
+	override public function executeResult( actionContext:ActionContext ) {
 
 	}
 }

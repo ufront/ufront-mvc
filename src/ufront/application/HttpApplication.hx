@@ -43,24 +43,34 @@ class HttpApplication
 	public var onPostResolveRequestCache(default, null) : AsyncDispatcher<HttpApplication>;
 
 	/**
-	 * Occurs just before a request is to be dispatched.
+	 * Occurs as a request is to be dispatched, deciding on which action to execute.
 	 */
-	public var onDispatchHandler(default, null) : AsyncDispatcher<HttpApplication>;
+	public var onDispatch(default, null) : AsyncDispatcher<HttpApplication>;
 
 	/**
-	 * Occurs after a dispatch has (and it's associated action) has been completed
+	 * Occurs after the controller, action and arguments have been decided by the dispatcher.
 	 */
-	public var onPostDispatchHandler(default, null) : AsyncDispatcher<HttpApplication>;
+	public var onPostDispatch(default, null) : AsyncDispatcher<HttpApplication>;
 
 	/**
-	 * Occurs just before executing an event handler (for example, a page or an XML Web service).
+	 * Occurs just before a request's action is to be executed.
 	 */
-	public var onRequestResultExecute(default, null) : AsyncDispatcher<HttpApplication>;
+	public var onActionExecute(default, null) : AsyncDispatcher<HttpApplication>;
 
 	/**
-	 * Occurs when the event handler (for example, a page or an XML Web service) finishes execution.
+	 * Occurs just after a request's action has been executed and it's result is available
 	 */
-	public var onPostRequestResultExecute(default, null) : AsyncDispatcher<HttpApplication>;
+	public var onPostActionExecute(default, null) : AsyncDispatcher<HttpApplication>;
+
+	/**
+	 * Occurs when executing the `ActionResult` from the request's action
+	 */
+	public var onResultExecute(default, null) : AsyncDispatcher<HttpApplication>;
+
+	/**
+	 * Occurs just after executing the `ActionResult` from the request's action
+	 */
+	public var onPostResultExecute(default, null) : AsyncDispatcher<HttpApplication>;
 
 	/**
 	 * Occurs when an event handler finishes execution in order to let caching modules store responses that will
@@ -104,11 +114,14 @@ class HttpApplication
 		onResolveRequestCache = new AsyncDispatcher();
 		onPostResolveRequestCache = new AsyncDispatcher();
 
-		onDispatchHandler = new AsyncDispatcher();
-		onPostDispatchHandler = new AsyncDispatcher();
+		onDispatch = new AsyncDispatcher();
+		onPostDispatch = new AsyncDispatcher();
 
-		onRequestResultExecute = new AsyncDispatcher();
-		onPostRequestResultExecute = new AsyncDispatcher();
+		onActionExecute = new AsyncDispatcher();
+		onPostActionExecute = new AsyncDispatcher();
+
+		onResultExecute = new AsyncDispatcher();
+		onPostResultExecute = new AsyncDispatcher();
 
 		onUpdateRequestCache = new AsyncDispatcher();
 		onPostUpdateRequestCache = new AsyncDispatcher();
@@ -154,10 +167,12 @@ class HttpApplication
 		- onBeginRequest
 		- onResolveRequestCache
 		- onPostResolveRequestCache
-		- onDispatchHandler
-		- onPostDispatchHandler
-		- onRequestResultExecute
-		- onPostRequestResultExecute
+		- onDispatch
+		- onPostDispatch
+		- onActionExecute
+		- onPostActionExecute
+		- onResultExecute
+		- onPostResultExecute
 		- onUpdateRequestCache
 		- onPostUpdateRequestCache
 		- onLogRequest
@@ -179,10 +194,12 @@ class HttpApplication
 			onBeginRequest,
 			onResolveRequestCache,
 			onPostResolveRequestCache,
-			onDispatchHandler,
-			onPostDispatchHandler,
-			onRequestResultExecute,
-			onPostRequestResultExecute,
+			onDispatch,
+			onPostDispatch,
+			onResultExecute,
+			onPostResultExecute,
+			onActionExecute,
+			onPostActionExecute,
 			onUpdateRequestCache,
 			onPostUpdateRequestCache,
 			onLogRequest,

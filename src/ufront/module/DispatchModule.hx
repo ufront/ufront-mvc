@@ -16,8 +16,11 @@ import ufront.web.context.*;
 **/
 class DispatchModule implements IHttpModule
 {
-	/** Gets the collection of defined routes for the Ufront application. */
+	/** The Object (API, Routes or Controller) that Dispatch will check requests against. */
 	public var dispatchConfig(default, null) : DispatchConfig;
+	
+	/** The Dispatch object used **/
+	var dispatch:Dispatch;
 
 	/** 
 		Construct using a dispatchConfig 
@@ -40,19 +43,20 @@ class DispatchModule implements IHttpModule
 	/** Initializes a module and prepares it to handle requests. */
 	public function init( application:HttpApplication ) : Void {
 		// TODO: make both of these async... may require some cleverness in the controllers?
-		application.onDispatchHandler.add( executeDispatch );
-		application.onRequestResultExecute.add( executeDispatch );
+		application.onDispatch.add( executeDispatchHandler );
+		application.onActionExecute.add( executeActionHandler );
+		application.onResultExecute.add( executeResultHandler );
 	}
 
 	// function executeDispatch(application : HttpApplication, async : hxevents.Async)
-	function executeDispatch( application:HttpApplication ) {
+	function executeDispatchHandler( application:HttpApplication ) {
 		var httpContext = application.httpContext;
 		try {
 			var filteredUri = httpContext.getRequestUri();
 			var params = httpContext.request.params.toStringMap();
-			var d = new Dispatch( filteredUri, params, httpContext );
-			httpContext.response.actionResult = createActionResult( d.runtimeReturnDispatch(dispatchConfig) );
-			httpContext.response.actionResultContext = new ActionResultContext( httpContext, d.controller, d.action );
+			dispatch = new Dispatch( filteredUri, params, httpContext );
+			dispatch.processDispatchRequest( dispatchConfig );
+			httpContext.response.actionContext = new ActionContext( httpContext, dispatch.controller, dispatch.action, dispatch.arguments );
 		} 
 		catch ( e : DispatchError ) {
 			switch ( e ) {
@@ -65,10 +69,30 @@ class DispatchModule implements IHttpModule
 		}
 	}
 
-	function onRequestResultHandler( application:HttpApplication ) {
-		var actionResult = application.httpContext.response.actionResult;
-		var actionResultContext = application.httpContext.response.actionResultContext;
-		actionResult.executeResult( actionResultContext );
+	function executeActionHandler( application:HttpApplication ) {
+		// Get the contexts
+		var httpContext = application.httpContext;
+		var actionContext = httpContext.response.actionContext;
+
+		// Update the Dispatch details (in case a module/middleware changed them)
+		dispatch.controller = actionContext.controller;
+		dispatch.action = actionContext.action;
+		dispatch.arguments = actionContext.args;
+
+		// Execute the result
+		try {
+			var result = dispatch.executeDispatchRequest();
+			httpContext.response.actionResult = createActionResult( result );
+		} 
+		catch ( e : DispatchError ) {
+			// Will be thrown happen if this function is called before dispatch.processDispatchRequest has run
+			throw new BadRequestError();
+		}
+	}
+
+	function executeResultHandler( application:HttpApplication ) {
+		var response = application.httpContext.response;
+		response.actionResult.executeResult( response.actionContext );
 	}
 
 	function createActionResult(returnValue : Dynamic) : ActionResult {

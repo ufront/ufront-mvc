@@ -1,7 +1,7 @@
 package ufront.web.result;
 
 import thx.error.NullArgument;
-import ufront.web.context.ActionResultContext;
+import ufront.web.context.ActionContext;
 
 /** Represents a user-defined content type that is the result of an action method. */
 class ContentResult extends ActionResult
@@ -15,7 +15,7 @@ class ContentResult extends ActionResult
 		this.contentType = contentType;
 	}
 
-	override public function executeResult( actionContext:ActionResultContext ) {
+	override public function executeResult( actionContext:ActionContext ) {
 		NullArgument.throwIfNull(actionContext);
 
 		if(null != contentType)

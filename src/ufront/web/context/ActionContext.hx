@@ -6,23 +6,25 @@ import thx.error.NullArgument;
 /**
 	A context describing the result returned by an action.
 
-	Mostly httpContext and it's children, and then also the controller and the action called.
+	Contains the `HttpContext`, it's children, the controller, action and arguments used.
 **/
-class ActionResultContext
+class ActionContext
 {
 	public var httpContext(default, null) : HttpContext;
-	public var controller(default, null) : {};
-	public var action(default, null) : String;
+	public var controller : Null<{}>;
+	public var action : Null<String>;
+	public var args : Null<Array<Dynamic>>;
 
 	public var request(get, null) : HttpRequest;
 	public var response(get, null) : HttpResponse;
 	public var session(get, null) : IHttpSessionState;
 
-	public function new( httpContext:HttpContext, controller:{}, action:String ) {
+	public function new( httpContext:HttpContext, ?controller:{}, ?action:String, ?args:Array<Dynamic> ) {
 		NullArgument.throwIfNull( httpContext );
 		this.httpContext = httpContext;
 		this.controller = controller;
 		this.action = action;
+		this.args = args;
 	}
 	
 	/**

@@ -3,11 +3,11 @@ package ufront.web.context;
 import massive.munit.util.Timer;
 import massive.munit.Assert;
 import massive.munit.async.AsyncFactory;
-import ufront.web.context.ActionResultContext;
+import ufront.web.context.ActionContext;
 
-class ActionResultContextTest 
+class ActionContextTest 
 {
-	var instance:ActionResultContext; 
+	var instance:ActionContext; 
 	
 	public function new() 
 	{
