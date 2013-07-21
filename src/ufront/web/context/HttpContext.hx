@@ -52,10 +52,10 @@ class HttpContext
 		this.auth = auth;
 	}
 
-	public var request(get, null):HttpRequest;
-	public var response(get, null):HttpResponse;
-	public var session(get, null):Null<IHttpSessionState>;
-	public var auth(get, null):Null<IAuthHandler<IAuthUser>>;
+	public var request(default, null):HttpRequest;
+	public var response(default, null):HttpResponse;
+	public var session(default, null):Null<IHttpSessionState>;
+	public var auth(default, null):Null<IAuthHandler<IAuthUser>>;
 
 	var _requestUri:String;
 	/**
@@ -121,9 +121,4 @@ class HttpContext
 	{
 		session.dispose();
 	}
-	
-	function get_request() return request;
-	function get_response() return response;
-	function get_session() return session;
-	function get_auth() return auth;
 }
