@@ -11,6 +11,7 @@ import hxevents.AsyncDispatcher;
 import hxevents.Dispatcher;
 import ufront.web.context.*;
 import ufront.web.session.IHttpSessionState;
+import ufront.auth.*;
 
 class HttpApplication
 {
@@ -18,6 +19,7 @@ class HttpApplication
 	public var request(get, null) : HttpRequest;
 	public var response(get, null) : HttpResponse;
 	public var session(get, null) : IHttpSessionState;
+	public var auth(get, null) : IAuthHandler<IAuthUser>;
 	public var modules(default, null) : List<IHttpModule>;
 
 	var _completed : Bool;
@@ -196,10 +198,10 @@ class HttpApplication
 			onPostResolveRequestCache,
 			onDispatch,
 			onPostDispatch,
-			onResultExecute,
-			onPostResultExecute,
 			onActionExecute,
 			onPostActionExecute,
+			onResultExecute,
+			onPostResultExecute,
 			onUpdateRequestCache,
 			onPostUpdateRequestCache,
 			onLogRequest,
@@ -255,29 +257,18 @@ class HttpApplication
 		Catch errors.  After finished, run `afterEffect()`
 	**/
 	function _dispatchChain(dispatchers : Array<AsyncDispatcher<HttpApplication>>, afterEffect : Void -> Void) {
-		#if php
-			// PHP has issues with long chains of methods
-			for(dispatcher in dispatchers) {
-				if(_completed)
-					break;
+		// PHP has issues with long chains of methods
+		for(dispatcher in dispatchers) {
+			if(_completed) break;
+			try {
 				dispatcher.dispatch(this, null, _dispatchError);
 			}
-			if(null != afterEffect)
-				afterEffect();
-		#else
-				var self = this;
-				var next = null;
-				next = function() {
-					var dispatcher = dispatchers.shift();
-					if(self._completed || null == dispatcher) {
-						if(null != afterEffect)
-							afterEffect();
-						return;
-					}
-					dispatcher.dispatch(self, next, self._dispatchError);
-				}
-				next();
-		#end
+			catch (e:Dynamic) {
+				_dispatchError(e);
+				return;
+			}
+		}
+		if(null != afterEffect) afterEffect();
 	}
 
 	/**
@@ -307,8 +298,7 @@ class HttpApplication
 		Close each module and the context
 	**/
 	function _dispose() {
-		for (module in modules)
-			module.dispose();
+		for (module in modules) module.dispose();
 		httpContext.dispose();
 	}
 
@@ -322,4 +312,5 @@ class HttpApplication
 	function get_request() return httpContext.request;
 	function get_response() return httpContext.response;
 	function get_session() return httpContext.session;
+	function get_auth() return httpContext.auth;
 }
