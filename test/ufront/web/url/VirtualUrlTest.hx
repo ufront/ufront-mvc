@@ -37,6 +37,6 @@ class VirtualUrlTest
 	@Test
 	public function testExample():Void
 	{
-		Assert.isTrue(false);
+		Assert.fail("Tests not implemented yet");
 	}
 }

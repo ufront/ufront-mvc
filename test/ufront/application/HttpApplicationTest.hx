@@ -167,7 +167,7 @@ class HttpApplicationTest
 		// With no listener, it should throw an error
 		try {
 			instance.execute();
-			Assert.isTrue( false );
+			Assert.fail( "Exception was not thrown" );
 		}
 		catch ( e:Dynamic ) {
 			Assert.isType( e, Error );
