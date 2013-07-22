@@ -100,7 +100,6 @@ class HttpApplicationTest
 		Assert.isType( instance.onApplicationError, AsyncDispatcher );
 
 		// Test context objects are there and available
-
 		Assert.areEqual( context, instance.httpContext );
 		Assert.areEqual( context.request, instance.httpContext.request );
 		Assert.areEqual( context.response, instance.httpContext.response );
@@ -108,7 +107,6 @@ class HttpApplicationTest
 		Assert.areEqual( context.auth, instance.httpContext.auth );
 
 		// Test onPostLogRequest has at least one event handler
-
 		Assert.isTrue( instance.onPostLogRequest.has() );
 	}
 
@@ -121,24 +119,12 @@ class HttpApplicationTest
 		Assert.areEqual( 2, instance.modules.length );
 	}
 
-	/**
-	execute():
-
-	 - modules init
-	 - events fire in correct order
-	 - conclude
-		 - flush
-		 - onEndRequest
-		 - moduleDispose
-		 - contextDispose
-	**/
 	@Test
 	public function testExecute():Void
 	{
 		addModules();
 		addEvents();
 		instance.execute();
-
 		// Test the modules have been initiated
 		Assert.areEqual( 2, modulesInitiated.length );
 		Assert.areEqual( "Module1,Module2", modulesInitiated.join(",") );
@@ -184,7 +170,8 @@ class HttpApplicationTest
 			Assert.isTrue( false );
 		}
 		catch ( e:Dynamic ) {
-			Assert.isTrue( true );
+			Assert.isType( e, Error );
+			Assert.areEqual( "ouch", e.toString() );
 		}
 
 		// Test the events fired, stopped when error thrown, and then finished
@@ -202,7 +189,11 @@ class HttpApplicationTest
 		addEvents();
 		instance.onResolveRequestCache.add( function(app) throw "ouch" );
 		instance.onApplicationError.add( 
-			function(event:{ error:thx.error.Error, application:HttpApplication }) eventsFired.push("onApplicationError")
+			function(event:{ error:Error, application:HttpApplication }) {
+				eventsFired.push("onApplicationError");
+				Assert.isType( event.error, Error );
+				Assert.areEqual( "ouch", event.error.toString() );
+			}
 		);
 		instance.execute();
 
@@ -218,12 +209,6 @@ class HttpApplicationTest
 		// 
 	}
 
-	/**
-	completeRequest() when completed:
-
-	 - same as execute, but only some events fire
-	 - conclude still runs...
-	**/
 	@Test
 	public function testCompleteRequest():Void
 	{
