@@ -11,6 +11,7 @@ class UfrontConfiguration
 	/** 
 		Is mod_rewrite or similar being used?  
 		If not, query strings will be filtered out of the URLs 
+		Default = false;
 	**/
 	public var urlRewrite(default, null) : Bool;
 	
@@ -36,10 +37,17 @@ class UfrontConfiguration
 
 	/**
 		Construct a new UfrontConfiguration option with the specified values or defaults.
+
+		Defaults:
+
+		- `urlRewrite = false`
+		- `basePath = "/"`
+		- `logFile = null`
+		- `disableBrowserTrace = false`
 	**/
-	public function new(?urlRewrite : Bool, ?basePath = "/", ?logFile : String, ?disableBrowserTrace = false)
+	public function new(?urlRewrite = false, ?basePath = "/", ?logFile : String, ?disableBrowserTrace = false)
 	{
-		this.urlRewrite = urlRewrite == null ? false : urlRewrite;
+		this.urlRewrite = urlRewrite;
 		this.basePath = basePath;
 		this.logFile = logFile;
 		this.disableBrowserTrace = disableBrowserTrace;
