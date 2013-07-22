@@ -45,7 +45,7 @@ class UfrontApplication extends HttpApplication
 		```
 	**/
 	public function new( dispatchConfig:DispatchConfig, ?configuration:UfrontConfiguration ) {
-		this.configuration = (configuration!=null) ? configuration : new UfrontConfiguration();
+		if (configuration==null) configuration = new UfrontConfiguration();
 
 		super();
 
@@ -58,6 +58,15 @@ class UfrontApplication extends HttpApplication
 			modules.add( new TraceToBrowserModule() );
 		if ( null!=configuration.logFile ) 
 			modules.add( new TraceToFileModule(configuration.logFile) );
+		
+		// Add URL filter for basePath, if it is not "/"
+		var path = Strings.trim( configuration.basePath, "/" );
+		if ( path.length>0 )
+			super.addUrlFilter( new DirectoryUrlFilter(path) );
+
+		// Unless mod_rewrite is used, filter out index.php/index.n from the urls.
+		if ( configuration.urlRewrite!=true )
+			super.addUrlFilter( new PathInfoUrlFilter() );
 
 		// Set up custom trace.  Will trace all ITraceModules found, or use the default as a fallback
 		var old = haxe.Log.trace;
@@ -78,16 +87,8 @@ class UfrontApplication extends HttpApplication
 	override public function execute( ?httpContext:HttpContext ) {
 		
 		// Set up HttpContext for the request
-		if ( httpContext==null ) httpContext = HttpContext.createWebContext();
-		
-		// Add URL filter for basePath, if it is not "/"
-		var path = Strings.trim( configuration.basePath, "/" );
-		if ( path.length>0 )
-			httpContext.addUrlFilter( new DirectoryUrlFilter(path) );
-
-		// Unless mod_rewrite is used, filter out index.php/index.n from the urls.
-		if ( configuration.urlRewrite!=true )
-			httpContext.addUrlFilter( new PathInfoUrlFilter() );
+		if ( httpContext==null ) httpContext = HttpContext.createWebContext( urlFilters );
+		else httpContext.setUrlFilters( urlFilters );
 
 		// execute
 		super.execute( httpContext );

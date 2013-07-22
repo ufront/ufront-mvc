@@ -57,13 +57,13 @@ class UfrontMocker
 
 		// Mock the HttpContext
 		var ctx = HttpContext.mock();
-		ctx.getRequestUri().callsRealMethod();
 		ctx.request.returns(request);
 		ctx.response.returns(response);
 		ctx.session.returns(session);
 		ctx.auth.returns(auth);
-		ctx.addUrlFilter(cast anyObject).callsRealMethod();
+		ctx.getRequestUri().callsRealMethod();
 		ctx.generateUri(cast anyString).callsRealMethod();
+		ctx.setUrlFilters(cast anyObject).callsRealMethod();
 		return ctx;
 	}
 }

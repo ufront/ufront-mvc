@@ -1,11 +1,12 @@
 package ufront.application;
 
 import massive.munit.Assert;
-import thx.error.Error;
+import thx.error.*;
 import ufront.application.HttpApplication;
 import hxevents.AsyncDispatcher;
 import hxevents.Dispatcher;
 import ufront.module.IHttpModule;
+import ufront.web.url.filter.IUrlFilter;
 import ufront.web.context.*;
 using ufront.mock.UfrontMocker;
 using mockatoo.Mockatoo;
@@ -211,19 +212,6 @@ class HttpApplicationTest
 		Assert.areEqual( "onEndRequest", eventsFired[2] );
 	}
 
-	var modulesInitiated:Array<String>;
-	var modulesDisposed:Array<String>;
-	var eventsFired:Array<String>;
-	
-	// add modules to the current instance
-	function addModules()
-	{
-		var module1 = new TestModule(modulesInitiated,modulesDisposed,"Module1");
-		var module2 = new TestModule(modulesInitiated,modulesDisposed,"Module2");
-		instance.addModule( module1 );
-		instance.addModule( module2 );
-	}
-
 	@Test
 	public function testInitModulesAndDispose():Void
 	{
@@ -240,6 +228,36 @@ class HttpApplicationTest
 		// Test the modules were disposed
 		Assert.areEqual( 2, modulesDisposed.length );
 		Assert.areEqual( "Module1,Module2", modulesDisposed.join(",") );
+	}
+
+	@Test
+	public function testUrlFilters():Void
+	{
+		instance.addUrlFilter( IUrlFilter.mock() );
+		instance.addUrlFilter( IUrlFilter.mock() );
+		try {
+			instance.addUrlFilter( null );
+			Assert.fail( "Did not throw error when adding Null UrlFilter" );
+		} catch (e:NullArgument) {}
+
+		Assert.areEqual( 2, instance.urlFilters.length );
+		
+		instance.clearUrlFilters();
+
+		Assert.areEqual( 0, instance.urlFilters.length );
+	}
+
+	var modulesInitiated:Array<String>;
+	var modulesDisposed:Array<String>;
+	var eventsFired:Array<String>;
+	
+	// add modules to the current instance
+	function addModules()
+	{
+		var module1 = new TestModule(modulesInitiated,modulesDisposed,"Module1");
+		var module2 = new TestModule(modulesInitiated,modulesDisposed,"Module2");
+		instance.addModule( module1 );
+		instance.addModule( module2 );
 	}
 	
 	// add modules to the current instance

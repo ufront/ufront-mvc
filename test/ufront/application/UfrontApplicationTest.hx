@@ -184,13 +184,11 @@ class UfrontApplicationTest
 		return instance.modules.exists( function (module) return Std.is(module,type) );
 	}
 
-	@:access( ufront.web.context.HttpContext )
 	function checkUrlFilterExists( type:Class<IUrlFilter> ) {
-		return context._urlFilters.exists( function (filter) return Std.is(filter,type) );
+		return instance.urlFilters.exists( function (filter) return Std.is(filter,type) );
 	}
 
-	@:access( ufront.web.context.HttpContext )
-	function getNumUrlFilters() return context._urlFilters.length;
+	function getNumUrlFilters() return instance.urlFilters.length;
 }
 
 private class TestController

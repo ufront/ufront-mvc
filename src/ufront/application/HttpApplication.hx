@@ -1,12 +1,13 @@
 package ufront.application;
 
 import ufront.module.IHttpModule;
-import thx.error.Error;
+import ufront.web.url.filter.IUrlFilter;
 import hxevents.AsyncDispatcher;
 import hxevents.Dispatcher;
-import ufront.web.context.*;
 import ufront.web.session.IHttpSessionState;
+import ufront.web.context.*;
 import ufront.auth.*;
+import thx.error.*;
 
 /**
 	The base class for a HTTP Application
@@ -25,7 +26,20 @@ import ufront.auth.*;
 **/
 class HttpApplication
 {
+	/** 
+		Modules to be used in the application.  
+		They will be initialized when `initModules()` is called, or when `execute()` is called.
+		After they are initialised, modifying this list will have no effect.
+	**/
 	public var modules(default,null):List<IHttpModule>;
+
+	/**
+		UrlFilters for the current application.  
+		These will be used in the HttpContext for `getRequestUri` and `generateUri`.  
+		See `addUrlFilter()` and `clearUrlFilters()` below.  
+		Modifying this list will take effect at the beginning of the next `execute()` request.
+	**/
+	public var urlFilters(default,null):Array<IUrlFilter>;
 
 	///// Events /////
 
@@ -147,6 +161,7 @@ class HttpApplication
 		onApplicationError = new AsyncDispatcher();
 
 		modules = new List();
+		urlFilters = [];
 	}
 
 	@:access(ufront.web.context.HttpContext)
@@ -194,8 +209,9 @@ class HttpApplication
 	**/
 	public function execute( ?httpContext:HttpContext ) {
 		
-		// Set up HttpContext for the request
-		if (httpContext == null) httpContext = HttpContext.createWebContext();
+		// Set up HttpContext for the request, and the URL filters
+		if (httpContext == null) httpContext = HttpContext.createWebContext( urlFilters );
+		else httpContext.setUrlFilters( urlFilters );
 
 		// Check modules are initialized
 		initModules();
@@ -319,9 +335,41 @@ class HttpApplication
 	}
 
 	/**
-		Dispose of each module used in the application.
+		Add a URL filter to be used in the HttpContext for `getRequestUri` and `generateUri`
+	**/
+	public function addUrlFilter( filter:IUrlFilter ) {
+		NullArgument.throwIfNull( filter );
+		urlFilters.push( filter );
+	}
+
+	/**
+		Remove existing URL filters
+	**/
+	public function clearUrlFilters() {
+		urlFilters = [];
+	}
+
+	/**
+		Dispose of the HttpApplication (and dependant modules etc)
 	**/
 	public function dispose() {
 		for ( module in modules ) module.dispose();
+		onBeginRequest = null;
+		onResolveRequestCache = null;
+		onPostResolveRequestCache = null;
+		onDispatch = null;
+		onPostDispatch = null;
+		onActionExecute = null;
+		onPostActionExecute = null;
+		onResultExecute = null;
+		onPostResultExecute = null;
+		onUpdateRequestCache = null;
+		onPostUpdateRequestCache = null;
+		onLogRequest = null;
+		onPostLogRequest = null;
+		onEndRequest = null;
+		onApplicationError = null;
+		modules = null;
+		urlFilters = null;
 	}
 }
