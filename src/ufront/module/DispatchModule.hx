@@ -82,7 +82,7 @@ class DispatchModule implements IHttpModule
 		try {
 			var result = dispatch.executeDispatchRequest();
 			context.actionResult = createActionResult( result );
-		} 
+		}
 		catch ( e : DispatchError ) {
 			// Will be thrown happen if this function is called before dispatch.processDispatchRequest has run
 			throw new BadRequestError();
@@ -93,14 +93,14 @@ class DispatchModule implements IHttpModule
 		context.actionResult.executeResult( context.actionContext );
 	}
 
-	function createActionResult(returnValue : Dynamic) : ActionResult {
-		if (returnValue == null) {
+	function createActionResult( returnValue:Dynamic ):ActionResult {
+		if ( returnValue==null ) {
 			return new EmptyResult();
 		}
 		else {
 			var actionReturnValue = Types.as( returnValue, ActionResult );
-			if (actionReturnValue == null) {
-				actionReturnValue =  new ContentResult(Std.string(actionReturnValue), null);
+			if ( actionReturnValue==null ) {
+				actionReturnValue = new ContentResult(Std.string(returnValue), null);
 			}
 			return actionReturnValue;
 		}

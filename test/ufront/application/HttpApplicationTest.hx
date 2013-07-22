@@ -119,6 +119,7 @@ class HttpApplicationTest
 		addModules();
 		addEvents();
 		instance.execute( context );
+
 		// Test the modules have been initiated
 		Assert.areEqual( 2, modulesInitiated.length );
 		Assert.areEqual( "Module1,Module2", modulesInitiated.join(",") );
@@ -144,7 +145,7 @@ class HttpApplicationTest
 		Assert.isTrue( context.response.flush().verify() );
 
 		// Test the context was disposed
-		Assert.isTrue( context.dispose().verify() );
+		Assert.isTrue( context.session.dispose().verify() );
 	}
 
 	@Test

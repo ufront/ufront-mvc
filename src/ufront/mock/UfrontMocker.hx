@@ -3,7 +3,8 @@ package ufront.mock;
 import ufront.web.context.*;
 import ufront.web.session.IHttpSessionState;
 import ufront.auth.*;
-import thx.error.NullArgument;
+import thx.error.*;
+import thx.collection.*;
 using mockatoo.Mockatoo;
 
 /**
@@ -13,9 +14,7 @@ using mockatoo.Mockatoo;
 
 	Designed for `using ufront.mock.UfrontMocker`.  
 
-
-
-	It will also work best to add `using mockatoo.Mockatoo.*` to make the mocking functions easily accessible.
+	It will also work best to add `using mockatoo.Mockatoo` to make the mocking functions easily accessible.
 **/
 class UfrontMocker
 {
@@ -38,7 +37,7 @@ class UfrontMocker
 		* The uri is used for `request.uri` if the request is being mocked.  (If the request object is given, not mocked, the supplied Uri is ignored)
 		* `getRequestUri` calls the real method, so will process filters on `request.uri`
 		* The request, response, session and auth return either the supplied value, or are mocked
-		* `addUrlFilter` and `generateUri` call the real method.
+		* `setUrlFilters` and `generateUri` call the real methods.
 	**/
 	public static function mockHttpContext( uri:String, ?request:HttpRequest, ?response:HttpResponse, ?session:IHttpSessionState, ?auth:IAuthHandler<IAuthUser> )
 	{
@@ -47,6 +46,8 @@ class UfrontMocker
 		if ( request==null ) {
 			request = HttpRequest.mock();
 			request.uri.returns( uri );
+			request.params.returns( new CascadeHash([]) );
+			request.httpMethod.returns( "GET" );
 		}
 		if ( response==null ) {
 			response = HttpResponse.spy();
@@ -55,20 +56,8 @@ class UfrontMocker
 		if (session==null) session = IHttpSessionState.mock();
 		if (auth==null) auth = IAuthHandler.mock([IAuthUser]);
 
-		// Mock the HttpContext
-		var ctx = HttpContext.mock();
-		ctx.request.returns(request);
-		ctx.response.returns(response);
-		ctx.session.returns(session);
-		ctx.auth.returns(auth);
-		ctx.getRequestUri().callsRealMethod();
-		ctx.generateUri(cast anyString).callsRealMethod();
-		ctx.setUrlFilters(cast anyObject).callsRealMethod();
+		// Build the HttpContext with our mock objects
+		var ctx = new HttpContext( request, response, session, auth, [] );
 		return ctx;
 	}
 }
-
-/**
-	Alias of Mockatoo, included so that `using UfrontMocker` implies `using Mockatoo`
-**/
-typedef Mockatoo = mockatoo.Mockatoo;

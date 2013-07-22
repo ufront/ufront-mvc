@@ -117,7 +117,7 @@ class ErrorModule implements IHttpModule
 			$inner
 			$exceptionStack
 			$callStack
-			<p><span frown>:(</p>
+			<p><span frown>:(</span></p>
 		</details>
 	</body>
 </html>';

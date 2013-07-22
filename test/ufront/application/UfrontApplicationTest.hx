@@ -7,6 +7,7 @@ import ufront.application.UfrontApplication;
 import ufront.web.context.*;
 import ufront.web.url.filter.*;
 import ufront.module.*;
+import ufront.web.result.*;
 import ufront.web.Dispatch;
 import haxe.web.Dispatch.DispatchConfig;
 import ufront.web.UfrontConfiguration;
@@ -17,7 +18,7 @@ class UfrontApplicationTest
 {
 	var context:HttpContext; 
 	var instance:UfrontApplication; 
-	var routes:TestController; 
+	var testController:TestController; 
 	var configuration:UfrontConfiguration; 
 	var dispatchConfig:DispatchConfig; 
 	
@@ -31,8 +32,8 @@ class UfrontApplicationTest
 
 	@Before
 	public function setup():Void {
-		routes = new TestController();
-		dispatchConfig = Dispatch.make( routes );
+		testController = new TestController();
+		dispatchConfig = Dispatch.make( testController );
 		configuration = new UfrontConfiguration();
 	}
 	
@@ -46,7 +47,6 @@ class UfrontApplicationTest
 	public function testNewDefaultConfig():Void {
 
 		// Setup UfrontApplication, default config
-		context = "/".mockHttpContext();
 		instance = new UfrontApplication( dispatchConfig, configuration );
 
 		// Check the modules were initialised: 
@@ -59,15 +59,22 @@ class UfrontApplicationTest
 		Assert.areEqual( 1, getNumUrlFilters() );
 		Assert.isTrue( checkUrlFilterExists(PathInfoUrlFilter) );
 
+		context = "/index.n/somepage/".mockHttpContext();
+		instance.execute(context);
+		
+		// Check the BasePath filter is in there...
+		Assert.areEqual( "/somepage/", context.getRequestUri() );
+		Assert.areEqual( "/index.n/otherpage.html", context.generateUri("/otherpage.html") );
 	}
 	
 	@Test
 	public function testNewBasePath():Void {
 
 		// Setup UfrontApplication, but with custom base path
-		context = "/home/".mockHttpContext();
+		context = "/home/todo/index.html".mockHttpContext();
 		configuration = new UfrontConfiguration( false, "/home", null, false );
 		instance = new UfrontApplication( dispatchConfig, configuration );
+		instance.execute( context );
 
 		// Check the URL filters were initialised:
 		Assert.areEqual( 2, getNumUrlFilters() );
@@ -75,23 +82,27 @@ class UfrontApplicationTest
 		Assert.isTrue( checkUrlFilterExists(PathInfoUrlFilter) );
 		
 		// Check the BasePath filter is in there...
-		Assert.fail( "Not checking base path yet" );
-
+		Assert.areEqual( "/todo/index.html", context.getRequestUri() );
+		Assert.areEqual( "/home/index.n/index.html", context.generateUri("/index.html") );
 	}
 	
 	@Test
 	public function testNewModRewrite():Void {
 
 		// Setup UfrontApplication, but with mod rewrite enabled
-		context = "/".mockHttpContext();
+		context = "/somepage/".mockHttpContext();
 		configuration = new UfrontConfiguration( true, "/", null, false );
 		instance = new UfrontApplication( dispatchConfig, configuration );
+		instance.execute( context );
 
 		// Check the URL filters were initialised:
 		Assert.areEqual( 0, getNumUrlFilters() );
 		
 		// Check the PathInfo filter has been removed...
-		Assert.fail( "Not checking base path yet" );
+		
+		// Check the BasePath filter is in there...
+		Assert.areEqual( "/somepage/", context.getRequestUri() );
+		Assert.areEqual( "/somepage.html", context.generateUri("/somepage.html") );
 
 	}
 	
@@ -109,9 +120,6 @@ class UfrontApplicationTest
 		Assert.isTrue( checkModuleExists(ErrorModule) );
 		Assert.isTrue( checkModuleExists(TraceToBrowserModule) );
 		Assert.isTrue( checkModuleExists(TraceToFileModule) );
-
-		// Check that the module is set up correctly
-		Assert.fail("Not checking yet");
 	}
 	
 	@Test
@@ -120,7 +128,7 @@ class UfrontApplicationTest
 		haxe.Log.trace = function (msg:Dynamic,?pos:haxe.PosInfos) oldTraceCalled = true;
 
 		// Setup UfrontApplication
-		context = "/".mockHttpContext();
+		context = "/empty/".mockHttpContext();
 		configuration = new UfrontConfiguration( false, "/", null, true );
 		instance = new UfrontApplication( dispatchConfig, configuration );
 
@@ -129,40 +137,46 @@ class UfrontApplicationTest
 		Assert.isTrue( checkModuleExists(DispatchModule) );
 		Assert.isTrue( checkModuleExists(ErrorModule) );
 
+		instance.execute( context );
+
 		// Check that the old trace is restored
 		trace ("Old trace works?");
-		Assert.fail("Not checking yet");
+		Assert.isTrue( oldTraceCalled );
 	}
 	
 	@Test
-	public function testNewDispatchModule():Void {
+	public function testExecute():Void {
 
 		// Setup UfrontApplication
-		context = "/".mockHttpContext();
 		instance = new UfrontApplication( dispatchConfig, configuration );
+		instance.initModules();
+		instance.onApplicationError.clear();
 
 		// Check the modules were initialised: 
-		Assert.areEqual( 4, instance.modules.length );
+		Assert.areEqual( 3, instance.modules.length );
 		Assert.isTrue( checkModuleExists(DispatchModule) );
 		Assert.isTrue( checkModuleExists(ErrorModule) );
 		Assert.isTrue( checkModuleExists(TraceToBrowserModule) );
-		Assert.isTrue( checkModuleExists(TraceToFileModule) );
+
+		var context1 = "/".mockHttpContext();
+		instance.execute( context1 );
 
 		// Assert that a result was returned
-		Assert.areEqual( 200, context.response.status );
-		Assert.areEqual( "Home", context.response.getBuffer() );
-	}
-	
-	@Test
-	public function testNewDispatchModuleDifferentUri():Void {
+		Assert.areEqual( testController, context1.actionContext.controller );
+		Assert.areEqual( "doDefault", context1.actionContext.action );
+		Assert.isTrue( Std.is(context1.actionResult,ContentResult) );
+		Assert.areEqual( "Home", context1.response.getBuffer() );
+		Assert.areEqual( 200, context1.response.status );
 
-		// Setup UfrontApplication
-		context = "/page/".mockHttpContext();
-		instance = new UfrontApplication( dispatchConfig, configuration );
+		var context2= "/page/".mockHttpContext();
+		instance.execute( context2 );
 
 		// Assert that a result was returned
-		Assert.areEqual( 200, context.response.status );
-		Assert.areEqual( "Page", context.response.getBuffer() );
+		Assert.areEqual( testController, context2.actionContext.controller );
+		Assert.areEqual( "doPage", context2.actionContext.action );
+		Assert.isTrue( Std.is(context2.actionResult,ContentResult) );
+		Assert.areEqual( "Page", context2.response.getBuffer() );
+		Assert.areEqual( 200, context2.response.status );
 	}
 	
 	@Test
@@ -172,12 +186,30 @@ class UfrontApplicationTest
 		instance = new UfrontApplication( dispatchConfig, configuration );
 		instance.execute( context );
 
-		Assert.fail("Tests not implemented yet");
+		// Assert that a result was returned
+		Assert.areEqual( 500, context.response.status );
+		Assert.isTrue( context.response.getBuffer().indexOf("<p>some error...</p>")>-1 );
 	}
 	
 	@Test
 	public function testNewCustomTrace():Void {
-		Assert.fail("Tests not implemented yet");
+		// Setup UfrontApplication
+		var traces = [];
+		configuration = new UfrontConfiguration( false, "/", null, true );
+		instance = new UfrontApplication( dispatchConfig, configuration );
+		instance.addModule( new CustomTrace( traces ) );
+
+		// Check the modules were initialised: 
+		Assert.areEqual( 3, instance.modules.length );
+		Assert.isTrue( checkModuleExists(DispatchModule) );
+		Assert.isTrue( checkModuleExists(ErrorModule) );
+		Assert.isTrue( checkModuleExists(CustomTrace) );
+
+		context = "/traces/".mockHttpContext();
+		instance.execute( context );
+
+		// Check the custom trace ran okay...
+		Assert.areEqual( "One,Two,Three", traces.join(",") );
 	}
 
 	function checkModuleExists( type:Class<IHttpModule> ) {
@@ -203,7 +235,27 @@ private class TestController
 		return "Page";
 	}
 
-	public function doError() {
-		throw "Error";
+	public function doEmpty() {
+		return "";
 	}
+
+	public function doTraces() {
+		trace ("One");
+		trace ("Two");
+		trace ("Three");
+		return "";
+	}
+
+	public function doError() {
+		throw "some error...";
+	}
+}
+
+private class CustomTrace implements ITraceModule
+{
+	public var arr:Array<String>;
+	public function new( arr:Array<String> ) this.arr = arr;
+	public function trace(msg:Dynamic, ?pos:haxe.PosInfos):Void arr.push( Std.string(msg) );
+	public function init( application:HttpApplication ):Void {}
+	public function dispose():Void {}
 }

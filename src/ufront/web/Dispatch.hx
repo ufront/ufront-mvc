@@ -178,7 +178,6 @@ class Dispatch extends haxe.web.Dispatch
 		this.cfg = cfg;
 		var r : DispatchRule = null;
 		for ( n in names ) {
-			trace (n);
 			r = Reflect.field(cfg.rules, n);
 			if ( r != null ) { name = n; break; }
 		}

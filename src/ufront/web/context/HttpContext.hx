@@ -122,7 +122,7 @@ class HttpContext
 		Sets the URL filters.  Should only be used before the request has begun processing.
 	**/
 	public function setUrlFilters( filters ) {
-		urlFilters = filters;
+		urlFilters = (filters!= null) ? filters : [];
 		_requestUri = null;
 	}
 	
