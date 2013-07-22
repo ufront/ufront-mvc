@@ -1,8 +1,3 @@
-/**
- * ...
- * @author Franco Ponticelli
- */
-
 package ufront.application;
 
 import ufront.module.IHttpModule;
@@ -13,103 +8,118 @@ import ufront.web.context.*;
 import ufront.web.session.IHttpSessionState;
 import ufront.auth.*;
 
+/**
+	The base class for a HTTP Application
+
+	This provides the framework for setting up a web-app that either uses Http or emulates Http behaviour - receiving requests and issuing responses.
+
+	It's function is:
+
+	- Have a handful of events, one after another.  The event chain fires for each request.
+	- Have different modules that do things (eg, a module to check a cache, a module to fire a controller action, a module to log a request)
+	- Modules listen to events, and trigger their functionality at the right part of the request.
+	- Each request has a HttpContext, describing the request, the response, the current session, authorization handler and other things.
+	- Once the request is complete, or if there is an error, the HTTP response is sent to the client.
+
+	Depending on the environment, a HttpApplication may be created once per request, or the application may be persistent and have many requests.
+**/
 class HttpApplication
 {
-	public var httpContext(default, null) : HttpContext;
-	public var request(get, null) : HttpRequest;
-	public var response(get, null) : HttpResponse;
-	public var session(get, null) : IHttpSessionState;
-	public var auth(get, null) : IAuthHandler<IAuthUser>;
-	public var modules(default, null) : List<IHttpModule>;
-
-	var _completed : Bool;
+	public var modules(default,null):List<IHttpModule>;
 
 	///// Events /////
 
 	/**
-	 * The onBeginRequest event signals the creation of any given new request.
-	 * This event is always raised and is always the first event to occur during the processing of a request.
-	 */
-	public var onBeginRequest(default, null) : AsyncDispatcher<HttpApplication>;
+		The onBeginRequest event signals the creation of any given new request.
+		This event is always raised and is always the first event to occur during the processing of a request.
+	**/
+	public var onBeginRequest(default,null):AsyncDispatcher<HttpContext>;
 
 	/**
-	 * Occurs to let the caching modules serve requests from the cache, bypassing execution of the event
-	 * handler (for example, a page or an XML Web service).
-	 */
-	public var onResolveRequestCache(default, null) : AsyncDispatcher<HttpApplication>;
+		Event to trigger caching modules so we can serve requests from the cache, bypassing execution 
+		of the event the usual request actions.
+	**/
+	public var onResolveRequestCache(default,null):AsyncDispatcher<HttpContext>;
 
 	/**
-	 * Occurs when execution of the current event handler is bypassed and allows a caching module to
-	 * serve a request from the cache.
-	 */
-	public var onPostResolveRequestCache(default, null) : AsyncDispatcher<HttpApplication>;
+		Occurs after a cache requests have been checked.
+	**/
+	public var onPostResolveRequestCache(default,null):AsyncDispatcher<HttpContext>;
 
 	/**
-	 * Occurs as a request is to be dispatched, deciding on which action to execute.
-	 */
-	public var onDispatch(default, null) : AsyncDispatcher<HttpApplication>;
+		Occurs as a request is to be dispatched, deciding on which action to execute.
+	**/
+	public var onDispatch(default,null):AsyncDispatcher<HttpContext>;
 
 	/**
-	 * Occurs after the controller, action and arguments have been decided by the dispatcher.
-	 */
-	public var onPostDispatch(default, null) : AsyncDispatcher<HttpApplication>;
+		Occurs after the controller, action and arguments have been decided by the dispatcher.
+	**/
+	public var onPostDispatch(default,null):AsyncDispatcher<HttpContext>;
 
 	/**
-	 * Occurs just before a request's action is to be executed.
-	 */
-	public var onActionExecute(default, null) : AsyncDispatcher<HttpApplication>;
+		Occurs just before a request's action is to be executed.
+	**/
+	public var onActionExecute(default,null):AsyncDispatcher<HttpContext>;
 
 	/**
-	 * Occurs just after a request's action has been executed and it's result is available
-	 */
-	public var onPostActionExecute(default, null) : AsyncDispatcher<HttpApplication>;
+		Occurs just after a request's action has been executed and it's result is available
+	**/
+	public var onPostActionExecute(default,null):AsyncDispatcher<HttpContext>;
 
 	/**
-	 * Occurs when executing the `ActionResult` from the request's action
-	 */
-	public var onResultExecute(default, null) : AsyncDispatcher<HttpApplication>;
+		Occurs when executing the `ActionResult` from the request's action
+	**/
+	public var onResultExecute(default,null):AsyncDispatcher<HttpContext>;
 
 	/**
-	 * Occurs just after executing the `ActionResult` from the request's action
-	 */
-	public var onPostResultExecute(default, null) : AsyncDispatcher<HttpApplication>;
+		Occurs just after executing the `ActionResult` from the request's action
+	**/
+	public var onPostResultExecute(default,null):AsyncDispatcher<HttpContext>;
 
 	/**
-	 * Occurs when an event handler finishes execution in order to let caching modules store responses that will
-	 * be used to serve subsequent requests from the cache.
-	 */
-	public var onUpdateRequestCache(default, null) : AsyncDispatcher<HttpApplication>;
+		Occurs when an event handler finishes execution in order to let caching modules store responses that will
+		be used to serve subsequent requests from the cache.
+	**/
+	public var onUpdateRequestCache(default,null):AsyncDispatcher<HttpContext>;
 
 	/**
-	 * Occurs when caching modules are finished updating and storing responses that are used to serve subsequent
-	 * requests from the cache.
-	 */
-	public var onPostUpdateRequestCache(default, null) : AsyncDispatcher<HttpApplication>;
+		Occurs when caching modules are finished updating and storing responses that are used to serve subsequent
+		requests from the cache.
+	**/
+	public var onPostUpdateRequestCache(default,null):AsyncDispatcher<HttpContext>;
 
 	/**
-	 * Occurs just before any logging is performed for the current request.
-	 */
-	public var onLogRequest(default, null) : AsyncDispatcher<HttpApplication>;
+		Occurs just before any logging is performed for the current request.
+	**/
+	public var onLogRequest(default,null):AsyncDispatcher<HttpContext>;
 
 	/**
-	 * Occurs when all the event handlers for the LogRequest event has completed processing.
-	 */
-	public var onPostLogRequest(default, null) : AsyncDispatcher<HttpApplication>;
+		Occurs when all the event handlers for the LogRequest event has completed processing.
+	**/
+	public var onPostLogRequest(default,null):AsyncDispatcher<HttpContext>;
 
 	/**
-	 * Occurs as the last event in the HTTP pipeline chain of execution when responding to a request.
-	 */
-	public var onEndRequest(default, null) : Dispatcher<HttpApplication>;
+		Occurs as the last event in the HTTP pipeline chain of execution when responding to a request.
+	**/
+	public var onEndRequest(default,null):Dispatcher<HttpContext>;
 
 	/**
-	 * Occurs when an unhandled exception is thrown.
-	 */
-	public var onApplicationError(default, null) : AsyncDispatcher<{ application : HttpApplication, error : Error}>;
+		Occurs when an unhandled exception is thrown.
+	**/
+	public var onApplicationError(default,null):AsyncDispatcher<{ context:HttpContext, error:Error }>;
 
 	///// End Events /////
 
-	public function new(?httpContext : HttpContext) {
-		this.httpContext = (httpContext == null) ? HttpContext.createWebContext() : httpContext;
+	/**
+		Start a new HttpApplication
+
+		Depending on the platform, this may run multiple requests or it may be created per request.
+
+		The constructor will initialize each of the events, and add a single `onPostLogRequest` event handler to make sure logs are not executed twice in the event of an error.
+
+		After creating the application, you can initialize the modules and then execute requests with a given HttpContext.
+	**/
+	public function new() {
 
 		onBeginRequest = new AsyncDispatcher();
 
@@ -130,22 +140,18 @@ class HttpApplication
 
 		onLogRequest = new AsyncDispatcher();
 		onPostLogRequest = new AsyncDispatcher();
-		onPostLogRequest.add(_executedLogRequest);
+		onPostLogRequest.add( _executedLogRequest );
 
 		onEndRequest = new Dispatcher();
 
 		onApplicationError = new AsyncDispatcher();
 
 		modules = new List();
-
-		_completed = false;
 	}
 
-	var _logDispatched : Bool;
-	var _flushed : Bool;
-
-	function _executedLogRequest(_) {
-		_logDispatched = true;
+	@:access(ufront.web.context.HttpContext)
+	function _executedLogRequest( context:HttpContext ) {
+		context.logDispatched = true;
 	}
 
 	/** 
@@ -186,13 +192,17 @@ class HttpApplication
 		If at any point errors occur, the chain stops, and `onApplicationError` is triggered, followed by running `_conclude()`
 		If at any point this HttpApplication is marked as complete, the chain stops and `_conclude()` is run.
 	**/
-	public function execute() {
-		_flushed = _logDispatched = false;
-		// wire modules
-		for (module in modules)
-			_initModule(module);
+	public function execute( ?httpContext:HttpContext ) {
+		
+		// Set up HttpContext for the request
+		if (httpContext == null) httpContext = HttpContext.createWebContext();
 
-		_dispatchChain([
+		// Check modules are initialized
+		initModules();
+
+		// Begin the chain of events.  They will be executed until either a completion, an error or the end of the chain.
+		// After that _conclude() will run
+		_dispatchChain( httpContext, [
 			onBeginRequest,
 			onResolveRequestCache,
 			onPostResolveRequestCache,
@@ -206,111 +216,112 @@ class HttpApplication
 			onPostUpdateRequestCache,
 			onLogRequest,
 			onPostLogRequest
-		], _conclude);
+		], _conclude.bind(httpContext) );
 	}
 
-	/** Flush the output, fire the onEndRequest event, and close up shop **/
-	function _conclude() {
-		// flush contents
-		_flush();
-		// this event is always dispatched no matter what
-		_dispatchEnd();
-		_dispose();
+	/** Flush the output, fire the onEndRequest event, dispose of the context **/
+	function _conclude( httpContext:HttpContext ) {
+		_flush( httpContext );
+		_dispatchEnd( httpContext );
+		httpContext.dispose();
 	}
 
 	/** Flush the response to the output. Catch errors. **/
-	function _flush() {
+	@:access(ufront.web.context.HttpContext)
+	function _flush( context:HttpContext ) {
 		try {
-			if(!_flushed) {
-				response.flush();
-				_flushed = true;
+			if( !context.flushed ) {
+				context.response.flush();
+				context.flushed = true;
 			}
 		} 
-		catch(e : Dynamic) {
-			_dispatchError(e);
+		catch( e:Dynamic ) {
+			_dispatchError( context, e );
 		}
 	}
 
-	/** Init every module required for this request **/
-	function _initModule(module : IHttpModule) {
-		try {
-			module.init(this);
-		} 
-		catch(e : Dynamic) {
-			_dispatchError(e);
+
+	/** 
+		Init every module required for this application.
+
+		If this is not called before `execute()`, it will be called during `execute()`.
+
+		If modules have already been initialized, this will have no effect.
+	**/
+	public function initModules( ?context:HttpContext ) {
+		if ( _initiatedModules==false ) {
+			for ( module in modules ) {
+				try module.init( this )
+				catch( e:Dynamic ) {
+					if ( context==null )
+		 				context = HttpContext.createWebContext();
+					_dispatchError( context, e );
+				}
+			}
+			_initiatedModules = true;
 		}
 	}
+	var _initiatedModules = false;
 
 	/** End the request by triggering the final onEndRequest event.  Catch errors **/
-	function _dispatchEnd() {
+	function _dispatchEnd( context:HttpContext ) {
 		try {
-			onEndRequest.dispatch(this);
+			onEndRequest.dispatch( context );
 		} 
-		catch (e : Dynamic) {
-			_dispatchError(e);
+		catch (e:Dynamic) {
+			_dispatchError( context, e );
 		}
 	}
 
 	/**
 		Loop through every event in the chain (unless the request is completed by an event)
 
-		Catch errors.  After finished, run `afterEffect()`
+		Catch errors.  After finished, run `afterEffect()`, which is probably `_conclude()`
 	**/
-	function _dispatchChain(dispatchers : Array<AsyncDispatcher<HttpApplication>>, afterEffect : Void -> Void) {
-		// PHP has issues with long chains of methods
-		for(dispatcher in dispatchers) {
-			if(_completed) break;
+	function _dispatchChain( httpContext:HttpContext, dispatchers:Array<AsyncDispatcher<HttpContext>>, afterEffect:Void->Void ) {
+		for( dispatcher in dispatchers ) {
+			if( httpContext.completed ) break;
 			try {
-				dispatcher.dispatch(this, null, _dispatchError);
+				dispatcher.dispatch( httpContext, null, _dispatchError.bind(httpContext) );
 			}
 			catch (e:Dynamic) {
-				_dispatchError(e);
+				_dispatchError( httpContext, e );
 				return;
 			}
 		}
-		if(null != afterEffect) afterEffect();
+		if( null!=afterEffect ) afterEffect();
 	}
 
 	/**
 		If logging hasn't happened, do that so the error is logged.
 		Then either hit up the "onApplicationError" event, or if nothing is listening, simply throw the error.
 	**/
-	function _dispatchError(e : Dynamic) {
-		if(!_logDispatched) {
-			_dispatchChain([onLogRequest, onPostLogRequest], _dispatchError.bind(e));
+	function _dispatchError( context:HttpContext, e:Dynamic ) {
+		if( !context.logDispatched ) {
+			_dispatchChain( context, [
+				onLogRequest, 
+				onPostLogRequest
+			], _dispatchError.bind(context,e) );
 			return;
 		}
 
 		var event = {
-			application : this,
-			error : Std.is(e, Error) ? e : new Error(Std.string(e))
+			context: context,
+			error: Std.is(e, Error) ? e : new Error(Std.string(e))
 		};
 
-		if(!onApplicationError.has())
+		if( !onApplicationError.has() )
 			throw event.error;
 		else
-			onApplicationError.dispatch(event);
+			onApplicationError.dispatch( event );
 
-		_conclude();
+		_conclude( context );
 	}
 
 	/**
-		Close each module and the context
+		Dispose of each module used in the application.
 	**/
-	function _dispose() {
-		for (module in modules) module.dispose();
-		httpContext.dispose();
+	public function dispose() {
+		for ( module in modules ) module.dispose();
 	}
-
-	/**
-		Finish the request.  No more events in the chain will be executed.
-	**/
-	public function completeRequest() {
-		_completed = true;
-	}
-
-	function get_request() return httpContext.request;
-	function get_response() return httpContext.response;
-	function get_session() return httpContext.session;
-	function get_auth() return httpContext.auth;
 }

@@ -33,7 +33,7 @@ class HttpApplicationTest
 	public function setup():Void
 	{
 		context = "/".mockHttpContext();
-		instance = new HttpApplication( context );
+		instance = new HttpApplication();
 		modulesInitiated = [];
 		modulesDisposed = [];
 		eventsFired = [];
@@ -99,13 +99,6 @@ class HttpApplicationTest
 		Assert.isNotNull( instance.onApplicationError );
 		Assert.isType( instance.onApplicationError, AsyncDispatcher );
 
-		// Test context objects are there and available
-		Assert.areEqual( context, instance.httpContext );
-		Assert.areEqual( context.request, instance.httpContext.request );
-		Assert.areEqual( context.response, instance.httpContext.response );
-		Assert.areEqual( context.session, instance.httpContext.session );
-		Assert.areEqual( context.auth, instance.httpContext.auth );
-
 		// Test onPostLogRequest has at least one event handler
 		Assert.isTrue( instance.onPostLogRequest.has() );
 	}
@@ -124,7 +117,7 @@ class HttpApplicationTest
 	{
 		addModules();
 		addEvents();
-		instance.execute();
+		instance.execute( context );
 		// Test the modules have been initiated
 		Assert.areEqual( 2, modulesInitiated.length );
 		Assert.areEqual( "Module1,Module2", modulesInitiated.join(",") );
@@ -149,10 +142,6 @@ class HttpApplicationTest
 		// Test that the response was flushed,
 		Assert.isTrue( context.response.flush().verify() );
 
-		// Test the modules were disposed
-		Assert.areEqual( 2, modulesDisposed.length );
-		Assert.areEqual( "Module1,Module2", modulesDisposed.join(",") );
-
 		// Test the context was disposed
 		Assert.isTrue( context.dispose().verify() );
 	}
@@ -166,7 +155,7 @@ class HttpApplicationTest
 
 		// With no listener, it should throw an error
 		try {
-			instance.execute();
+			instance.execute( context );
 			Assert.fail( "Exception was not thrown" );
 		}
 		catch ( e:Dynamic ) {
@@ -189,13 +178,13 @@ class HttpApplicationTest
 		addEvents();
 		instance.onResolveRequestCache.add( function(app) throw "ouch" );
 		instance.onApplicationError.add( 
-			function(event:{ error:Error, application:HttpApplication }) {
+			function(event:{ error:Error, context:HttpContext }) {
 				eventsFired.push("onApplicationError");
 				Assert.isType( event.error, Error );
 				Assert.areEqual( "ouch", event.error.toString() );
 			}
 		);
-		instance.execute();
+		instance.execute( context );
 
 		// Test the events fired, stopped when error thrown, and then finished
 		Assert.areEqual( "onBeginRequest", eventsFired[0] );
@@ -205,8 +194,6 @@ class HttpApplicationTest
 		Assert.areEqual( "onApplicationError", eventsFired[4] );
 		Assert.areEqual( "onEndRequest", eventsFired[5] );
 		Assert.areEqual( 6, eventsFired.length );
-
-		// 
 	}
 
 	@Test
@@ -214,8 +201,8 @@ class HttpApplicationTest
 	{
 		addModules();
 		addEvents();
-		instance.onResolveRequestCache.add( function(app) app.completeRequest() );
-		instance.execute();
+		instance.onResolveRequestCache.add( function(context) context.completed=true );
+		instance.execute( context );
 
 		// Test the events fired, stopped when completeRequest() was called, and then finished
 		Assert.areEqual( 3, eventsFired.length );
@@ -236,11 +223,29 @@ class HttpApplicationTest
 		instance.addModule( module1 );
 		instance.addModule( module2 );
 	}
+
+	@Test
+	public function testInitModulesAndDispose():Void
+	{
+		addModules();
+		addEvents();
+		instance.initModules();
+
+		// Test the modules have been initiated
+		Assert.areEqual( 2, modulesInitiated.length );
+		Assert.areEqual( "Module1,Module2", modulesInitiated.join(",") );
+
+		instance.dispose();
+
+		// Test the modules were disposed
+		Assert.areEqual( 2, modulesDisposed.length );
+		Assert.areEqual( "Module1,Module2", modulesDisposed.join(",") );
+	}
 	
 	// add modules to the current instance
 	function addEvents()
 	{
-		var f = function(name:String, httpApplication:HttpApplication) eventsFired.push(name);
+		var f = function(name:String, context:HttpContext) eventsFired.push(name);
 
 		instance.onBeginRequest.add( f.bind("onBeginRequest") );
 		instance.onResolveRequestCache.add( f.bind("onResolveRequestCache") );

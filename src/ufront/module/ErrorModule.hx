@@ -4,6 +4,7 @@ import haxe.CallStack;
 import ufront.web.error.InternalServerError;
 import ufront.web.error.HttpError;
 import ufront.application.HttpApplication;
+import ufront.web.context.HttpContext;
 import ufront.module.IHttpModule;
 import haxe.ds.StringMap;
 import thx.error.Error;
@@ -22,18 +23,15 @@ using Types;
 **/
 class ErrorModule implements IHttpModule
 {
-	public function new(){}
-
-	var application:HttpApplication;
+	public function new() {}
 
 	/**
 		HttpModule initialization.  
 
 		Will add the error handler to the `onApplicationError` event of your `HttpApplication`.
 	**/
-	public function init(application : HttpApplication) {
-		this.application = application;
-		application.onApplicationError.add(_onError);
+	public function init( application:HttpApplication ) {
+		application.onApplicationError.add( _onError );
 	}
 
 	/** Nothing much to dispose for this module. **/
@@ -51,10 +49,10 @@ class ErrorModule implements IHttpModule
 		TODO: give more options for processing different kinds of errors
 		TODO: figure out async support
 	**/
-	public function _onError(e : { application : HttpApplication, error : Error })
+	public function _onError( e:{ context:HttpContext, error:Error } )
 	{
 		// Get the error into the HttpError type, wrap it if necessary
-		var httpError : HttpError;
+		var httpError:HttpError;
 		if( !Std.is(e.error, HttpError) ) {
 			httpError = new InternalServerError();
 			httpError.setInner(e.error);
@@ -63,16 +61,16 @@ class ErrorModule implements IHttpModule
 
 		// Is this required?
 		var action = httpError.className().lcfirst();
-		if("httpError" == action)
+		if( "httpError"==action )
 			action = "internalServerError";
 
 		var showStack = #if debug true #else false #end;
 
 		// Clear the output, set the response code, and output.
-		application.response.clear();
-		application.response.status = httpError.code; 
-		application.response.write( renderError(httpError, showStack) );
-		application.completeRequest();
+		e.context.response.clear();
+		e.context.response.status = httpError.code; 
+		e.context.response.write( renderError(httpError,showStack) );
+		e.context.completed = true;
 	}
 
 	/**
@@ -84,9 +82,8 @@ class ErrorModule implements IHttpModule
 		avoid using templating engines as any errors in displaying the error template will not
 		be displayed correctly.
 	**/
-	dynamic public function renderError(error : HttpError, ?showStack:Bool = false):String
-	{
-		var inner = (null != error.inner) ? '<p>' + error.inner.toString() + '</p>' : "";
+	dynamic public function renderError( error:HttpError, ?showStack:Bool=false ):String {
+		var inner = (null!=error.inner) ? '<p>${error.inner}</p>':"";
 		
 		var exceptionStackItems = errorStackItems( CallStack.exceptionStack() );
 		var callStackItems = errorStackItems( CallStack.callStack() );
@@ -129,39 +126,39 @@ class ErrorModule implements IHttpModule
 	/**
 		Turns an `Array<StackItem>` into an `Array<String>`, ready to print.
 	**/
-	public static function errorStackItems( stack:Array<StackItem> ) : Array<String> {
+	public static function errorStackItems( stack:Array<StackItem> ):Array<String> {
 		var arr = [];
 
 		#if php
 			stack.pop();
-			stack = stack.slice(2);
+			stack = stack.slice( 2 );
 		#end
 
-		for(item in stack)
-			arr.push(stackItemToString(item));
+		for( item in stack )
+			arr.push( stackItemToString(item) );
 
 		return arr;
 	}
 
-	private static function stackItemToString(s:StackItem) {
+	private static function stackItemToString( s:StackItem ) {
 		switch( s ) {
-		case Module(m):
-			return "module " + m;
+		case Module( m ):
+			return 'module $m';
 		case CFunction:
 			return "a C function";
-		case FilePos(s,file,line):
+		case FilePos( s, file, line ):
 			var r = "";
 			if( s != null ) {
-				r += stackItemToString(s) + " (";
+				r += stackItemToString( s ) + " (";
 			}
-			r += file + " line " + line;
+			r += '$file line $line';
 			if( s != null ) 
 				r += ")";
 			return r;
-		case Method(cname,meth):
-			return cname + "." + meth;
-		case Lambda(n):
-			return "local function #" + n;
+		case Method( cname, meth ):
+			return '$cname.$meth';
+		case Lambda( n ):
+			return 'local function #$n';
 		}
 	}
 }

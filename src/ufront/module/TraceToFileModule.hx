@@ -19,26 +19,28 @@ import haxe.PosInfos;
 **/
 class TraceToFileModule implements ITraceModule
 {
-	var file : haxe.io.Output;
-	var path : String;
+	var file:haxe.io.Output;
+	var path:String;
 	static var REMOVENL = ~/[\n\r]/g;
 	
 	/**
 		Initiate the new module.  Specify the path to the file that you will be logging to.
 	**/
-	public function new(path : String) {
+	public function new( path:String ) {
 		this.path = path;
 	}
 
 	/** Initialize the module **/
-	public function init(application : HttpApplication) {}
+	public function init( application:HttpApplication ) {
+		application.onLogRequest.add( closeFile );
+	}
 
 	/** 
 		Trace function.  
 		Will be called by the custom trace implemented in `ufront.application.UfrontApplication`.
 	**/
-	public function trace(msg : Dynamic, ?pos : PosInfos) : Void {
-		getFile().writeString(format(msg, pos) + "\n");
+	public function trace( msg:Dynamic, ?pos:PosInfos ):Void {
+		getFile().writeString( format(msg, pos) + "\n" );
 	}
 
 	/**
@@ -46,20 +48,23 @@ class TraceToFileModule implements ITraceModule
 	**/
 	public function dispose() {
 		path = null; // prevents reusing the instance
-		if(null == file)
+	}
+
+	function closeFile( context ) {
+		if( null==file )
 			return;
 		file.close();
 		file = null;
 	}
 
-	static function format(msg : Dynamic, pos : PosInfos) {
-		msg = REMOVENL.replace(msg, '\\n');
+	static function format( msg:Dynamic, pos:PosInfos ) {
+		msg = REMOVENL.replace( msg, '\\n' );
 		return '${Date.now()}: ${pos.className}.${pos.methodName}(${pos.lineNumber}) ${Dynamics.string(msg)}';
 	}
 
 	function getFile() {
-		if(null == file)
-			file = File.append(path);
+		if( null==file )
+			file = File.append( path );
 		return file;
 	}
 }

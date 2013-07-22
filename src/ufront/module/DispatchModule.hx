@@ -2,6 +2,7 @@ package ufront.module;
 
 import ufront.module.IHttpModule;
 import ufront.application.HttpApplication;
+import ufront.web.context.HttpContext;
 import haxe.web.Dispatch.DispatchConfig;
 import haxe.web.Dispatch.DispatchError;
 import ufront.web.Dispatch;
@@ -48,15 +49,14 @@ class DispatchModule implements IHttpModule
 		application.onResultExecute.add( executeResultHandler );
 	}
 
-	// function executeDispatch(application : HttpApplication, async : hxevents.Async)
-	function executeDispatchHandler( application:HttpApplication ) {
-		var httpContext = application.httpContext;
+	// function executeDispatch( context:HttpContext, async : hxevents.Async)
+	function executeDispatchHandler( context:HttpContext ) {
 		try {
-			var filteredUri = httpContext.getRequestUri();
-			var params = httpContext.request.params.toStringMap();
-			dispatch = new Dispatch( filteredUri, params, httpContext );
+			var filteredUri = context.getRequestUri();
+			var params = context.request.params.toStringMap();
+			dispatch = new Dispatch( filteredUri, params, context );
 			dispatch.processDispatchRequest( dispatchConfig );
-			httpContext.response.actionContext = new ActionContext( httpContext, dispatch.controller, dispatch.action, dispatch.arguments );
+			context.actionContext = new ActionContext( context, dispatch.controller, dispatch.action, dispatch.arguments );
 		} 
 		catch ( e : DispatchError ) {
 			switch ( e ) {
@@ -69,10 +69,9 @@ class DispatchModule implements IHttpModule
 		}
 	}
 
-	function executeActionHandler( application:HttpApplication ) {
+	function executeActionHandler( context:HttpContext ) {
 		// Get the contexts
-		var httpContext = application.httpContext;
-		var actionContext = httpContext.response.actionContext;
+		var actionContext = context.actionContext;
 
 		// Update the Dispatch details (in case a module/middleware changed them)
 		dispatch.controller = actionContext.controller;
@@ -82,7 +81,7 @@ class DispatchModule implements IHttpModule
 		// Execute the result
 		try {
 			var result = dispatch.executeDispatchRequest();
-			httpContext.response.actionResult = createActionResult( result );
+			context.actionResult = createActionResult( result );
 		} 
 		catch ( e : DispatchError ) {
 			// Will be thrown happen if this function is called before dispatch.processDispatchRequest has run
@@ -90,9 +89,8 @@ class DispatchModule implements IHttpModule
 		}
 	}
 
-	function executeResultHandler( application:HttpApplication ) {
-		var response = application.httpContext.response;
-		response.actionResult.executeResult( response.actionContext );
+	function executeResultHandler( context:HttpContext ) {
+		context.actionResult.executeResult( context.actionContext );
 	}
 
 	function createActionResult(returnValue : Dynamic) : ActionResult {

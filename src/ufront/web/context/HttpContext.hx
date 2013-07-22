@@ -6,6 +6,7 @@ import ufront.web.url.filter.IUrlFilter;
 import thx.error.AbstractMethod;
 import ufront.web.session.FileSession;
 import ufront.web.session.IHttpSessionState;
+import ufront.web.result.ActionResult;
 import ufront.auth.IAuthHandler;
 import ufront.web.url.*;
 import ufront.web.url.filter.*;
@@ -44,6 +45,7 @@ class HttpContext
 	public function new( request:HttpRequest, response:HttpResponse, ?session:IHttpSessionState, ?auth:IAuthHandler<IAuthUser> )
 	{
 		_urlFilters = [];
+		completed = false;
 		NullArgument.throwIfNull(response);
 		NullArgument.throwIfNull(request);
 		this.request = request;
@@ -52,12 +54,33 @@ class HttpContext
 		this.auth = auth;
 	}
 
+	/** The current HttpRequest **/
 	public var request(default, null):HttpRequest;
+
+	/** The current HttpResponse **/
 	public var response(default, null):HttpResponse;
+
+	/** The current session **/
 	public var session(default, null):Null<IHttpSessionState>;
+
+	/** The current auth handler **/
 	public var auth(default, null):Null<IAuthHandler<IAuthUser>>;
 
-	var _requestUri:String;
+	/** The `ActionContext` used in processing the request. Will be null until the application has processed it's dispatch **/
+	public var actionContext:ActionContext;
+
+	/** The `ActionResult` that came from processing the request. Will be null until the action has been executed. **/
+	public var actionResult:ActionResult;
+
+	/** When true, the event chain in `HttpApplication` will stop firing and begin it's conclusion **/
+	public var completed:Bool;
+
+	/** Returns true if the log has been dispatched already for the current request (Read only) **/
+	public var logDispatched(default,null):Bool;
+
+	/** Returns true if the response has been flushed already for the current request (Read only) **/
+	public var flushed(default,null):Bool;
+
 	/**
 		Gets the filtered request URI. 
 
@@ -75,6 +98,7 @@ class HttpContext
 		}
 		return _requestUri;
 	}
+	var _requestUri:String;
 
 	/**
 		Takes a URI and runs it through the given filters in reverse.

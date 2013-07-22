@@ -245,7 +245,7 @@ class Dispatch extends haxe.web.Dispatch
 		var cfg = makeConfig(obj);
 		var args = [url,params];
 		if (httpContext != null) { args.push(httpContext); }
-		return macro new ufront.web.Dispatch(${args}).processDispatchRequest($cfg).executeDispatchResult();
+		return macro new ufront.web.Dispatch($a{args}).processDispatchRequest($cfg).executeDispatchResult();
 	}
 
 	/**

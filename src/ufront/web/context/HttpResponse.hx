@@ -5,7 +5,7 @@ import haxe.io.Output;
 import thx.collection.HashList;
 import thx.error.NullArgument;
 import thx.error.NotImplemented;
-import ufront.web.result.ActionResult;
+import haxe.ds.StringMap;
 
 /**
 	The response that will be sent to the browser
@@ -75,12 +75,6 @@ class HttpResponse
 
 	/** The HTTP Response code.  See the inline static vars for common values **/
 	public var status:Int;
-
-	/** The `ActionContext` used in processing the request. Will be null until the application has processed it's dispatch **/
-	public var actionContext:ActionContext;
-
-	/** The `ActionResult` that came from processing the request. Will be null until the action has been executed. **/
-	public var actionResult:ActionResult;
 
 	var _buff:StringBuf;
 	var _headers:HashList<String>;

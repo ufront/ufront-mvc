@@ -30,29 +30,34 @@ class UfrontMocker
 		UFMocker.mockHttpContext( '/home' );
 		UFMocker.mockHttpContext( '/home', request, response, session, auth );
 		```
+
+		The URI provided is the raw `REQUEST_URI` and so can include a query string etc.
 		
 		The mocking is as follows:
 
-		* `getRequestUri` returns the given uri.  
+		* The uri is used for `request.uri` if the request is being mocked.  (If the request object is given, not mocked, the supplied Uri is ignored)
+		* `getRequestUri` calls the real method, so will process filters on `request.uri`
 		* The request, response, session and auth return either the supplied value, or are mocked
-		* The uri is also used for `request.uri` if the request is being mocked.
 		* `addUrlFilter` and `generateUri` call the real method.
 	**/
 	public static function mockHttpContext( uri:String, ?request:HttpRequest, ?response:HttpResponse, ?session:IHttpSessionState, ?auth:IAuthHandler<IAuthUser> )
 	{
 		// Check the supplied arguments
 		NullArgument.throwIfNull( uri );
-		if (request==null) {
+		if ( request==null ) {
 			request = HttpRequest.mock();
-			request.uri.returns(uri);
+			request.uri.returns( uri );
 		}
-		if (response==null) response = HttpResponse.mock();
+		if ( response==null ) {
+			response = HttpResponse.spy();
+			response.flush().stub();
+		}
 		if (session==null) session = IHttpSessionState.mock();
 		if (auth==null) auth = IAuthHandler.mock([IAuthUser]);
 
 		// Mock the HttpContext
 		var ctx = HttpContext.mock();
-		ctx.getRequestUri().returns(uri);
+		ctx.getRequestUri().callsRealMethod();
 		ctx.request.returns(request);
 		ctx.response.returns(response);
 		ctx.session.returns(session);
