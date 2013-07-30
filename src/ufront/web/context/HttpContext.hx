@@ -132,6 +132,6 @@ class HttpContext
 		Currently just disposes of the given `session`.
 	**/
 	public function dispose():Void {
-		session.dispose();
+		if (session!=null) session.dispose();
 	}
 }
