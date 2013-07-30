@@ -60,6 +60,6 @@ class TraceToBrowserModule implements ITraceModule
 		if ( type!="warn" && type!="info" && type!="debug" && type!="error" )
 			type = ( m.pos==null ) ? "error" : "log";
 	   	var msg = '${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}';
-	   	return 'console.${type}(decodeURIComponent(${StringTools.urlEncode(msg)}))';
+	   	return 'console.${type}(decodeURIComponent("${StringTools.urlEncode(msg)}"))';
 	}
 }
