@@ -1,6 +1,7 @@
 package ufront.web.result;
 
 import haxe.io.Bytes;
+import ufront.web.context.ActionContext;
 
 class BytesResult extends FileResult
 {
