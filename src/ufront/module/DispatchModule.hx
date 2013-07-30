@@ -54,7 +54,7 @@ class DispatchModule implements IHttpModule
 		try {
 			var filteredUri = context.getRequestUri();
 			var params = context.request.params.toStringMap();
-			dispatch = new Dispatch( filteredUri, params, context );
+			dispatch = new Dispatch( filteredUri, params, context.request.httpMethod );
 			dispatch.processDispatchRequest( dispatchConfig );
 			context.actionContext = new ActionContext( context, dispatch.controller, dispatch.action, dispatch.arguments );
 		} 

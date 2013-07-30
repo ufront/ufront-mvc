@@ -35,9 +35,10 @@ import ufront.web.context.HttpContext;
 
 	Key differences:
 
-	- It has an understanding of the HttpContext
 	- It can check for HTTP methods (get/post) etc and specialised actions for those.
 	- Dispatching returns the result of the called action
+	- Processing the dispatch and executing the action are separated, so code (for example, ufront's DispatchModule) can intercept execution inbetween stages.
+	- The controller, action and arguments that are used are recorded, to assist with unit testing.
 	- It is case insensitive.  So "doSomethingLong" will resolve to "/somethinglong/" or "/SomethingLONG/" etc
 
 	The important static macros and methods are still available here and function similarly to those in `haxe.web.Dispatch`, except for the changes described above.
@@ -47,18 +48,9 @@ class Dispatch extends haxe.web.Dispatch
 	/** 
 		The method used in the request.  
 
-		Is set via the request information found in the HttpContext passed to the constructor.
-
-		If the HttpContext was not specified, this will be null.
-
-		The returned string will be lower-case.
+		Is set via the constructor.  Whatever value this is set to will be transformed to lowercase.
 	**/
 	public var method(default,null):String;
-	
-	/** 
-		The HttpContext passed to the constructor.
-	**/
-	public var httpContext(default,null):HttpContext;
 	
 	/** 
 		The controller / API object that was used.
@@ -80,7 +72,7 @@ class Dispatch extends haxe.web.Dispatch
 		The name of the selected action to be used in the dispatch.
 
 		After a successful `processDispatchRequest`, it will contain the name of the action that
-		dispatch has chosen to execute.  eg. `doSomething` if `doSomething()` was called.
+		dispatch has chosen to execute.  eg. `doSomething` if `doSomething()` is to be called.
 
 		This can be useful to get Action Information while processing an ActionResult, for example,
 		while trying to find the appropriate View to use for an action.
@@ -104,12 +96,11 @@ class Dispatch extends haxe.web.Dispatch
 	public var arguments:Null<Array<Dynamic>>;
 
 	/**
-		Construct a new Dispatch object, for the given URL, 
+		Construct a new Dispatch object, for the given URL, parameters and HTTP method
 	**/
-	public function new(url:String, params, httpContext) {
+	public function new( url:String, params:Map<String,String>, ?method:String ) {
 		super (url, params);
-		this.httpContext = httpContext;
-		this.method = (httpContext != null) ? httpContext.request.httpMethod.toLowerCase() : null;
+		this.method = (method!=null) ? method.toLowerCase() : null;
 		this.controller = null;
 		this.action = null;
 		this.arguments = null;
@@ -117,20 +108,12 @@ class Dispatch extends haxe.web.Dispatch
 
 	/**
 		Same as `haxe.web.Dispatch`, except it uses the ufront version of `makeConfig()`, and will call
-		`processDispatchRequest()`, not `runtimeDispatch()`, meaning that this will return a value.
+		`runtimeReturnDispatch()`, not `runtimeDispatch()`, meaning that this will return a value.
 	**/
-	public macro function returnDispatch( ethis : Expr, obj : ExprOf<{}> ) : ExprOf<Dynamic> {
+	public macro function returnDispatch( ethis:Expr, obj:ExprOf<{}> ):ExprOf<Dynamic> {
 		var p = Context.currentPos();
 		var cfg = makeConfig(obj);
-		return { expr : ECall({ expr : EField(ethis, "processDispatchRequest"), pos : p }, [cfg]), pos : p };
-		return macro $ethis.processDispatchRequest($cfg).executeDispatchRequest();
-	}
-
-	/**
-		For 'someAction', will return 'doSomeAction'
-	**/
-	override function resolveName( name : String ) {
-		return "do" + name.charAt(0).toUpperCase() + name.substr(1);
+		return macro $ethis.runtimeReturnDispatch($cfg);
 	}
 
 	/**
@@ -143,10 +126,10 @@ class Dispatch extends haxe.web.Dispatch
 		'someAction' with no method will produce ['doSomeAction']  
 		'someAction' with 'post' method will produce ['post_doSomeAction', 'doSomeAction']
 	**/
-	function resolveNames( name : String ) {
+	function resolveNames( name:String ) {
 		var arr = [];
-		if ( method != null ) arr.push( method+"_"+resolveName(name) );
-		arr.push( resolveName(name) );
+		if ( method != null ) arr.push( method+"_"+name );
+		arr.push( name );
 		return arr;
 	}
 
@@ -165,34 +148,41 @@ class Dispatch extends haxe.web.Dispatch
 		
 		This function does not execute the result, it merely populates `controller`, `action`
 		and `argument` properties.  Use `executeDispatchRequest` to then execute this request.
-
-		Returns `this`, so that chaining is enabled:
-
-		`new haxe.web.Dispatch(...).processDispatchRequest(...).executeDispatchResult`
 	**/
-	public function processDispatchRequest( cfg : DispatchConfig ):Void {
-		name = parts.shift();
-		if( name == null )
-			name = "doDefault";
-		var names = resolveNames(name);
+	public function processDispatchRequest( cfg:DispatchConfig ) {
+		var partName = parts.shift();
+		if( partName==null || partName=="" )
+			partName = "default";
+		var names = resolveNames('do$partName');
 		this.cfg = cfg;
-		var r : DispatchRule = null;
+		var name:String = null;
+		var r:DispatchRule = null;
 		for ( n in names ) {
-			r = Reflect.field(cfg.rules, n);
-			if ( r != null ) { name = n; break; }
+			for ( fieldName in Reflect.fields(cfg.rules) ) {
+				var lcName = fieldName.toLowerCase();
+				if ( lcName==n.toLowerCase() ) {
+					r = Reflect.field( cfg.rules, fieldName );
+					name = fieldName;
+					break;
+				}
+			}
+			if ( name!=null ) break;
 		}
-		if( r == null ) {
-			r = Reflect.field(cfg.rules, "doDefault");
-			if( r == null )
-				throw DENotFound(name);
-			parts.unshift(name);
+		if( r==null ) {
+			r = Reflect.field( cfg.rules, "doDefault" );
+			if( r==null )
+				throw DENotFound( name );
+			parts.unshift( partName );
 			name = "doDefault";
 		}
 		var args = [];
 		subDispatch = false;
-		loop(args, r);
+		loop( args, r );
 		if( parts.length > 0 && !subDispatch ) {
-			if( parts.length == 1 && parts[parts.length - 1] == "" ) parts.pop() else throw DETooManyValues;
+			if( parts.length==1 && parts[parts.length-1]=="" ) 
+				parts.pop()
+			else 
+				throw DETooManyValues;
 		}
 		this.controller = cfg.obj;
 		this.action = name;
@@ -205,30 +195,39 @@ class Dispatch extends haxe.web.Dispatch
 		The result of the action will be returned.
 
 		If `processDispatchRequest`has not been run, `DispatchError.DEMissing` will be thrown.
-
-		If `Redirect` is thrown, `processDispatchRequest` and `executeDispatchRequest` will be run again, executing the redirect.
+	
+		This method will not catch or handle `Redirect` exceptions in the same way as `runtimeReturnDispatch`.  If you are calling this method manually you should account for this.
 	**/
 	public function executeDispatchRequest():Dynamic {
 		if ( controller==null || action==null || arguments==null )
 			throw DEMissing;
 		
-		try {
-			var actionMethod = Reflect.field(controller, action);
-			return Reflect.callMethod(controller, actionMethod, arguments);
-		} catch( e : Redirect ) {
-			processDispatchRequest( cfg );
-			return executeDispatchRequest();
-		}
+		var actionMethod = Reflect.field(controller, action);
+		return Reflect.callMethod(controller, actionMethod, arguments);
+	}
+
+	/**
+		The same as `runtimeReturnDispatch`, except it does not return a result, so it is consistent with the super class.
+	**/
+	override public function runtimeDispatch( cfg:DispatchConfig ) {
+		runtimeReturnDispatch( cfg );
 	}
 
 	/**
 		This simple calls `processDispatchRequest`,followed by `executeDispatchRequest`
 
-		So the functionality is similar to the `runtimeDispatch` in `haxe.web.Dispatch`, except ufront's processing rules our used.
+		If a `Redirect` is thrown, it will rerun the two method recursively until a result is reached or an error thrown.
+
+		So the functionality is similar to the `runtimeDispatch` in `haxe.web.Dispatch`, except ufront's processing rules are used, and a result is returned.
 	**/
-	override public function runtimeDispatch( cfg : DispatchConfig ) {
+	public function runtimeReturnDispatch( cfg:DispatchConfig ) {
 		processDispatchRequest( cfg );
-		executeDispatchRequest();
+		try {
+			return executeDispatchRequest();
+		} catch( e:Redirect ) {
+			processDispatchRequest( cfg );
+			return executeDispatchRequest();
+		}
 	}
 
 	/**
@@ -236,15 +235,15 @@ class Dispatch extends haxe.web.Dispatch
 		A macro similar to `haxe.web.Dispatch.run()`, with the following differences:
 
 		* We create a new `ufront.web.Dispatch` instead of `haxe.web.Dispatch` instance.
-		* We call `processDispatchRequest` followed by `executeDispatchRequest`, returning the result of the action called.
-		* We allow you to optionally specify a HttpContext to be passed to the `Dispatch` instance.
+		* We call `runtimeReturnDispatch` followed by `executeDispatchRequest`, returning the result of the action called.
+		* We allow you to specify the HTTP method, which can be used to trigger method-specific actions
 	**/
-	public static macro function run( url : ExprOf<String>, params : ExprOf<haxe.ds.StringMap<String>>, obj : ExprOf<{}>, ?httpContext : ExprOf<HttpContext> ) : ExprOf<Dynamic> {
+	public static macro function run( url:ExprOf<String>, params:ExprOf<haxe.ds.StringMap<String>>, ?method:ExprOf<String>, obj:ExprOf<{}> ):ExprOf<Dynamic> {
 		var p = Context.currentPos();
 		var cfg = makeConfig(obj);
 		var args = [url,params];
-		if (httpContext != null) { args.push(httpContext); }
-		return macro new ufront.web.Dispatch($a{args}).processDispatchRequest($cfg).executeDispatchResult();
+		if (method != null) { args.push(method); }
+		return macro new ufront.web.Dispatch($a{args}).runtimeReturnDispatch($cfg);
 	}
 
 	/**
@@ -255,22 +254,15 @@ class Dispatch extends haxe.web.Dispatch
 		* Allows `$method_doSomething` eg `post_doGetName` methods
 		* Save all names as lower case, making `ufront.web.Dispatch` case insensitive
 	**/
-	public static macro function make( obj : ExprOf<{}> ) : ExprOf<DispatchConfig> {
+	public static macro function make( obj:ExprOf<{}> ):ExprOf<DispatchConfig> {
 		return makeConfig(obj);
 	}
 
 	#if macro 
-		/**
-		Main changes from `haxe.web.Dispatch.makeConfig`:
-
-		 * Allows `$method_doSomething` eg `post_doGetName` methods
-		 * Save all names as lower case, making `ufront.web.Dispatch` case insensitive
-		
-		**/
-		static function makeConfig( obj : Expr ) {
+		static function makeConfig( obj:Expr ) {
 			var p = obj.pos;
 			if( Context.defined("display") )
-				return { expr :  EObjectDecl([ { field : "obj", expr : obj }, { field : "rules", expr : { expr : EObjectDecl([]), pos : p } } ]), pos : p };
+				return { expr: EObjectDecl([ { field:"obj", expr:obj }, { field:"rules", expr:{ expr:EObjectDecl([]), pos:p } } ]), pos:p };
 			var t = Context.typeof(obj);
 			switch( Context.follow(t) ) {
 			case TAnonymous(fl):
@@ -281,12 +273,12 @@ class Dispatch extends haxe.web.Dispatch
 					if (!f.meta.has(':keep'))
 						f.meta.add(':keep', [], f.pos);
 					var r = haxe.web.Dispatch.makeRule(f);
-					fields.push( { field : "do"+f.name.substr(2), expr : Context.makeExpr(r,p) } );
+					fields.push( { field:"do"+f.name.substr(2), expr:Context.makeExpr(r,p) } );
 				}
-				if( fields.length == 0 )
+				if( fields.length==0 )
 					Context.error("No dispatch method found", p);
-				var rules = { expr : EObjectDecl(fields), pos : p };
-				return { expr : EObjectDecl([ { field : "obj", expr : obj }, { field : "rules", expr : rules } ]), pos : p };
+				var rules = { expr:EObjectDecl(fields), pos:p };
+				return { expr:EObjectDecl([ { field:"obj", expr:obj }, { field:"rules", expr:rules } ]), pos:p };
 			case TInst(i, _):
 				var i = i.get();
 				// store the config inside the class metadata (only once)
@@ -296,7 +288,7 @@ class Dispatch extends haxe.web.Dispatch
 					while( true ) {
 						for( f in tmp.fields.get() ) {
 							var name = f.name;
-							if( f.meta.has(":method") ) name = name.substr(name.indexOf("_") + 1);
+							if( name.indexOf("_do")>-1 ) name = name.substr(name.indexOf("_") + 1);
 							if( name.substr(0, 2) != "do" )
 								continue;
 							if (!f.meta.has(':keep'))
@@ -310,16 +302,16 @@ class Dispatch extends haxe.web.Dispatch
 								}
 							Reflect.setField(fields, f.name, r);
 						}
-						if( tmp.superClass == null )
+						if( tmp.superClass==null )
 							break;
 						tmp = tmp.superClass.t.get();
 					}
-					if( Reflect.fields(fields).length == 0 )
+					if( Reflect.fields(fields).length==0 )
 						Context.error("No dispatch method found", p);
 					var str = haxe.web.Dispatch.serialize(fields);
-					i.meta.add("dispatchConfig", [ { expr : EConst(CString(str)), pos : p } ], p);
+					i.meta.add("dispatchConfig", [ { expr:EConst(CString(str)), pos:p } ], p);
 				}
-				return { expr : EUntyped ({ expr : ECall({ expr : EField(Context.makeExpr(haxe.web.Dispatch,p),"extractConfig"), pos : p },[obj]), pos : p }), pos : p };
+				return { expr:EUntyped ({ expr:ECall({ expr:EField(Context.makeExpr(haxe.web.Dispatch,p),"extractConfig"), pos:p },[obj]), pos:p }), pos:p };
 			default:
 				Context.error("Configuration should be an anonymous object",p);
 			}
