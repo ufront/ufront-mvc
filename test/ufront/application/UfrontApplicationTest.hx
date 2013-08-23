@@ -11,7 +11,7 @@ import ufront.web.result.*;
 import ufront.web.Dispatch;
 import haxe.web.Dispatch.DispatchConfig;
 import ufront.web.UfrontConfiguration;
-using ufront.mock.UfrontMocker;
+using ufront.test.TestUtils;
 using Lambda;
 
 class UfrontApplicationTest 

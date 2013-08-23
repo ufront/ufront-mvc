@@ -24,6 +24,7 @@ import ufront.web.url.filter.SegmentToParamUrlFilterTest;
 import ufront.web.url.filter.QueryStringUrlFilterTest;
 import ufront.web.url.filter.PathInfoUrlFilterTest;
 import ufront.web.url.VirtualUrlTest;
+import ufront.web.ControllerTest;
 import ufront.web.upload.SaveToDirectoryUploadHandlerTest;
 import ufront.web.upload.EmptyUploadHandlerTest;
 import ufront.web.DispatchTest;
@@ -78,6 +79,7 @@ class TestSuite extends massive.munit.TestSuite
 		add(ufront.web.url.filter.QueryStringUrlFilterTest);
 		add(ufront.web.url.filter.PathInfoUrlFilterTest);
 		add(ufront.web.url.VirtualUrlTest);
+		add(ufront.web.ControllerTest);
 		add(ufront.web.upload.SaveToDirectoryUploadHandlerTest);
 		add(ufront.web.upload.EmptyUploadHandlerTest);
 		add(ufront.web.DispatchTest);

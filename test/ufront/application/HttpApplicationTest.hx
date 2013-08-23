@@ -8,7 +8,7 @@ import hxevents.Dispatcher;
 import ufront.module.IHttpModule;
 import ufront.web.url.filter.IUrlFilter;
 import ufront.web.context.*;
-using ufront.mock.UfrontMocker;
+using ufront.test.TestUtils;
 using mockatoo.Mockatoo;
 
 class HttpApplicationTest 

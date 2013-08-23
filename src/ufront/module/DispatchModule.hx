@@ -21,7 +21,7 @@ class DispatchModule implements IHttpModule
 	public var dispatchConfig(default, null) : DispatchConfig;
 	
 	/** The Dispatch object used **/
-	var dispatch:Dispatch;
+	public var dispatch(default, null):Dispatch;
 
 	/** 
 		Construct using a dispatchConfig 
@@ -70,13 +70,11 @@ class DispatchModule implements IHttpModule
 	}
 
 	function executeActionHandler( context:HttpContext ) {
-		// Get the contexts
-		var actionContext = context.actionContext;
 
 		// Update the Dispatch details (in case a module/middleware changed them)
-		dispatch.controller = actionContext.controller;
-		dispatch.action = actionContext.action;
-		dispatch.arguments = actionContext.args;
+		dispatch.controller = context.actionContext.controller;
+		dispatch.action = context.actionContext.action;
+		dispatch.arguments = context.actionContext.args;
 
 		// Execute the result
 		try {
@@ -85,7 +83,7 @@ class DispatchModule implements IHttpModule
 		}
 		catch ( e : DispatchError ) {
 			// Will be thrown happen if this function is called before dispatch.processDispatchRequest has run
-			throw new BadRequestError();
+			throw new PageNotFoundError();
 		}
 	}
 
@@ -93,7 +91,7 @@ class DispatchModule implements IHttpModule
 		context.actionResult.executeResult( context.actionContext );
 	}
 
-	function createActionResult( returnValue:Dynamic ):ActionResult {
+	public static function createActionResult( returnValue:Dynamic ):ActionResult {
 		if ( returnValue==null ) {
 			return new EmptyResult();
 		}
@@ -109,5 +107,6 @@ class DispatchModule implements IHttpModule
 	/** Disposes of the resources (other than memory) that are used by the module. */
 	public function dispose() : Void {
 		dispatchConfig = null;
+		dispatch = null;
 	}
 }

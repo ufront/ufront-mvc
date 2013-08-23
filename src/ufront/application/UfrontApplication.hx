@@ -11,7 +11,7 @@ import ufront.module.*;
 /**
 	A standard Ufront Application.  This extends HttpApplication and provides:
 
-	- Routing with `ufront.modules.DispatchModule`
+	- Routing with `ufront.module.DispatchModule`
 	- Tracing, to console or logfile, based on your `ufront.web.UfrontConfiguration`
 
 	And in future
@@ -25,7 +25,26 @@ import ufront.module.*;
 **/
 class UfrontApplication extends HttpApplication
 {
-	var configuration:UfrontConfiguration;
+	/** 
+		The configuration that was used when setting up the application.
+		
+		This is set during the constructor.  Changing values of this object is not guaranteed to have any effect.
+	**/
+	public var configuration(default,null):UfrontConfiguration;
+	
+	/** 
+		The dispatch module used for this application.
+		
+		This is mostly made accessible for unit testing and logging purposes.  You are unlikely to need to access it for anything else.
+	**/
+	public var dispatchModule(default,null):DispatchModule;
+	
+	/** 
+		The error module used for this application.
+		
+		This is made accessible so that you can configure the error module or add new error handlers.
+	**/
+	public var errorModule(default,null):ErrorModule;
 
 	/**
 		Initialize a new UfrontApplication with the given configurations.
@@ -44,16 +63,18 @@ class UfrontApplication extends HttpApplication
 		ufrontApp.execute();
 		```
 	**/
-	public function new( dispatchConfig:DispatchConfig, ?configuration:UfrontConfiguration ) {
-		if (configuration==null) configuration = new UfrontConfiguration();
+	public function new( dispatchConfig:DispatchConfig, ?conf:UfrontConfiguration ) {
+		this.configuration = (conf!=null) ? conf : new UfrontConfiguration();
 
 		super();
 
 		// Add a DispatchModule which will deal with all of our routing and executing contorller actions and results
-		modules.add( new DispatchModule(dispatchConfig) );
+		dispatchModule = new DispatchModule(dispatchConfig);
+		modules.add( dispatchModule );
 
 		// add debugging modules
-		modules.add( new ErrorModule() );
+		errorModule = new ErrorModule();
+		modules.add( errorModule );
 		if ( !configuration.disableBrowserTrace ) 
 			modules.add( new TraceToBrowserModule() );
 		if ( null!=configuration.logFile ) 
@@ -70,9 +91,10 @@ class UfrontApplication extends HttpApplication
 
 		// Set up custom trace.  Will trace all ITraceModules found, or use the default as a fallback
 		var old = haxe.Log.trace;
+		var allModules = modules; // workaround for weird neko glitch when you have no trace modules...
 		haxe.Log.trace = function(msg:Dynamic, ?pos:haxe.PosInfos) {
 			var found = false;
-			for( module in modules ) {
+			for( module in allModules ) {
 				var tracer = Types.as( module, ITraceModule );
 				if(null != tracer) {
 					found = true;

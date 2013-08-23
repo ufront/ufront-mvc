@@ -23,6 +23,15 @@ using Types;
 **/
 class ErrorModule implements IHttpModule
 {
+	/**
+		A flag for catching and handling errors.
+
+		The only reason you would disable this is for debugging or unit testing.  
+
+		`true` by default.
+	**/
+	public var catchErrors:Bool = true;
+
 	public function new() {}
 
 	/**
@@ -71,6 +80,9 @@ class ErrorModule implements IHttpModule
 		e.context.response.status = httpError.code; 
 		e.context.response.write( renderError(httpError,showStack) );
 		e.context.completed = true;
+
+		// rethrow error if catchErrors has been disabled
+		if (!catchErrors) throw e.error;
 	}
 
 	/**
