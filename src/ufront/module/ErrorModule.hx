@@ -169,7 +169,7 @@ class ErrorModule implements IHttpModule
 			return r;
 		case Method( cname, meth ):
 			return '$cname.$meth';
-		case Lambda( n ):
+		case #if (haxe_ver >= 3.1) LocalFunction #else Lambda #end(n):
 			return 'local function #$n';
 		}
 	}
