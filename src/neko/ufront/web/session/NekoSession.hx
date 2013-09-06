@@ -6,6 +6,8 @@
 #if neko
 package neko.ufront.web.session;
 
+import haxe.Serializer;
+import haxe.Unserializer;
 import sys.FileSystem;
 import neko.Lib;
 import neko.Web;
@@ -80,8 +82,8 @@ class NekoSession
 	public static function set(name : String, value : Dynamic)
 	{
 		start();
-		needCommit = true;
 		sessionData.set(name, value);
+		commit();
 	}
 
 	static var lifetime = 0;
@@ -123,20 +125,20 @@ class NekoSession
 	public static function remove(name : String)
 	{
 		start();
-		needCommit = true;
+		commit();
 		sessionData.remove(name);
 	}
 
 	public static function start()
 	{
 		if (started) return;
-		needCommit = false;
-		if( sessionName == null ) sessionName = SID;
 
-		if( savePath == null )
-			savePath = Sys.getCwd();
-		else
-		{
+		if( sessionName==null ) sessionName = SID;
+
+		if( savePath==null ) {
+			savePath = Web.getCwd();
+		}
+		else {
 			// Test if savepath exists. Need to remove last slash in path, otherwise FileSystem.exists() throws an exception.
 			var testPath = (StringTools.endsWith(savePath, '/') || StringTools.endsWith(savePath, '\\')) ? savePath.substr(0, savePath.length - 1) : savePath;
 
@@ -144,20 +146,17 @@ class NekoSession
 				throw 'Neko session savepath not found: ' + testPath;
 		}
 
-		if( id==null )
-		{
+		if( id==null ) {
 			var params = Web.getParams();
 			id = params.get(sessionName);
 			//trace("getting id from req: " + id);
 		}
-		if( id==null )
-		{
+		if( id==null ) {
 			var cookies = Web.getCookies();
 			id = cookies.get(sessionName);
 			//trace("getting id from cookie: " + id);
 		}
-		if( id==null )
-		{
+		if( id==null ) {
 			var args = Sys.args();
 			for( a in args )
 			{
@@ -172,31 +171,32 @@ class NekoSession
 		}
 
 		var file : String;
-		var fileData : Bytes;
+		var fileData : String;
 
-		if( id!=null )
-		{
+		if( id!=null ) {
 			testValidId(id);
 
-			file = savePath + id + ".sess";
-			if( !sys.FileSystem.exists(file) )
+			file = getSessionFilePath(id);
+			if( !sys.FileSystem.exists(file) ) {
 				id = null;
-			else
-			{
-				fileData = try sys.io.File.getBytes(file) catch ( e:Dynamic ) null;
-				if( fileData == null )
-				{
-					id = null;
-					try sys.FileSystem.deleteFile(file) catch( e:Dynamic ) null;
+			}
+			else {
+				fileData = try sys.io.File.getContent(file) catch ( e:Dynamic ) null;
+				if( fileData!=null ) {
+					try {
+						sessionData = cast(Unserializer.run(fileData), StringMap<Dynamic>);
+					}
+					catch ( e:Dynamic ) {
+						fileData = null;
+					}
 				}
-				else
-				{
-					sessionData = Lib.unserialize(fileData);
+				if ( fileData==null ) {
+					id = null;
+					try sys.FileSystem.deleteFile(file) catch( e:Dynamic ) {};
 				}
 			}
 		}
-		if( id==null )
-		{
+		if( id==null ) {
 			//trace("no id found, creating a new session.");
 			sessionData = new StringMap<Dynamic>();
 
@@ -220,15 +220,18 @@ class NekoSession
 		sessionData = new StringMap<Dynamic>();
 	}
 
+	static inline function getSessionFilePath(id:String) {
+		return '$savePath$id.sess';
+	}
+
 	private static function commit()
 	{
 		if( !started ) return;
 		try
 		{
-			var w = sys.io.File.write(savePath + id + ".sess", true),
-				b = Lib.serialize(sessionData);
-			w.writeBytes(b, 0, b.length);
-			w.close();
+			var filePath = getSessionFilePath(id);
+			var content = Serializer.run(sessionData);
+			sys.io.File.saveContent(filePath, content);
 		}
 		catch(e : Dynamic)
 		{
@@ -238,7 +241,7 @@ class NekoSession
 
 	public static function close(?forceCommit = false)
 	{
-		if( needCommit || forceCommit ) commit();
+		if( forceCommit ) commit();
 		started = false;
 	}
 

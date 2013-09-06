@@ -13,14 +13,12 @@ using StringTools;
 
 class FileSession implements IHttpSessionState
 {
-    public function setLifeTime(lifetime:Int){
+    public inline function setLifeTime(lifetime:Int){
     	if(lifetime!=0)
     		NekoSession.setCookieParams(lifetime);
     }
-
     
-	public function new(savePath : String, ?expire : Int = 0)
-	{
+	public function new(savePath:String, ?expire:Int = 0) {
 		savePath = savePath.replace("\\", "/");
 		if (!savePath.endsWith("/"))
 			savePath += "/";
@@ -28,40 +26,33 @@ class FileSession implements IHttpSessionState
 		NekoSession.set_savePath(savePath);
 	}
 
-	public function dispose() : Void
-	{
+	public function dispose():Void {
 		if (!NekoSession.started)
 			return;
 		NekoSession.close();
 	}
 
-	public function clear() : Void
-	{
+	public inline function clear():Void {
 		NekoSession.clear();
 	}
 
-	public function get(name : String) : Dynamic
-	{
+	public inline function get(name:String):Dynamic {
 		return NekoSession.get(name);
 	}
 
-	public function set(name : String, value : Dynamic) : Void
-	{
+	public inline function set(name:String, value:Dynamic):Void {
 		NekoSession.set(name, value);
 	}
 
-	public function exists(name : String) : Bool
-	{
+	public inline function exists(name:String):Bool {
 		return NekoSession.exists(name);
 	}
 
-	public function remove(name : String) : Void
-	{
+	public inline function remove(name:String):Void {
 		NekoSession.remove(name);
 	}
 	
-	public function id() : String
-	{
+	public inline function id():String {
 		return NekoSession.id;
 	}
 }
