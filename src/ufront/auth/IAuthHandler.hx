@@ -41,46 +41,28 @@ interface IAuthHandler<T>
 		Does the given user have the specified permission?
 		Will return false if the user is not logged in, or if the user does not have permission.
 	**/
-	function hasPermission( user:T, permission:EnumValue ) : Bool;
+	function hasPermission( permission:EnumValue ) : Bool;
 
 	/** 
 		Does the given user have the specified permissions?
 		Will return false if the user is not logged in, or if the user does not have all of the specified permissions.
 	**/
-	function hasPermissions( user:T, permissions:Iterable<EnumValue> ) : Bool;
+	function hasPermissions( permissions:Iterable<EnumValue> ) : Bool;
 
 	/**
 		Require the given user to have the specified permission. 
 		If not, trigger the `onNoPermission` dispatcher, throw `AuthError.NoPermission(permission)`.
 	**/
-	function requirePermission( user:T, permission:EnumValue ) : Void;
+	function requirePermission( permission:EnumValue ) : Void;
 
 	/** 
 		Require the given user to have the specified permissions. 
 		If not, trigger the `onNoPermission` dispatcher, throw `AuthError.NoPermission(permission)`.
 	**/
-	function requirePermissions( user:T, permissions:Iterable<EnumValue> ) : Void;
+	function requirePermissions( permissions:Iterable<EnumValue> ) : Void;
 
 	/** 
 		The currently logged in user.  Will be null if no user is logged in.
 	**/
 	var currentUser(get,null) : Null<T>;
-
-	/** 
-		A notifier for every time `requireLogin` fails.  
-		This will not stop an exception being thrown.
-	**/
-	var onNotLoggedIn : Notifier;
-	
-	/** 
-		A notifier for every time `requireLoginAs` fails.  
-		This will not stop an exception being thrown.
-	**/
-	var onNotLoggedInAs : Dispatcher<T>;
-
-	/** 
-		A notifier for every time `requirePermission` or `requirePermissions` fails.  
-		This will not stop an exception being thrown.
-	**/
-	var onNoPermission : Dispatcher<EnumValue>;
 }
