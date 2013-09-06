@@ -25,4 +25,11 @@ class Controller
 		Included so that you don't need a constructor in your container
 	**/
 	public function new() {}
+
+	/**
+		A default toString() to aid in debugging.  Just prints the current class name.
+	**/
+	public function toString() {
+		return Type.getClassName( Type.getClass(this) );
+	}
 }
