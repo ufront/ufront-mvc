@@ -4,7 +4,7 @@ import dtx.DOMCollection;
 import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
 import dtx.widget.Widget;
-import dtx.IDetoxLayout;
+import dtx.layout.IDetoxLayout;
 using Detox;
 
 /** Represents a class that is used to send JSON-formatted content to the response. */
