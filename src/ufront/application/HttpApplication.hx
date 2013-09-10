@@ -295,17 +295,34 @@ class HttpApplication
 		Catch errors.  After finished, run `afterEffect()`, which is probably `_conclude()`
 	**/
 	function _dispatchChain( httpContext:HttpContext, dispatchers:Array<AsyncDispatcher<HttpContext>>, afterEffect:Void->Void ) {
-		for( dispatcher in dispatchers ) {
-			if( httpContext.completed ) break;
-			try {
-				dispatcher.dispatch( httpContext, null, _dispatchError.bind(httpContext) );
+		#if php 
+			// PHP has issues with long chains of methods, so can't do this in the async format... Just loop through synchronously
+			for( dispatcher in dispatchers ) {
+				if( httpContext.completed ) break;
+				try {
+					dispatcher.dispatch( httpContext, null, _dispatchError.bind(httpContext) );
+				}
+				catch (e:Dynamic) {
+					_dispatchError( httpContext, e );
+					return;
+				}
 			}
-			catch (e:Dynamic) {
-				_dispatchError( httpContext, e );
-				return;
+			if( null!=afterEffect ) afterEffect();
+		#else
+			// On other platforms, run this asynchronously... start with one, and only when the async callback is fired does the next event fire
+			var self = this;
+			var next = null;
+			next = function() {
+				var dispatcher = dispatchers.shift();
+				if( httpContext.completed || null==dispatcher ) {
+					if( null!=afterEffect )
+						afterEffect();
+					return;
+				}
+				dispatcher.dispatch( httpContext, next, _dispatchError.bind(httpContext) );
 			}
-		}
-		if( null!=afterEffect ) afterEffect();
+			next();
+		#end
 	}
 
 	/**
