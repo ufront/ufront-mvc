@@ -13,25 +13,21 @@ import haxe.ds.StringMap;
 class HttpResponse
 {
 	/**
-		Get a singleton instance of the HttpResponse.
-
-		This will actually create the instance using the underlying platform implementation of this class.
+		Create a `HttpResponse` using the platform specific implementation.
 
 		Currently PHP and Neko are supported.  Other platforms will get the default implementation, which will mostly work, except for flush(), which actually writes the HTTP response output.
 	**/
-	public static var instance(get, null):HttpResponse;
-	static function get_instance():HttpResponse
+	public static function createResponse():HttpResponse
 	{
-		if(null == instance)
+		return
 			#if php
-				instance = new php.ufront.web.context.HttpResponse();
+				new php.ufront.web.context.HttpResponse();
 			#elseif neko
-				instance = new neko.ufront.web.context.HttpResponse();
+				new neko.ufront.web.context.HttpResponse();
 			#else
 				// use the default implementation.  `flush()` won't work...
 				new HttpResponse();
 			#end
-		return instance;
 	}
 	
 	/** "Content-type" **/

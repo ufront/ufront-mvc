@@ -18,7 +18,7 @@ class HttpContext
 	/**
 		Create a HttpContext using the usual Http environment.
 
-		`request` and `response`, if not supplied, will both be set up by their classes' "get_instance" method, which has platform specific implementations.
+		`request` and `response`, if not supplied, will both be set up by their classes' "getCurrentRequest"and "createResponse" methods respevtively, which have platform specific implementations.
 	   
 		`session` and `auth` will be null if not supplied.
 
@@ -26,9 +26,9 @@ class HttpContext
 	**/
 	public static function createWebContext( ?request:HttpRequest, ?response:HttpResponse, ?session:IHttpSessionState, ?auth:IAuthHandler<IAuthUser>, ?urlFilters:Array<IUrlFilter> ) {
 		if(null == request)
-			request = HttpRequest.instance;
+			request = HttpRequest.getCurrentRequest();
 		if(null == response)
-			response = HttpResponse.instance;
+			response = HttpResponse.createResponse();
 		// import ufront.web.session.FileSession;
 		// if (null == sessionpath)
 			// sessionpath = request.scriptDirectory + "../_sessions";

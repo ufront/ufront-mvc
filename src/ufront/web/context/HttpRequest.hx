@@ -14,22 +14,20 @@ import ufront.web.upload.IHttpUploadHandler;
 class HttpRequest
 {
 	/**
-		A singleton instance of the current HttpRequest.
+		Create a `HttpRequest` using the platform specific implementation.
 
-		It will create the request using the underlying platform's constructor.
+		Currently supports PHP and Neko only.
 	**/
-	public static var instance(get, null) : HttpRequest;
-	static function get_instance() : HttpRequest
+	public static function getCurrentRequest() : HttpRequest
 	{
-		if(null == instance)
-			#if php
-				instance = new php.ufront.web.context.HttpRequest();
-			#elseif neko
-				instance = new neko.ufront.web.context.HttpRequest();
+		return 
+			#if php 
+				new php.ufront.web.context.HttpRequest();
+			#elseif 
+				neko new neko.ufront.web.context.HttpRequest();
 			#else
 				throw new NotImplemented();
 			#end
-		return instance;
 	}
 
 	/**
