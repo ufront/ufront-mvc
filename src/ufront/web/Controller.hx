@@ -22,7 +22,7 @@ class Controller
 
 	/**
 		Empty constructor.  
-		Included so that you don't need a constructor in your container
+		Included so that you don't need to manually specify a constructor in your controller when you don't need it.
 	**/
 	public function new() {}
 

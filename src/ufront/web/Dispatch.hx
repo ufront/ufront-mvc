@@ -28,6 +28,7 @@ import haxe.macro.Context;
 #end
 
 import haxe.web.Dispatch;
+import hxevents.Notifier;
 import ufront.web.context.HttpContext;
 
 /**
@@ -96,10 +97,18 @@ class Dispatch extends haxe.web.Dispatch
 	public var arguments:Null<Array<Dynamic>>;
 
 	/**
+		Fires whenever `processDispatchRequest` is called.
+
+		This allows you to listen to changes to the controller, action and arguments and process them accordingly.
+	**/
+	public var onProcessDispatchRequest:Notifier;
+
+	/**
 		Construct a new Dispatch object, for the given URL, parameters and HTTP method
 	**/
 	public function new( url:String, params:Map<String,String>, ?method:String ) {
 		super (url, params);
+		this.onProcessDispatchRequest = new Notifier();
 		this.method = (method!=null) ? method.toLowerCase() : null;
 		this.controller = null;
 		this.action = null;
@@ -107,6 +116,8 @@ class Dispatch extends haxe.web.Dispatch
 	}
 
 	/**
+		Dispatch a request and return the resulting value.
+
 		Same as `haxe.web.Dispatch`, except it uses the ufront version of `makeConfig()`, and will call
 		`runtimeReturnDispatch()`, not `runtimeDispatch()`, meaning that this will return a value.
 	**/
@@ -187,6 +198,7 @@ class Dispatch extends haxe.web.Dispatch
 		this.controller = cfg.obj;
 		this.action = name;
 		this.arguments = args;
+		onProcessDispatchRequest.dispatch();
 	}
 
 	/**

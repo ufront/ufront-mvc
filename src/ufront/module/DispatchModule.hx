@@ -49,14 +49,22 @@ class DispatchModule implements IHttpModule
 		application.onResultExecute.add( executeResultHandler );
 	}
 
-	// function executeDispatch( context:HttpContext, async : hxevents.Async)
+	// function executeDispatchHandler( context:HttpContext, async : hxevents.Async) {
 	function executeDispatchHandler( context:HttpContext ) {
 		try {
 			var filteredUri = context.getRequestUri();
 			var params = context.request.params.toStringMap();
 			dispatch = new Dispatch( filteredUri, params, context.request.httpMethod );
+
+			// Listen for when the controller, action and args have been decided so we can set our "context" object up...
+			dispatch.onProcessDispatchRequest.add(function() {
+				context.actionContext = new ActionContext( context, dispatch.controller, dispatch.action, dispatch.arguments );
+				Types.ifIs(dispatch.controller, ufront.web.Controller, function (c) {
+					c.context = context.actionContext;
+				});
+			});
+
 			dispatch.processDispatchRequest( dispatchConfig );
-			context.actionContext = new ActionContext( context, dispatch.controller, dispatch.action, dispatch.arguments );
 		} 
 		catch ( e : DispatchError ) {
 			switch ( e ) {
