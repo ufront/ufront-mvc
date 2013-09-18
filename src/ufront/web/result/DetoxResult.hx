@@ -1,6 +1,7 @@
 package ufront.web.result;
 
 import dtx.DOMCollection;
+import hxevents.Async;
 import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
 import dtx.widget.Widget;
@@ -21,9 +22,7 @@ class DetoxResult<W:DOMCollection> extends ActionResult
 		this.layout = layout;
 	}
 
-	override function executeResult( actionContext:ActionContext ) {
-		NullArgument.throwIfNull(actionContext);
-
+	override function executeResult( actionContext:ActionContext, async:Async ) {
 		// If layout is null, get a default one...
 		if (layout==null) layout = getDefaultLayout();
 
@@ -32,6 +31,8 @@ class DetoxResult<W:DOMCollection> extends ActionResult
 
 		actionContext.response.contentType = "text/html";
 		actionContext.response.write( '<!DOCTYPE html>' + layout.document.html() );
+
+		async.completed();
 	}
 
 	// TODO: move somewhere else?

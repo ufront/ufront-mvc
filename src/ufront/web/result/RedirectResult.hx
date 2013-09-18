@@ -1,5 +1,6 @@
 package ufront.web.result;
 
+import hxevents.Async;
 import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
 
@@ -18,10 +19,14 @@ class RedirectResult extends ActionResult
 		this.permanentRedirect = permanentRedirect;
 	}
 
-	override function executeResult( actionContext:ActionContext ) {
-		NullArgument.throwIfNull(actionContext);
-		actionContext.response.clear();
-        if(permanentRedirect) actionContext.response.permanentRedirect(url);
-		else actionContext.response.redirect(url);
+	override function executeResult( actionContext:ActionContext, async:Async ) {
+		// Clear content and headers, but not cookies
+		actionContext.response.clearContent();
+		actionContext.response.clearHeaders();
+
+		if(permanentRedirect) actionContext.response.permanentRedirect( url );
+		else actionContext.response.redirect( url );
+		
+		async.completed();
 	}
 }

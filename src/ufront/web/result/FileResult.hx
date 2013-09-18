@@ -1,6 +1,7 @@
 package ufront.web.result;
 
 import haxe.io.Bytes;
+import hxevents.Async;
 import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
 
@@ -18,7 +19,7 @@ class FileResult extends ActionResult
 		this.fileDownloadName = fileDownloadName;
 	}
 	
-	override function executeResult( actionContext:ActionContext ) {
+	override function executeResult( actionContext:ActionContext, async:Async ) {
 		NullArgument.throwIfNull(actionContext);
 
 		if(null != contentType)
@@ -26,5 +27,7 @@ class FileResult extends ActionResult
 		
 		if(null != fileDownloadName)
 			actionContext.response.setHeader("content-disposition", "attachment; filename=" + fileDownloadName);
+
+		async.completed();
 	}
 }

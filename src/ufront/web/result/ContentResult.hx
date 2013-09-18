@@ -1,5 +1,6 @@
 package ufront.web.result;
 
+import hxevents.Async;
 import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
 
@@ -15,12 +16,11 @@ class ContentResult extends ActionResult
 		this.contentType = contentType;
 	}
 
-	override public function executeResult( actionContext:ActionContext ) {
-		NullArgument.throwIfNull(actionContext);
-
+	override public function executeResult( actionContext:ActionContext, async:Async ) {
 		if(null != contentType)
 			actionContext.response.contentType = contentType;
 
 		actionContext.response.write(content);
+		async.completed();
 	}
 }

@@ -1,5 +1,6 @@
 package ufront.web.result;
 
+import hxevents.Async;
 import ufront.web.context.ActionContext;
 
 /**
@@ -11,7 +12,7 @@ class EmptyResult extends ActionResult
 {
 	public function new(){}
 	
-	override public function executeResult( actionContext:ActionContext ) {
-
+	override public function executeResult( actionContext:ActionContext, async:Async ) {
+		async.completed();
 	}
 }
