@@ -2,6 +2,7 @@ package ufront.web.result;
 
 import haxe.io.Bytes;
 import haxe.io.Eof;
+import hxevents.Async;
 import sys.io.File;
 import ufront.web.context.ActionContext;
 
@@ -19,15 +20,18 @@ class FilePathResult extends FileResult
 		this.fileName = fileName;
 	}
 
-	override function executeResult( actionContext:ActionContext ) {
-		super.executeResult( actionContext );
+	override function executeResult( actionContext:ActionContext, async:Async ) {
+		super.executeResult( actionContext, null );
 		if ( null!=fileName ) {
 			var reader = File.read( fileName, true );
 			try {
 				var buf = Bytes.alloc( BUF_SIZE );
 				var size = reader.readBytes( buf, 0, BUF_SIZE );
 				actionContext.response.writeBytes( buf, 0, size );
-			} catch (e:Eof) { }
+				async.completed();
+			} catch (e:Eof) {
+				async.completed();
+			}
 		}
 	}
 }

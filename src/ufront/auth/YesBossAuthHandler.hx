@@ -12,23 +12,32 @@ import hxevents.Notifier;
 **/
 class YesBossAuthHandler<T:IAuthUser> implements IAuthHandler<T>
 {
-	function isLoggedIn() return true;
+	/**
+		Create a new YesBossAuthHandler.
+	**/
+	public static inline function create( context:ufront.web.context.HttpContext ) {
+		return new YesBossAuthHandler();
+	}
 
-	function requireLogin() {}
+	public function new() {}
+
+	public function isLoggedIn() return true;
+
+	public function requireLogin() {}
 	
-	function isLoggedInAs( user:T ) return true;
+	public function isLoggedInAs( user:T ) return true;
 
-	function requireLoginAs( user:T ) {}
+	public function requireLoginAs( user:T ) {}
 
-	function hasPermission( permission:EnumValue ) return true;
+	public function hasPermission( permission:EnumValue ) return true;
 
-	function hasPermissions( permissions:Iterable<EnumValue> ) return true;
+	public function hasPermissions( permissions:Iterable<EnumValue> ) return true;
 
-	function requirePermission( permission:EnumValue ) {}
+	public function requirePermission( permission:EnumValue ) {}
 
-	function requirePermissions( permissions:Iterable<EnumValue> ) {}
+	public function requirePermissions( permissions:Iterable<EnumValue> ) {}
 
-	var currentUser(get,null);
+	public var currentUser(get,null):Null<T>;
 
 	function get_currentUser() return null;
 }

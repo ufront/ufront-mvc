@@ -8,6 +8,9 @@
 -lib thx
 -lib hxevents
 -lib erazor
+-lib minject
+-lib random
+-lib compiletime
 -lib hscript
 -dce no
 --each

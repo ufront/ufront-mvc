@@ -28,6 +28,6 @@ class FileResult extends ActionResult
 		if(null != fileDownloadName)
 			actionContext.response.setHeader("content-disposition", "attachment; filename=" + fileDownloadName);
 
-		async.completed();
+		if (async!=null) async.completed();
 	}
 }

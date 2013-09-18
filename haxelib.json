@@ -11,6 +11,8 @@
   "dependencies": {
     "hxevents": "",
     "detox": "",
+    "random": "",
+    "compiletime": "",
     "minject": ""
   }
 }

@@ -7,6 +7,7 @@ import ufront.application.UfrontApplication;
 import ufront.web.context.*;
 import ufront.web.url.filter.*;
 import ufront.module.*;
+import ufront.log.*;
 import ufront.web.result.*;
 import ufront.web.Dispatch;
 import haxe.web.Dispatch.DispatchConfig;
@@ -34,7 +35,6 @@ class UfrontApplicationTest
 	public function setup():Void {
 		testController = new TestController();
 		dispatchConfig = Dispatch.make( testController );
-		configuration = new UfrontConfiguration();
 	}
 	
 	@After
@@ -47,13 +47,15 @@ class UfrontApplicationTest
 	public function testNewDefaultConfig():Void {
 
 		// Setup UfrontApplication, default config
-		instance = new UfrontApplication( dispatchConfig, configuration );
+		instance = new UfrontApplication({
+			dispatchConf: dispatchConfig
+		});
 
 		// Check the modules were initialised: 
 		Assert.areEqual( 3, instance.modules.length );
 		Assert.isTrue( checkModuleExists(DispatchModule) );
 		Assert.isTrue( checkModuleExists(ErrorModule) );
-		Assert.isTrue( checkModuleExists(TraceToBrowserModule) );
+		Assert.isTrue( checkModuleExists(BrowserConsoleLogger) );
 
 		// Check the URL filters were initialised:
 		Assert.areEqual( 1, getNumUrlFilters() );
@@ -63,8 +65,8 @@ class UfrontApplicationTest
 		instance.execute(context);
 		
 		// Check the BasePath filter is in there...
-		Assert.areEqual( "/somepage/", context.getRequestUri() );
-		Assert.areEqual( "/index.n/otherpage.html", context.generateUri("/otherpage.html") );
+		Assert.areEqual( "/", context.getRequestUri() );
+		Assert.areEqual( "/otherpage.html", context.generateUri("/otherpage.html") );
 	}
 	
 	@Test
@@ -72,8 +74,11 @@ class UfrontApplicationTest
 
 		// Setup UfrontApplication, but with custom base path
 		context = "/home/todo/index.html".mockHttpContext();
-		configuration = new UfrontConfiguration( false, "/home", null, false );
-		instance = new UfrontApplication( dispatchConfig, configuration );
+		instance = new UfrontApplication({
+			dispatchConf: dispatchConfig,
+			basePath: "/home",
+			urlRewrite: true
+		});
 		instance.execute( context );
 
 		// Check the URL filters were initialised:
@@ -91,8 +96,9 @@ class UfrontApplicationTest
 
 		// Setup UfrontApplication, but with mod rewrite enabled
 		context = "/somepage/".mockHttpContext();
-		configuration = new UfrontConfiguration( true, "/", null, false );
-		instance = new UfrontApplication( dispatchConfig, configuration );
+		instance = new UfrontApplication({
+			urlRewrite: false
+		});
 		instance.execute( context );
 
 		// Check the URL filters were initialised:
@@ -101,8 +107,8 @@ class UfrontApplicationTest
 		// Check the PathInfo filter has been removed...
 		
 		// Check the BasePath filter is in there...
-		Assert.areEqual( "/somepage/", context.getRequestUri() );
-		Assert.areEqual( "/somepage.html", context.generateUri("/somepage.html") );
+		Assert.areEqual( "index.n/somepage/", context.getRequestUri() );
+		Assert.areEqual( "index.n/somepage.html", context.generateUri("/somepage.html") );
 
 	}
 	
@@ -111,15 +117,19 @@ class UfrontApplicationTest
 
 		// Setup UfrontApplication
 		context = "/".mockHttpContext();
-		configuration = new UfrontConfiguration( false, "/", "traces.txt", false );
-		instance = new UfrontApplication( dispatchConfig, configuration );
+		instance = new UfrontApplication({
+			dispatchConf: dispatchConfig,
+			urlRewrite: false,
+			logFile: "traces.txt",
+			basePath: "/"
+		});
 
 		// Check the modules were initialised: 
-		Assert.areEqual( 4, instance.modules.length );
+		Assert.areEqual( 5, instance.modules.length );
 		Assert.isTrue( checkModuleExists(DispatchModule) );
 		Assert.isTrue( checkModuleExists(ErrorModule) );
-		Assert.isTrue( checkModuleExists(TraceToBrowserModule) );
-		Assert.isTrue( checkModuleExists(TraceToFileModule) );
+		Assert.isTrue( checkModuleExists(BrowserConsoleLogger) );
+		Assert.isTrue( checkModuleExists(FileLogger) );
 	}
 	
 	@Test
@@ -129,8 +139,12 @@ class UfrontApplicationTest
 
 		// Setup UfrontApplication
 		context = "/empty/".mockHttpContext();
-		configuration = new UfrontConfiguration( false, "/", null, true );
-		instance = new UfrontApplication( dispatchConfig, configuration );
+		instance = new UfrontApplication({
+			dispatchConf: dispatchConfig, 
+			disableBrowserTrace: true,
+			urlRewrite: false,
+			basePath: "/"
+		});
 
 		// Check the modules were initialised: 
 		Assert.areEqual( 2, instance.modules.length );
@@ -148,7 +162,9 @@ class UfrontApplicationTest
 	public function testExecute():Void {
 
 		// Setup UfrontApplication
-		instance = new UfrontApplication( dispatchConfig, configuration );
+		instance = new UfrontApplication({
+			dispatchConf: dispatchConfig
+		});
 		instance.initModules();
 		instance.onApplicationError.clear();
 
@@ -156,7 +172,7 @@ class UfrontApplicationTest
 		Assert.areEqual( 3, instance.modules.length );
 		Assert.isTrue( checkModuleExists(DispatchModule) );
 		Assert.isTrue( checkModuleExists(ErrorModule) );
-		Assert.isTrue( checkModuleExists(TraceToBrowserModule) );
+		Assert.isTrue( checkModuleExists(BrowserConsoleLogger) );
 
 		var context1 = "/".mockHttpContext();
 		instance.execute( context1 );
@@ -183,7 +199,9 @@ class UfrontApplicationTest
 	public function testNewErrorModule():Void {
 		// Use error function instead
 		context = "/error/".mockHttpContext();
-		instance = new UfrontApplication( dispatchConfig, configuration );
+		instance = new UfrontApplication({
+			dispatchConf: dispatchConfig
+		});
 		instance.execute( context );
 
 		// Assert that a result was returned
@@ -195,8 +213,12 @@ class UfrontApplicationTest
 	public function testNewCustomTrace():Void {
 		// Setup UfrontApplication
 		var traces = [];
-		configuration = new UfrontConfiguration( false, "/", null, true );
-		instance = new UfrontApplication( dispatchConfig, configuration );
+		instance = new UfrontApplication({
+			dispatchConf: dispatchConfig,
+			basePath: "/",
+			disableBrowserTrace: true,
+			urlRewrite: false
+		});
 		instance.addModule( new CustomTrace( traces ) );
 
 		// Check the modules were initialised: 
@@ -251,7 +273,7 @@ private class TestController
 	}
 }
 
-private class CustomTrace implements ITraceModule
+private class CustomTrace implements IHttpModule
 {
 	public var arr:Array<String>;
 	public function new( arr:Array<String> ) this.arr = arr;

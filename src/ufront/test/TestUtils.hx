@@ -76,8 +76,14 @@ class TestUtils
 		If an error is encountered, the exception is returned as a Failure.
 	**/
 	public static function testRoute( context:HttpContext, dispatchCfg:DispatchConfig ):Outcome<RouteTestResult,HttpError> {
-		var ufrontConf = new UfrontConfiguration(true,"/",null,true); // url rewrite, "/" base path, no file trace, no browser trace
-		var app = new UfrontApplication( dispatchCfg, ufrontConf );
+		var ufrontConf:UfrontConfiguration = {
+			dispatchConf: dispatchCfg,
+			urlRewrite: true,
+			basePath: "/",
+			logFile: null,
+			disableBrowserTrace: true
+		}
+		var app = new UfrontApplication( ufrontConf );
 		app.errorModule.catchErrors = false;
 		var result = try {
 			app.execute( context );

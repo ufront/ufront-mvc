@@ -5,7 +5,9 @@ import haxe.PosInfos;
 import minject.Injector;
 import ufront.application.HttpApplication;
 import haxe.web.Dispatch.DispatchConfig;
-import ufront.auth.EasyAuth;
+#if ufront_easyauth
+	import ufront.auth.EasyAuth;
+#end
 import ufront.log.*;
 import ufront.remoting.RemotingApiContext;
 import ufront.remoting.RemotingModule;

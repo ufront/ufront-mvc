@@ -110,7 +110,7 @@ class DispatchModule implements IHttpModule
 
 			dispatch.processDispatchRequest( dispatchConfig );
 		} 
-		catch ( e:DispatchError ) throw dispatchErrorToHttpError( e )
+		catch ( e:DispatchError ) throw dispatchErrorToHttpError( e );
 	}
 
 	function executeActionHandler( context:HttpContext, async:Async ) {

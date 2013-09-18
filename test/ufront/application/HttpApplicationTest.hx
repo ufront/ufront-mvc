@@ -145,7 +145,7 @@ class HttpApplicationTest
 		Assert.isTrue( context.response.flush().verify() );
 
 		// Test the context was disposed
-		Assert.isTrue( context.session.dispose().verify() );
+		Assert.isTrue( context.dispose().verify() );
 	}
 
 	@Test

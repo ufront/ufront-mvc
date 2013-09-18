@@ -37,7 +37,7 @@ typedef UfrontConfiguration = {
 	/** 
 		Is mod_rewrite or similar being used?  
 		If not, query strings will be filtered out of the URLs.
-		Default = false;
+		Default = true;
 	**/
 	?urlRewrite:Bool,
 	
@@ -124,7 +124,9 @@ class DefaultUfrontConfiguration {
 			apis: cast CompileTime.getAllClasses( RemotingApiClass ),
 			errorModule: new ErrorModule(),
 			sessionFactory: FileSession.create.bind(_, "sessions", null, 0),
-			authFactory: cast EasyAuth.create.bind(_,null)
+			authFactory: 
+				#if ufront_easyauth cast EasyAuth.create.bind(_,null)
+				#else YesBossAuthHandler.create #end
 		}
 	}
 }
