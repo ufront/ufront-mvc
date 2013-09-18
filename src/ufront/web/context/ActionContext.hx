@@ -2,6 +2,7 @@ package ufront.web.context;
 
 import ufront.web.session.IHttpSessionState;
 import thx.error.NullArgument;
+import ufront.auth.*;
 
 /**
 	A context describing the result returned by an action.
@@ -18,6 +19,7 @@ class ActionContext
 	public var request(get, null) : HttpRequest;
 	public var response(get, null) : HttpResponse;
 	public var session(get, null) : IHttpSessionState;
+	public var auth(get, null) : IAuthHandler<IAuthUser>;
 
 	public function new( httpContext:HttpContext, ?controller:{}, ?action:String, ?args:Array<Dynamic> ) {
 		NullArgument.throwIfNull( httpContext );
@@ -30,13 +32,16 @@ class ActionContext
 	/**
 		Dispose of this ActionResultContext.
 
-		Currently just disposes of the given `session`.
+		Currently just disposes of the HttpContext, which will commit the given `session`.
 	**/
 	public function dispose():Void {
-		session.dispose();
+		httpContext.dispose();
 	}
 	
 	inline function get_request() return httpContext.request;
 	inline function get_response() return httpContext.response;
 	inline function get_session() return httpContext.session;
+	inline function get_auth() return httpContext.auth;
+
+	public function toString() return 'ActionContext($controller, $action, $args)';
 }

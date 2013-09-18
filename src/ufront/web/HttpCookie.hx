@@ -1,5 +1,7 @@
 package ufront.web;
 
+import thx.error.NullArgument;
+
 /**
 	A class describing a Http Cookie.
 
@@ -30,15 +32,13 @@ class HttpCookie
 	
 	function setName(v : String)
 	{
-		if (null == v)
-			throw "invalid null argument name";
+		NullArgument.throwIfNull( v );
 		return name = v;
 	}
 	
 	function set_value(v : String)
 	{
-		if (null == v)
-			throw "invalid null argument value";
+		NullArgument.throwIfNull( v );
 		return value = v;
 	}
 	

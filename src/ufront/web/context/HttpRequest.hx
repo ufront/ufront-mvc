@@ -1,5 +1,4 @@
 package ufront.web.context;
-import thx.collection.CascadeHash;
 import thx.error.AbstractMethod;
 import haxe.io.Bytes;
 import haxe.ds.StringMap;
@@ -18,7 +17,7 @@ class HttpRequest
 
 		Currently supports PHP and Neko only.
 	**/
-	public static function getCurrentRequest() : HttpRequest
+	public static function create():HttpRequest
 	{
 		return 
 			#if php 
@@ -36,14 +35,20 @@ class HttpRequest
 		The parameters are collected in the following order:
 
 		- query-string parameters
-		- post values
 		- cookies
+		- post values
 	**/
-	public var params(get, null) : CascadeHash<String>;
+	@:isVar public var params(get, null) : Map<String,String>;
 	function get_params()
 	{
-		if (null == params)
-			params = new CascadeHash([new StringMap(), query, post, cookies]);
+		if (null == params) {
+			params = new Map<String,String>();
+			for (map in [query,cookies,post]) {
+				for (key in map.keys()) {
+					params.set(key, map[key]);
+				}
+			}
+		}
 		return params;
 	}
 
@@ -62,19 +67,19 @@ class HttpRequest
 	/**
 		The GET query parameters for this request.
 	**/
-	public var query(get, null) : StringMap<String>;
+	public var query(get, null) : Map<String,String>;
 	function get_query() return throw new AbstractMethod();
 
 	/**
 		The POST parameters for this request.
 	**/
-	public var post(get, null) : StringMap<String>;
+	public var post(get, null) : Map<String,String>;
 	function get_post() return throw new AbstractMethod();
 
 	/**
 		The Cookie parameters for this request.
 	**/
-	public var cookies(get, null) : StringMap<String>;
+	public var cookies(get, null) : Map<String,String>;
 	function get_cookies() return throw new AbstractMethod();
 
 	/**
@@ -100,7 +105,7 @@ class HttpRequest
 	/**
 		The client headers supplied in the request.  
 	**/
-	public var clientHeaders(get, null) : StringMap<String>;
+	public var clientHeaders(get, null) : Map<String,String>;
 	function get_clientHeaders() return throw new AbstractMethod();
 
 	/**
@@ -125,6 +130,8 @@ class HttpRequest
 		This is the path to your `index` file, not to the current class or controller.
 
 		It will usually be an absolute path, but depending on the environment it may be relative.
+
+		@todo confirm this always has a traling slash.  It appears to...
 	**/
 	public var scriptDirectory(get, null) : String;
 	function get_scriptDirectory() return throw new AbstractMethod();

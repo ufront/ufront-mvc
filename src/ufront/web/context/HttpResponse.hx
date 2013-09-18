@@ -17,7 +17,7 @@ class HttpResponse
 
 		Currently PHP and Neko are supported.  Other platforms will get the default implementation, which will mostly work, except for flush(), which actually writes the HTTP response output.
 	**/
-	public static function createResponse():HttpResponse
+	public static function create():HttpResponse
 	{
 		return
 			#if php
