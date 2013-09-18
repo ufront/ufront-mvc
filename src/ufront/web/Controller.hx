@@ -1,5 +1,6 @@
 package ufront.web;
 
+import haxe.PosInfos;
 import ufront.web.context.ActionContext;
 
 /**
@@ -13,12 +14,10 @@ class Controller
 {
 	/** 
 		The Action Context.  
-		This is not set automatically, it is up to the DispatchModule or similar to pass the context to the controller.  
-		This has a setter that you can override if you want to perform any initialisation logic when the context is set.
+
+		This is usually injected by `ufront.web.DispatchModule`.
 	**/
-	@:isVar
-	public var context(default,set):Null<ActionContext>;
-	function set_context(v) return context=v;
+	@inject public var context:ActionContext;
 
 	/**
 		Empty constructor.  
@@ -31,5 +30,33 @@ class Controller
 	**/
 	public function toString() {
 		return Type.getClassName( Type.getClass(this) );
+	}
+
+	/**
+		A shortcut to `HttpContext.ufTrace`
+	**/
+	public inline function ufTrace( msg:Dynamic, ?pos:PosInfos ) {
+		context.httpContext.ufTrace( msg, pos );
+	}
+
+	/**
+		A shortcut to `HttpContext.ufLog`
+	**/
+	public inline function ufLog( msg:Dynamic, ?pos:PosInfos ) {
+		context.httpContext.ufLog( msg, pos );
+	}
+
+	/**
+		A shortcut to `HttpContext.ufWarn`
+	**/
+	public inline function ufWarn( msg:Dynamic, ?pos:PosInfos ) {
+		context.httpContext.ufWarn( msg, pos );
+	}
+
+	/**
+		A shortcut to `HttpContext.ufError`
+	**/
+	public inline function ufError( msg:Dynamic, ?pos:PosInfos ) {
+		context.httpContext.ufError( msg, pos );
 	}
 }
