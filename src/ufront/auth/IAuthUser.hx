@@ -16,11 +16,6 @@ import hxevents.Notifier;
 interface IAuthUser
 {
 	/** 
-		Is this user the currently logged in user?
-	**/
-	function isCurrentlyLoggedIn() : Bool;
-
-	/** 
 		Does this user have the specified permission(s)
 		You can specify either a single permission or a group or permissions.  
 		All permissions must be satisfied for it to return true.
