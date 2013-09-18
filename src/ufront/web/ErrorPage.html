@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Ufront Error</title>
+	<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet" />
+	<style>
+		p[frown] {
+			text-align: center;
+		}
+		p[frown] span { 
+			transform: rotate(90deg); 
+			display: inline-block; 
+			color: #bbb; 
+			font-size: 3em;
+		}
+	</style>
+</head>
+<body style="padding-top: 30px;">
+	<div class="container">
+		<div class="hero-unit">
+			<p frown><span>:(</span></p>
+			<summary><h1>$error</h1></summary>
+			<details>
+				$inner
+				$exceptionStack
+				$callStack
+			</details>
+		</div>
+	</div>
+</body>
+</html>

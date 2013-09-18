@@ -60,6 +60,10 @@ class ErrorModule implements IHttpModule
 	**/
 	public function _onError( e:{ context:HttpContext, error:Error } )
 	{
+		// Pass the error to our log...
+		var callStack = #if debug " "+CallStack.toString( CallStack.exceptionStack() ) #else "" #end;
+		e.context.ufError( 'Handling error: ${e.error}$callStack' );
+
 		// Get the error into the HttpError type, wrap it if necessary
 		var httpError:HttpError;
 		if( !Std.is(e.error, HttpError) ) {
@@ -78,6 +82,7 @@ class ErrorModule implements IHttpModule
 		// Clear the output, set the response code, and output.
 		e.context.response.clear();
 		e.context.response.status = httpError.code; 
+		e.context.response.contentType = "text/html";
 		e.context.response.write( renderError(httpError,showStack) );
 		e.context.completed = true;
 
@@ -102,37 +107,19 @@ class ErrorModule implements IHttpModule
 
 		var exceptionStack = 
 			if ( showStack && exceptionStackItems.length>0 ) 
-				'<div><p><i>exception stack:</i></p>\n<ul><li>' + exceptionStackItems.join("</li><li>") + '</li></ul></div>'
+				'<div><h3>Exception Stack:</h3>
+					<pre><code>' + exceptionStackItems.join("\n") + '</pre></code>
+				</div>'
 			else "";
 
 		var callStack = 
 			if ( showStack && callStackItems.length>0 ) 
-				'<div><p><i>call stack:</i></p>\n<ul><li>' + callStackItems.join("</li><li>") + '</li></ul></div>'
+				'<div><h3>Call Stack:</h3>
+					<pre><code>' + callStackItems.join("\n") + '</pre></code>
+				</div>'
 			else "";
 		
-		return '<!doctype html>
-<html>
-	<head>
-		<title>$error</title>
-		<style>
-			body { text-align: center;}
-			h1 { font-size: 50px; }
-			body { font: 20px Constantia, "Hoefler Text",  "Adobe Caslon Pro", Baskerville, Georgia, Times, serif; color: #999; text-shadow: 2px 2px 2px rgba(200, 200, 200, 0.5)}
-			a { color: rgb(36, 109, 56); text-decoration:none; }
-			a:hover { color: rgb(96, 73, 141) ; text-shadow: 2px 2px 2px rgba(36, 109, 56, 0.5) }
-			span[frown] { transform: rotate(90deg); display:inline-block; color: #bbb; }
-		</style>
-	</head>
-	<body>
-		<details>
-			<summary><h1>$error</h1></summary>  
-			$inner
-			$exceptionStack
-			$callStack
-			<p><span frown>:(</span></p>
-		</details>
-	</body>
-</html>';
+		return CompileTime.interpolateFile( "ufront/web/ErrorPage.html" );
 	}
 	
 	/**
