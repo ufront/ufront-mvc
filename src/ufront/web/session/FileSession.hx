@@ -1,5 +1,6 @@
 package ufront.web.session;
 
+import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
 import ufront.web.context.HttpContext;
@@ -95,11 +96,10 @@ class FileSession implements IHttpSessionStateSync
 		this.sessionName = (sessionName!=null) ? sessionName : defaultSessionName;
 		this.expiry = (expiry!=null && expiry>0) ? expiry : defaultExpiry;
 		
-		// sanitise the savePath
+		// sanitise and set the savePath
 		if (savePath==null) savePath = defaultSavePath;
-		savePath = savePath.replace("\\", "/");
-		if (!savePath.endsWith("/")) savePath += "/";
-		if (!savePath.startsWith("/")) savePath = context.request.scriptDirectory + savePath;
+		savePath = Path.addTrailingSlash( "/" );
+		if (!savePath.startsWith("/")) savePath = context.contentDirectory + savePath;
 		this.savePath = savePath;
 
 		started = false;
@@ -131,7 +131,7 @@ class FileSession implements IHttpSessionStateSync
 	/**
 		The save path for the session files.
 
-		This should be absolute, or relative to the script's execution directory.
+		This should be absolute, or relative to the `HttpContext.contentDirectory`
 
 		Relative paths should not have a leading slash.
 		If a trailing slash is not included, it will be added.

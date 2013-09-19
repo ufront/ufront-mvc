@@ -11,7 +11,7 @@ using Types;
 /**
 	Trace module that logs traces to a file.
 
-	During the `onLogRequest` event, this will open a file (relative to the script directory) and append entries to the log.
+	During the `onLogRequest` event, this will open a file (relative to the `HttpContext.contentDirectory`) and append entries to the log.
 
 	This will log traces, logs, warnings and errors from the current request.  	If the current application is a UfrontApplication, it will also log messages which are not associated with a particular request.
 
@@ -74,7 +74,7 @@ class FileLogger implements IHttpModule
 
 	function writeFile( context:HttpContext ) {
 		if ( file==null ) {
-			file = File.append( context.request.scriptDirectory + path );
+			file = File.append( context.contentDirectory + path );
 		}
 
 		var req = context.request;
