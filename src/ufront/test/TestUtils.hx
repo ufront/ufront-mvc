@@ -77,7 +77,7 @@ class TestUtils
 	**/
 	public static function testRoute( context:HttpContext, dispatchCfg:DispatchConfig ):Outcome<RouteTestResult,HttpError> {
 		var ufrontConf:UfrontConfiguration = {
-			dispatchConf: dispatchCfg,
+			dispatchConfig: dispatchCfg,
 			urlRewrite: true,
 			basePath: "/",
 			logFile: null,

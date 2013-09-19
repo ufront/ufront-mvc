@@ -17,11 +17,11 @@ typedef UfrontConfiguration = {
 	/**
 		The `DispatchConfig` representing your routes.
 
-		Fetch by using `dispatchConf = ufront.web.Dispatch.make( new MyRoutes() )`
+		Fetch by using `dispatchConfig = ufront.web.Dispatch.make( new MyRoutes() )`
 		
-		The default value is a catch-all controller that informs you that you need to add a dispatchConf.
+		The default value is a catch-all controller that informs you that you need to add a dispatchConfig.
 	**/
-	?dispatchConf:DispatchConfig,
+	?dispatchConfig:DispatchConfig,
 
 	/**
 		The `RemotingApiContext` to share via remoting.
@@ -47,9 +47,23 @@ typedef UfrontConfiguration = {
 		Default = "/" (app is at root of webserver)
 	**/
 	?basePath:String,
+
+	/**
+		The directory 
+		
+		This should be specified relative to the script directory (fetched using `HttpRequest.scriptDirectory`).  You can either have it as a subdirectory, (eg "uf-content") or in a parent directory (eg "../uf-content")
+
+		There should not be a leading slash, and a trailing slash is optional.
+
+		Default = "uf-content"
+	**/
+	?contentDirectory:String,
 	
 	/**
 		If specified, then traces are logged to the file specified by this path.
+
+		This should be set relative to `contentDirectory`. 
+
 		Default = null; (don't log)
 	**/
 	?logFile:Null<String>,
@@ -114,10 +128,11 @@ class DefaultUfrontConfiguration {
 	**/
 	public static function get():UfrontConfiguration {
 		return {
-			dispatchConf: Dispatch.make( _defaultRoutes ),
+			dispatchConfig: Dispatch.make( _defaultRoutes ),
 			remotingContext: null,
 			urlRewrite:true,
 			basePath:'/',
+			contentDirectory:'uf-content',
 			logFile:null,
 			disableBrowserTrace: false,
 			controllers: cast CompileTime.getAllClasses( Controller ),

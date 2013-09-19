@@ -29,7 +29,7 @@ using Objects;
 
 	- Routing with `ufront.module.DispatchModule`
 	- Easily add remoting API context and initiate the `ufront.remoting.RemotingModule`
-	- Tracing, to console or logfile, based on your `ufront.web.UfrontConfiguration`
+	- Tracing, to console, logfile or remoting call, based on your `ufront.web.UfrontConfiguration`
 
 	And in future
 
@@ -148,11 +148,12 @@ class UfrontApplication extends HttpApplication
 			remotingModule = new RemotingModule();
 			addModule( remotingModule );
 			remotingModule.loadApi( configuration.remotingContext );
-			addModule( new RemotingLogger() );
+			if ( !configuration.disableBrowserTrace ) 
+				addModule( new RemotingLogger() );
 		}
 
 		// Add a DispatchModule which will deal with all of our routing and executing contorller actions and results
-		dispatchModule = new DispatchModule( configuration.dispatchConf );
+		dispatchModule = new DispatchModule( configuration.dispatchConfig );
 		addModule( dispatchModule );
 
 		// add tracing modules
@@ -185,7 +186,7 @@ class UfrontApplication extends HttpApplication
 	**/
 	override public function execute( ?httpContext:HttpContext ) {
 		// Set up HttpContext for the request
-		if ( httpContext==null ) httpContext = HttpContext.create( sessionFactory, authFactory, urlFilters );
+		if ( httpContext==null ) httpContext = HttpContext.create( sessionFactory, authFactory, urlFilters, configuration.contentDirectory );
 
 		// execute
 		super.execute( httpContext );

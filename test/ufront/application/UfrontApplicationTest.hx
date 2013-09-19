@@ -48,7 +48,7 @@ class UfrontApplicationTest
 
 		// Setup UfrontApplication, default config
 		instance = new UfrontApplication({
-			dispatchConf: dispatchConfig
+			dispatchConfig: dispatchConfig
 		});
 
 		// Check the modules were initialised: 
@@ -75,7 +75,7 @@ class UfrontApplicationTest
 		// Setup UfrontApplication, but with custom base path
 		context = "/home/todo/index.html".mockHttpContext();
 		instance = new UfrontApplication({
-			dispatchConf: dispatchConfig,
+			dispatchConfig: dispatchConfig,
 			basePath: "/home",
 			urlRewrite: true
 		});
@@ -118,7 +118,7 @@ class UfrontApplicationTest
 		// Setup UfrontApplication
 		context = "/".mockHttpContext();
 		instance = new UfrontApplication({
-			dispatchConf: dispatchConfig,
+			dispatchConfig: dispatchConfig,
 			urlRewrite: false,
 			logFile: "traces.txt",
 			basePath: "/"
@@ -140,7 +140,7 @@ class UfrontApplicationTest
 		// Setup UfrontApplication
 		context = "/empty/".mockHttpContext();
 		instance = new UfrontApplication({
-			dispatchConf: dispatchConfig, 
+			dispatchConfig: dispatchConfig, 
 			disableBrowserTrace: true,
 			urlRewrite: false,
 			basePath: "/"
@@ -163,7 +163,7 @@ class UfrontApplicationTest
 
 		// Setup UfrontApplication
 		instance = new UfrontApplication({
-			dispatchConf: dispatchConfig
+			dispatchConfig: dispatchConfig
 		});
 		instance.initModules();
 		instance.onApplicationError.clear();
@@ -200,7 +200,7 @@ class UfrontApplicationTest
 		// Use error function instead
 		context = "/error/".mockHttpContext();
 		instance = new UfrontApplication({
-			dispatchConf: dispatchConfig
+			dispatchConfig: dispatchConfig
 		});
 		instance.execute( context );
 
@@ -214,7 +214,7 @@ class UfrontApplicationTest
 		// Setup UfrontApplication
 		var traces = [];
 		instance = new UfrontApplication({
-			dispatchConf: dispatchConfig,
+			dispatchConfig: dispatchConfig,
 			basePath: "/",
 			disableBrowserTrace: true,
 			urlRewrite: false

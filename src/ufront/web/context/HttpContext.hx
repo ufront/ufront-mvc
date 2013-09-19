@@ -1,4 +1,5 @@
 package ufront.web.context;
+import haxe.io.Path;
 import haxe.PosInfos;
 import hxevents.Async;
 import ufront.auth.IAuthUser;
@@ -28,15 +29,12 @@ class HttpContext
 
 		`urlFilters` will be an empty array if not supplied.
 	**/
-	public static function create( ?request:HttpRequest, ?response:HttpResponse, ?session:IHttpSessionState, ?auth:IAuthHandler<IAuthUser>, ?sessionFactory:HttpContext->IHttpSessionState, ?authFactory:HttpContext->IAuthHandler<IAuthUser>, ?urlFilters:Array<IUrlFilter> ) {
+	public static function create( ?request:HttpRequest, ?response:HttpResponse, ?session:IHttpSessionState, ?auth:IAuthHandler<IAuthUser>, ?sessionFactory:HttpContext->IHttpSessionState, ?authFactory:HttpContext->IAuthHandler<IAuthUser>, ?urlFilters:Array<IUrlFilter>, ?contentDir="uf-content" ) {
 		if( null==request )
 			request = HttpRequest.create();
 		if( null==response )
 			response = HttpResponse.create();
-		// import ufront.web.session.FileSession;
-		// if (null == sessionpath)
-			// sessionpath = request.scriptDirectory + "../_sessions";
-		return new HttpContext(request, response, session, auth, sessionFactory, authFactory, urlFilters );
+		return new HttpContext( request, response, session, auth, sessionFactory, authFactory, urlFilters );
 	}
 
 	/**
@@ -47,8 +45,10 @@ class HttpContext
 		`request` and `response` are required.  `session` and `auth` are optional, and will default to null.
 
 		`urlFilters` will be used for `getRequestUri()` and `generateUri()`.  By default it is an empty array.
+
+		`contentDir` is used to help specify the path of `contentDirectory`, relative to `request.scriptDirectory`.  Default value is `uf-content`
 	**/
-	public function new( request:HttpRequest, response:HttpResponse, ?session:IHttpSessionState, ?auth:IAuthHandler<IAuthUser>, ?sessionFactory:HttpContext->IHttpSessionState, ?authFactory:HttpContext->IAuthHandler<IAuthUser>, ?urlFilters:Array<IUrlFilter> ) {
+	public function new( request:HttpRequest, response:HttpResponse, ?session:IHttpSessionState, ?auth:IAuthHandler<IAuthUser>, ?sessionFactory:HttpContext->IHttpSessionState, ?authFactory:HttpContext->IAuthHandler<IAuthUser>, ?urlFilters:Array<IUrlFilter>, ?contentDir="uf-content" ) {
 		completed = false;
 		NullArgument.throwIfNull(response);
 		NullArgument.throwIfNull(request);
@@ -59,6 +59,7 @@ class HttpContext
 		this._session = session;
 		this._auth = auth;
 		this.urlFilters = (urlFilters!=null) ? urlFilters : [];
+		this.contentDir = contentDir;
 		messages = [];
 	}
 
@@ -142,6 +143,26 @@ class HttpContext
 	public function setUrlFilters( filters ) {
 		urlFilters = (filters!= null) ? filters : [];
 		_requestUri = null;
+	}
+
+	/**
+		Get the path of the content directory.
+
+		This is a directory that ufront has write-access to, and should preferably not be available for general Http access.
+
+		It can be used to store sessions, log files, cache, uploaded files etc.
+		
+		The value is essentially `${request.scriptDirectory}/${contentDir}/`, where `contentDir` is the value that was supplied to the constructor.
+
+		If using `ufront.application.UfrontApplication`, this value can be set with the `contentDirectory` setting in your `ufront.web.Configuration` initialization settings.
+
+		The trailing slash is always included.
+	**/
+	public var contentDirectory(get,null):String;
+
+	var contentDir:String;
+	function get_contentDirectory() {
+		return Path.addTrailingSlash( '${request.scriptDirectory}/$contentDir' );
 	}
 	
 	/**
