@@ -35,6 +35,7 @@ class RemotingApiClass
 
 		A `messages` array must be injected for these to function correctly.  `ufront.module.DispatchModule` and `ufront.rmeoting.RemotingModule` inject this correctly.
 	**/
+	@:noCompletion
 	public inline function ufTrace( msg:Dynamic, ?pos:PosInfos ) {
 		messages.push({ msg: msg, pos: pos, type:Trace });
 	}
@@ -44,6 +45,7 @@ class RemotingApiClass
 
 		A `messages` array must be injected for these to function correctly.  `ufront.module.DispatchModule` and `ufront.rmeoting.RemotingModule` inject this correctly.
 	**/
+	@:noCompletion
 	public inline function ufLog( msg:Dynamic, ?pos:PosInfos ) {
 		messages.push({ msg: msg, pos: pos, type:Log });
 	}
@@ -53,6 +55,7 @@ class RemotingApiClass
 
 		A `messages` array must be injected for these to function correctly.  `ufront.module.DispatchModule` and `ufront.rmeoting.RemotingModule` inject this correctly.
 	**/
+	@:noCompletion
 	public inline function ufWarn( msg:Dynamic, ?pos:PosInfos ) {
 		messages.push({ msg: msg, pos: pos, type:Warning });
 	}
@@ -62,6 +65,7 @@ class RemotingApiClass
 
 		A `messages` array must be injected for these to function correctly.  `ufront.module.DispatchModule` and `ufront.rmeoting.RemotingModule` inject this correctly.
 	**/
+	@:noCompletion
 	public inline function ufError( msg:Dynamic, ?pos:PosInfos ) {
 		messages.push({ msg: msg, pos: pos, type:Error });
 	}
@@ -69,6 +73,7 @@ class RemotingApiClass
 	/**
 		Print the current class name
 	**/
+	@:noCompletion
 	public function toString() {
 		return Type.getClassName( Type.getClass(this) );
 	}

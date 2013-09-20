@@ -28,6 +28,7 @@ class Controller
 	/**
 		A default toString() to aid in debugging.  Just prints the current class name.
 	**/
+	@:noCompletion
 	public function toString() {
 		return Type.getClassName( Type.getClass(this) );
 	}
@@ -35,6 +36,7 @@ class Controller
 	/**
 		A shortcut to `HttpContext.ufTrace`
 	**/
+	@:noCompletion
 	public inline function ufTrace( msg:Dynamic, ?pos:PosInfos ) {
 		context.httpContext.ufTrace( msg, pos );
 	}
@@ -42,6 +44,7 @@ class Controller
 	/**
 		A shortcut to `HttpContext.ufLog`
 	**/
+	@:noCompletion
 	public inline function ufLog( msg:Dynamic, ?pos:PosInfos ) {
 		context.httpContext.ufLog( msg, pos );
 	}
@@ -49,6 +52,7 @@ class Controller
 	/**
 		A shortcut to `HttpContext.ufWarn`
 	**/
+	@:noCompletion
 	public inline function ufWarn( msg:Dynamic, ?pos:PosInfos ) {
 		context.httpContext.ufWarn( msg, pos );
 	}
@@ -56,6 +60,7 @@ class Controller
 	/**
 		A shortcut to `HttpContext.ufError`
 	**/
+	@:noCompletion
 	public inline function ufError( msg:Dynamic, ?pos:PosInfos ) {
 		context.httpContext.ufError( msg, pos );
 	}
