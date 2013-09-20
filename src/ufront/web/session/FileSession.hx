@@ -98,7 +98,7 @@ class FileSession implements IHttpSessionStateSync
 		
 		// sanitise and set the savePath
 		if (savePath==null) savePath = defaultSavePath;
-		savePath = Path.addTrailingSlash( "/" );
+		savePath = Path.addTrailingSlash( savePath );
 		if (!savePath.startsWith("/")) savePath = context.contentDirectory + savePath;
 		this.savePath = savePath;
 
@@ -201,11 +201,8 @@ class FileSession implements IHttpSessionStateSync
 					file = savePath + id + ".sess";
 				} while( FileSystem.exists(file) );
 				
-				// Quickly create the file
-				var f = File.write( file );
-				f.writeString("");
-				f.flush();
-				f.close();
+				// Create the file so no one else takes it
+				File.saveContent( file, "" );
 
 				var expire = ( expiry==0 ) ? null : DateTools.delta( Date.now(), 1000.0*expiry );
 				var path = '/'; // TODO: Set cookie path to application path, right now it's global.
