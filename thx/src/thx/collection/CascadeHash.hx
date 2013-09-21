@@ -6,8 +6,9 @@
 package thx.collection;
 import thx.error.Error;
 import thx.error.NullArgument;
+import Map;
 
-class CascadeHash<T>
+class CascadeHash<T> implements IMap<String,T>
 {	
 	var _h : List<Map<String, T>>;
 	public function new(hashes : Array<Map<String, T>>)
@@ -32,7 +33,7 @@ class CascadeHash<T>
 	}
 	
 	public function get(key : String)
-	{
+	{   
 		for(h in _h)
 			if(h.exists(key))
 				return h.get(key);
@@ -72,12 +73,12 @@ class CascadeHash<T>
 		return "{" + arr.join(", ") + "}";
 	}
 
-	public function toStringMap()
+	public function toStringMap():haxe.ds.StringMap<T>
 	{
-		var sm = new StringMap();
+		var sm = new Map<String,T>();
 		for(h in _h)
 			for(k in h.keys())
-				sm[k] = h[k];
+				sm[k] = h.get(k);
 		return sm;
 	}
 }

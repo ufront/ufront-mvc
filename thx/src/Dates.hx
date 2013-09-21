@@ -7,6 +7,7 @@ import thx.culture.Culture;
 import thx.culture.FormatDate;
 import thx.culture.FormatParams;
 import thx.error.Error;
+import thx.culture.Culture;
 
 // Also allow static methods in these classes to be accessed with "using Dates;"
 typedef FormatDate = thx.culture.FormatDate;
@@ -225,7 +226,7 @@ class Dates
 	*	
 	*	@param time The unix time in milliseconds.  See date.getTime()
 	*	@param day Day to snap to.  Either "sunday", "monday", "tuesday" etc. Case insensitive.
-	*	@param mode Whether to go the next day, the previous day, or in the current week.
+	*	@param mode Whether to go the next day (positive), the previous day (negative), or in the current week (0, default).
 	*	@param firstDayOfWk The first day of the week.  Default to 0 (Sunday).  Monday = 1.
 	*	
 	*	@throws String if invalid weekday was entered.
