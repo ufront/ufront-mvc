@@ -5,8 +5,8 @@
   "tags": ["ufront","web","framework","mvc","neko","php"],
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
-  "releasenote": "Initial Release. For early adopters only at this point, things subject to change.",
-  "version": "1.0.0-alpha.1",
+  "releasenote": "Project restructure. Using `haxe.web.Dispatch` for routing, and `minject` for dependency injection.  API is stabilising now, though still open to feedback.  Use ufront-mvc-classic if you want to preserve project compatibility with your old projects.",
+  "version": "1.0.0-beta.1",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
     "hxevents": "",
