@@ -17,7 +17,7 @@ interface IHttpSessionState
 	/** Empty the session of values.  Please note this does not end the session. **/
 	public function clear() : Void;
 
-	/** Get an existing session item **/
+	/** Get an existing session item. **/
 	public function get(name : String) : Dynamic;
 
 	/** Set a session item.  This should not be committed until `commit()` is called **/
@@ -28,6 +28,9 @@ interface IHttpSessionState
 
 	/** Remove an item from the session **/
 	public function remove(name : String) : Void;
+
+	/** Return whether or not there is already an active session. **/
+	public function isActive() : Bool;
 
 	/** Return the ID of the current session **/
 	public function getID() : String;

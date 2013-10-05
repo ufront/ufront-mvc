@@ -159,25 +159,23 @@ class FileSession implements IHttpSessionStateSync
 	public function init():Void {
 		if (!started) {
 
-			if(!FileSystem.exists(savePath)) throw 'Neko session savepath not found: ' + savePath;
+			if ( !FileSystem.exists(savePath) ) throw 'Neko session savepath not found: ' + savePath;
 
-			var id:String = null;
-			if( id==null ) id = context.request.cookies[sessionName];
-			if( id==null ) id = context.request.params[sessionName];
+			var id = getID();
 
 			var file : String;
 			var fileData : String;
 
 			// Try to restore an existing session
-			if( id!=null ) {
+			if ( id!=null ) {
 				testValidId( id );
 				file = getSessionFilePath( id );
-				if( !FileSystem.exists(file) ) {
+				if ( !FileSystem.exists(file) ) {
 					id = null;
 				}
 				else {
 					fileData = try File.getContent( file ) catch ( e:Dynamic ) null;
-					if( fileData!=null ) {
+					if ( fileData!=null ) {
 						try 
 							sessionData = cast( Unserializer.run(fileData), StringMap<Dynamic> )
 						catch ( e:Dynamic ) 
@@ -271,6 +269,7 @@ class FileSession implements IHttpSessionStateSync
 		Check if a session has the specified item.
 	**/
 	public inline function exists( name:String ):Bool {
+		if ( !isActive() ) return false;
 		init();
 		return sessionData.exists( name );
 	}
@@ -305,9 +304,20 @@ class FileSession implements IHttpSessionStateSync
 	}
 	
 	/**
+		Whether or not the current session is active.
+
+		This is determined by if a sessionID exists, which will happen if init() has been called or if a SessionID was provided in the request context (via Cookie or GET/POST parameter etc)
+	**/
+	public inline function isActive():Bool {
+		return getID()!=null;
+	}
+	
+	/**
 		Return the current ID
 	**/
 	public inline function getID():String {
+		if ( sessionID==null ) sessionID = context.request.cookies[sessionName];
+		if ( sessionID==null ) sessionID = context.request.params[sessionName];
 		return sessionID;
 	}
 
