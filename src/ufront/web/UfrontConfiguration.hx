@@ -140,7 +140,7 @@ class DefaultUfrontConfiguration {
 			errorModule: new ErrorModule(),
 			sessionFactory: FileSession.create.bind(_, "sessions", null, 0),
 			authFactory: 
-				#if ufront_easyauth cast EasyAuth.create.bind(_,null)
+				#if ufront_easyauth EasyAuth.create.bind(_,null)
 				#else YesBossAuthHandler.create #end
 		}
 	}
