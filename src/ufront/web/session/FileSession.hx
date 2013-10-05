@@ -159,7 +159,7 @@ class FileSession implements IHttpSessionStateSync
 	public function init():Void {
 		if (!started) {
 
-			if ( !FileSystem.exists(savePath) ) throw 'Neko session savepath not found: ' + savePath;
+			if( !FileSystem.exists(savePath.substr(0, -1)) ) throw 'Neko session savepath not found: ' + savePath;
 
 			var id = getID();
 
