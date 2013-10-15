@@ -5,14 +5,16 @@
   "tags": ["ufront","web","framework","mvc","neko","php"],
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
-  "releasenote": "Project restructure. Using `haxe.web.Dispatch` for routing, and `minject` for dependency injection.  API is stabilising now, though still open to feedback.  Use ufront-mvc-classic if you want to preserve project compatibility with your old projects.",
-  "version": "1.0.0-beta.1",
+  "releasenote": "Small fix for FileSession on windows, and other minor improvements.",
+  "version": "1.0.0-beta.2",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
     "hxevents": "",
     "detox": "",
     "random": "",
     "compiletime": "",
-    "minject": ""
+    "minject": "",
+    "tink_core": "1.0.0-beta.3",
+    "tink_macro": "0.0.0-beta "
   }
 }
