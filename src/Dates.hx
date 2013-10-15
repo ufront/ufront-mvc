@@ -1,64 +1,70 @@
-/**
- * ...
- * @author Franco Ponticelli
- */
-
 import thx.culture.Culture;
 import thx.culture.FormatDate;
 import thx.culture.FormatParams;
 import thx.error.Error;
 import thx.culture.Culture;
 
-// Also allow static methods in these classes to be accessed with "using Dates;"
-typedef FormatDate = thx.culture.FormatDate;
-typedef HaxeDateTools = DateTools;
 
+/**
+	Helpers for working with Date objects or timestampts
+
+	`using Dates;`
+
+	@author Franco Ponticelli
+	@author Jason O'Neil
+
+	Also includes typed aliases for `DateTools` and `thx.culture.FormatDate` so their mixins can be included in `using Dates` also
+**/
 class Dates
 {
 	/**
-	* Format a date.
-	* 
-	* Output examples:
-	* 	date.format("D");		Tuesday, October 16, 2012
-	* 	date.format("DS");		10/16/2012
-	* 	date.format("DST");		10/16/2012 12:31:05 PM
-	* 	date.format("DSTS");	10/16/2012 12:31 PM
-	* 	date.format("DTS");		Tuesday, October 16, 2012 12:31 PM
-	* 	date.format("Y");		2012
-	* 	date.format("YM");		October, 2012
-	* 	date.format("M");		10
-	* 	date.format("MN");		October
-	* 	date.format("MS");		Oct
-	* 	date.format("MD");		October 16
-	* 	date.format("WD");		2
-	* 	date.format("WDN");		Tuesday
-	* 	date.format("WDS");		Tue
-	* 	date.format("R");		Tue, 16 Oct 2012 12:31:05 GMT
-	* 	date.format("DT");		Tuesday, October 16, 2012 12:31:05 PM
-	* 	date.format("U");		2012-10-16 12:31:05Z
-	* 	date.format("S");		2012-10-16T12:31:05
-	* 	date.format("T");		12:31:05 PM
-	* 	date.format("TS");		12:31 PM
-	* 	date.format("C");		Tuesday, October 16, 2012
-	* 	date.format(["C", "This happened on %A at %r"]);	This happened on Tuesday at 12:31:05 PM
-	*   
-	*   If the provided format does not match one of these strings, it is passed to FormatDate.format() and is used.
-	*
-	* @param d The Date object to format
-	* @param param A String with the parameter describing the desired output.  See the description above for a list of codes.
-	* @param params An array containing a number of parameters.  Mostly useful if you use "C", and then need a second parameter to describe the format.
-	* @param culture The culture to use.
-	*/
+		Format a date.
+		
+		```
+		Output examples:
+			date.format("D");		Tuesday, October 16, 2012
+			date.format("DS");		10/16/2012
+			date.format("DST");		10/16/2012 12:31:05 PM
+			date.format("DSTS");	10/16/2012 12:31 PM
+			date.format("DTS");		Tuesday, October 16, 2012 12:31 PM
+			date.format("Y");		2012
+			date.format("YM");		October, 2012
+			date.format("M");		10
+			date.format("MN");		October
+			date.format("MS");		Oct
+			date.format("MD");		October 16
+			date.format("WD");		2
+			date.format("WDN");		Tuesday
+			date.format("WDS");		Tue
+			date.format("R");		Tue, 16 Oct 2012 12:31:05 GMT
+			date.format("DT");		Tuesday, October 16, 2012 12:31:05 PM
+			date.format("U");		2012-10-16 12:31:05Z
+			date.format("S");		2012-10-16T12:31:05
+			date.format("T");		12:31:05 PM
+			date.format("TS");		12:31 PM
+			date.format("C");		Tuesday, October 16, 2012
+			date.format(["C", "This happened on %A at %r"]);	This happened on Tuesday at 12:31:05 PM
+		```
+
+		If the provided format does not match one of these strings, it is passed to FormatDate.format() and is used.
+		
+		```
+		@param d The Date object to format
+		@param param A String with the parameter describing the desired output.  See the description above for a list of codes.
+		@param params An array containing a number of parameters.  Mostly useful if you use "C", and then need a second parameter to describe the format.
+		@param culture The culture to use.
+		```
+	**/
 	public static function format(d : Date, ?param : String, ?params : Array<String>, ?culture : Culture)
 	{
 		return formatf(param, params, culture)(d);
 	}
 
 	/** 
-	*	Return a function for formatting a date.  The function returned depends on the format code used here.
-	*
-	*	@see format()
-	*/
+		Return a function for formatting a date.  The function returned depends on the format code used here.
+	
+		@see format()
+	**/
 	public static function formatf(?param : String, ?params : Array<String>, ?culture : Culture)
 	{
 		params = FormatParams.params(param, params, 'D');
@@ -129,17 +135,17 @@ class Dates
 	}
 
 	/** 
-	*	Snaps a time to the nearest second, minute, hour, day, week, month or year.
-	*
-	*	Note, I'm not sure if "week" is functioning correctly yet. It rounds up/down to the
-	*	nearest 7 days, but the epoch didn't begin on a sunday or monday, so that's probably wrong
-	*	
-	*	@param time The unix time in milliseconds.  See date.getTime()
-	*	@param period Either "second", "minute", "hour", "day", "week", "month" or "year"
-	*	@param mode Defines whether to snap up (1), snap down (-1) or round (0)
-	*	
-	*	@return the unix time of the snapped date (In milliseconds).  Or 0 if "period" was invalid.
-	*/
+		Snaps a time to the nearest second, minute, hour, day, week, month or year.
+	
+		Note, I'm not sure if "week" is functioning correctly yet. It rounds up/down to the
+		nearest 7 days, but the epoch didn't begin on a sunday or monday, so that's probably wrong
+		
+		@param time The unix time in milliseconds.  See date.getTime()
+		@param period Either "second", "minute", "hour", "day", "week", "month" or "year"
+		@param mode Defines whether to snap up (1), snap down (-1) or round (0)
+		
+		@return the unix time of the snapped date (In milliseconds).  Or 0 if "period" was invalid.
+	**/
 	public static function snap(time : Float, period : String, mode = 0) : Float
 	{
 		if (mode < 0)
@@ -220,19 +226,19 @@ class Dates
 	}
 
 	/** 
-	*	Snaps a time to a given weekday in the current week.  The time within the day will stay the same.
-	*
-	*	If you are already on the given day, the date will not change.
-	*	
-	*	@param time The unix time in milliseconds.  See date.getTime()
-	*	@param day Day to snap to.  Either "sunday", "monday", "tuesday" etc. Case insensitive.
-	*	@param mode Whether to go the next day (positive), the previous day (negative), or in the current week (0, default).
-	*	@param firstDayOfWk The first day of the week.  Default to 0 (Sunday).  Monday = 1.
-	*	
-	*	@throws String if invalid weekday was entered.
-	*	
-	*	@return The unix time of the day you have snapped to.
-	*/
+		Snaps a time to a given weekday in the current week.  The time within the day will stay the same.
+	
+		If you are already on the given day, the date will not change.
+		
+		@param time The unix time in milliseconds.  See date.getTime()
+		@param day Day to snap to.  Either "sunday", "monday", "tuesday" etc. Case insensitive.
+		@param mode Whether to go the next day (positive), the previous day (negative), or in the current week (0, default).
+		@param firstDayOfWk The first day of the week.  Default to 0 (Sunday).  Monday = 1.
+		
+		@throws String if invalid weekday was entered.
+		
+		@return The unix time of the day you have snapped to.
+	**/
 	public static function snapToWeekDay(time : Float, day : String, ?mode=0, ?firstDayOfWk = 0)
 	{
 		var d = Date.fromTime(time).getDay();
@@ -264,10 +270,11 @@ class Dates
 	}
 
 	/**
-	* Tells if a year is a leap year
-	* @param year The year, represented as a 4 digit integer
-	* @return True if a leap year, false otherwise.
-	*/
+		Tells if a year is a leap year
+
+		@param year The year, represented as a 4 digit integer
+		@return True if a leap year, false otherwise.
+	**/
 	public static function isLeapYear(year:Int)
 	{
 		// Only every 4th year
@@ -280,19 +287,21 @@ class Dates
 	}
 
 	/**
-	* Tells if the given date is inside a leap year.
-	* @param date The date object to check.
-	* @return True if it is in a leap year, false otherwise.
-	*/
+		Tells if the given date is inside a leap year.
+
+		@param date The date object to check.
+		@return True if it is in a leap year, false otherwise.
+	**/
 	inline public static function isInLeapYear(d:Date) return isLeapYear(d.getFullYear());
 
 	/**
-	* Returns the number of days in a month.
-	* @param month An integer representing the month. (Jan=0, Dec=11)
-	* @param year An 4 digit integer representing the year.
-	* @return Int, the number of days in the month.
-	* @throws Error if the month is not between 0 and 11.
-	*/
+		Returns the number of days in a month.
+
+		@param month An integer representing the month. (Jan=0, Dec=11)
+		@param year An 4 digit integer representing the year.
+		@return Int, the number of days in the month.
+		@throws Error if the month is not between 0 and 11.
+	**/
 	public static function numDaysInMonth(month:Int, year:Int)
 	{
 		// 31: Jan, Mar, May, Jul, Aug, Oct, Dec
@@ -308,11 +317,12 @@ class Dates
 	}
 
 	/**
-	* Tells how many days in the month of the given date.
-	* @param date The date representing the month we are checking.
-	* @return Int, the number of days in the month.
-	* @throws Error if the month is not between 0 and 11.
-	*/
+		Tells how many days in the month of the given date.
+
+		@param date The date representing the month we are checking.
+		@return Int, the number of days in the month.
+		@throws Error if the month is not between 0 and 11.
+	**/
 	public static function numDaysInThisMonth(d:Date) return numDaysInMonth(d.getMonth(), d.getFullYear());
 
 	/** Return a new date, offset by `numSec` seconds */
@@ -381,34 +391,36 @@ class Dates
 	static var _reparse = ~/^\d{4}-\d\d-\d\d(( |T)\d\d:\d\d(:\d\d(\.\d{1,3})?)?)?Z?$/;
 	
 	/** 
-	*	Let's you know if a string can be parsed into a valid date format
-	*	
-	*	String formats allowed include: "2010-10-01", "2010-10-01 05:05", 
-	*   "2010-10-01T05:05Z", "2010-10-01 05:05:05", "2010-10-01T05:05:05Z", 
-	*	"2010-10-01T05:05:05", "2010-10-01 05:05:05.005"]
-	* 
-	*	@param s String to check.  
-	*
-	*	@return True if the string can be parsed as a date. 
-	*
-	*	@see Dates.parse()
-	*/
+		Let's you know if a string can be parsed into a valid date format
+		
+		String formats allowed include: 
+		
+		```
+		"2010-10-01", "2010-10-01 05:05", 
+	   "2010-10-01T05:05Z", "2010-10-01 05:05:05", "2010-10-01T05:05:05Z", 
+		"2010-10-01T05:05:05", "2010-10-01 05:05:05.005"]
+		```
+	 
+		@param s `String` to check.  
+		@return True if the string can be parsed as a date. 
+		@see `Dates.parse()`
+	**/
 	public static function canParse(s : String)
 	{
 		return _reparse.match(s);
 	}
 
 	/**
-	*	Parses a string into a Date object.
-	*	
-	*	Use Dates.canParse() to see if a string is in a parsable format.
-	* 
-	*	@param s String to parse.  See canParse() docs for valid string formats.
-	*
-	*	@return A Date object for the given time.
-	*
-	*	@see Dates.canParse()
-	*/
+		Parses a string into a Date object.
+		
+		Use Dates.canParse() to see if a string is in a parsable format.
+	 
+		@param s String to parse.  See canParse() docs for valid string formats.
+	
+		@return A Date object for the given time.
+	
+		@see `Dates.canParse()`
+	**/
 	public static function parse(s : String) : Date
 	{
 		var parts = s.split(".");
@@ -419,18 +431,24 @@ class Dates
 	}
 
 	/**
-	*	A comparison function for dates.
-	*
-	*	Can be used to sort an array of dates from earliest to latest:
-	*
-	*		arrayOfDates.sort(Dates.compare); 
-	* 
-	*	@param a First Date to compare.
-	*	@param b Second Date to compare.
-	*	@return 1 if A is before B, -1 if B is before A and 0 if they represent the same point in time.
-	*/
+		A comparison function for dates.
+	
+		Can be used to sort an array of dates from earliest to latest:
+	
+			arrayOfDates.sort(Dates.compare); 
+	 
+		@param a First Date to compare.
+		@param b Second Date to compare.
+		@return 1 if A is before B, -1 if B is before A and 0 if they represent the same point in time.
+	**/
 	inline public static function compare(a : Date, b : Date)
 	{
 		return Floats.compare(a.getTime(), b.getTime());
 	}
 }
+
+/** Alias of `thx.culture.FormatDate`, included so mixins work with `using Dates;` **/
+typedef FormatDate = thx.culture.FormatDate;
+
+/** Alias of `DateTools`, included so mixins work with `using Dates;` **/
+typedef HaxeDateTools = DateTools;
