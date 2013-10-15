@@ -41,5 +41,4 @@ class DetoxResult<W:DOMCollection> extends ActionResult
 		if (defaultLayout==null) defaultLayout = new DefaultDetoxLayout();
 		return defaultLayout;
 	}
-
 }

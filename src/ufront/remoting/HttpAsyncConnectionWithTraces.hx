@@ -49,8 +49,10 @@ class HttpAsyncConnectionWithTraces extends HttpAsyncConnection
 	// Code mostly copied from super class, but the onData() response has been modified to output traces
 	override public function call( params : Array<Dynamic>, ?onResult : Dynamic -> Void ) {
 
-		// Track the call-stack in case there's an error (not possible on safari/IE currently)
-		var callStack = try CallStack.callStack() catch(e:Dynamic) [Module('Stack traces not supported in this browser...')];
+		#if debug
+			// Track the call-stack in case there's an error (not possible on safari/IE currently)
+			var callStack = try CallStack.callStack() catch(e:Dynamic) [Module('Stack traces not supported in this browser...')];
+		#end
 
 		// Set up the remoting call
 		var h = new haxe.Http(__data.url);
@@ -109,8 +111,7 @@ class HttpAsyncConnectionWithTraces extends HttpAsyncConnection
 				}
 				if (hxrFound == false) throw "Invalid response, no hxr remoting line was found: " + response;
 			} 
-			catch( err : Dynamic ) 
-			{
+			catch( err : Dynamic ) {
 
 				// Pass the error to the error handler
 				ok = false;
@@ -119,15 +120,17 @@ class HttpAsyncConnectionWithTraces extends HttpAsyncConnection
 				error({ err: err, stack: stack });
 			}
 
-			if( ok && onResult != null )
-			{
+			if( ok && onResult != null ) {
 				try onResult(ret) catch (e:Dynamic) {
 					trace ('  Error: $e');
 					#if debug 
 						var cs = CallStack.toString(callStack);
-						trace ('  CallStack: $cs');
-						trace ("  Launching Debugger...");
+						// var es = CallStack.toString( CallStack.exceptionStack() ); // ExceptionStack appears to always be unavailable at this point.
+						trace ( '  During callback for remoting call: ${__path.join(".")}(${params.join(", ")})' );
+						// trace ( '  ExceptionStack: $es'.replace("\n","\n    ") );
+						trace ( '  CallStack: $cs'.replace("\n","\n    ") );
 						#if js 
+							trace ("  Launching Debugger...");
 							js.Lib.debug();
 						#end
 					#end

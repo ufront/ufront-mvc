@@ -53,9 +53,9 @@ class RemotingLogger implements IHttpModule
 		}
 	}
 
-	inline function formatMessage( m:Message ):String {
+	function formatMessage( m:Message ):String {
 		// Make sure everything is toString()'d before we serialize it
-		m.msg = Std.string( m.msg );
+		m.msg = try Std.string( m.msg ) catch ( e:Dynamic ) "ERROR: unable to format message in RemotingLogger.formatMessage";
 		if ( m.pos.customParams != null)
 			m.pos.customParams = m.pos.customParams.map( function (v) return Std.string(v) );
 

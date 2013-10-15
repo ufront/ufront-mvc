@@ -87,7 +87,7 @@ class RemotingModule implements IHttpModule
 					throw 'Remoting call did not have parameter `__x` which describes which API call to make.  Aborting';
 				
 				// Execute the response ... TODO... can we make this support async?
-				remotingResponse = processRequest( params["__x"], context, httpContext );
+				remotingResponse = processRequest( params["__x"], context );
 				r.setOk();
 			}
 			catch ( e:Dynamic ) {
@@ -115,11 +115,10 @@ class RemotingModule implements IHttpModule
 		else async.completed(); // Not a remoting call
 	}
 
-	function processRequest( requestData:String, ctx:Context, httpContext:HttpContext ):String {
+	function processRequest( requestData:String, ctx:Context ):String {
 		var u = new Unserializer( requestData );
 		var path:Array<String> = u.unserialize();
 		var args:Array<String> = u.unserialize();
-		httpContext.ufTrace('Remoting call ${path.join(".")}(${args.join(", ")})');
 		var data = ctx.call( path, args );
 		var s = new Serializer();
 		s.serialize( data );
@@ -139,7 +138,6 @@ class RemotingModule implements IHttpModule
 			// Serialize the stack trace
 			var exceptionStack = CallStack.toString( CallStack.exceptionStack() );
 			var serializedStack = "hxs" + Serializer.run( exceptionStack );
-
 			return '$serializedStack\n$serializedException';
 		#else
 			return '$serializedException';
