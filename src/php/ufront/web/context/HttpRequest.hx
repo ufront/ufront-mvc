@@ -219,7 +219,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	{
 		if (null == scriptDirectory)
 		{
-			scriptDirectory =  untyped __php__('dirname($_SERVER["SCRIPT_FILENAME"])') + "/";
+			scriptDirectory =  untyped __php__("dirname($_SERVER['SCRIPT_FILENAME'])") + "/";
 		}
 		return scriptDirectory;
 	}
