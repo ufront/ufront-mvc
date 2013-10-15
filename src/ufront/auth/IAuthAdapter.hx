@@ -1,6 +1,6 @@
 package ufront.auth;
 
-import tink.core.types.Outcome;
+import tink.core.Outcome;
 
 interface IAuthAdapter<T>
 {

@@ -13,7 +13,7 @@ import haxe.web.Dispatch.DispatchConfig;
 import ufront.application.UfrontApplication;
 import ufront.web.UfrontConfiguration;
 using mockatoo.Mockatoo;
-using tink.core.types.Outcome;
+using tink.core.Outcome;
 
 /**
 	A set of functions to make it easier to mock and test various ufront classes and interfaces.

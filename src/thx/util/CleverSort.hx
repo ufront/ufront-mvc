@@ -5,9 +5,11 @@
 
 package thx.util;
 
-import haxe.macro.Context;
-import haxe.macro.Expr;
-using tink.macro.tools.MacroTools;
+#if macro
+	import haxe.macro.Context;
+	import haxe.macro.Expr;
+	using tink.MacroApi;
+#end
 
 /** Syntax sugar for creating arrays that sorts on multiple properties
 
