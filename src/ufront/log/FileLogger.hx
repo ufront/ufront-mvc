@@ -57,7 +57,7 @@ class FileLogger implements IHttpModule
 
 	/** Initialize the module **/
 	public function init( application:HttpApplication ) {
-		application.onLogRequest.add( writeFile );
+		application.onLogRequest.handle( writeFile );
 		application.ifIs( UfrontApplication, function(ufrontApp) {
 			appMessages = ufrontApp.messages;
 		});

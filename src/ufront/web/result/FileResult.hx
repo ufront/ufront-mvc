@@ -1,9 +1,9 @@
 package ufront.web.result;
 
 import haxe.io.Bytes;
-import hxevents.Async;
 import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
+import ufront.core.AsyncCallback;
 
 /** Represents a base class that is used to send binary file content to the response. **/
 class FileResult extends ActionResult
@@ -19,7 +19,7 @@ class FileResult extends ActionResult
 		this.fileDownloadName = fileDownloadName;
 	}
 	
-	override function executeResult( actionContext:ActionContext, async:Async ) {
+	override function executeResult( actionContext:ActionContext ) {
 		NullArgument.throwIfNull(actionContext);
 
 		if(null != contentType)
@@ -28,6 +28,6 @@ class FileResult extends ActionResult
 		if(null != fileDownloadName)
 			actionContext.response.setHeader("content-disposition", "attachment; filename=" + fileDownloadName);
 
-		if (async!=null) async.completed();
+		return AsyncCallback.COMPLETED;
 	}
 }

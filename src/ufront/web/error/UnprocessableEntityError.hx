@@ -6,8 +6,8 @@ import haxe.PosInfos;
 **/
 class UnprocessableEntityError extends HttpError
 {                                 
-	public function new(?pos : PosInfos)
+	public function new( ?pos:PosInfos )
 	{
-		super(422, "Unprocessable Entity", pos); 
+		super( 422, "Unprocessable Entity", pos );
 	}
 }

@@ -40,7 +40,7 @@ class ErrorModule implements IHttpModule
 		Will add the error handler to the `onApplicationError` event of your `HttpApplication`.
 	**/
 	public function init( application:HttpApplication ) {
-		application.onApplicationError.add( _onError );
+		application.onApplicationError.handle( _onError );
 	}
 
 	/** Nothing much to dispose for this module. **/
@@ -58,7 +58,7 @@ class ErrorModule implements IHttpModule
 		TODO: give more options for processing different kinds of errors
 		TODO: figure out async support
 	**/
-	public function _onError( e:{ context:HttpContext, error:Error } )
+	public function _onError( e:{ context:HttpContext, error:Dynamic } )
 	{
 		// Pass the error to our log...
 		var callStack = #if debug " "+CallStack.toString( CallStack.exceptionStack() ) #else "" #end;
@@ -67,15 +67,9 @@ class ErrorModule implements IHttpModule
 		// Get the error into the HttpError type, wrap it if necessary
 		var httpError:HttpError;
 		if( !Std.is(e.error, HttpError) ) {
-			httpError = new InternalServerError();
-			httpError.setInner(e.error);
+			httpError = new InternalServerError( e.error );
 		}
 		else httpError = cast e.error;
-
-		// Is this required?
-		var action = httpError.className().lcfirst();
-		if( "httpError"==action )
-			action = "internalServerError";
 
 		var showStack = #if debug true #else false #end;
 
@@ -98,9 +92,11 @@ class ErrorModule implements IHttpModule
 		It is recommended that this method have as few dependencies as possible, for example,
 		avoid using templating engines as any errors in displaying the error template will not
 		be displayed correctly.
+
+		It is also expected that this method should be synchronous.
 	**/
 	dynamic public function renderError( error:HttpError, ?showStack:Bool=false ):String {
-		var inner = (null!=error.inner) ? '<p>${error.inner}</p>':"";
+		var inner = (null!=error.data) ? '<p>${error.data}</p>':"";
 		
 		var exceptionStackItems = errorStackItems( CallStack.exceptionStack() );
 		var callStackItems = errorStackItems( CallStack.callStack() );

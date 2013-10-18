@@ -87,10 +87,10 @@ class TestUtils
 		app.errorModule.catchErrors = false;
 		var result = try {
 			app.execute( context );
-			{ app: app, context: context, d:app.dispatchModule.dispatch }.asSuccess();
+			Success( { app: app, context: context, d:app.dispatchModule.dispatch } );
 		}
 		catch (e:HttpError) {
-			e.asFailure();
+			Failure(e);
 		}
 		return result;
 	}

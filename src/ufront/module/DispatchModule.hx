@@ -1,6 +1,6 @@
 package ufront.module;
 
-import hxevents.Async;
+import tink.CoreApi;
 import ufront.module.IHttpModule;
 import ufront.application.*;
 import ufront.web.context.*;
@@ -9,11 +9,11 @@ import ufront.auth.*;
 import haxe.web.Dispatch.DispatchConfig;
 import haxe.web.Dispatch.DispatchError;
 import ufront.web.Dispatch;
-import hxevents.Async;
 import minject.Injector;
 import ufront.web.error.*;
 import ufront.web.result.*;
 import ufront.web.context.*;
+import ufront.core.AsyncCallback;
 
 /**
 	Uses `ufront.web.Dispatch` to match the URL to a controller action and it's parameters.
@@ -50,9 +50,9 @@ class DispatchModule implements IHttpModule
 
 	/** Initializes a module and prepares it to handle requests. */
 	public function init( application:HttpApplication ) : Void {
-		application.onDispatch.add( executeDispatchHandler );
-		application.onActionExecute.addAsync( executeActionHandler );
-		application.onResultExecute.addAsync( executeResultHandler );
+		application.onDispatch.handle( executeDispatchHandler );
+		application.onActionExecute.handle( executeActionHandler );
+		application.onResultExecute.handle( executeResultHandler );
 
 		injector = 
 			if (Std.is(application, UfrontApplication)) cast(application,UfrontApplication).dispatchInjector
@@ -86,7 +86,7 @@ class DispatchModule implements IHttpModule
 			dispatch = new Dispatch( filteredUri, params, context.request.httpMethod );
 
 			// Listen for when the controller, action and args have been decided so we can set our "context" object up...
-			dispatch.onProcessDispatchRequest.add(function() {
+			dispatch.onProcessDispatchRequest.handle(function() {
 				// Update the actionContext
 				actionContext.controller = dispatch.controller;
 				actionContext.action = dispatch.action;
@@ -113,35 +113,38 @@ class DispatchModule implements IHttpModule
 		catch ( e:DispatchError ) throw dispatchErrorToHttpError( e );
 	}
 
-	function executeActionHandler( context:HttpContext, async:Async ) {
+	function executeActionHandler( context:HttpContext ) {
+
+		var trigger = Future.trigger();
 
 		// Update the Dispatch details (in case a module/middleware changed them)
 		dispatch.controller = context.actionContext.controller;
 		dispatch.action = context.actionContext.action;
 		dispatch.arguments = context.actionContext.args;
-
+		
 		// Execute the result
 		try {
 			// TODO - make this async...
 			var result = dispatch.executeDispatchRequest();
 			context.actionResult = createActionResult( result );
-			async.completed();
+			trigger.trigger( Completed );
 		}
-		catch ( e : DispatchError ) {
-			// Will be thrown happen if this function is called before dispatch.processDispatchRequest has run
-			async.error( dispatchErrorToHttpError(e) );
+		catch ( e:DispatchError ) {
+			trigger.trigger( Error(dispatchErrorToHttpError(e)) );
 		}
-		catch ( e : Dynamic ) {
-			async.error( e );
+		catch ( e:Dynamic ) {
+			trigger.trigger( Error(e) );
 		}
+
+		return trigger.asFuture();
 	}
 
-	function executeResultHandler( context:HttpContext, async:hxevents.Async ) {
+	function executeResultHandler( context:HttpContext ) {
 		try {
-			context.actionResult.executeResult( context.actionContext, async );
+			return context.actionResult.executeResult( context.actionContext );
 		}
 		catch ( e: Dynamic ) {
-			async.error( e );
+			return Future.sync( Error(e) );
 		}
 	}
 

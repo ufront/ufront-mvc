@@ -11,6 +11,7 @@ import haxe.ds.StringMap;
 import haxe.Serializer;
 import haxe.Unserializer;
 import thx.error.NullArgument;
+import tink.CoreApi;
 using StringTools;
 
 /**
@@ -26,25 +27,24 @@ using StringTools;
 
 	When searching the parameters or cookies for the Session ID, the name to search for is defined by the `sessionName` property.
 **/
-class FileSession implements IHttpSessionStateSync
+class FileSession implements IHttpSessionState
 {
 	// Statics
 
 	/**
-		Create a new FileSession (using the appropriate platform implementation) at the given path.
+		Get a factory for FileSessions so one can be created for each context.
 	
-		@param context - the HttpContext to use for the current session, with access to a `HttpRequest` and `HttpResponse`
 		@param savePath - relative path to directory where sessions will be saved.
 		@param sessionName - the name of the variable to store the sessionID in.
 		@param expire - the number of seconds the session should last.  Default is 0.  If the value is 0 the session does not have an expiry time.
 	**/
-	public static function create( context:HttpContext, savePath:String, sessionName:String, ?expire:Int=0 ) : IHttpSessionState {
-		#if (php || neko)
-			return new FileSession( context, savePath, sessionName, expire );
-		#else
-			return throw new NotImplemented();
-		#end
+	public static function getFactory( ?savePath:String, ?sessionName:String, ?expire:Int=0 ) {
+		if ( _factory==null || _factory.savePath!=savePath || _factory.sessionName!=sessionName || _factory.expire!=expire ) 
+			_factory = new FileSessionFactory( savePath, sessionName, expire );
+		
+		return _factory;
 	}
+	static var _factory:FileSessionFactory;
 
 	/**
 		The default session name to use if none is provided.
@@ -156,66 +156,72 @@ class FileSession implements IHttpSessionStateSync
 
 		This is called before any other operations which require access to the current session.
 	**/
-	public function init():Void {
-		if (!started) {
+	public function init():Surprise<Noise,String> {
+		var t = Future.trigger();
+		
+		if ( !started ) {
+			if( FileSystem.exists(savePath.substr(0, -1)) ) {
+				var id = getID();
 
-			if( !FileSystem.exists(savePath.substr(0, -1)) ) throw 'Neko session savepath not found: ' + savePath;
+				var file : String;
+				var fileData : String;
 
-			var id = getID();
-
-			var file : String;
-			var fileData : String;
-
-			// Try to restore an existing session
-			if ( id!=null ) {
-				testValidId( id );
-				file = getSessionFilePath( id );
-				if ( !FileSystem.exists(file) ) {
-					id = null;
-				}
-				else {
-					fileData = try File.getContent( file ) catch ( e:Dynamic ) null;
-					if ( fileData!=null ) {
-						try 
-							sessionData = cast( Unserializer.run(fileData), StringMap<Dynamic> )
-						catch ( e:Dynamic ) 
-							fileData = null; // invalid data
-					}
-					if ( fileData==null ) {
-						// delete file and start new session
+				// Try to restore an existing session
+				if ( id!=null ) {
+					testValidId( id );
+					file = getSessionFilePath( id );
+					if ( !FileSystem.exists(file) ) {
 						id = null;
-						try FileSystem.deleteFile( file ) catch( e:Dynamic ) {}; 
+					}
+					else {
+						fileData = try File.getContent( file ) catch ( e:Dynamic ) null;
+						if ( fileData!=null ) {
+							try 
+								sessionData = cast( Unserializer.run(fileData), StringMap<Dynamic> )
+							catch ( e:Dynamic ) 
+								fileData = null; // invalid data
+						}
+						if ( fileData==null ) {
+							// delete file and start new session
+							id = null;
+							try FileSystem.deleteFile( file ) catch( e:Dynamic ) {}; 
+						}
 					}
 				}
-			}
 
-			// No session existed, or it was invalid - start a new one
-			if( id==null ) {
-				sessionData = new StringMap<Dynamic>();
+				// No session existed, or it was invalid - start a new one
+				if( id==null ) {
+					sessionData = new StringMap<Dynamic>();
+					started = true;
+
+					do {
+						id = generateSessionID();
+						file = savePath + id + ".sess";
+					} while( FileSystem.exists(file) );
+					
+					// Create the file so no one else takes it
+					File.saveContent( file, "" );
+
+					var expire = ( expiry==0 ) ? null : DateTools.delta( Date.now(), 1000.0*expiry );
+					var path = '/'; // TODO: Set cookie path to application path, right now it's global.
+					var domain = null; 
+					var secure = false;
+
+					var sessionCookie = new HttpCookie( sessionName, id, expire, domain, path, secure );
+					context.response.setCookie( sessionCookie );
+
+					commit();
+				}
+
+				sessionID = id;
 				started = true;
-
-				do {
-					id = generateSessionID();
-					file = savePath + id + ".sess";
-				} while( FileSystem.exists(file) );
-				
-				// Create the file so no one else takes it
-				File.saveContent( file, "" );
-
-				var expire = ( expiry==0 ) ? null : DateTools.delta( Date.now(), 1000.0*expiry );
-				var path = '/'; // TODO: Set cookie path to application path, right now it's global.
-				var domain = null; 
-				var secure = false;
-
-				var sessionCookie = new HttpCookie( sessionName, id, expire, domain, path, secure );
-				context.response.setCookie( sessionCookie );
-
-				commit();
+				t.trigger( Success(null) );
 			}
-
-			sessionID = id;
-			started = true;
+			else t.trigger( Failure('Neko session savepath not found: ' + savePath.substr(0, -1)) );
 		}
+		else t.trigger( Success(null) );
+
+		return t.asFuture();
 	}
 
 	/**
@@ -223,34 +229,45 @@ class FileSession implements IHttpSessionStateSync
 
 		Throws a String if the commit failed (usually because of no permission to write to disk)
 	**/
-	public function commit():Void {
-		if ( commitFlag ) {
-			init();
+	public function commit():Surprise<Noise,String> {
+		var t = Future.trigger();
+		var handled = false;
+
+		if ( commitFlag && sessionData!=null ) {
+			handled = true;
 			try {
 				var filePath = getSessionFilePath(sessionID);
 				var content = Serializer.run(sessionData);
 				File.saveContent(filePath, content);
+				t.trigger( Success(null) );
 			}
 			catch( e:Dynamic ) {
-				throw 'Unable to save session: $e';
+				t.trigger( Failure('Unable to save session: $e') );
 			}
 		}
 		if ( closeFlag ) {
-			throw "NotImplemented: close the session, delete the file, expire the cookie";
+			handled = true;
+			t.trigger( Failure("NotImplemented: close the session, delete the file, expire the cookie") );
 		}
 		if ( regenerateFlag ) {
-			throw "NotImplemented: use regenerated ID to rename file and update cookie";
+			handled = true;
+			t.trigger( Failure("NotImplemented: use regenerated ID to rename file and update cookie") );
 		}
 		if ( expiryFlag ) {
-			throw "NotImplemented: change expiry on cookie";
+			handled = true;
+			t.trigger( Failure("NotImplemented: change expiry on cookie") );
 		}
+
+		if ( !handled ) t.trigger( Success(null) );
+
+		return t.asFuture();
 	}
 
 	/**
 		Retrieve an item from the session data
 	**/
 	public inline function get( name:String ):Dynamic {
-		init();
+		checkStarted();
 		return sessionData.get( name );
 	}
 
@@ -270,7 +287,7 @@ class FileSession implements IHttpSessionStateSync
 	**/
 	public inline function exists( name:String ):Bool {
 		if ( !isActive() ) return false;
-		init();
+		checkStarted();
 		return sessionData.exists( name );
 	}
 
@@ -278,7 +295,7 @@ class FileSession implements IHttpSessionStateSync
 		Remove an item from the session
 	**/
 	public inline function remove( name:String ):Void {
-		init();
+		checkStarted();
 		sessionData.remove(name);
 		commitFlag = true;
 	}
@@ -287,20 +304,22 @@ class FileSession implements IHttpSessionStateSync
 		Empty all items from the current session data without closing the session
 	**/
 	public inline function clear():Void {
-		init();
-		sessionData = new StringMap<Dynamic>();
-		commitFlag = true;
+		if ( sessionData!=null && isActive() ) {
+			sessionData = new StringMap<Dynamic>();
+			commitFlag = true;
+		}
 	}
 
 	/**
 		Regenerate the ID for this session, renaming the file on the server and sending a new session to the 
 	**/
-	public function regenerateID() {
-		init();
+	public function regenerateID():Surprise<String,String> {
+		var t = Future.trigger();
 		oldSessionID = sessionID;
 		sessionID = generateSessionID();
 		regenerateFlag = true;
-		return sessionID;
+		t.trigger( Success(sessionID) );
+		return t.asFuture();
 	}
 	
 	/**
@@ -344,10 +363,33 @@ class FileSession implements IHttpSessionStateSync
 		return Random.string(40);
 	}
 
+	inline function checkStarted() {
+		if ( !started ) 
+			throw "Trying to access session data before calling init()";
+	}
+
 	static var validID = ~/^[a-zA-Z0-9]+$/;
 	static inline function testValidId( id:String ):Void {
 		if( id!=null )
 			if(!validID.match(id)) 
 				throw "Invalid session ID.";
 	}
+}
+
+class FileSessionFactory implements ISessionFactory {
+	
+	public var savePath(default,null):Null<String>;
+	public var sessionName(default,null):Null<String>;
+	public var expire(default,null):Int;
+
+	public function new( ?savePath:String, ?sessionName:String, ?expire:Int=0 ) {
+		this.savePath = savePath;
+		this.sessionName = sessionName;
+		this.expire = expire;
+	}
+
+	public function create( context:HttpContext ) {
+		return new FileSession( context, savePath, sessionName, expire );
+	}
+
 }

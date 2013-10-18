@@ -103,7 +103,7 @@ typedef UfrontConfiguration = {
 
 		This means using `ufront.web.session.FileSession`, saving to the "sessions" folder, with a default session variable name, and an expiry of 0 (when window closed)
 	**/
-	?sessionFactory:HttpContext->IHttpSessionState,
+	?sessionFactory:ISessionFactory,
 
 	/**
 		A method which can be used to generate an AuthHandler for the current request, as required.
@@ -112,7 +112,7 @@ typedef UfrontConfiguration = {
 
 		This means it will create an `ufront.auth.EasyAuth` handler using the current session, and the default variable name to store the ID in the session.
 	**/
-	?authFactory:HttpContext->IAuthHandler<IAuthUser>
+	?authFactory:IAuthFactory
 }
 
 class DefaultUfrontConfiguration {
@@ -138,10 +138,13 @@ class DefaultUfrontConfiguration {
 			controllers: cast CompileTime.getAllClasses( Controller ),
 			apis: cast CompileTime.getAllClasses( RemotingApiClass ),
 			errorModule: new ErrorModule(),
-			sessionFactory: FileSession.create.bind(_, "sessions", null, 0),
+			sessionFactory: FileSession.getFactory("sessions", null, 0),
 			authFactory: 
-				#if ufront_easyauth EasyAuth.create.bind(_,null)
-				#else YesBossAuthHandler.create #end
+				#if ufront_easyauth 
+					EasyAuth.getFactory()
+				#else 
+					YesBoss.getFactory() 
+				#end
 		}
 	}
 }

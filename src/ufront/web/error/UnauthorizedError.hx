@@ -6,8 +6,8 @@ import haxe.PosInfos;
 **/
 class UnauthorizedError extends HttpError
 {             
-	public function new(?pos : PosInfos)
+	public function new( ?pos:PosInfos )
 	{
-		super(401, "Unauthorized Access", pos); 
+		super( 401, "Unauthorized Access", pos );
 	}
 }

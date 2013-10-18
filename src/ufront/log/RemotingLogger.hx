@@ -23,7 +23,7 @@ class RemotingLogger implements IHttpModule
 	public function new() {}
 
 	public function init( application:HttpApplication ) {
-		application.onLogRequest.add( _sendContent );
+		application.onLogRequest.handle( _sendContent );
 		application.ifIs( UfrontApplication, function(ufrontApp) {
 			appMessages = ufrontApp.messages;
 		});

@@ -1,8 +1,5 @@
 package ufront.auth;
 
-import hxevents.Dispatcher;
-import hxevents.Notifier;
-
 /**
 	An interface describing an authentication handler.
 

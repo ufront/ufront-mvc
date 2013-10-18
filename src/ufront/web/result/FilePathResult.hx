@@ -2,9 +2,9 @@ package ufront.web.result;
 
 import haxe.io.Bytes;
 import haxe.io.Eof;
-import hxevents.Async;
 import sys.io.File;
 import ufront.web.context.ActionContext;
+import ufront.core.AsyncCallback;
 
 /**  Sends the contents of a file to the response.  */
 class FilePathResult extends FileResult
@@ -20,18 +20,19 @@ class FilePathResult extends FileResult
 		this.fileName = fileName;
 	}
 
-	override function executeResult( actionContext:ActionContext, async:Async ) {
-		super.executeResult( actionContext, null );
+	override function executeResult( actionContext:ActionContext ) {
+		super.executeResult( actionContext );
 		if ( null!=fileName ) {
 			var reader = File.read( fileName, true );
 			try {
 				var buf = Bytes.alloc( BUF_SIZE );
 				var size = reader.readBytes( buf, 0, BUF_SIZE );
 				actionContext.response.writeBytes( buf, 0, size );
-				async.completed();
+				return AsyncCallback.COMPLETED;
 			} catch (e:Eof) {
-				async.completed();
+				return AsyncCallback.COMPLETED;
 			}
 		}
+		return AsyncCallback.COMPLETED;
 	}
 }

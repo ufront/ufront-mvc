@@ -1,18 +1,19 @@
 package ufront.web.context;
+
 import haxe.io.Path;
 import haxe.PosInfos;
-import hxevents.Async;
 import ufront.auth.IAuthUser;
 import ufront.log.Message;
 import ufront.web.url.UrlDirection;
 import thx.error.NullArgument;
 import ufront.web.url.filter.IUrlFilter;
 import thx.error.AbstractMethod;
-import ufront.web.session.IHttpSessionState;
+import ufront.web.session.*;
 import ufront.web.result.ActionResult;
-import ufront.auth.IAuthHandler;
+import ufront.auth.*;
 import ufront.web.url.*;
 import ufront.web.url.filter.*;
+import tink.CoreApi;
 using Types;
 
 /**
@@ -29,7 +30,7 @@ class HttpContext
 
 		`urlFilters` will be an empty array if not supplied.
 	**/
-	public static function create( ?request:HttpRequest, ?response:HttpResponse, ?session:IHttpSessionState, ?auth:IAuthHandler<IAuthUser>, ?sessionFactory:HttpContext->IHttpSessionState, ?authFactory:HttpContext->IAuthHandler<IAuthUser>, ?urlFilters:Array<IUrlFilter>, ?contentDir="uf-content" ) {
+	public static function create( ?request:HttpRequest, ?response:HttpResponse, ?session:IHttpSessionState, ?auth:IAuthHandler<IAuthUser>, ?sessionFactory:ISessionFactory, ?authFactory:IAuthFactory, ?urlFilters:Array<IUrlFilter>, ?contentDir="uf-content" ) {
 		if( null==request )
 			request = HttpRequest.create();
 		if( null==response )
@@ -48,7 +49,7 @@ class HttpContext
 
 		`contentDir` is used to help specify the path of `contentDirectory`, relative to `request.scriptDirectory`.  Default value is `uf-content`
 	**/
-	public function new( request:HttpRequest, response:HttpResponse, ?session:IHttpSessionState, ?auth:IAuthHandler<IAuthUser>, ?sessionFactory:HttpContext->IHttpSessionState, ?authFactory:HttpContext->IAuthHandler<IAuthUser>, ?urlFilters:Array<IUrlFilter>, ?contentDir="uf-content" ) {
+	public function new( request:HttpRequest, response:HttpResponse, ?session:IHttpSessionState, ?auth:IAuthHandler<IAuthUser>, ?sessionFactory:ISessionFactory, ?authFactory:IAuthFactory, ?urlFilters:Array<IUrlFilter>, ?contentDir="uf-content" ) {
 		completed = false;
 		NullArgument.throwIfNull(response);
 		NullArgument.throwIfNull(request);
@@ -101,8 +102,8 @@ class HttpContext
 	/** The URL filters to be used for `getRequestUri()` and `generateUri()` **/
 	public var urlFilters(default,null):Iterable<IUrlFilter>;
 
-	var sessionFactory:HttpContext->IHttpSessionState;
-	var authFactory:HttpContext->IAuthHandler<IAuthUser>;
+	var sessionFactory:ISessionFactory;
+	var authFactory:IAuthFactory;
 
 	var _requestUri:String;
 
@@ -168,19 +169,12 @@ class HttpContext
 	/**
 		Commit the session data, if there is any.
 
-		If async is provided, on completion of the session commit `async.complete()` will be called
+		Will return a future letting you know when the session commit has been completed
 	**/
-	public function commitSession( ?async:Async ):Void {
-		if (_session!=null) {
-			session.ifIs(IHttpSessionStateAsync, function(s) {
-				NullArgument.throwIfNull( async );
-				s.commit( async );
-			});
-			session.ifIs(IHttpSessionStateSync, function(s) {
-				s.commit();
-				if (async!=null) async.completed();
-			});
-		}
+	public function commitSession():Surprise<Noise,String> {
+		return
+			if (_session!=null) _session.commit();
+			else Future.sync(Success(null));
 	}
 
 	/**
@@ -256,14 +250,14 @@ class HttpContext
 	var _session:IHttpSessionState;
 	function get_session() {
 		if( null==_session && sessionFactory!=null )
-			_session = sessionFactory( this );
+			_session = sessionFactory.create( this );
 		return _session;
 	}
 
 	var _auth:IAuthHandler<IAuthUser>;
 	function get_auth() {
 		if( null==_auth && authFactory!=null && session!=null )
-			_auth = authFactory( this );
+			_auth = authFactory.create( this );
 		return _auth;
 	}
 }

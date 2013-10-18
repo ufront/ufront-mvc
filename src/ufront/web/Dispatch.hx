@@ -28,7 +28,8 @@ import haxe.macro.Context;
 #end
 
 import haxe.web.Dispatch;
-import hxevents.Notifier;
+import tink.core.Signal;
+import tink.core.Noise;
 import ufront.web.context.HttpContext;
 
 /**
@@ -101,14 +102,16 @@ class Dispatch extends haxe.web.Dispatch
 
 		This allows you to listen to changes to the controller, action and arguments and process them accordingly.
 	**/
-	public var onProcessDispatchRequest:Notifier;
+	public var onProcessDispatchRequest:Signal<Noise>;
+	public var onProcessDispatchRequestTrigger:SignalTrigger<Noise>;
 
 	/**
 		Construct a new Dispatch object, for the given URL, parameters and HTTP method
 	**/
 	public function new( url:String, params:Map<String,String>, ?method:String ) {
 		super (url, params);
-		this.onProcessDispatchRequest = new Notifier();
+		this.onProcessDispatchRequestTrigger = Signal.trigger();
+		this.onProcessDispatchRequest = onProcessDispatchRequestTrigger.asSignal();
 		this.method = (method!=null) ? method.toLowerCase() : null;
 		this.controller = null;
 		this.action = null;
@@ -210,7 +213,7 @@ class Dispatch extends haxe.web.Dispatch
 		this.controller = cfg.obj;
 		this.action = name;
 		this.arguments = args;
-		onProcessDispatchRequest.dispatch();
+		onProcessDispatchRequestTrigger.trigger( null );
 	}
 
 	/**

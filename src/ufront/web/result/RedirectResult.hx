@@ -1,8 +1,8 @@
 package ufront.web.result;
 
-import hxevents.Async;
 import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
+import ufront.core.AsyncCallback;
 
 /** Controls the processing of application actions by redirecting to a specified URI. */
 class RedirectResult extends ActionResult
@@ -19,7 +19,7 @@ class RedirectResult extends ActionResult
 		this.permanentRedirect = permanentRedirect;
 	}
 
-	override function executeResult( actionContext:ActionContext, async:Async ) {
+	override function executeResult( actionContext:ActionContext ) {
 		// Clear content and headers, but not cookies
 		actionContext.response.clearContent();
 		actionContext.response.clearHeaders();
@@ -27,6 +27,6 @@ class RedirectResult extends ActionResult
 		if(permanentRedirect) actionContext.response.permanentRedirect( url );
 		else actionContext.response.redirect( url );
 		
-		async.completed();
+		return AsyncCallback.COMPLETED;
 	}
 }

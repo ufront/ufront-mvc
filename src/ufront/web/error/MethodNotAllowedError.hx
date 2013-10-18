@@ -6,8 +6,8 @@ import haxe.PosInfos;
 **/
 class MethodNotAllowedError extends HttpError
 {                   
-	public function new(?pos : PosInfos)
+	public function new( ?pos:PosInfos )
 	{
-		super(405, "Method Not Allowed", pos); 
+		super( 405, "Method Not Allowed", pos );
 	}
 }

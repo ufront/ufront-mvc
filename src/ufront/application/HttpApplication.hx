@@ -2,14 +2,14 @@ package ufront.application;
 
 import ufront.module.IHttpModule;
 import ufront.web.url.filter.IUrlFilter;
-import hxevents.AsyncDispatcher;
-import hxevents.Dispatcher;
-import hxevents.Async;
+import ufront.core.AsyncSignal;
+import ufront.core.AsyncCallback;
 import ufront.web.session.IHttpSessionState;
 import minject.Injector;
 import ufront.web.context.*;
 import ufront.auth.*;
 import thx.error.*;
+import tink.CoreApi;
 
 /**
 	The base class for a HTTP Application
@@ -67,80 +67,80 @@ class HttpApplication
 		The onBeginRequest event signals the creation of any given new request.
 		This event is always raised and is always the first event to occur during the processing of a request.
 	**/
-	public var onBeginRequest(default,null):AsyncDispatcher<HttpContext>;
+	public var onBeginRequest(default,null):AsyncSignal<HttpContext>;
 
 	/**
 		Event to trigger caching modules so we can serve requests from the cache, bypassing execution 
 		of the event the usual request actions.
 	**/
-	public var onResolveRequestCache(default,null):AsyncDispatcher<HttpContext>;
+	public var onResolveRequestCache(default,null):AsyncSignal<HttpContext>;
 
 	/**
 		Occurs after a cache requests have been checked.
 	**/
-	public var onPostResolveRequestCache(default,null):AsyncDispatcher<HttpContext>;
+	public var onPostResolveRequestCache(default,null):AsyncSignal<HttpContext>;
 
 	/**
 		Occurs as a request is to be dispatched, deciding on which action to execute.
 	**/
-	public var onDispatch(default,null):AsyncDispatcher<HttpContext>;
+	public var onDispatch(default,null):AsyncSignal<HttpContext>;
 
 	/**
 		Occurs after the controller, action and arguments have been decided by the dispatcher.
 	**/
-	public var onPostDispatch(default,null):AsyncDispatcher<HttpContext>;
+	public var onPostDispatch(default,null):AsyncSignal<HttpContext>;
 
 	/**
 		Occurs just before a request's action is to be executed.
 	**/
-	public var onActionExecute(default,null):AsyncDispatcher<HttpContext>;
+	public var onActionExecute(default,null):AsyncSignal<HttpContext>;
 
 	/**
 		Occurs just after a request's action has been executed and it's result is available
 	**/
-	public var onPostActionExecute(default,null):AsyncDispatcher<HttpContext>;
+	public var onPostActionExecute(default,null):AsyncSignal<HttpContext>;
 
 	/**
 		Occurs when executing the `ActionResult` from the request's action
 	**/
-	public var onResultExecute(default,null):AsyncDispatcher<HttpContext>;
+	public var onResultExecute(default,null):AsyncSignal<HttpContext>;
 
 	/**
 		Occurs just after executing the `ActionResult` from the request's action
 	**/
-	public var onPostResultExecute(default,null):AsyncDispatcher<HttpContext>;
+	public var onPostResultExecute(default,null):AsyncSignal<HttpContext>;
 
 	/**
 		Occurs when an event handler finishes execution in order to let caching modules store responses that will
 		be used to serve subsequent requests from the cache.
 	**/
-	public var onUpdateRequestCache(default,null):AsyncDispatcher<HttpContext>;
+	public var onUpdateRequestCache(default,null):AsyncSignal<HttpContext>;
 
 	/**
 		Occurs when caching modules are finished updating and storing responses that are used to serve subsequent
 		requests from the cache.
 	**/
-	public var onPostUpdateRequestCache(default,null):AsyncDispatcher<HttpContext>;
+	public var onPostUpdateRequestCache(default,null):AsyncSignal<HttpContext>;
 
 	/**
 		Occurs just before any logging is performed for the current request.
 	**/
-	public var onLogRequest(default,null):AsyncDispatcher<HttpContext>;
+	public var onLogRequest(default,null):AsyncSignal<HttpContext>;
 
 	/**
 		Occurs when all the event handlers for the LogRequest event has completed processing.
 	**/
-	public var onPostLogRequest(default,null):AsyncDispatcher<HttpContext>;
+	public var onPostLogRequest(default,null):AsyncSignal<HttpContext>;
 
 	/**
 		Occurs as the last event in the HTTP pipeline chain of execution when responding to a request.
 	**/
-	public var onEndRequest(default,null):AsyncDispatcher<HttpContext>;
+	public var onEndRequest(default,null):AsyncSignal<HttpContext>;
 
 	/**
 		Occurs when an unhandled exception is thrown.
 	**/
-	public var onApplicationError(default,null):AsyncDispatcher<{ context:HttpContext, error:Error }>;
+	public var onApplicationError(default,null):AsyncSignal<{ context:HttpContext, error:Dynamic }>;
 
 	///// End Events /////
 
@@ -153,43 +153,39 @@ class HttpApplication
 
 		After creating the application, you can initialize the modules and then execute requests with a given HttpContext.
 	**/
+	@:access(ufront.web.context.HttpContext)
 	public function new() {
 
 		appInjector = new Injector();
 		appInjector.mapValue( Injector, appInjector );
 
-		onBeginRequest = new AsyncDispatcher();
+		onBeginRequest = new AsyncSignal();
 
-		onResolveRequestCache = new AsyncDispatcher();
-		onPostResolveRequestCache = new AsyncDispatcher();
+		onResolveRequestCache = new AsyncSignal();
+		onPostResolveRequestCache = new AsyncSignal();
 
-		onDispatch = new AsyncDispatcher();
-		onPostDispatch = new AsyncDispatcher();
+		onDispatch = new AsyncSignal();
+		onPostDispatch = new AsyncSignal();
 
-		onActionExecute = new AsyncDispatcher();
-		onPostActionExecute = new AsyncDispatcher();
+		onActionExecute = new AsyncSignal();
+		onPostActionExecute = new AsyncSignal();
 
-		onResultExecute = new AsyncDispatcher();
-		onPostResultExecute = new AsyncDispatcher();
+		onResultExecute = new AsyncSignal();
+		onPostResultExecute = new AsyncSignal();
 
-		onUpdateRequestCache = new AsyncDispatcher();
-		onPostUpdateRequestCache = new AsyncDispatcher();
+		onUpdateRequestCache = new AsyncSignal();
+		onPostUpdateRequestCache = new AsyncSignal();
 
-		onLogRequest = new AsyncDispatcher();
-		onPostLogRequest = new AsyncDispatcher();
-		onPostLogRequest.add( _executedLogRequest );
+		onLogRequest = new AsyncSignal();
+		onPostLogRequest = new AsyncSignal();
+		onPostLogRequest.handle( function _executedLogRequest(context:HttpContext) context.logDispatched = true );
 
-		onEndRequest = new AsyncDispatcher();
+		onEndRequest = new AsyncSignal();
 
-		onApplicationError = new AsyncDispatcher();
+		onApplicationError = new AsyncSignal();
 
 		modules = [];
 		urlFilters = [];
-	}
-
-	@:access(ufront.web.context.HttpContext)
-	function _executedLogRequest( context:HttpContext ) {
-		context.logDispatched = true;
 	}
 
 	/** 
@@ -201,6 +197,35 @@ class HttpApplication
 		if (module!=null) modules.push( module );
 		return this;
 	}
+
+
+	/** 
+		Init every module required for this application.
+
+		If this is not called before `execute()`, it will be called during `execute()`.
+
+		If modules have already been initialized, this will have no effect.
+
+		The `context` argument is optional, and is only needed if an error occurs initializing the modules, in which case, it uses the `HttpContext` to send an error message to the browser.
+	**/
+	public function initModules( ?context:HttpContext ) {
+		if ( _initiatedModules==false ) {
+			for ( module in modules ) {
+				try {
+					appInjector.injectInto( module );
+					module.init( this );
+				}
+				catch( e:Dynamic ) {
+					if ( context==null ) {
+						context = HttpContext.create();
+					}
+					_dispatchError( context, e );
+				}
+			}
+			_initiatedModules = true;
+		}
+	}
+	var _initiatedModules = false;
 
 	/** 
 		Execute the request 
@@ -224,12 +249,12 @@ class HttpApplication
 		- onLogRequest
 		- onPostLogRequest
 
-		Once all the events have fired, if no errors occured, `_conclude` is run.
-		The `_conclude()` function will then flush the output from the response, fire "onEndRequest", and dispose of the context and modules.
+		Once all the events have fired, if no errors occured, then flush the output from the response, fire "onEndRequest", and dispose of the context.
 		
 		If at any point errors occur, the chain stops, and `onApplicationError` is triggered, followed by running `_conclude()`
 		If at any point this HttpApplication is marked as complete, the chain stops and `_conclude()` is run.
 	**/
+	@:access(ufront.web.context.HttpContext)
 	public function execute( ?httpContext:HttpContext ) {
 		
 		// Set up HttpContext for the request, and the URL filters
@@ -241,168 +266,127 @@ class HttpApplication
 
 		// Begin the chain of events.  They will be executed until either a completion, an error or the end of the chain.
 		// After that _conclude() will run
-		_dispatchChain( httpContext, [
-			onBeginRequest,
-			onResolveRequestCache,
-			onPostResolveRequestCache,
-			onDispatch,
-			onPostDispatch,
-			onActionExecute,
-			onPostActionExecute,
-			onResultExecute,
-			onPostResultExecute,
-			onUpdateRequestCache,
-			onPostUpdateRequestCache,
-			onLogRequest,
-			onPostLogRequest
-		], _conclude.bind(httpContext) );
-	}
+		var showStopper = function() return httpContext.completed;
+		AsyncSignal
+			.dispatchChain( httpContext, [
+				onBeginRequest,
+				onResolveRequestCache,
+				onPostResolveRequestCache,
+				onDispatch,
+				onPostDispatch,
+				onActionExecute,
+				onPostActionExecute,
+				onResultExecute,
+				onPostResultExecute,
+				onUpdateRequestCache,
+				onPostUpdateRequestCache,
+				onLogRequest,
+				onPostLogRequest
+			], showStopper )
+			.handle(function (result:AsyncCompletion) {
+				switch (result) {
+					case Error( e ): 
+						return _dispatchError( httpContext, e );
+					default: 
+						var flushed = Future.trigger();
+						var requestEnded = Future.trigger();
 
-	/** Flush the output, fire the onEndRequest event, dispose of the context **/
-	function _conclude( httpContext:HttpContext ) {
-		httpContext.commitSession( new Async(function () {
-			_flush( httpContext );
-			_dispatchEnd( httpContext, function() {
-				httpContext.dispose();
-			} );
-		}) );
-	}
+						// Commit session
+						var sessionDone = httpContext.commitSession();
+						
+						// After session is committed, flush the response (if needed, and catch errors, if needed)
+						sessionDone.handle(function () {
+							try {
+								if( !httpContext.flushed ) {
+									httpContext.response.flush();
+									httpContext.flushed = true;
+								}
+								flushed.trigger( Completed );
+							} 
+							catch( e:Dynamic ) {
+								_dispatchError(httpContext, e).handle( function(r) flushed.trigger(r) );
+							}
+						});
 
-	/** Flush the response to the output. Catch errors. **/
-	@:access(ufront.web.context.HttpContext)
-	function _flush( context:HttpContext ) {
-		try {
-			if( !context.flushed ) {
-				context.response.flush();
-				context.flushed = true;
-			}
-		} 
-		catch( e:Dynamic ) {
-			_dispatchError( context, e );
-		}
-	}
+						// After flushing, end the request
+						flushed.asFuture().handle( function () {
+							onEndRequest.trigger( httpContext ).handle( function(r) requestEnded.trigger(r) );
+						});
 
+						// After the request is ended, dispose the context
+						requestEnded.asFuture().handle( httpContext.dispose );
 
-	/** 
-		Init every module required for this application.
-
-		If this is not called before `execute()`, it will be called during `execute()`.
-
-		If modules have already been initialized, this will have no effect.
-	**/
-	public function initModules( ?context:HttpContext ) {
-		if ( _initiatedModules==false ) {
-			for ( module in modules ) {
-				try {
-					appInjector.injectInto( module );
-					module.init( this );
+						return requestEnded.asFuture();
 				}
-				catch( e:Dynamic ) {
-					if ( context==null ) {
-						context = HttpContext.create();
-					}
-					_dispatchError( context, e );
-				}
-			}
-			_initiatedModules = true;
-		}
-	}
-	var _initiatedModules = false;
-
-	/** End the request by triggering the final onEndRequest event.  Catch errors **/
-	function _dispatchEnd( context:HttpContext, next:Void->Void ) {
-		try {
-			onEndRequest.dispatch( context, next, _dispatchError.bind(context) );
-		} 
-		catch (e:Dynamic) {
-			_dispatchError( context, e );
-		}
-	}
-
-	/**
-		Loop through every event in the chain (unless the request is completed by an event)
-
-		Catch errors.  After finished, run `afterEffect()`, which is probably `_conclude()`
-	**/
-	function _dispatchChain( httpContext:HttpContext, dispatchers:Array<AsyncDispatcher<HttpContext>>, afterEffect:Void->Void ) {
-		#if php 
-			// PHP has issues with long chains of methods, so can't do this in the async format... Just loop through synchronously
-			for( dispatcher in dispatchers ) {
-				if( httpContext.completed ) break;
-				try {
-					dispatcher.dispatch( httpContext, null, _dispatchError.bind(httpContext) );
-				}
-				catch (e:Dynamic) {
-					_dispatchError( httpContext, e );
-					return;
-				}
-			}
-			if( null!=afterEffect ) afterEffect();
-		#else
-			// On other platforms, run this asynchronously... start with one, and only when the async callback is fired does the next event fire
-			var self = this;
-			var next = null;
-			next = function() {
-				var dispatcher = dispatchers.shift();
-				if( httpContext.completed || null==dispatcher ) {
-					if( null!=afterEffect )
-						afterEffect();
-					return;
-				}
-				dispatcher.dispatch( httpContext, next, _dispatchError.bind(httpContext) );
-			}
-			next();
-		#end
+			});
 	}
 
 	/**
 		If logging hasn't happened, do that so the error is logged.
 		Then either hit up the "onApplicationError" event, or if nothing is listening, simply throw the error.
+
+		Wrap Error / Context
+		If Error Handler
+			onApplicationError.trigger()
+			then if not logged, log
+			then 
+				if error throw
+				else finalFlush()
+		Else
+			if not logged then log (throw if error)
+			throw original error
 	**/
 	@:access(ufront.web.context.HttpContext)
 	function _dispatchError( context:HttpContext, e:Dynamic ) {
+		// Wrap the event if it isn't already an error
 		var event = {
 			context: context,
-			error: Std.is(e, Error) ? e : new Error(Std.string(e))
+			error: e
 		};
 
-		var onError = function(e) throw e;
-		if ( onApplicationError.has() ) {
-			// If there is a handler, run that first, then log, then conclude
-			// this is because the handler may wipe existing content, including the log
-			var finalFlush = function () {
-				if( !context.flushed ) {
-					context.response.flush();
-					context.flushed = true;
-				}
-				_dispatchEnd( context, function() {} );
+		// If there is an error handler, execute that and wait
+		var hasErrorHandler = (onApplicationError.getLength() > 0);
+		var afterErrorHandler = 
+			if ( hasErrorHandler )
+				onApplicationError.trigger( event );
+			else
+				AsyncCallback.COMPLETED;
+
+		// After the error handler, check if we need logging to happen
+		var afterLogging = Future.trigger();
+		afterErrorHandler.handle(function () {
+			if( !context.logDispatched )  
+				AsyncSignal.dispatchChain( context, [
+					onLogRequest,
+					onPostLogRequest
+				]).handle( function(r) afterLogging.trigger(r) );
+			else 
+				afterLogging.trigger( Completed );
+		});
+
+		// After the logging is done, if there was an error handler, do a flush, if not, throw anyway
+		var requestEnded = Future.trigger();
+		afterLogging.asFuture().handle(function (result) {
+			switch result {
+				case Error(e): 
+					throw e; // There was an error in the error handler.  Ouch!
+				default:
+					if (hasErrorHandler) { 
+						// Do a final flush, end the request
+						if( !context.flushed ) {
+							context.response.flush();
+							context.flushed = true;
+						}
+						onEndRequest.trigger( context ).handle( function(r) requestEnded.trigger(r) );
+					}
+					else {
+						// No error handler, just throw error to give best hope of debugging
+						throw event.error; 
+					} 
 			}
-			var afterErrorModule = function() {
-				if( !context.logDispatched ) {
-					// Execute onLogRequest, onPostLogRequest, finalFlush, and if there's an error, onError
-					onLogRequest.dispatch( context, function () {
-						onPostLogRequest.dispatch( context, function () {
-							finalFlush();
-						}, onError );
-					}, onError );
-					
-				}
-				else finalFlush();
-			}
-			onApplicationError.dispatch( event, afterErrorModule, onError );
-		}
-		else {
-			// If there is not a handler, log first, then throw
-			if( !context.logDispatched ) {
-				// Execute onLogRequest, onPostLogRequest, and then throw the original error.  If there's any errors, throw the error anyway
-				onLogRequest.dispatch( context, function () {
-					onPostLogRequest.dispatch( context, function () {
-						throw event.error;
-					}, onError );
-				}, onError );
-			}
-			else throw event.error;
-		}
+		});
+
+		return requestEnded.asFuture();
 	}
 
 	/**
@@ -424,7 +408,11 @@ class HttpApplication
 		Dispose of the HttpApplication (and dependant modules etc)
 	**/
 	public function dispose() {
-		for ( module in modules ) module.dispose();
+		for ( module in modules ) 
+			module.dispose();
+		modules = null;
+		_initiatedModules = false;
+
 		onBeginRequest = null;
 		onResolveRequestCache = null;
 		onPostResolveRequestCache = null;
@@ -440,7 +428,7 @@ class HttpApplication
 		onPostLogRequest = null;
 		onEndRequest = null;
 		onApplicationError = null;
-		modules = null;
+		
 		urlFilters = null;
 	}
 }

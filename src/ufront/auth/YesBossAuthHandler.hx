@@ -12,13 +12,6 @@ import hxevents.Notifier;
 **/
 class YesBossAuthHandler<T:IAuthUser> implements IAuthHandler<T>
 {
-	/**
-		Create a new YesBossAuthHandler.
-	**/
-	public static inline function create( context:ufront.web.context.HttpContext ) {
-		return new YesBossAuthHandler();
-	}
-
 	public function new() {}
 
 	public function isLoggedIn() return true;
@@ -40,4 +33,18 @@ class YesBossAuthHandler<T:IAuthUser> implements IAuthHandler<T>
 	public var currentUser(get,null):Null<T>;
 
 	function get_currentUser() return null;
+
+	static var _factory:YesBossFactory;
+	public static function getFactory() {
+		if (_factory==null) _factory = new YesBossFactory();
+		return _factory;
+	}
+}
+
+class YesBossFactory implements IAuthFactory {
+	public function new() {}
+
+	public function create( context:HttpContext ) {
+		return new YesBossAuthHandler();
+	}
 }

@@ -1,7 +1,8 @@
 package ufront.web.result;
 
-import hxevents.Async;
+import tink.CoreApi;
 import ufront.web.context.ActionContext;
+import ufront.core.AsyncCallback;
 
 /** 
 	Encapsulates the result of an action method and is used to perform a framework-level operation on behalf of the action method. 
@@ -9,5 +10,7 @@ import ufront.web.context.ActionContext;
 class ActionResult 
 {
 	/** Enables processing of the result of an action method by a custom type that inherits from the ActionResult class. */
-	public function executeResult( actionContext:ActionContext, async:Async ){}
+	public function executeResult( actionContext:ActionContext ):Future<AsyncCompletion> {
+		return AsyncCallback.COMPLETED;
+	}
 }

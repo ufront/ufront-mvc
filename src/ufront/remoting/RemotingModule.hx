@@ -4,7 +4,6 @@ import haxe.remoting.Context;
 import haxe.Serializer;
 import haxe.Unserializer;
 import haxe.CallStack;
-import hxevents.Async;
 import ufront.module.IHttpModule;
 import ufront.application.HttpApplication;
 import ufront.web.error.*;
@@ -13,6 +12,8 @@ import ufront.web.context.*;
 import minject.Injector;
 import ufront.application.*;
 import ufront.auth.*;
+import tink.CoreApi;
+import ufront.core.AsyncSignal;
 
 /**
 	Checks if a request is a remoting request and processes accordingly.
@@ -45,7 +46,7 @@ class RemotingModule implements IHttpModule
 		injector = 
 			if (Std.is(app, UfrontApplication)) cast(app,UfrontApplication).remotingInjector
 			else app.appInjector;
-		app.onPostResolveRequestCache.addAsync( executeRemoting );
+		app.onPostResolveRequestCache.handle( executeRemoting );
 	}
 
 	/** Disposes of the resources (other than memory) that are used by the module. */
@@ -54,7 +55,8 @@ class RemotingModule implements IHttpModule
 		apis = null;
 	}
 
-	function executeRemoting( httpContext:HttpContext, async:Async ) {
+	function executeRemoting( httpContext:HttpContext ):Future<Noise> {
+		var doneTrigger = Future.trigger();
 		if ( httpContext.request.clientHeaders.exists("X-Haxe-Remoting") ) {
 			
 			// Set up the injector
@@ -104,15 +106,12 @@ class RemotingModule implements IHttpModule
 			// Mark this request as complete so further events don't fire
 			httpContext.completed = true;
 
-			// Run the log functions asynchronously, then complete.  In the event of an error, complete anyway (our request worked, just not the logging)
-			var onError = function (e) { async.completed(); }
-			app.onLogRequest.dispatch( httpContext, function () {
-				app.onPostLogRequest.dispatch( httpContext, function () {
-					async.completed();
-				}, onError );
-			}, onError );
+			// Run the log functions asynchronously, then complete.  
+			AsyncSignal.dispatchChain( httpContext, [app.onLogRequest, app.onPostLogRequest] ).handle( function(_) doneTrigger.trigger(null) );
 		}
-		else async.completed(); // Not a remoting call
+		else doneTrigger.trigger(null); // Not a remoting call
+
+		return doneTrigger.asFuture();
 	}
 
 	function processRequest( requestData:String, ctx:Context ):String {

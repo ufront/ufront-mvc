@@ -1,11 +1,12 @@
 package ufront.web.result;
 
 import dtx.DOMCollection;
-import hxevents.Async;
+import tink.CoreApi;
 import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
 import dtx.widget.Widget;
 import dtx.layout.IDetoxLayout;
+import ufront.core.AsyncCallback;
 using Detox;
 
 /** Represents a class that is used to send JSON-formatted content to the response. */
@@ -22,7 +23,7 @@ class DetoxResult<W:DOMCollection> extends ActionResult
 		this.layout = layout;
 	}
 
-	override function executeResult( actionContext:ActionContext, async:Async ) {
+	override function executeResult( actionContext:ActionContext ) {
 		// If layout is null, get a default one...
 		if (layout==null) layout = getDefaultLayout();
 
@@ -32,7 +33,7 @@ class DetoxResult<W:DOMCollection> extends ActionResult
 		actionContext.response.contentType = "text/html";
 		actionContext.response.write( '<!DOCTYPE html>' + layout.document.html() );
 
-		async.completed();
+		return AsyncCallback.COMPLETED;
 	}
 
 	// TODO: move somewhere else?

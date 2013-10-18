@@ -13,14 +13,13 @@ import ufront.remoting.RemotingApiContext;
 import ufront.remoting.RemotingModule;
 import ufront.web.context.HttpContext;
 import ufront.web.Dispatch;
-import ufront.web.session.FileSession;
+import ufront.web.session.*;
 import ufront.web.url.filter.*;
 import ufront.web.Controller;
 import ufront.web.UfrontConfiguration;
 import ufront.module.*;
 import ufront.web.session.IHttpSessionState;
-import ufront.auth.IAuthHandler;
-import ufront.auth.IAuthUser;
+import ufront.auth.*;
 import ufront.remoting.RemotingApiClass;
 using Objects;
 
@@ -115,7 +114,6 @@ class UfrontApplication extends HttpApplication
 		This will redirect `haxe.Log.trace` to a local function which adds trace messages to the `messages` property of this application.  You will need to use an appropriate tracing module to view these.
 	**/
 	public function new( ?optionsIn:UfrontConfiguration ) {
-		
 		super();
 
 		// Set up custom trace.  Will save messages to the `messages` array, and let modules log as they desire.
@@ -176,8 +174,8 @@ class UfrontApplication extends HttpApplication
 		authFactory = configuration.authFactory;
 	}
 
-	var sessionFactory:HttpContext->IHttpSessionState;
-	var authFactory:HttpContext->IAuthHandler<IAuthUser>;
+	var sessionFactory:ISessionFactory;
+	var authFactory:IAuthFactory;
 
 	/**
 		Execute the current request.

@@ -6,8 +6,8 @@ import haxe.PosInfos;
 **/
 class PageNotFoundError extends HttpError
 {
-	public function new(?pos : PosInfos)
+	public function new( ?pos:PosInfos )
 	{
-		super(404, "Page Not Found", pos); 
+		super( 404, "Page Not Found", pos );
 	}
 }

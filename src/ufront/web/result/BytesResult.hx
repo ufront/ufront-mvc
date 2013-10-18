@@ -1,8 +1,8 @@
 package ufront.web.result;
 
 import haxe.io.Bytes;
-import hxevents.Async;
 import ufront.web.context.ActionContext;
+import ufront.core.AsyncCallback;
 
 class BytesResult extends FileResult
 {
@@ -14,10 +14,9 @@ class BytesResult extends FileResult
 		this.bytes = bytes;
 	}
 	
-	override function executeResult( actionContext:ActionContext, async:Async ) {
-		super.executeResult(actionContext, new Async(function (){ 
-			actionContext.response.writeBytes(bytes, 0, bytes.length);
-			async.completed(); 
-		}, async.error));
+	override function executeResult( actionContext:ActionContext ) {
+		super.executeResult(actionContext);
+		actionContext.response.writeBytes(bytes, 0, bytes.length);
+		return AsyncCallback.COMPLETED;
 	}
 }
