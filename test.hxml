@@ -5,7 +5,6 @@
 -lib mockatoo
 -cp src
 -cp test
--lib thx
 -lib hxevents
 -lib erazor
 -lib minject
