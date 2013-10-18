@@ -131,18 +131,6 @@ class Dispatch extends haxe.web.Dispatch
 	}
 
 	/**
-		Dispatch a request asynchronously, using the appropriate Async object.
-
-		Same as `haxe.web.Dispatch`, except it uses the ufront version of `makeConfig()`, and will call
-		`runtimeAsyncDispatch()`, not `runtimeDispatch()`, meaning that this will return a value.
-	**/
-	public macro function asyncDispatch( ethis:Expr, obj:ExprOf<{}>, async:ExprOf<Async<Dynamic,DispatchError>> ) {
-		var p = Context.currentPos();
-		var cfg = makeConfig(obj);
-		return macro $ethis.runtimeAsyncDispatch($cfg, $async);
-	}
-
-	/**
 		Will return an array of possible names. 
 
 		If method is not null, it will match '$method_$name'. 
@@ -234,20 +222,6 @@ class Dispatch extends haxe.web.Dispatch
 	}
 
 	/**
-		This is the same as executeDispatchRequest, but rather than returning a result, an async callback is returned.
-
-		The async error() handler will be used if 
-	**/
-	public function executeDispatchRequestAsync(async:Async<Dynamic,DispatchError>) {
-		if ( controller==null || action==null || arguments==null )
-			async.error( DEMissing );
-		
-		var actionMethod = Reflect.field(controller, action);
-		var result = Reflect.callMethod(controller, actionMethod, arguments);
-		async.complete( result );
-	}
-
-	/**
 		The same as `runtimeReturnDispatch`, except it does not return a result, so it is consistent with the super class.
 	**/
 	override public function runtimeDispatch( cfg:DispatchConfig ) {
@@ -268,27 +242,6 @@ class Dispatch extends haxe.web.Dispatch
 		} catch( e:Redirect ) {
 			processDispatchRequest( cfg );
 			return executeDispatchRequest();
-		}
-	}
-
-	/**
-		This calls `processDispatchRequest` synchronously, followed by `executeDispatchRequest` asynchronously.
-
-
-		This simple calls `processDispatchRequest`,followed by `executeDispatchRequest`
-
-		If a `Redirect` is thrown, it will rerun the two method recursively until a result is reached or an error thrown.
-
-		So the functionality is similar to the `runtimeDispatch` in `haxe.web.Dispatch`, except ufront's processing rules are used, and a result is returned.
-	**/
-	public function runtimeAsyncDispatch( cfg:DispatchConfig, async:Async<Dynamic,DispatchError> ) {
-		processDispatchRequest( cfg );
-		executeDispatchRequestAsync( async );
-		try {
-			return ;
-		} catch( e:Redirect ) {
-			processDispatchRequest( cfg );
-			return executeDispatchRequestAsync( async );
 		}
 	}
 
@@ -384,29 +337,4 @@ class Dispatch extends haxe.web.Dispatch
 		}
 
 	#end
-}
-
-/**
-	A simple container for two callbacks: one signifying a successful completion, the other an error
-**/
-class Async<T,E>
-{
-	var _after : T -> Void;
-	var _error : E -> Void;
-	public function new(after : T -> Void, ?error : E -> Void)
-	{
-		_after = after;
-		_error = error;
-	}
-
-	inline public function complete(v : T)
-	{
-		_after(v);
-	}
-
-	inline public function error(e : E)
-	{
-		if (null != _error)
-			_error(e);
-	}
 }
