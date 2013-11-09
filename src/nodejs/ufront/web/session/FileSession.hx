@@ -4,10 +4,10 @@
  */
 
 package nodejs.ufront.web.session;
-import ufront.web.IHttpSessionState;  
+import ufront.web.UFHttpSessionState;  
 import thx.error.NotImplemented;
 
-class FileSession implements IHttpSessionState
+class FileSession implements UFHttpSessionState
 {
 	public function new(savePath : String, ?expire : Int = 0)
 	{                              

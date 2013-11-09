@@ -4,7 +4,7 @@ import haxe.io.Bytes;
 import haxe.io.Eof;
 import sys.io.File;
 import ufront.web.context.ActionContext;
-import ufront.core.AsyncCallback;
+import ufront.core.Sync;
 
 /**  Sends the contents of a file to the response.  */
 class FilePathResult extends FileResult
@@ -28,11 +28,11 @@ class FilePathResult extends FileResult
 				var buf = Bytes.alloc( BUF_SIZE );
 				var size = reader.readBytes( buf, 0, BUF_SIZE );
 				actionContext.response.writeBytes( buf, 0, size );
-				return AsyncCallback.COMPLETED;
+				return Sync.success();
 			} catch (e:Eof) {
-				return AsyncCallback.COMPLETED;
+				return Sync.success();
 			}
 		}
-		return AsyncCallback.COMPLETED;
+		return Sync.success();
 	}
 }

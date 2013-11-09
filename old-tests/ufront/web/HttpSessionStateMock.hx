@@ -1,8 +1,8 @@
 package ufront.web;
-import ufront.web.IHttpSessionState;
+import ufront.web.UFHttpSessionState;
 import haxe.ds.StringMap;
 
-class HttpSessionStateMock implements IHttpSessionState
+class HttpSessionStateMock implements UFHttpSessionState
 {
 	var _h : StringMap<Dynamic>;
 	public function new()

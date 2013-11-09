@@ -5,9 +5,9 @@ package ufront.web.session;
 
 	In fact, it forgets everything the moment you ask it.  Use this when you do not want a session implementation, but also do not want to get null related errors in your code.  For example, when testing.
 **/
-class VoidSession implements IHttpSessionStateSync
+class VoidSession implements UFHttpSessionStateSync
 {
-	public static function create( context:HttpContext ) : IHttpSessionState {
+	public static function create( context:HttpContext ) : UFHttpSessionState {
 		return new VoidSession();
 	}
 

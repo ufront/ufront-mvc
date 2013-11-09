@@ -1,13 +1,13 @@
 package ufront.log;
 
 import ufront.web.context.HttpContext;
-import ufront.application.*;
-import ufront.module.IHttpModule;
+import ufront.app.*;
 import haxe.PosInfos;
+import ufront.core.Sync;
 using Types;
 
 /**
-	Trace module that adds a "hxt" line to haxe remoting call, that can work with `ufront.remoting.HttpAsyncConnectionWithTraces`
+	Trace module that adds a "hxt" line to haxe remoting call, that can work with `ufront.api.HttpAsyncConnectionWithTraces`
 
 	When `onLogRequest` is fired, this will flush the messages (traces, logs, warnings and errors) from the current context to the remoting response.
 
@@ -15,42 +15,34 @@ using Types;
 		
 	If the `HttpResponse` output type is not "application/x-haxe-remoting", the traces will not be displayed.
 **/
-class RemotingLogger implements IHttpModule
+class RemotingLogger implements UFLogHandler
 {
 	/** A reference to the applications messages, so we can also flush those if required **/
 	var appMessages:Array<Message>;
 
 	public function new() {}
 
-	public function init( application:HttpApplication ) {
-		application.onLogRequest.handle( _sendContent );
-		application.ifIs( UfrontApplication, function(ufrontApp) {
-			appMessages = ufrontApp.messages;
-		});
-	}
+	public function log( httpContext:HttpContext, appMessages:Array<Message> ) {
 
-	public function dispose() {}
-
-	function _sendContent( httpContext:HttpContext ) {
-
-		if( httpContext.response.contentType!="application/x-haxe-remoting" ) {
-			return;
-		}
-		
-		var results = [];
-		for( msg in httpContext.messages )
-			results.push( formatMessage(msg) );
-		
-		#if debug
-			if ( appMessages!=null) {
-				for( msg in appMessages )
-					results.push( formatMessage(msg) );
+		if( httpContext.response.contentType=="application/x-haxe-remoting" ) {
+			var results = [];
+			for( msg in httpContext.messages )
+				results.push( formatMessage(msg) );
+			
+			#if debug
+				if ( appMessages!=null) {
+					for( msg in appMessages )
+						results.push( formatMessage(msg) );
+				}
+			#end
+			
+			if( results.length>0 ) {
+				httpContext.response.write( '\n' + results.join("\n") );
 			}
-		#end
-		
-		if( results.length>0 ) {
-			httpContext.response.write( '\n' + results.join("\n") );
 		}
+		
+
+		return Sync.success();
 	}
 
 	function formatMessage( m:Message ):String {

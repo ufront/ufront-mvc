@@ -1,12 +1,13 @@
 package ufront.web.context;
 
+import haxe.EnumFlags;
 import haxe.io.Path;
 import haxe.PosInfos;
-import ufront.auth.IAuthUser;
+import ufront.auth.UFAuthUser;
 import ufront.log.Message;
 import ufront.web.url.UrlDirection;
 import thx.error.NullArgument;
-import ufront.web.url.filter.IUrlFilter;
+import ufront.web.url.filter.UFUrlFilter;
 import thx.error.AbstractMethod;
 import ufront.web.session.*;
 import ufront.web.result.ActionResult;
@@ -30,7 +31,7 @@ class HttpContext
 
 		`urlFilters` will be an empty array if not supplied.
 	**/
-	public static function create( ?request:HttpRequest, ?response:HttpResponse, ?session:IHttpSessionState, ?auth:IAuthHandler<IAuthUser>, ?sessionFactory:ISessionFactory, ?authFactory:IAuthFactory, ?urlFilters:Array<IUrlFilter>, ?contentDir="uf-content" ) {
+	public static function create( ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser>, ?sessionFactory:UFSessionFactory, ?authFactory:UFAuthFactory, ?urlFilters:Array<UFUrlFilter>, ?contentDir="uf-content" ) {
 		if( null==request )
 			request = HttpRequest.create();
 		if( null==response )
@@ -49,19 +50,22 @@ class HttpContext
 
 		`contentDir` is used to help specify the path of `contentDirectory`, relative to `request.scriptDirectory`.  Default value is `uf-content`
 	**/
-	public function new( request:HttpRequest, response:HttpResponse, ?session:IHttpSessionState, ?auth:IAuthHandler<IAuthUser>, ?sessionFactory:ISessionFactory, ?authFactory:IAuthFactory, ?urlFilters:Array<IUrlFilter>, ?contentDir="uf-content" ) {
-		completed = false;
-		NullArgument.throwIfNull(response);
-		NullArgument.throwIfNull(request);
+	public function new( request:HttpRequest, response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser>, ?sessionFactory:UFSessionFactory, ?authFactory:UFAuthFactory, ?urlFilters:Array<UFUrlFilter>, ?contentDir="uf-content" ) {
+
+		NullArgument.throwIfNull( response );
+		NullArgument.throwIfNull( request );
+		
 		this.request = request;
 		this.response = response;
 		this.sessionFactory = sessionFactory;
 		this.authFactory = authFactory;
 		this._session = session;
 		this._auth = auth;
-		this.urlFilters = (urlFilters!=null) ? urlFilters : [];
+		this.urlFilters = ( urlFilters!=null ) ? urlFilters : [];
 		this.contentDir = contentDir;
+		
 		messages = [];
+		completion = new EnumFlags<RequestCompletion>();
 	}
 
 	/** The current HttpRequest **/
@@ -75,14 +79,14 @@ class HttpContext
 
 		If no session is provided, but `sessionFactory` is set, that will be used to create a session.
 	**/
-	public var session(get, null):IHttpSessionState;
+	public var session(get, null):UFHttpSessionState;
 
 	/**
 		The current auth handler 
 
 		If no auth handler is provided, but authFactory is set, that will be used to create a session.
 	**/
-	public var auth(get, null):IAuthHandler<IAuthUser>;
+	public var auth(get, null):UFAuthHandler<UFAuthUser>;
 
 	/** The `ActionContext` used in processing the request. Will be null until the application has processed it's dispatch **/
 	public var actionContext:ActionContext;
@@ -90,20 +94,35 @@ class HttpContext
 	/** The `ActionResult` that came from processing the request. Will be null until the action has been executed. **/
 	public var actionResult:ActionResult;
 
-	/** When true, the event chain in `HttpApplication` will stop firing and begin it's conclusion **/
-	public var completed:Bool;
+	/**
+		The completion progress of the current request. Setting these values will affect the flow of the request.
+		
+		For example, if a middleware restores a response from a cached entry matching the current request, it may want to skip the `RequestHandler` and any `ResponseMiddleware`:
 
-	/** Returns true if the log has been dispatched already for the current request (Read only) **/
-	public var logDispatched(default,null):Bool;
+		```
+		// Skip remaining request middleware, and the request handler (this will then skip to the response middleware)
+		ctx.completion.set( CRequestMiddlewareComplete );
+		ctx.completion.set( CRequestHandlerComplete );
+		```
 
-	/** Returns true if the response has been flushed already for the current request (Read only) **/
-	public var flushed(default,null):Bool;
+		Another example is if you have a controller or some code that writes directly to the output, not the response object, in which case you want to skip the log, flush, middleware etc.  (This is the case with the `dbadmin` tool)
+
+		```
+		ctx.completion.set( CRequestHandlerComplete );
+		ctx.completion.set( CResponseMiddlewareComplete );
+		ctx.completion.set( CLogComplete );
+		ctx.completion.set( CFlushComplete );
+		```
+
+		These values are updated by HttpApplication and various middleware and handlers, or you can update them manually.
+	**/
+	public var completion:EnumFlags<RequestCompletion>;
 
 	/** The URL filters to be used for `getRequestUri()` and `generateUri()` **/
-	public var urlFilters(default,null):Iterable<IUrlFilter>;
+	public var urlFilters(default,null):Iterable<UFUrlFilter>;
 
-	var sessionFactory:ISessionFactory;
-	var authFactory:IAuthFactory;
+	var sessionFactory:UFSessionFactory;
+	var authFactory:UFAuthFactory;
 
 	var _requestUri:String;
 
@@ -114,10 +133,10 @@ class HttpContext
 		For example, if you use `PathInfoUrlFilter` to filter `index.n?path=/home/` into `/home/`, this will return the filtered result.
 	**/
 	public function getRequestUri():String {
-		if(null == _requestUri) {
-			var url = PartialUrl.parse(request.uri);
-			for(filter in urlFilters)
-				filter.filterIn(url, request);
+		if( null==_requestUri ) {
+			var url = PartialUrl.parse( request.uri );
+			for( filter in urlFilters )
+				filter.filterIn( url, request );
 			_requestUri = url.toString();
 		}
 		return _requestUri;
@@ -130,11 +149,11 @@ class HttpContext
 		This is useful so your code contains the simple URIs, but at runtime they are transformed into the correct form depending on the environment.
 	**/
 	public function generateUri( uri:String ):String {
-		var uriOut = VirtualUrl.parse(uri);
-		var filters:Array<IUrlFilter> = cast urlFilters;
+		var uriOut = VirtualUrl.parse( uri );
+		var filters:Array<UFUrlFilter> = cast urlFilters;
 		var i = filters.length - 1;
-		while(i >= 0)
-			filters[i--].filterOut(uriOut, request);
+		while( i>=0 )
+			filters[i--].filterOut( uriOut, request );
 		return uriOut.toString();
 	}
 
@@ -142,7 +161,7 @@ class HttpContext
 		Sets the URL filters.  Should only be used before the request has begun processing.
 	**/
 	public function setUrlFilters( filters ) {
-		urlFilters = (filters!= null) ? filters : [];
+		urlFilters = ( filters!=null ) ? filters : [];
 		_requestUri = null;
 	}
 
@@ -173,8 +192,8 @@ class HttpContext
 	**/
 	public function commitSession():Surprise<Noise,String> {
 		return
-			if (_session!=null) _session.commit();
-			else Future.sync(Success(null));
+			if ( _session!=null ) _session.commit();
+			else Future.sync( Success(Noise) );
 	}
 
 	/**
@@ -193,7 +212,7 @@ class HttpContext
 		
 		A workaround is to call HttpContext's ufTrace(), store our messages here, and output them at the end of the request.  You can call `httpContext.ufTrace(someValue)` just like you would any other trace, and the traces will be displayed as normal at the end of the request.
 
-		Inline shortcuts are provided from `ufront.web.Controller` and `ufront.remoting.RemotingApiClass` so that you can call ufTrace() and it points to this method.
+		Inline shortcuts are provided from `ufront.web.Controller` and `ufront.api.UFApi` so that you can call ufTrace() and it points to this method.
 	**/
 	public inline function ufTrace( msg:Dynamic, ?pos:PosInfos ) {
 		messages.push({ msg: msg, pos: pos, type:Trace });
@@ -233,31 +252,27 @@ class HttpContext
 		A collection of messages that were traced during this request.
 	**/
 	public var messages:Array<Message>;
-	
-	/**
-		Dispose of this HttpContext.
-	**/
-	public function dispose():Void {
-		request = null;
-		response = null;
-		session = null;
-		auth = null;
-		actionContext = null;
-		actionResult = null;
-		urlFilters = null;
-	}
 
-	var _session:IHttpSessionState;
+	var _session:UFHttpSessionState;
 	function get_session() {
 		if( null==_session && sessionFactory!=null )
 			_session = sessionFactory.create( this );
 		return _session;
 	}
 
-	var _auth:IAuthHandler<IAuthUser>;
+	var _auth:UFAuthHandler<UFAuthUser>;
 	function get_auth() {
 		if( null==_auth && authFactory!=null && session!=null )
 			_auth = authFactory.create( this );
 		return _auth;
 	}
+}
+
+enum RequestCompletion {
+	CRequestMiddlewareComplete;
+	CRequestHandlersComplete;
+	CResponseMiddlewareComplete;
+	CLogHandlersComplete;
+	CFlushComplete;
+	CErrorHandlersComplete;
 }

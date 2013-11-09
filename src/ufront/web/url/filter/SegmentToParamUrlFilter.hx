@@ -12,7 +12,7 @@ using StringTools;
 	TODO: decide if this overlaps Dispatch's built in functionality.  Any de-duplication needed
 	TODO: document further
 **/
-class SegmentToParamUrlFilter implements IUrlFilter
+class SegmentToParamUrlFilter implements UFUrlFilter
 {
 	public var defaultValue : String;
 	public var allowedValues : Array<String>;

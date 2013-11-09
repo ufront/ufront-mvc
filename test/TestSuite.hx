@@ -1,8 +1,6 @@
 import massive.munit.TestSuite;
 
 import ufront.util.ServerDateTest;
-import ufront.application.UfrontApplicationTest;
-import ufront.application.HttpApplicationTest;
 import ufront.web.context.HttpResponseTest;
 import ufront.web.context.ActionContextTest;
 import ufront.web.context.HttpRequestTest;
@@ -36,8 +34,6 @@ import ufront.web.error.UnauthorizedErrorTest;
 import ufront.web.error.MethodNotAllowedErrorTest;
 import ufront.web.error.InternalServerErrorTest;
 import ufront.web.error.UnprocessableEntityErrorTest;
-import ufront.module.DispatchModuleTest;
-import ufront.module.ErrorModuleTest;
 import ufront.module.IHttpModuleTest;
 
 /**
@@ -53,8 +49,6 @@ class TestSuite extends massive.munit.TestSuite
 		super();
 
 		add(ufront.util.ServerDateTest);
-		add(ufront.application.UfrontApplicationTest);
-		add(ufront.application.HttpApplicationTest);
 		add(ufront.web.context.HttpResponseTest);
 		add(ufront.web.context.ActionContextTest);
 		add(ufront.web.context.HttpRequestTest);
@@ -88,8 +82,6 @@ class TestSuite extends massive.munit.TestSuite
 		add(ufront.web.error.MethodNotAllowedErrorTest);
 		add(ufront.web.error.InternalServerErrorTest);
 		add(ufront.web.error.UnprocessableEntityErrorTest);
-		add(ufront.module.DispatchModuleTest);
-		add(ufront.module.ErrorModuleTest);
 		add(ufront.module.IHttpModuleTest);
 	}
 }

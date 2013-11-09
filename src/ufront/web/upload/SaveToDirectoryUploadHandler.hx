@@ -14,7 +14,7 @@ using StringTools;
 	
 	@author Franco Ponticelli
 **/
-class SaveToDirectoryUploadHandler implements IHttpUploadHandler
+class SaveToDirectoryUploadHandler implements UFHttpUploadHandler
 {
 	var _directory : String;
 	var _output : FileOutput;

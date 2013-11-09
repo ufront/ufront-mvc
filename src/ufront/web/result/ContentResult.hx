@@ -2,7 +2,7 @@ package ufront.web.result;
 
 import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
-import ufront.core.AsyncCallback;
+import ufront.core.Sync;
 
 /** Represents a user-defined content type that is the result of an action method. */
 class ContentResult extends ActionResult {
@@ -19,6 +19,6 @@ class ContentResult extends ActionResult {
 			actionContext.response.contentType = contentType;
 
 		actionContext.response.write( content );
-		return AsyncCallback.COMPLETED;
+		return Sync.success();
 	}
 }

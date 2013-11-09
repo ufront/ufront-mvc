@@ -11,7 +11,7 @@ using StringTools;
 
 	For example `index.n?q=/some/path/` becomes `/some/path/`
 **/
-class QueryStringUrlFilter implements IUrlFilter
+class QueryStringUrlFilter implements UFUrlFilter
 {
 	public var frontScript(default, null) : String;
 	public var paramName(default, null) : String; 

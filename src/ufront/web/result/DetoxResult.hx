@@ -6,7 +6,7 @@ import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
 import dtx.widget.Widget;
 import dtx.layout.IDetoxLayout;
-import ufront.core.AsyncCallback;
+import ufront.core.Sync;
 using Detox;
 
 /** Represents a class that is used to send JSON-formatted content to the response. */
@@ -33,7 +33,7 @@ class DetoxResult<W:DOMCollection> extends ActionResult
 		actionContext.response.contentType = "text/html";
 		actionContext.response.write( '<!DOCTYPE html>' + layout.document.html() );
 
-		return AsyncCallback.COMPLETED;
+		return Sync.success();
 	}
 
 	// TODO: move somewhere else?

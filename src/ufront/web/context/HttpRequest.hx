@@ -3,7 +3,7 @@ import thx.error.AbstractMethod;
 import haxe.io.Bytes;
 import haxe.ds.StringMap;
 import thx.error.NotImplemented;
-import ufront.web.upload.IHttpUploadHandler;
+import ufront.web.upload.UFHttpUploadHandler;
 
 /**
 	A description of the current HttpRequest.
@@ -151,7 +151,7 @@ class HttpRequest
 	/**
 		TODO: document this.  May need Franco's help to explain it...
 	**/
-	public function setUploadHandler(handler : IHttpUploadHandler) throw new AbstractMethod();
+	public function setUploadHandler(handler : UFHttpUploadHandler) throw new AbstractMethod();
 
 	/**
 		Things not implemented yet but which would be handy:

@@ -9,7 +9,7 @@ import thx.error.NotImplemented;
 import haxe.io.Bytes;
 import thx.error.Error;      
 import ufront.web.IHttpHandler;
-import ufront.web.IHttpUploadHandler;
+import ufront.web.UFHttpUploadHandler;
 import ufront.web.EmptyUploadHandler;   
 import js.Node;
 import haxe.ds.StringMap;
@@ -40,7 +40,7 @@ class HttpRequest extends ufront.web.HttpRequest
 		return throw new NotImplemented();
 	}
 /*	
-	var _uploadHandler : IHttpUploadHandler;
+	var _uploadHandler : UFHttpUploadHandler;
 	var _parsed : Bool;
 	function _parseMultipart()
 	{
@@ -104,7 +104,7 @@ class HttpRequest extends ufront.web.HttpRequest
 		}
 	}
  */
-	override public function setUploadHandler(handler : IHttpUploadHandler)
+	override public function setUploadHandler(handler : UFHttpUploadHandler)
 	{     
 		throw new NotImplemented();
 /*		

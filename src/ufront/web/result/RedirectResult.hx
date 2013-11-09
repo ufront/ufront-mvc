@@ -2,7 +2,7 @@ package ufront.web.result;
 
 import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
-import ufront.core.AsyncCallback;
+import ufront.core.Sync;
 
 /** Controls the processing of application actions by redirecting to a specified URI. */
 class RedirectResult extends ActionResult
@@ -27,6 +27,6 @@ class RedirectResult extends ActionResult
 		if(permanentRedirect) actionContext.response.permanentRedirect( url );
 		else actionContext.response.redirect( url );
 		
-		return AsyncCallback.COMPLETED;
+		return Sync.success();
 	}
 }

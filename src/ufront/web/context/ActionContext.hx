@@ -1,6 +1,6 @@
 package ufront.web.context;
 
-import ufront.web.session.IHttpSessionState;
+import ufront.web.session.UFHttpSessionState;
 import thx.error.NullArgument;
 import ufront.auth.*;
 
@@ -11,15 +11,15 @@ import ufront.auth.*;
 **/
 class ActionContext
 {
-	public var httpContext(default, null) : HttpContext;
-	public var controller : Null<{}>;
-	public var action : Null<String>;
-	public var args : Null<Array<Dynamic>>;
+	public var httpContext(default, null):HttpContext;
+	public var controller:Null<{}>;
+	public var action:Null<String>;
+	public var args:Null<Array<Dynamic>>;
 
-	public var request(get, null) : HttpRequest;
-	public var response(get, null) : HttpResponse;
-	public var session(get, null) : IHttpSessionState;
-	public var auth(get, null) : IAuthHandler<IAuthUser>;
+	public var request(get, null):HttpRequest;
+	public var response(get, null):HttpResponse;
+	public var session(get, null):UFHttpSessionState;
+	public var auth(get, null):UFAuthHandler<UFAuthUser>;
 
 	public function new( httpContext:HttpContext, ?controller:{}, ?action:String, ?args:Array<Dynamic> ) {
 		NullArgument.throwIfNull( httpContext );
@@ -27,15 +27,6 @@ class ActionContext
 		this.controller = controller;
 		this.action = action;
 		this.args = args;
-	}
-	
-	/**
-		Dispose of this ActionResultContext.
-
-		Currently just disposes of the HttpContext, which will commit the given `session`.
-	**/
-	public function dispose():Void {
-		httpContext.dispose();
 	}
 	
 	inline function get_request() return httpContext.request;

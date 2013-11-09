@@ -2,7 +2,7 @@ package ufront.web.result;
 
 import haxe.io.Bytes;
 import ufront.web.context.ActionContext;
-import ufront.core.AsyncCallback;
+import ufront.core.Sync;
 
 class BytesResult extends FileResult
 {
@@ -17,6 +17,6 @@ class BytesResult extends FileResult
 	override function executeResult( actionContext:ActionContext ) {
 		super.executeResult(actionContext);
 		actionContext.response.writeBytes(bytes, 0, bytes.length);
-		return AsyncCallback.COMPLETED;
+		return Sync.success();
 	}
 }

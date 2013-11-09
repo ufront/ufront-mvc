@@ -1,15 +1,15 @@
 package ufront.log;
 
 import ufront.web.context.HttpContext;
-import ufront.application.*;
-import ufront.module.IHttpModule;
+import ufront.app.*;
 import haxe.PosInfos;
+import ufront.core.Sync;
 using Types;
 
 /**
 	Trace module that adds javascript snippet to output trace to Javascript console.
 	
-	When `onLogRequest` is fired, this will flush the messages (traces, logs, warnings and errors) from the current context to the browser.
+	This will flush the messages (traces, logs, warnings and errors) from the current context to the browser.
 
 	If `-debug` is defined, any application level messages (not necessarily associated with this request) will also be sent to the browser.
 		
@@ -19,44 +19,35 @@ using Types;
 
 	This module will respect the trace types specified in the `haxe.log.Message`, using `console.log`, `console.info`, `console.warn` and `console.error` as appropriate.
 **/
-class BrowserConsoleLogger implements IHttpModule
+class BrowserConsoleLogger implements UFLogHandler
 {
 	/** A reference to the applications messages, so we can also flush those if required **/
 	var appMessages:Array<Message>;
 
 	public function new() {}
 
-	public function init( application:HttpApplication ) {
-		application.onLogRequest.handle( _sendContent );
-		application.ifIs( UfrontApplication, function(ufrontApp) {
-			appMessages = ufrontApp.messages;
-		});
-	}
+	public function log( ctx:HttpContext, appMessages:Array<Message> ) {
 
-	public function dispose() {}
-
-	function _sendContent( httpContext:HttpContext ) {
-
-		if( httpContext.response.contentType!="text/html" ) {
-			return;
-		}
-		
-		var results = [];
-		for( msg in httpContext.messages )
-			results.push( formatMessage(msg) );
-		
-		#if debug
-			if ( appMessages!=null) {
-				for( msg in appMessages )
-					results.push( formatMessage(msg) );
+		if( ctx.response.contentType=="text/html" ) {
+			var results = [];
+			for( msg in ctx.messages )
+				results.push( formatMessage(msg) );
+			
+			#if debug
+				if ( appMessages!=null) {
+					for( msg in appMessages )
+						results.push( formatMessage(msg) );
+				}
+			#end
+			
+			if( results.length>0 ) {
+				ctx.response.write(
+					'\n<script type="text/javascript">\n${results.join("\n")}\n</script>'
+				);
 			}
-		#end
-		
-		if( results.length>0 ) {
-			httpContext.response.write(
-				'\n<script type="text/javascript">\n${results.join("\n")}\n</script>'
-			);
 		}
+
+		return Sync.success();
 	}
 
 	function formatMessage( m:Message ):String {

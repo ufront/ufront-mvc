@@ -1,11 +1,11 @@
 package ufront.log;
 
 import sys.io.File;
-import ufront.application.*;
+import ufront.app.*;
 import haxe.PosInfos;
 import sys.io.FileOutput;
 import ufront.web.context.HttpContext;
-import ufront.module.IHttpModule;
+import ufront.core.Sync;
 using Types;
 
 /**
@@ -19,7 +19,7 @@ using Types;
 
 	- A general request log: `$datetime [$method] [$uri] from [$clientIP] with session [$sessionID], response: [$code $contentType]`
 	- Any messages from the HttpContext, in the format `\t[$messageType] $className($line): "$message"` (note the leading tab)
-	- Any messages from the UfrontApplication, in the same format.
+	- Any messages from the HttpApplication, in the same format.
 
 	New lines will be removed from the log, and added as a literal "\n".
 
@@ -35,11 +35,8 @@ using Types;
 
 	The file will be flushed after the log is written, and closed when the module is disposed
 **/
-class FileLogger implements IHttpModule
+class FileLogger implements UFLogHandler implements UFInitRequired
 {
-	/** A reference to the applications messages, so we can also flush those if required **/
-	var appMessages:Array<Message>;
-
 	/** the relative path to the log file **/
 	var path:String;
 
@@ -56,23 +53,20 @@ class FileLogger implements IHttpModule
 	}
 
 	/** Initialize the module **/
-	public function init( application:HttpApplication ) {
-		application.onLogRequest.handle( writeFile );
-		application.ifIs( UfrontApplication, function(ufrontApp) {
-			appMessages = ufrontApp.messages;
-		});
+	public function init( app:HttpApplication ) {
+		return Sync.success();
 	}
 
-	public function dispose() {
+	public function dispose( app:HttpApplication ) {
 		path = null;
-		appMessages = null;
 		if ( file!=null ) {
 			file.close();
 			file = null;
 		}
+		return Sync.success();
 	}
 
-	function writeFile( context:HttpContext ) {
+	public function log( context:HttpContext, appMessages:Array<Message> ) {
 		if ( file==null ) {
 			file = File.append( context.contentDirectory + path );
 		}
@@ -90,6 +84,8 @@ class FileLogger implements IHttpModule
 		}
 
 		file.flush();
+
+		return Sync.success();
 	}
 
 	static var REMOVENL = ~/[\n\r]/g;

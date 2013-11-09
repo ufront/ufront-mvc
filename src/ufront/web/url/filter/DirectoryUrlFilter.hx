@@ -10,7 +10,7 @@ using StringTools;
 
 	For example `/myappdir/posts/3/` becomes `/posts/3/`
 **/
-class DirectoryUrlFilter implements IUrlFilter
+class DirectoryUrlFilter implements UFUrlFilter
 {
 	/** The directory that is being filtered **/
 	public var directory(default, null) : String;

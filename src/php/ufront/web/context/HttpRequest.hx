@@ -51,7 +51,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		return postString;
 	}
 	
-	var _uploadHandler : IHttpUploadHandler;
+	var _uploadHandler : UFHttpUploadHandler;
 	var _parsed : Bool;
 	function _parseMultipart()
 	{
@@ -101,7 +101,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 	}
 
-	override public function setUploadHandler(handler : IHttpUploadHandler)
+	override public function setUploadHandler(handler : UFHttpUploadHandler)
 	{
 		if (_parsed)
 			throw new Error("multipart has been already parsed");

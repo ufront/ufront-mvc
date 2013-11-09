@@ -2,7 +2,7 @@ package ufront.test;
 
 import ufront.web.context.*;
 import ufront.web.error.HttpError;
-import ufront.web.session.IHttpSessionState;
+import ufront.web.session.UFHttpSessionState;
 import ufront.auth.*;
 import thx.error.*;
 import thx.collection.*;
@@ -47,12 +47,12 @@ class TestUtils
 		* The request, response, session and auth return either the supplied value, or are mocked
 		* `setUrlFilters` and `generateUri` call the real methods.
 	**/
-	public static function mockHttpContext( uri:String, ?method:String, ?request:HttpRequest, ?response:HttpResponse, ?session:IHttpSessionState, ?auth:IAuthHandler<IAuthUser> )
+	public static function mockHttpContext( uri:String, ?method:String, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser> )
 	{
 		// Check the supplied arguments
 		NullArgument.throwIfNull( uri );
 		if ( request==null ) {
-			request = HttpRequest.mock();
+			// request = HttpRequest.mock();
 			request.uri.returns( uri );
 			request.params.returns( new CascadeHash([]) );
 			request.httpMethod.returns( (method!=null) ? method.toUpperCase() : "GET" );
@@ -61,8 +61,8 @@ class TestUtils
 			response = HttpResponse.spy();
 			response.flush().stub();
 		}
-		if (session==null) session = IHttpSessionState.mock();
-		if (auth==null) auth = IAuthHandler.mock([IAuthUser]);
+		if (session==null) session = UFHttpSessionState.mock();
+		if (auth==null) auth = UFAuthHandler.mock([UFAuthUser]);
 
 		// Build the HttpContext with our mock objects
 		var ctx = new HttpContext( request, response, session, auth, [] );

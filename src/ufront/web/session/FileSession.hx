@@ -5,7 +5,7 @@ import sys.FileSystem;
 import sys.io.File;
 import ufront.web.context.HttpContext;
 import ufront.web.HttpCookie;
-import ufront.web.session.IHttpSessionState;
+import ufront.web.session.UFHttpSessionState;
 import thx.error.NotImplemented;
 import haxe.ds.StringMap;
 import haxe.Serializer;
@@ -27,7 +27,7 @@ using StringTools;
 
 	When searching the parameters or cookies for the Session ID, the name to search for is defined by the `sessionName` property.
 **/
-class FileSession implements IHttpSessionState
+class FileSession implements UFHttpSessionState
 {
 	// Statics
 
@@ -215,11 +215,11 @@ class FileSession implements IHttpSessionState
 
 				sessionID = id;
 				started = true;
-				t.trigger( Success(null) );
+				t.trigger( Success(Noise) );
 			}
 			else t.trigger( Failure('Neko session savepath not found: ' + savePath.substr(0, -1)) );
 		}
-		else t.trigger( Success(null) );
+		else t.trigger( Success(Noise) );
 
 		return t.asFuture();
 	}
@@ -239,7 +239,7 @@ class FileSession implements IHttpSessionState
 				var filePath = getSessionFilePath(sessionID);
 				var content = Serializer.run(sessionData);
 				File.saveContent(filePath, content);
-				t.trigger( Success(null) );
+				t.trigger( Success(Noise) );
 			}
 			catch( e:Dynamic ) {
 				t.trigger( Failure('Unable to save session: $e') );
@@ -258,7 +258,7 @@ class FileSession implements IHttpSessionState
 			t.trigger( Failure("NotImplemented: change expiry on cookie") );
 		}
 
-		if ( !handled ) t.trigger( Success(null) );
+		if ( !handled ) t.trigger( Success(Noise) );
 
 		return t.asFuture();
 	}
@@ -376,7 +376,7 @@ class FileSession implements IHttpSessionState
 	}
 }
 
-class FileSessionFactory implements ISessionFactory {
+class FileSessionFactory implements UFSessionFactory {
 	
 	public var savePath(default,null):Null<String>;
 	public var sessionName(default,null):Null<String>;

@@ -4,6 +4,11 @@ import thx.culture.FormatParams;
 import thx.error.Error;
 import thx.culture.Culture;
 
+/** Alias of `DateTools`, included so mixins work with `using Dates;` **/
+typedef HaxeDateTools = DateTools;
+
+/** Alias of `thx.culture.FormatDate`, included so mixins work with `using Dates;` **/
+typedef FormatDate = thx.culture.FormatDate;
 
 /**
 	Helpers for working with Date objects or timestampts
@@ -447,8 +452,3 @@ class Dates
 	}
 }
 
-/** Alias of `thx.culture.FormatDate`, included so mixins work with `using Dates;` **/
-typedef FormatDate = thx.culture.FormatDate;
-
-/** Alias of `DateTools`, included so mixins work with `using Dates;` **/
-typedef HaxeDateTools = DateTools;

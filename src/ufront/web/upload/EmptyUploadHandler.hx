@@ -9,7 +9,7 @@ import haxe.io.Bytes;
 	
 	@author Franco Ponticelli
 **/
-class EmptyUploadHandler implements IHttpUploadHandler
+class EmptyUploadHandler implements UFHttpUploadHandler
 {
 	public function new(){}
 	public function uploadStart(name : String, filename : String) : Void{}

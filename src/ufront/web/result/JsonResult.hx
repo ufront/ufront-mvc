@@ -2,7 +2,7 @@ package ufront.web.result;
 import thx.json.Json;
 import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
-import ufront.core.AsyncCallback;
+import ufront.core.Sync;
 
 /** Represents a class that is used to send JSON-formatted content to the response. */
 class JsonResult<T> extends ActionResult
@@ -21,6 +21,6 @@ class JsonResult<T> extends ActionResult
 		actionContext.response.contentType = "application/json";
 		var serialized = Json.encode(content);
 		actionContext.response.write(serialized);
-		return AsyncCallback.COMPLETED;
+		return Sync.success();
 	}
 }

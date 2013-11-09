@@ -1,7 +1,7 @@
 package ufront.auth;
 
-import hxevents.Dispatcher;
-import hxevents.Notifier;
+import ufront.web.context.HttpContext;
+
 
 /**
 	An AuthHandler which always gives you permission to do anything.
@@ -10,7 +10,7 @@ import hxevents.Notifier;
 	
 	@author Jason O'Neil
 **/
-class YesBossAuthHandler<T:IAuthUser> implements IAuthHandler<T>
+class YesBossAuthHandler<T:UFAuthUser> implements UFAuthHandler<T>
 {
 	public function new() {}
 
@@ -41,7 +41,7 @@ class YesBossAuthHandler<T:IAuthUser> implements IAuthHandler<T>
 	}
 }
 
-class YesBossFactory implements IAuthFactory {
+class YesBossFactory implements UFAuthFactory {
 	public function new() {}
 
 	public function create( context:HttpContext ) {

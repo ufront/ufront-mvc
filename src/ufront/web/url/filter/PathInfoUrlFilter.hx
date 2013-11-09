@@ -11,7 +11,7 @@ using StringTools;
 
 	For example `index.n/some/path/` becomes `/some/path/`
 **/
-class PathInfoUrlFilter implements IUrlFilter
+class PathInfoUrlFilter implements UFUrlFilter
 {
 	public var frontScript(default, null) : String;  
 	public var useCleanRoot(default, null) : Bool;
