@@ -131,8 +131,8 @@ class UfrontApplication extends HttpApplication
 				super.addUrlFilter( new PathInfoUrlFilter() );
 
 			// Save the session / auth factories for later, when we're building requests
-			sessionFactory = configuration.sessionFactory;
-			authFactory = configuration.authFactory;
+			inject( UFSessionFactory, configuration.sessionFactory );
+			inject( UFAuthFactory, configuration.authFactory );
 		}
 
 		/**
@@ -142,7 +142,7 @@ class UfrontApplication extends HttpApplication
 		**/
 		override public function execute( ?httpContext:HttpContext ) {
 			// Set up HttpContext for the request
-			if ( httpContext==null ) httpContext = HttpContext.create( sessionFactory, authFactory, urlFilters, configuration.contentDirectory );
+			if ( httpContext==null ) httpContext = HttpContext.create( injector, sessionFactory, authFactory, urlFilters, configuration.contentDirectory );
 
 			// execute
 			return super.execute( httpContext );

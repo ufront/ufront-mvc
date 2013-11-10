@@ -81,6 +81,9 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 			requestInjector.mapValue( Type.getClass( httpContext.session ), httpContext.session );
 			requestInjector.mapValue( Type.getClass( httpContext.auth ), httpContext.auth );
 
+			// Expose this injector to the HttpContext
+			httpContext.injector = injector;
+
 			// Set up the context
 			var context = new Context();
 			for (api in apis) {

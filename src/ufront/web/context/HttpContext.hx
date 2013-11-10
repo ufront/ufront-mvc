@@ -3,6 +3,7 @@ package ufront.web.context;
 import haxe.EnumFlags;
 import haxe.io.Path;
 import haxe.PosInfos;
+import minject.Injector;
 import ufront.auth.UFAuthUser;
 import ufront.log.Message;
 import ufront.web.url.UrlDirection;
@@ -31,12 +32,14 @@ class HttpContext
 
 		`urlFilters` will be an empty array if not supplied.
 	**/
-	public static function create( ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser>, ?sessionFactory:UFSessionFactory, ?authFactory:UFAuthFactory, ?urlFilters:Array<UFUrlFilter>, ?contentDir="uf-content" ) {
+	public static function create( ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?contentDir="uf-content" ) {
+		if( null==injector )
+			injector = new Injector();
 		if( null==request )
 			request = HttpRequest.create();
 		if( null==response )
 			response = HttpResponse.create();
-		return new HttpContext( request, response, session, auth, sessionFactory, authFactory, urlFilters );
+		return new HttpContext( injector, request, response, session, auth, sessionFactory, authFactory, urlFilters );
 	}
 
 	/**
@@ -50,23 +53,29 @@ class HttpContext
 
 		`contentDir` is used to help specify the path of `contentDirectory`, relative to `request.scriptDirectory`.  Default value is `uf-content`
 	**/
-	public function new( request:HttpRequest, response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser>, ?sessionFactory:UFSessionFactory, ?authFactory:UFAuthFactory, ?urlFilters:Array<UFUrlFilter>, ?contentDir="uf-content" ) {
+	public function new( injector:Injector, request:HttpRequest, response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?contentDir="uf-content" ) {
 
+		NullArgument.throwIfNull( injector );
 		NullArgument.throwIfNull( response );
 		NullArgument.throwIfNull( request );
 		
+		this.injector = injector;
 		this.request = request;
 		this.response = response;
-		this.sessionFactory = sessionFactory;
-		this.authFactory = authFactory;
 		this._session = session;
 		this._auth = auth;
 		this.urlFilters = ( urlFilters!=null ) ? urlFilters : [];
 		this.contentDir = contentDir;
+
+		this.sessionFactory = injector.getInstance( UFSessionFactory );
+		this.authFactory = injector.getInstance( UFAuthFactory );
 		
 		messages = [];
 		completion = new EnumFlags<RequestCompletion>();
 	}
+
+	/** An injector that is available to the current request **/
+	public var injector:Injector;
 
 	/** The current HttpRequest **/
 	public var request(default, null):HttpRequest;

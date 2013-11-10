@@ -136,6 +136,9 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 			requestInjector.mapValue( Type.getClass( context.session ), context.session );
 			requestInjector.mapValue( Type.getClass( context.auth ), context.auth );
 
+			// Expose this injector to the HttpContext
+			context.injector = requestInjector;
+
 			// Process the dispatch request
 			try {
 				var filteredUri = context.getRequestUri();

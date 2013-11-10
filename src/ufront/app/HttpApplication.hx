@@ -276,7 +276,7 @@ class HttpApplication
 	@:access(ufront.web.context.HttpContext)
 	public function execute( ?httpContext:HttpContext ) {
 		
-		if (httpContext == null) httpContext = HttpContext.create( urlFilters );
+		if (httpContext == null) httpContext = HttpContext.create( injector, urlFilters );
 		else httpContext.setUrlFilters( urlFilters );
 
 		var reqMidModules = requestMiddleware.map( function(m) return m.requestIn );
