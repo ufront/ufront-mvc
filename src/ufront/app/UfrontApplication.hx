@@ -149,12 +149,6 @@ class UfrontApplication extends HttpApplication
 			// Save the session / auth factories for later, when we're building requests
 			inject( UFSessionFactory, configuration.sessionFactory );
 			inject( UFAuthFactory, configuration.authFactory );
-
-			// Make the UFViewEngine available (and inject into it, in case it needs anything)
-			if ( configuration.viewEngine!=null ) {
-				injector.injectInto( configuration.viewEngine );
-				inject( UFViewEngine, configuration.viewEngine );
-			}
 		}
 
 		/**
@@ -168,13 +162,24 @@ class UfrontApplication extends HttpApplication
 			// Set up HttpContext for the request
 			if ( httpContext==null ) httpContext = HttpContext.create( injector, urlFilters, configuration.contentDirectory );
 
-			if ( !injector.hasMapping(String,"scriptDirectory") ) {
-				inject( String, httpContext.request.scriptDirectory, "scriptDirectory" );
-				inject( String, httpContext.contentDirectory, "contentDirectory" );
-			}
+			if ( firstRun ) initOnFirstExecute( httpContext );
 
 			// execute
 			return super.execute( httpContext );
+		}
+
+		static var firstRun = true;
+		function initOnFirstExecute( httpContext:HttpContext ) {
+			firstRun = false;
+			
+			inject( String, httpContext.request.scriptDirectory, "scriptDirectory" );
+			inject( String, httpContext.contentDirectory, "contentDirectory" );
+			
+			// Make the UFViewEngine available (and inject into it, in case it needs anything)
+			if ( configuration.viewEngine!=null ) {
+				injector.injectInto( configuration.viewEngine );
+				inject( UFViewEngine, configuration.viewEngine );
+			}
 		}
 
 		/**

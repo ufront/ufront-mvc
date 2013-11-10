@@ -157,7 +157,7 @@ class HttpApplication
 		This method is chainable.
 	**/
 	public function inject<T>( cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton=false, ?named:String ) {
-		if ( val!=null ) injector.mapValue( cl, val )
+		if ( val!=null ) injector.mapValue( cl, val, named )
 		else {
 			if (cl2==null) 
 				cl2 = cl;
