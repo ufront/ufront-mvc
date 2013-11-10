@@ -1,5 +1,6 @@
 package ufront.web;
 
+import ufront.view.FileViewEngine;
 import ufront.view.UFViewEngine;
 import ufront.web.Controller;
 import ufront.api.*;
@@ -146,6 +147,7 @@ class DefaultUfrontConfiguration {
 			disableBrowserTrace: false,
 			controllers: cast CompileTime.getAllClasses( Controller ),
 			apis: cast CompileTime.getAllClasses( UFApi ),
+			viewEngine: new FileViewEngine(""),
 			sessionFactory: FileSession.getFactory("sessions", null, 0),
 			requestMiddleware: [inlineSession],
 			responseMiddleware: [inlineSession],

@@ -163,7 +163,7 @@ class UfrontApplication extends HttpApplication
 
 			if ( !injector.hasMapping(String,"scriptDirectory") ) {
 				inject( String, httpContext.request.scriptDirectory, "scriptDirectory" );
-				inject( String, httpContext.scriptDirectory, "contentDirectory" );
+				inject( String, httpContext.contentDirectory, "contentDirectory" );
 			}
 
 			// execute
