@@ -1,5 +1,6 @@
 package ufront.web;
 
+import ufront.view.UFViewEngine;
 import ufront.web.Controller;
 import ufront.api.*;
 import ufront.web.session.*;
@@ -95,6 +96,15 @@ typedef UfrontConfiguration = {
 		Default is a list of all `ufront.api.UFApi` classes, fetched using `CompileTime.getAllClasses()`
 	**/
 	?apis:Null<Iterable<Class<UFApi>>>,
+	
+	/**
+		ViewEngine to add to the Dependency Injector.
+
+		This engine will be used to load views created using `ufront.web.result.ViewResult`, or other views as you need them.
+
+		Default is `ufront.view.FileViewEngine`, configured to use the "views/" subfolder of your content directory.
+	**/
+	?viewEngine:Null<UFViewEngine>,
 
 	/**
 		A method which can be used to generate a session for the current request, as required.

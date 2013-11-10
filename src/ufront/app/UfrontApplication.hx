@@ -65,9 +65,6 @@ class UfrontApplication extends HttpApplication
 		**/
 		public var remotingHandler(default,null):RemotingHandler;
 
-		var sessionFactory:UFSessionFactory;
-		var authFactory:UFAuthFactory;
-
 		/**
 			Initialize a new UfrontApplication with the given configurations.
 
