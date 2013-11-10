@@ -10,6 +10,8 @@ import thx.culture.FormatParams;
 using StringTools;
 using Arrays;
 
+typedef HaxeStringTools = StringTools;
+
 class Strings
 {
 	static var _re = new EReg("[{](\\d+)(?::[^}]*)?[}]", "m");
