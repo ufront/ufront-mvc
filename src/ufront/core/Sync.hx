@@ -1,6 +1,6 @@
 package ufront.core;
 
-import haxe.PosInfos;
+import tink.core.Error.Pos;
 import ufront.web.HttpError;
 using tink.CoreApi;
 
@@ -23,8 +23,8 @@ class Sync {
 
 		Will wrap your error with `HttpError.internalServerError(err)`
 	**/
-	public static inline function httpError( ?err:Dynamic, ?p ):Surprise<Noise,HttpError> {
-		return Future.sync( Failure( HttpError.internalServerError(err,p) ) );
+	public static inline function httpError( ?msg:String, ?err:Dynamic, ?p:Pos ):Surprise<Noise,HttpError> {
+		return Future.sync( Failure( HttpError.internalServerError(msg,err,p) ) );
 	}
 
 	/**

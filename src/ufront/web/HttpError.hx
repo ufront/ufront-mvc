@@ -22,6 +22,10 @@ class HttpError extends Error {
 		return '$code Error: $message';
 	}
 
+	override public function printPos() {
+		return super.printPos();
+	}
+
 	/**
 		A Http 400 "Bad Request" error
 	**/
@@ -32,8 +36,8 @@ class HttpError extends Error {
 	/**
 		A Http 500 "Internal Server Error", optionally containing the inner error
 	**/
-	static public function internalServerError( ?inner:Dynamic, ?pos ):HttpError {
-		var e = new HttpError( 500, "Internal Server Error", pos );
+	static public function internalServerError( ?msg="Internal Server Error", ?inner:Dynamic, ?pos ):HttpError {
+		var e = new HttpError( 500, msg, pos );
 		e.data = inner;
 		return e;
 	}

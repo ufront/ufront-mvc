@@ -104,6 +104,9 @@ class HttpApplication
 	**/
 	var modulesReady:Surprise<Noise,HttpError>;
 
+	/** A reference to the currently executing module.  Useful for diagnosing if something in our async chain never completed. **/
+	var currentModule:String;
+
 	///// End Events /////
 
 	/**
@@ -279,10 +282,10 @@ class HttpApplication
 		if (httpContext == null) httpContext = HttpContext.create( injector, urlFilters );
 		else httpContext.setUrlFilters( urlFilters );
 
-		var reqMidModules = requestMiddleware.map( function(m) return m.requestIn );
-		var reqHandModules = requestHandlers.map( function(h) return h.handleRequest );
-		var resMidModules = responseMiddleware.map( function(m) return m.responseOut );
-		var logHandModules = logHandlers.map( function(h) return h.log.bind(_,messages) );
+		var reqMidModules = requestMiddleware.map( function(m) return new Pair(typeName(m), m.requestIn) );
+		var reqHandModules = requestHandlers.map( function(h) return new Pair(typeName(h), h.handleRequest) );
+		var resMidModules = responseMiddleware.map( function(m) return new Pair(typeName(m), m.responseOut) );
+		var logHandModules = logHandlers.map( function(h) return new Pair(typeName(h), h.log.bind(_,messages)) );
 		
 		// Here `>>` does a Future flatMap, so each call to `executeModules()` returns a Future,
 		// once that Future is done, it does the next `executeModules()`.  The final future returned
@@ -315,7 +318,7 @@ class HttpApplication
 
 		Returns a future that will prove
 	**/
-	function executeModules( modules:Array<HttpContext->Surprise<Noise,HttpError>>, ctx:HttpContext, ?flag:RequestCompletion ):Surprise<Noise,HttpError> {
+	function executeModules( modules:Array<Pair<String,HttpContext->Surprise<Noise,HttpError>>>, ctx:HttpContext, ?flag:RequestCompletion ):Surprise<Noise,HttpError> {
 		var done:FutureTrigger<Outcome<Noise,HttpError>> = Future.trigger();
 		function runNext() {
 			var m = modules.shift();
@@ -326,12 +329,14 @@ class HttpApplication
 					ctx.completion.set( flag );
 				done.trigger( Success(Noise) );
 			}
-			else
-				try m( ctx ).handle( function (result) {
+			else {
+				currentModule = m.a;
+				try m.b( ctx ).handle( function (result) {
 					result.sure();
 					runNext();
 				}) 
 				catch (e:Dynamic) handleError(e, ctx, done);
+			}
 		};
 		runNext();
 		return done.asFuture();
@@ -343,12 +348,10 @@ class HttpApplication
 		Then mark the middleware and requestHandlers as complete, so the `execute` function can log, flush and finish the request.
 	**/
 	function handleError( err:Dynamic, ctx:HttpContext, doneTrigger:FutureTrigger<Outcome<Noise,HttpError>> ) {
-
 		if ( !ctx.completion.has(CErrorHandlersComplete) ) {
 			ctx.completion.set(CErrorHandlersComplete);
 
-			var errHandModules = requestMiddleware.map(function(m) return m.requestIn);
-			var logHandModules = logHandlers.map(function(h) return h.log);
+			var errHandModules = errorHandlers.map(function(m) return new Pair(Type.getClassName(Type.getClass(m)), m.handleError.bind(err,_,currentModule)));
 
 			var allDone = 
 				executeModules( errHandModules, ctx, null ) >>
@@ -367,9 +370,12 @@ class HttpApplication
 			//   - the LogHandlers
 			//   - the "flush" stage...
 			// rethrow the error, and hopefully they'll come to this line number and figure out what happened.
+			Sys.println( 'You had an error after your error handler had already run.  Current module: $currentModule<br/>');
 			throw err;
 		}
 	}
+
+	inline function typeName( cl:{} ) return Type.getClassName( Type.getClass(cl) );
 
 	function flush( ctx:HttpContext ) {
 		if ( !ctx.completion.has(CFlushComplete) ) {

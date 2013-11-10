@@ -1,6 +1,7 @@
 package ufront.handler;
 
 import haxe.CallStack;
+import tink.core.Error;
 import ufront.web.HttpError;
 import ufront.app.*;
 import ufront.core.Sync;
@@ -45,26 +46,33 @@ class ErrorPageHandler implements UFErrorHandler
 		TODO: give more options for processing different kinds of errors
 		TODO: figure out async support
 	**/
-	public function handleError( e:Dynamic, ctx:HttpContext ) {
+	@:access( ufront.web.HttpError )
+	public function handleError( e:Dynamic, ctx:HttpContext, currentModule:String ) {
 		// Pass the error to our log...
 		var callStack = #if debug " "+CallStack.toString( CallStack.exceptionStack() ) #else "" #end;
-		e.context.ufError( 'Handling error: ${e.error}$callStack' );
+		ctx.ufError( 'Handling error: ${e.error}$callStack' );
 
 		// Get the error into the HttpError type, wrap it if necessary
 		var httpError:HttpError;
-		if( !Std.is(e.error, HttpError) ) {
-			httpError = HttpError.internalServerError( e.error );
+		if( Std.is(e, HttpError) ) {
+			httpError = cast e;
 		}
-		else httpError = cast e.error;
+		else {
+			httpError = HttpError.internalServerError( e.error );
+			if( Std.is(e, Error) ) {
+				httpError.pos = e.pos;
+				httpError.data = e.data;
+			}
+		}
 
 		var showStack = #if debug true #else false #end;
 
 		// Clear the output, set the response code, and output.
-		e.context.response.clear();
-		e.context.response.status = httpError.code; 
-		e.context.response.contentType = "text/html";
-		e.context.response.write( renderError(httpError,showStack) );
-		e.context.completed = true;
+		ctx.response.clear();
+		ctx.response.status = httpError.code; 
+		ctx.response.contentType = "text/html";
+		ctx.response.write( renderError(httpError,currentModule,showStack) );
+		ctx.completion.set( CRequestHandlersComplete );
 
 		// rethrow error if catchErrors has been disabled
 		if (!catchErrors) throw e.error;
@@ -83,8 +91,9 @@ class ErrorPageHandler implements UFErrorHandler
 
 		It is also expected that this method should be synchronous.  If you require loading something asynchronously it will be easiest to create a new ErrorHandler.
 	**/
-	dynamic public function renderError( error:HttpError, ?showStack:Bool=false ):String {
+	dynamic public function renderError( error:HttpError, currentModule:String, ?showStack:Bool=false ):String {
 		var inner = (null!=error.data) ? '<p>${error.data}</p>':"";
+		var pos = showStack ? '<p>&gt; ${error.printPos()}</p>' : '';
 		
 		var exceptionStackItems = errorStackItems( CallStack.exceptionStack() );
 		var callStackItems = errorStackItems( CallStack.callStack() );
@@ -101,6 +110,10 @@ class ErrorPageHandler implements UFErrorHandler
 				'<div><h3>Call Stack:</h3>
 					<pre><code>' + callStackItems.join("\n") + '</pre></code>
 				</div>'
+			else "";
+
+		var lastKnownModule = 
+			if ( showStack ) '<div><h3>Last module: $currentModule</h3></div>'
 			else "";
 		
 		return CompileTime.interpolateFile( "ufront/web/ErrorPage.html" );

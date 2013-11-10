@@ -190,7 +190,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 				t.trigger( Success(Noise) );
 			}
 			catch ( e:DispatchError ) t.trigger( Failure(dispatchErrorToHttpError(e)) )
-			catch ( e:Dynamic ) t.trigger( Failure(HttpError.internalServerError(e)) );
+			catch ( e:Dynamic ) t.trigger( Failure(HttpError.internalServerError('Internal Server Error: Error executing action', e)) );
 
 			return t.asFuture();
 		}
