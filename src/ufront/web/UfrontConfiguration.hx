@@ -147,7 +147,7 @@ class DefaultUfrontConfiguration {
 			disableBrowserTrace: false,
 			controllers: cast CompileTime.getAllClasses( Controller ),
 			apis: cast CompileTime.getAllClasses( UFApi ),
-			viewEngine: new FileViewEngine(""),
+			viewEngine: new FileViewEngine(),
 			sessionFactory: FileSession.getFactory("sessions", null, 0),
 			requestMiddleware: [inlineSession],
 			responseMiddleware: [inlineSession],

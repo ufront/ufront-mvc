@@ -10,6 +10,7 @@ package ufront.app;
 	import ufront.log.*;
 	import ufront.api.UFApiContext;
 	import ufront.handler.*;
+	import ufront.view.UFViewEngine;
 	import ufront.web.context.HttpContext;
 	import ufront.web.Dispatch;
 	import ufront.web.session.*;
@@ -148,6 +149,12 @@ class UfrontApplication extends HttpApplication
 			// Save the session / auth factories for later, when we're building requests
 			inject( UFSessionFactory, configuration.sessionFactory );
 			inject( UFAuthFactory, configuration.authFactory );
+
+			// Make the UFViewEngine available (and inject into it, in case it needs anything)
+			if ( configuration.viewEngine!=null ) {
+				injector.injectInto( configuration.viewEngine );
+				inject( UFViewEngine, configuration.viewEngine );
+			}
 		}
 
 		/**
