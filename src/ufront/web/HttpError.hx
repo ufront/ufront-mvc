@@ -1,4 +1,6 @@
 package ufront.web;
+
+import tink.core.Error.Pos;
 using tink.CoreApi;
 
 /**
@@ -24,6 +26,19 @@ class HttpError extends Error {
 
 	override public function printPos() {
 		return super.printPos();
+	}
+
+	/**
+		Wrap an existing error into a HttpError
+
+		- If it was a HttpError already, return it as is
+		- If it was a tink.core.Error, use code 500, copy it's message, pos and data.
+		- If it was a normal exception, use code 500, with "Internal Server Error" as the message, the exception as the data, and the pos that call site for `wrap()` as the pos.
+	**/
+	static public function wrap( e:Dynamic, ?pos:Pos ):HttpError {
+		if ( Std.is(e, HttpError) ) return cast e;
+		else if ( Std.is(e, Error) ) return internalServerError( e.message, e.data, e.pos );
+		else return HttpError.internalServerError( "Internal Server Error", e, pos );
 	}
 
 	/**

@@ -200,7 +200,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 				try 
 					context.actionResult.executeResult( context.actionContext )
 				catch ( e:Dynamic ) 
-					Future.sync( Failure(HttpError.internalServerError(e)) );
+					Future.sync( Failure(HttpError.wrap(e)) );
 		}
 
 		function dispatchErrorToHttpError( e:DispatchError ):HttpError {

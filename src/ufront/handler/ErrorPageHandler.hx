@@ -52,18 +52,7 @@ class ErrorPageHandler implements UFErrorHandler
 		var callStack = #if debug " "+CallStack.toString( CallStack.exceptionStack() ) #else "" #end;
 		ctx.ufError( 'Handling error: ${e.error}$callStack' );
 
-		// Get the error into the HttpError type, wrap it if necessary
-		var httpError:HttpError;
-		if( Std.is(e, HttpError) ) {
-			httpError = cast e;
-		}
-		else {
-			httpError = HttpError.internalServerError( e.error );
-			if( Std.is(e, Error) ) {
-				httpError.pos = e.pos;
-				httpError.data = e.data;
-			}
-		}
+		var httpError = HttpError.wrap(e);
 
 		var showStack = #if debug true #else false #end;
 
