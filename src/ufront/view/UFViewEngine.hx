@@ -44,15 +44,18 @@ class UFViewEngine {
 	#end
 
 	var engines:Array<TemplatingEngine>;
+	var cache:Map<String,Pair<String,UFTemplate>>;
 
-	public function new() {
-
+	public function new( ?cachingEnabled=true ) {
+		if ( cachingEnabled ) cache = new Map();
 	}
 
 	/** 
 		Fetch a template for the given path.
 		
 		Behaviour:
+
+		- **If caching is enabled, and a cache for this request exists, use it**
 
 		- **If a templating engine is specified, and the path has an extension:**
 		  The exact path will used, with the given templating engine, regardless of whether the extensions match or not.
@@ -77,11 +80,19 @@ class UFViewEngine {
 
 		If there is an error parsing or initializing a template, this will return a failure.
 		
+		If a template was initialized successfully, it will be added to the cache.
+
 		Please note, `ufront.view.UFViewEngine` is an abstract implementation that never checks for templates, it always fails.  Please use the appropriate subclass if you want your templates to work.
 
 		This operation is asynchronous (a `tink.core.Surprise`), and should return a Failure if the view is not found or could not be parsed.
 	**/
 	public function getTemplate( path:String, ?templatingEngine:TemplatingEngine ):Surprise<UFTemplate,Error> {
+
+		if ( cache!=null && cache.exists(path) ) {
+			var cached = cache[path];
+			if ( templatingEngine==null || templatingEngine.type==cached.a )
+				return Future.sync( Success(cached.b) );
+		}
 		
 		var tplStrReady:FutureTrigger<Outcome<String,Error>> = Future.trigger();
 		var ext = path.extension();
@@ -176,6 +187,7 @@ class UFViewEngine {
 			function (tplStr) {
 				try {
 					var tpl:UFTemplate = templatingEngine.factory(tplStr);
+					cache[path] = new Pair( templatingEngine.type, tpl );
 					return Success( tpl );
 				}
 				catch ( e:Dynamic ) {
