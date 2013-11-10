@@ -35,6 +35,24 @@ package ufront.app;
 	And in future
 
 	- easily cache requests
+	
+	Things we inject:
+
+	- `app.injector`
+		- A copy of the `Injector` itself
+		- The `UFSessionFactory` provided in the configuration
+		- The `UFAuthFactory` provided in the configuration
+		- A String name `scriptDirectory`, containing the path to the current module.
+		- A String name `contentDirectory`, containing a path to ufront's specified content directory.
+	- `app.dispatchHandler.injector`
+		- All of the mappings from `app.injector`
+		- All of the controllers specified in your configuration (by default: all of them)
+		- All of the APIs specified in your configuration (by default: all of them)
+	- `app.remotingHandler.injector`
+		- All of the mappings from `app.injector`
+		- All of the APIs specified in your configuration (by default: all of them)
+	
+	Futher injections may take place in various middleware / handlers also.
 
 	@author Jason O'Neil
 	@author Andreas Soderlund
@@ -136,10 +154,17 @@ class UfrontApplication extends HttpApplication
 			Execute the current request.
 
 			If `httpContext` is not defined, `HttpContext.create()` will be used, with your session data being sent through.
+
+			The first time this runs, it will map injections for the Strings "scriptDirectory" and "contentDirectory", so that they can be used by various middleware / handlers / actions / views etc.
 		**/
 		override public function execute( ?httpContext:HttpContext ) {
 			// Set up HttpContext for the request
 			if ( httpContext==null ) httpContext = HttpContext.create( injector, urlFilters, configuration.contentDirectory );
+
+			if ( !injector.hasMapping(String,"scriptDirectory") ) {
+				inject( String, httpContext.request.scriptDirectory, "scriptDirectory" );
+				inject( String, httpContext.scriptDirectory, "contentDirectory" );
+			}
 
 			// execute
 			return super.execute( httpContext );
