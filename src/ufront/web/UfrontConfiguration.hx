@@ -103,7 +103,7 @@ typedef UfrontConfiguration = {
 
 		This engine will be used to load views created using `ufront.web.result.ViewResult`, or other views as you need them.
 
-		Default is `ufront.view.FileViewEngine`, configured to use the "views/" subfolder of your content directory.
+		Default is `ufront.view.FileViewEngine`, configured to use the "view/" subfolder of your content directory.
 	**/
 	?viewEngine:Null<UFViewEngine>,
 

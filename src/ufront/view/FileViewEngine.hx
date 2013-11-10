@@ -13,11 +13,11 @@ class FileViewEngine extends UFViewEngine {
 	function get_viewDirectory() return contentDir+path+'/';
 
 	/**
-		@param path - path (relative to your content-directory) where your views are stored.  Default is "views"
+		@param path - path (relative to your content-directory) where your views are stored.  Default is "view"
 		@param ?cachingEnabled - (default is true)
 	**/
-	public function new( ?path="views", ?cachingEnabled=true ) {
-		super();
+	public function new( ?path="view", ?cachingEnabled=true ) {
+		super(cachingEnabled);
 		this.path = path;
 	}
 }

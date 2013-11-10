@@ -10,6 +10,7 @@ package ufront.app;
 	import ufront.log.*;
 	import ufront.api.UFApiContext;
 	import ufront.handler.*;
+	import ufront.view.TemplatingEngines;
 	import ufront.view.UFViewEngine;
 	import ufront.web.context.HttpContext;
 	import ufront.web.Dispatch;
@@ -83,6 +84,13 @@ class UfrontApplication extends HttpApplication
 			It is automatically set up if a `UFApiContext` class is supplied
 		**/
 		public var remotingHandler(default,null):RemotingHandler;
+		
+		/** 
+			The view engine being used with this application
+			
+			It is configured using the `viewEngine` property on your `UfrontConfiguration`.
+		**/
+		public var viewEngine(default,null):UFViewEngine;
 
 		/**
 			Initialize a new UfrontApplication with the given configurations.
@@ -149,6 +157,9 @@ class UfrontApplication extends HttpApplication
 			// Save the session / auth factories for later, when we're building requests
 			inject( UFSessionFactory, configuration.sessionFactory );
 			inject( UFAuthFactory, configuration.authFactory );
+
+			// Set up the view engine
+			this.viewEngine = configuration.viewEngine;
 		}
 
 		/**
@@ -156,7 +167,7 @@ class UfrontApplication extends HttpApplication
 
 			If `httpContext` is not defined, `HttpContext.create()` will be used, with your session data being sent through.
 
-			The first time this runs, it will map injections for the Strings "scriptDirectory" and "contentDirectory", so that they can be used by various middleware / handlers / actions / views etc.
+			The first time this runs, `initOnFirstExecute()` will be called, which runs some more initialization that requires the HttpContext to be ready before running.
 		**/
 		override public function execute( ?httpContext:HttpContext ) {
 			// Set up HttpContext for the request
@@ -176,9 +187,9 @@ class UfrontApplication extends HttpApplication
 			inject( String, httpContext.contentDirectory, "contentDirectory" );
 			
 			// Make the UFViewEngine available (and inject into it, in case it needs anything)
-			if ( configuration.viewEngine!=null ) {
-				injector.injectInto( configuration.viewEngine );
-				inject( UFViewEngine, configuration.viewEngine );
+			if ( viewEngine!=null ) {
+				injector.injectInto( viewEngine );
+				inject( UFViewEngine, viewEngine );
 			}
 		}
 
@@ -199,6 +210,16 @@ class UfrontApplication extends HttpApplication
 		**/
 		public inline function loadRoutesConfig( dispatchConfig:DispatchConfig ) {
 			dispatchHandler.loadRoutesConfig( dispatchConfig );
+			return this;
+		}
+
+		/**
+			Add support for a templating engine to your view engine.
+
+			Some ready-to-go templating engines are included `ufront.view.TemplatingEngines`.
+		**/
+		public inline function addTemplatingEngine( engine:TemplatingEngine ) {
+			viewEngine.addTemplatingEngine( engine );
 			return this;
 		}
 
