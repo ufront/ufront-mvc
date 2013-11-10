@@ -39,7 +39,7 @@ class HttpContext
 			request = HttpRequest.create();
 		if( null==response )
 			response = HttpResponse.create();
-		return new HttpContext( injector, request, response, session, auth, sessionFactory, authFactory, urlFilters );
+		return new HttpContext( injector, request, response, session, auth, urlFilters );
 	}
 
 	/**
