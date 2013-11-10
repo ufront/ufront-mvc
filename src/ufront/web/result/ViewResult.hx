@@ -73,10 +73,13 @@ class ViewResult extends ActionResult {
 		
 		Some small transformations: 
 
-		- Firstly, the first letter of your controller name will be made lowercase.  
-		- Secondly, if your controller name ends with "Controller", it will not be included in the view.
-		- Thirdly, if the action name begins with "do", it will be removed
-		- Fourthly, the first letter of your action name will be made lowercase.
+		- On the controller:
+			- The package is discarded, only the section after the final "." is kept
+			- The first letter of your controller name will be made lowercase. 
+			- If your controller name ends with "Controller", it will not be included in the view.
+		- On the action:
+ 			- If the action name begins with "do", it will be removed
+			- The first letter of your action name will be made lowercase.
 	**/
 	public function new( ?data:TemplateData, ?viewPath:String, ?templatingEngine:TemplatingEngine, ?pos:PosInfos ) {
 		
@@ -87,9 +90,9 @@ class ViewResult extends ActionResult {
 		this.layout = null;
 
 		if ( viewPath==null ) {
-			var ct = pos.className.lcfirst();
+			var ct = pos.className.split(".").pop().lcfirst();
 			if ( ct.endsWith("Controller") ) 
-				ct = ct.substr( 0, ct.length-("Controller".length) );
+				ct = ct.substr( 0, ct.length-10 );
 			var action = pos.methodName.startsWith("do") ? pos.methodName.substr(2).lcfirst() : pos.methodName.lcfirst();
 			this.viewPath = '$ct/$action';
 		}
@@ -191,18 +194,23 @@ class ViewResult extends ActionResult {
 				}
 
 				// Try execute the template
-				var viewOut = 
-					try template.execute( combinedData ) 
-					catch ( e:Dynamic ) return error( "Unable to execute view template", e );
+				var viewOut:String = null; 
+				try 
+					viewOut = template.execute( combinedData ) 
+				catch ( e:Dynamic ) 
+					return error( "Unable to execute view template", e );
 
 				// Try execute the layout around the view, if there is a layout.  Otherwise just use the view.
 				var finalOut:String = null;
-				if ( layout==null ) finalOut == viewOut;
+				if ( layout==null ) {
+					finalOut = viewOut;
+				}
 				else {
 					combinedData["viewContent"] = viewOut;
-					finalOut = 
-						try layout.execute( combinedData ) 
-						catch ( e:Dynamic ) return error( "Unable to execute layout template", e );
+					try 
+						finalOut = layout.execute( combinedData ) 
+					catch 
+						( e:Dynamic ) return error( "Unable to execute layout template", e );
 				}
 
 				// Write to the response

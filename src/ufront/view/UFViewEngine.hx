@@ -48,6 +48,7 @@ class UFViewEngine {
 
 	public function new( ?cachingEnabled=true ) {
 		if ( cachingEnabled ) cache = new Map();
+		engines = [];
 	}
 
 	/** 
@@ -166,6 +167,7 @@ class UFViewEngine {
 
 				extensionsUsed.push( ext );
 
+
 				finalPath = path.withExtension(ext);
 				getTemplateString( finalPath ).handle( function (result) switch result {
 					case Failure(err): tplStrReady.trigger( Failure(err) );
@@ -176,6 +178,7 @@ class UFViewEngine {
 				});
 				return;
 			}
+			testNextEngineOrExtension();
 		}
 
 		// Once the tplStrReady is loaded, transform a successfully loaded template string 
@@ -200,6 +203,17 @@ class UFViewEngine {
 		Abstract method to fetch the template string for an exact path.
 
 		This must be overridden by a subclass to be useful, in `UFViewEngine` it will always return a Failure.
+
+		The return type is:
+		
+		```
+		- A Future (so async platforms are supported)
+		- An Outcome (success or failure)
+			- Failure means an error occured while checking if the file exists, or while trying to read it.
+			- Success returns an Option, letting you know:
+				- Some - the template exists, and here is it's contents
+				- None - no file existed at that path.
+		```
 	**/
 	public function getTemplateString( path:String ):Surprise<Option<String>,Error> {
 		return Future.sync( Failure(new Error('Attempting to fetch template $path with UFViewEngine.  This is an abstract class, you must use one of the ViewEngine implementations.')) );
