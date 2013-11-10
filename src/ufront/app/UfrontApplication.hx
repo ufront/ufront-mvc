@@ -142,7 +142,7 @@ class UfrontApplication extends HttpApplication
 		**/
 		override public function execute( ?httpContext:HttpContext ) {
 			// Set up HttpContext for the request
-			if ( httpContext==null ) httpContext = HttpContext.create( injector, sessionFactory, authFactory, urlFilters, configuration.contentDirectory );
+			if ( httpContext==null ) httpContext = HttpContext.create( injector, urlFilters, configuration.contentDirectory );
 
 			// execute
 			return super.execute( httpContext );
