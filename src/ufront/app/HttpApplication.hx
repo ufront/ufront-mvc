@@ -304,6 +304,13 @@ class HttpApplication
 		// Why does nothing happen unless there is a handle applied?  Need to ask Juraj...
 		allDone.handle( function() {} );
 
+		#if (debug && (neko || php))
+			// Sync target... we can test if the async callbacks finished
+			if ( httpContext.completion.has(CFlushComplete)==false ) {
+				throw 'Async callbacks never completed.  Last stuck on $currentModule';
+			}
+		#end
+
 		return allDone;
 	}
 
