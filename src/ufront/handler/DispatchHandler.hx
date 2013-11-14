@@ -1,5 +1,6 @@
 package ufront.handler;
 
+import haxe.PosInfos;
 import ufront.web.Dispatch;
 import ufront.app.UFInitRequired;
 import ufront.app.UFRequestHandler;
@@ -190,7 +191,17 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 				t.trigger( Success(Noise) );
 			}
 			catch ( e:DispatchError ) t.trigger( Failure(dispatchErrorToHttpError(e)) )
-			catch ( e:Dynamic ) t.trigger( Failure(HttpError.internalServerError('Internal Server Error: Error executing action', e)) );
+			catch ( e:Dynamic ) {
+				// Fake the position the error came from...
+				var p:PosInfos = {
+					methodName: context.actionContext.action,
+					lineNumber: -1,
+					fileName: "",
+					customParams: context.actionContext.args,
+					className: Type.getClassName( Type.getClass(context.actionContext.controller) )
+				};
+				t.trigger( Failure( HttpError.wrap(e,p)) ); 
+			}
 
 			return t.asFuture();
 		}
@@ -203,13 +214,13 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 					Future.sync( Failure(HttpError.wrap(e)) );
 		}
 
-		function dispatchErrorToHttpError( e:DispatchError ):HttpError {
+		function dispatchErrorToHttpError( e:DispatchError, ?p:PosInfos ):HttpError {
 			return switch ( e ) {
-				case DENotFound( part ): HttpError.pageNotFound();
-				case DEInvalidValue: HttpError.badRequest();
-				case DEMissing: HttpError.pageNotFound();
-				case DEMissingParam( _ ): HttpError.badRequest();
-				case DETooManyValues: HttpError.pageNotFound();
+				case DENotFound( part ): HttpError.pageNotFound( p );
+				case DEInvalidValue: HttpError.badRequest( p );
+				case DEMissing: HttpError.pageNotFound( p );
+				case DEMissingParam( _ ): HttpError.badRequest( p );
+				case DETooManyValues: HttpError.pageNotFound( p );
 			}
 		}
 
