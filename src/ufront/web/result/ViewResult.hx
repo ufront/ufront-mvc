@@ -109,7 +109,8 @@ class ViewResult extends ActionResult {
 
 		If you call `viewResult.withoutLayout()` then no layout will wrap the current view, even if a default layout is specified.
 		
-		Default layouts can be set by mapping a "UFTemplate" with id "defaultLayout" in your `ufront.app.HttpApplication`'s injector.  
+		Default layouts can be set through the `ufront.app.HttpApplication.injector`.
+		You must map a `String` with id "defaultLayout" which holds the path to the default layout.
 	**/
 	public function withLayout( layoutPath:String, ?templatingEngine:TemplatingEngine ):ViewResult {
 		this.layout = Some( new Pair(layoutPath, templatingEngine) );
@@ -156,17 +157,17 @@ class ViewResult extends ActionResult {
 
 		// Get the layout future
 		var layoutReady:Surprise<Null<UFTemplate>,Error>;
+		if ( layout==null ) {
+			var layoutPath = try actionContext.httpContext.injector.getInstance( String, "defaultLayout" ) catch (e:Dynamic) null;
+			layout = Some( new Pair(layoutPath,null) );
+		}
 		if ( layout!=null ) {
 			layoutReady = switch layout {
 				case Some( layoutData ): viewEngine.getTemplate( layoutData.a, layoutData.b );
 				case None: Future.sync( Success(null) );
 			}
 		}
-		else {
-			trace ("TODO: check that the cast on the next line (casting from injected abstract impl to abstract type) works");
-			var defaultLayout:UFTemplate = try cast actionContext.httpContext.injector.getInstance( UFTemplate, "defaultLayout" ) catch (e:Dynamic) null;
-			layoutReady = Future.sync( Success(defaultLayout) );
-		}
+		else layoutReady = Future.sync( Success(null) );
 
 		// Get the template future
 		var templateReady = viewEngine.getTemplate( viewPath, templatingEngine );
