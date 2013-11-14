@@ -223,6 +223,10 @@ class UfrontApplication extends HttpApplication
 			return this;
 		}
 
+		override public function inject<T>( cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton=false, ?named:String ):UfrontApplication {
+			return cast super.inject( cl, val, cl2, singleton, named );
+		}
+
 	#else 
 		/**
 			Shortcut for `dispatchHandler.loadRoutes()`
