@@ -142,7 +142,7 @@ class ErrorPageHandler implements UFErrorHandler
 				return r;
 			case Method( cname, meth ):
 				return '$cname.$meth';
-			case #if (haxe_ver >= 3.1) LocalFunction #else Lambda #end(n):
+			case LocalFunction(n):
 				return 'local function #$n';
 		}
 	}
