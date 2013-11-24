@@ -9,24 +9,28 @@ import ufront.core.Sync;
 class FileResult extends ActionResult
 {
 	/** Gets the content type to use for the response. **/
-	public var contentType : String;
+	public var contentType:String;
 
-	/** Gets or sets the content-disposition header so that a file-download dialog box is displayed in the browser with the specified file name. **/
-	public var fileDownloadName : String;
+	/** 
+		Gets or sets the content-disposition header so that a file-download dialog box is displayed in the browser with the specified file name. 
+
+		Setting a non-null value will set the `content-disposition` to `attachment`, which will force the file to be downloaded
+	**/
+	public var fileDownloadName:String;
 	
-	function new(contentType : String, fileDownloadName : String) {
+	function new( contentType:String, fileDownloadName:String ) {
 		this.contentType = contentType;
 		this.fileDownloadName = fileDownloadName;
 	}
 	
 	override function executeResult( actionContext:ActionContext ) {
-		NullArgument.throwIfNull(actionContext);
+		NullArgument.throwIfNull( actionContext );
 
-		if(null != contentType)
+		if( null!=contentType )
 			actionContext.response.contentType = contentType;
 		
-		if(null != fileDownloadName)
-			actionContext.response.setHeader("content-disposition", "attachment; filename=" + fileDownloadName);
+		if( null!=fileDownloadName )
+			actionContext.response.setHeader( "content-disposition", 'attachment; filename=$fileDownloadName' );
 
 		return Sync.success();
 	}
