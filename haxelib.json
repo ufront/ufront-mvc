@@ -5,8 +5,8 @@
   "tags": ["ufront","web","framework","mvc","neko","php"],
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
-  "releasenote": "Major restructure of internals, should be much easier to add modules/middleware now!",
-  "version": "1.0.0-beta.3",
+  "releasenote": "Improvements to FileResult and FilePathResult",
+  "version": "1.0.0-beta.5",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
     "detox": "",
