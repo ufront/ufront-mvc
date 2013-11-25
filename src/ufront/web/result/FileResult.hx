@@ -8,7 +8,7 @@ import ufront.core.Sync;
 /** Represents a base class that is used to send binary file content to the response. **/
 class FileResult extends ActionResult
 {
-	/** Gets the content type to use for the response. **/
+	/** Gets the content type to use for the response.  If it is null, no content-type header will be set, and the client will do it's best guess as to the type **/
 	public var contentType:String;
 
 	/** 
