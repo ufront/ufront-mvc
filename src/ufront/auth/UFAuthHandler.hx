@@ -60,6 +60,9 @@ interface UFAuthHandler<T>
 
 	/** 
 		The currently logged in user.  Will be null if no user is logged in.
+
+		Getter retrieves the current user.
+		Setter sets the current user.  (Used when implementing "log in as ____" functionality, make sure you only use this method in a secure piece of code!)
 	**/
-	var currentUser(get,null) : Null<T>;
+	var currentUser(get,set) : Null<T>;
 }

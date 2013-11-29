@@ -30,9 +30,10 @@ class YesBossAuthHandler<T:UFAuthUser> implements UFAuthHandler<T>
 
 	public function requirePermissions( permissions:Iterable<EnumValue> ) {}
 
-	public var currentUser(get,null):Null<T>;
+	public var currentUser(get,set):Null<T>;
 
 	function get_currentUser() return null;
+	function set_currentUser( u:T ) return u;
 
 	static var _factory:YesBossFactory;
 	public static function getFactory() {
