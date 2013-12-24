@@ -323,7 +323,7 @@ class HttpApplication
 
 		Usage:
 
-		`requestHandlersDone:Future<Noise> = executeModules( requestHandlers.map(function (r) return r.handleRequest), CRequestHandler );`
+		`requestHandlersDone:Future<Noise> = executeModules( requestHandlers.map(function (r) return new Pair(Type.getClassName(Type.getClass(r)), r.handleRequest)), httpContext, CRequestHandler );`
 
 		Returns a future that will prove
 	**/
@@ -331,8 +331,9 @@ class HttpApplication
 		var done:FutureTrigger<Outcome<Noise,HttpError>> = Future.trigger();
 		function runNext() {
 			var m = modules.shift();
-			if ( flag!=null && ctx.completion.has(flag) ) 
+			if ( flag!=null && ctx.completion.has(flag) ) {
 				done.trigger( Success(Noise) );
+			}
 			else if ( m==null ) {
 				if (flag!=null) 
 					ctx.completion.set( flag );
@@ -340,11 +341,13 @@ class HttpApplication
 			}
 			else {
 				currentModule = m.a;
-				try m.b( ctx ).handle( function (result) {
-					result.sure();
-					runNext();
-				}) 
-				catch (e:Dynamic) handleError(e, ctx, done);
+				var moduleResult = try m.b( ctx ) catch (e:Dynamic) handleError(e, ctx, done);
+				moduleResult.handle( function (result) {
+					switch result {
+						case Success(_): runNext();
+						case Failure(e): handleError(e, ctx, done);
+					}
+				});
 			}
 		};
 		runNext();
