@@ -29,8 +29,16 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	
 	override function get_queryString()
 	{
-		if (null == queryString)
-			queryString = new String(_get_params_string());
+		if (null == queryString) {
+			var v = _get_params_string();
+			queryString = (v!=null) ? new String(v) : null;
+			if( v == null )
+				queryString = null;
+			else
+				queryString = new String(v);
+			if (null == queryString)
+				queryString = "";
+		}
 		return queryString;
 	}
 	
@@ -38,13 +46,12 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	{
 		if (httpMethod == "GET")
 			return "";
-		if (null == postString)
-		{
+		if (null == postString) {
 			var v = _get_post_data();
 			if( v == null )
 				postString = null;
 			else
-				postString =  new String(v);
+				postString = new String(v);
 			if (null == postString)
 				postString = "";
 		}

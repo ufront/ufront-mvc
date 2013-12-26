@@ -53,13 +53,17 @@ class HttpRequest
 	}
 
 	/**
-		The GET query parameters
+		The GET query parameters.  
+
+		Will return an empty String if there are no GET parameters.
 	**/
 	public var queryString(get, null) : String;
 	function get_queryString() return throw new AbstractMethod();
 
 	/**
-		The POST query parameters
+		The POST query parameters.
+
+		Will return an empty String if there are no GET parameters.
 	**/
 	public var postString(get, null) : String;
 	function get_postString() return throw new AbstractMethod();
