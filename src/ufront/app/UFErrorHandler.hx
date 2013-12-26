@@ -20,5 +20,5 @@ import ufront.web.HttpError;
 	The `handleError()` method should return a Surprise - a Future letting you know when the outcome of the error handler once it has completed - was it a success (continue with any remaining stages in the request) or a failure (in which case, a raw error will be thrown - you have an error in your error handler).
 **/
 interface UFErrorHandler {
-	public function handleError( err:Dynamic, ctx:HttpContext, currentModule:String ):Surprise<Noise,HttpError>;
+	public function handleError( err:HttpError, ctx:HttpContext ):Surprise<Noise,HttpError>;
 }

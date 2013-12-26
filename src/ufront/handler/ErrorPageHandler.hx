@@ -47,65 +47,116 @@ class ErrorPageHandler implements UFErrorHandler
 		TODO: figure out async support
 	**/
 	@:access( ufront.web.HttpError )
-	public function handleError( e:Dynamic, ctx:HttpContext, currentModule:String ) {
+	public function handleError( httpError:HttpError, ctx:HttpContext ) {
+		
 		// Pass the error to our log...
 		var callStack = #if debug " "+CallStack.toString( CallStack.exceptionStack() ) #else "" #end;
-		ctx.ufError( 'Handling error: ${e.error}$callStack' );
+		ctx.ufError( 'Handling error: $httpError$callStack' );
 
-		var httpError = HttpError.wrap(e);
+		if ( !ctx.completion.has(CRequestHandlersComplete) ) {
+			var showStack = #if debug true #else false #end;
 
-		var showStack = #if debug true #else false #end;
-
-		// Clear the output, set the response code, and output.
-		ctx.response.clear();
-		ctx.response.status = httpError.code; 
-		ctx.response.contentType = "text/html";
-		ctx.response.write( renderError(httpError,currentModule,showStack) );
-		ctx.completion.set( CRequestHandlersComplete );
+			// Clear the output, set the response code, and output.
+			ctx.response.clear();
+			ctx.response.status = httpError.code; 
+			ctx.response.contentType = "text/html";
+			ctx.response.write( renderError(httpError,showStack) );
+			ctx.completion.set( CRequestHandlersComplete );
+		}
 
 		// rethrow error if catchErrors has been disabled
-		if (!catchErrors) throw e.error;
+		if (!catchErrors) throw httpError;
 
 		return Sync.success();
 	}
 
 	/**
-		Render the given error message into a String (usually HTML) to be sent to the browser.
+		Render the given error message into a String (usually HTML) to be used in `renderErrorPage()`.
 
-		You can override this function if you wish to supply a different error template.
+		This method provides HTML for the error message content, to be inserted into your usual site layout.
+
+		This function is dynamic, so you can override it if you wish to supply a different error template.
 
 		It is recommended that this method have as few dependencies as possible, for example,
 		avoid using templating engines as any errors in displaying the error template will not
 		be displayed correctly.
 
-		It is also expected that this method should be synchronous.  If you require loading something asynchronously it will be easiest to create a new ErrorHandler.
+		It is also expected that this method should be synchronous.  If you require loading 
+		something asynchronously it will be easiest to create a new ErrorHandler.
+
+		The default template looks like:
+
+		```
+		<summary class="error-summary">
+			<h1 class="error-message">${error.toString()}</h1>
+		</summary>
+		<details class="error-details">
+			<p class="error-data">${error.data}</p>
+			<p class="error-pos">${error.pos}</p>
+			<p class="error-exception-stack">${exceptionStackFromError}</p>
+			<p class="error-call-stack">${callStackFromError}</p>
+		</details>
+		```
 	**/
-	dynamic public function renderError( error:HttpError, currentModule:String, ?showStack:Bool=false ):String {
-		var inner = (null!=error.data) ? '<p>${error.data}</p>':"";
-		var pos = showStack ? '<p>&gt; ${error.printPos()}</p>' : '';
+	dynamic public function renderErrorContent( error:HttpError, ?showStack:Bool=false ):String {
+		
+		var inner = (null!=error.data) ? '<p class="error-data">${error.data}</p>':"";
+		var pos = showStack ? '<p class="error-pos">&gt; ${error.printPos()}</p>' : '';
 		
 		var exceptionStackItems = errorStackItems( CallStack.exceptionStack() );
 		var callStackItems = errorStackItems( CallStack.callStack() );
 
 		var exceptionStack = 
 			if ( showStack && exceptionStackItems.length>0 ) 
-				'<div><h3>Exception Stack:</h3>
+				'<div class="error-exception-stack"><h3>Exception Stack:</h3>
 					<pre><code>' + exceptionStackItems.join("\n") + '</pre></code>
 				</div>'
 			else "";
 
 		var callStack = 
 			if ( showStack && callStackItems.length>0 ) 
-				'<div><h3>Call Stack:</h3>
+				'<div class="error-call-stack"><h3>Call Stack:</h3>
 					<pre><code>' + callStackItems.join("\n") + '</pre></code>
 				</div>'
 			else "";
-
-		var lastKnownModule = 
-			if ( showStack ) '<div><h3>Last module: $currentModule</h3></div>'
-			else "";
 		
+		var content = '
+			<summary class="error-summary"><h1 class="error-message">$error</h1></summary>
+			<details class="error-details"> $inner $pos $exceptionStack $callStack </details>
+		';
+
+		return content;
+	}
+
+	/**
+		Render the given error title and error content (from `renderErrorContent`) into a page to be sent to the browser.
+
+		This method takes two arguments: a window title, and content representing the error page.  
+		It then renders a full HTML page with these variables inserted.
+
+		This function is dynamic, so you can override it if you wish to supply a different template.
+
+		It is recommended that this method have as few dependencies as possible, for example,
+		avoid using templating engines as any errors in displaying the error template will not
+		be displayed correctly.
+
+		It is also expected that this method should be synchronous.  If you require loading 
+		something asynchronously it will be easiest to create a new ErrorHandler.
+
+		The default template uses a CDN-hosted Bootstrap stylesheet, a "jumbotron" component and a giant sad-face.  It took 1000 designers 1000 days to craft this work of art.
+	**/
+	dynamic public function renderErrorPage( title:String, content:String ):String {
 		return CompileTime.interpolateFile( "ufront/web/ErrorPage.html" );
+	}
+
+	/**
+		Renders the error content and places it in the error page.
+
+		To change the look of your error messages, edit either `renderErrorContent` or `renderErrorPage`.
+	**/
+	public function renderError( error:HttpError, ?showStack:Bool ):String {
+		var content = renderErrorContent( error, showStack );
+		return renderErrorPage( error.toString(), content );
 	}
 	
 	/**

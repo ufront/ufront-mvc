@@ -24,7 +24,7 @@ class Sync {
 		Will wrap your error with `HttpError.internalServerError(err)`
 	**/
 	public static inline function httpError( ?msg:String, ?err:Dynamic, ?p:Pos ):Surprise<Noise,HttpError> {
-		return Future.sync( Failure( HttpError.internalServerError(msg,err,p) ) );
+		return Future.sync( Failure( HttpError.wrap(err,msg,p) ) );
 	}
 
 	/**

@@ -35,10 +35,10 @@ class HttpError extends Error {
 		- If it was a tink.core.Error, use code 500, copy it's message, pos and data.
 		- If it was a normal exception, use code 500, with "Internal Server Error" as the message, the exception as the data, and the pos that call site for `wrap()` as the pos.
 	**/
-	static public function wrap( e:Dynamic, ?pos:Pos ):HttpError {
+	static public function wrap( e:Dynamic, ?msg="Internal Server Error", ?pos:Pos ):HttpError {
 		if ( Std.is(e, HttpError) ) return cast e;
 		else if ( Std.is(e, Error) ) return internalServerError( e.message, e.data, e.pos );
-		else return HttpError.internalServerError( "Internal Server Error", e, pos );
+		else return HttpError.internalServerError( msg, e, pos );
 	}
 
 	/**
@@ -83,5 +83,24 @@ class HttpError extends Error {
 	**/
 	static public function unprocessableEntity( ?pos ):HttpError {
 		return new HttpError( 422, "Unprocessable Entity", pos );
+	}
+
+	/**
+		Generate a fake HaxePos position for a given class, method and args.
+
+		Useful for debugging async code when you're not sure where the error came from.
+
+		@param obj - The object (controller / module / handler) from which we derive the class name
+		@param method - the method name to use in our position
+		@param args - any arguments parsed to that method.  If not given, an empty array will be used.
+	**/
+	static inline public function fakePosition( obj:Dynamic, method:String, ?args:Array<Dynamic> ) {
+		return {
+			methodName: method,
+			lineNumber: -1,
+			fileName: "",
+			customParams: (args!=null) ? args : [],
+			className: Type.getClassName(Type.getClass(obj))
+		};
 	}
 }

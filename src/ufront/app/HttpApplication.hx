@@ -1,5 +1,8 @@
 package ufront.app;
 
+#if macro 
+	import haxe.macro.Expr;
+#end
 import ufront.web.url.filter.UFUrlFilter;
 import ufront.core.Sync;
 import minject.Injector;
@@ -10,6 +13,7 @@ import ufront.web.HttpError;
 import ufront.log.Message;
 import thx.error.NullArgument;
 import haxe.PosInfos;
+import tink.core.Error.Pos;
 using tink.CoreApi;
 
 /**
@@ -104,8 +108,8 @@ class HttpApplication
 	**/
 	var modulesReady:Surprise<Noise,HttpError>;
 
-	/** A reference to the currently executing module.  Useful for diagnosing if something in our async chain never completed. **/
-	var currentModule:String;
+	/** A position representing the current module.  Useful for diagnosing if something in our async chain never completed. **/
+	var currentModule:PosInfos;
 
 	///// End Events /////
 
@@ -249,14 +253,14 @@ class HttpApplication
 	inline public function addLogHandler( ?logger:UFLogHandler, ?loggers:Iterable<UFLogHandler> ) 
 		return addModule( logHandlers, logger, loggers );
 
-	function addModule<T>( arr:Array<T>, ?i:T, ?it:Iterable<T> ) {
-		if (i!=null) { 
-			injector.injectInto( i ); 
-			arr.push( i ); 
+	function addModule<T>( modulesArr:Array<T>, ?newModule:T, ?newModules:Iterable<T> ) {
+		if (newModule!=null) { 
+			injector.injectInto( newModule ); 
+			modulesArr.push( newModule ); 
 		};
-		if (it!=null) for (i in it) { 
-			injector.injectInto( i ); 
-			arr.push( i ); 
+		if (newModules!=null) for (newModule in newModules) { 
+			injector.injectInto( newModule ); 
+			modulesArr.push( newModule ); 
 		};
 		return this;
 	}
@@ -284,14 +288,14 @@ class HttpApplication
 		if (httpContext == null) httpContext = HttpContext.create( injector, urlFilters );
 		else httpContext.setUrlFilters( urlFilters );
 
-		var reqMidModules = requestMiddleware.map( function(m) return new Pair(typeName(m), m.requestIn) );
-		var reqHandModules = requestHandlers.map( function(h) return new Pair(typeName(h), h.handleRequest) );
-		var resMidModules = responseMiddleware.map( function(m) return new Pair(typeName(m), m.responseOut) );
-		var logHandModules = logHandlers.map( function(h) return new Pair(typeName(h), h.log.bind(_,messages)) );
+		var reqMidModules = prepareModules(requestMiddleware,"requestIn");
+		var reqHandModules = prepareModules(requestHandlers,"handleRequest");
+		var resMidModules = prepareModules(responseMiddleware,"responseOut");
+		var logHandModules = prepareModules(logHandlers,"log",[_,messages]);
 		
 		// Here `>>` does a Future flatMap, so each call to `executeModules()` returns a Future,
 		// once that Future is done, it does the next `executeModules()`.  The final future returned
-		// is for once the `logHandlers` have all been run
+		// is for once the `flush()` call has completed, which will happen once all the modules are done
 		
 		var allDone = 
 			init() >>
@@ -305,9 +309,14 @@ class HttpApplication
 		allDone.handle( function() {} );
 
 		#if (debug && (neko || php))
-			// Sync target... we can test if the async callbacks finished
+			// Sync targets... we can test if the async callbacks finished
 			if ( httpContext.completion.has(CFlushComplete)==false ) {
-				throw 'Async callbacks never completed.  Last stuck on $currentModule';
+				// We need to prevent macro-time seeing this code as "Pos" for them is "haxe.macro.Pos" not "haxe.PosInfos"
+				var msg = 'Async callbacks never completed.  ';
+				#if !macro
+					msg += 'The last active module was ${currentModule.className}.${currentModule.methodName}(${currentModule.customParams.join(", ")})';
+				#end
+				throw msg;
 			}
 		#end
 
@@ -327,7 +336,7 @@ class HttpApplication
 
 		Returns a future that will prove
 	**/
-	function executeModules( modules:Array<Pair<String,HttpContext->Surprise<Noise,HttpError>>>, ctx:HttpContext, ?flag:RequestCompletion ):Surprise<Noise,HttpError> {
+	function executeModules( modules:Array<Pair<HttpContext->Surprise<Noise,HttpError>,Pos>>, ctx:HttpContext, ?flag:RequestCompletion ):Surprise<Noise,HttpError> {
 		var done:FutureTrigger<Outcome<Noise,HttpError>> = Future.trigger();
 		function runNext() {
 			var m = modules.shift();
@@ -340,8 +349,15 @@ class HttpApplication
 				done.trigger( Success(Noise) );
 			}
 			else {
-				currentModule = m.a;
-				var moduleResult = try m.b( ctx ) catch (e:Dynamic) handleError(e, ctx, done);
+				var moduleResult = 
+					try m.a( ctx ) 
+					catch ( e:Dynamic ) {
+						var pos = m.b;
+						#if (!macro && debug) ctx.ufLog( 'Caught error $e while executing module ${pos.className}.${pos.methodName} in HttpApplication.executeModules()' ); #end
+						ctx.ufLog( 'ufLog' );
+						Future.sync( Failure( HttpError.wrap(e,null,pos) ) );
+					}
+
 				moduleResult.handle( function (result) {
 					switch result {
 						case Success(_): runNext();
@@ -359,16 +375,16 @@ class HttpApplication
 		
 		Then mark the middleware and requestHandlers as complete, so the `execute` function can log, flush and finish the request.
 	**/
-	function handleError( err:Dynamic, ctx:HttpContext, doneTrigger:FutureTrigger<Outcome<Noise,HttpError>> ) {
+	function handleError( err:HttpError, ctx:HttpContext, doneTrigger:FutureTrigger<Outcome<Noise,HttpError>> ) {
 		if ( !ctx.completion.has(CErrorHandlersComplete) ) {
-			ctx.completion.set(CErrorHandlersComplete);
 
-			var errHandModules = errorHandlers.map(function(m) return new Pair(Type.getClassName(Type.getClass(m)), m.handleError.bind(err,_,currentModule)));
+			var errHandlerModules = prepareModules(errorHandlers,"handleError",[err]);
 
 			var allDone = 
-				executeModules( errHandModules, ctx, null ) >>
+				executeModules( errHandlerModules, ctx, CErrorHandlersComplete ) >>
 				function (n:Noise) {
 					// Mark the handler as complete.  (It will continue on with the Middleware, Logging and Flushing stages)
+					ctx.completion.set( CErrorHandlersComplete );
 					ctx.completion.set( CRequestHandlersComplete );
 					return Sync.success();
 				};
@@ -382,12 +398,10 @@ class HttpApplication
 			//   - the LogHandlers
 			//   - the "flush" stage...
 			// rethrow the error, and hopefully they'll come to this line number and figure out what happened.
-			Sys.println( 'You had an error after your error handler had already run.  Current module: $currentModule<br/>');
+			Sys.println( 'You had an error after your error handler had already run.  Last active module: $currentModule<br/>');
 			throw err;
 		}
 	}
-
-	inline function typeName( cl:{} ) return Type.getClassName( Type.getClass(cl) );
 
 	function flush( ctx:HttpContext ) {
 		if ( !ctx.completion.has(CFlushComplete) ) {
@@ -410,5 +424,38 @@ class HttpApplication
 	**/
 	public function clearUrlFilters() {
 		urlFilters = [];
+	}
+
+	/**
+		Given a bunch of modules (handlers,middleware) and the name of the method on that 
+		module, return a 
+
+		`Array<Pair<(HttpContext->Surprise<Noise,HttpError>),PosInfos>>` 
+
+		so we can execute them all in the same way.
+	**/
+	static macro function prepareModules( modules:ExprOf<Array<Dynamic>>, methodName:String, ?bindArgs:ExprOf<Array<Dynamic>> ):ExprOf<Array<Pair<HttpContext->Surprise<Noise,HttpError>,PosInfos>>> {
+		
+		var argsToBind:Array<Expr>;
+		var argsForPos:Array<Dynamic> = [];
+
+		switch bindArgs.expr {
+			case EArrayDecl( args ):
+				argsToBind = args;
+				for ( a in args ) {
+					if ( !tink.macro.Exprs.isWildcard(a) ) 
+						argsForPos.push( a );
+					else
+						argsForPos.push( "{HttpContext}" );
+				}
+			default:
+				argsToBind = [];
+				argsForPos = [];
+		}
+
+		var fakePos:Expr = macro HttpError.fakePosition( m, $v{methodName}, $v{argsForPos} );
+		var boundMethod:Expr = macro m.$methodName.bind( $a{argsToBind} );
+
+		return macro $modules.map( function(m) return new Pair($boundMethod,$fakePos) );
 	}
 }
