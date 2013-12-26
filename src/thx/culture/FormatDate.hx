@@ -179,6 +179,12 @@ customs for missing features
 		return format(date, culture.date.patternMonthDay, culture, false);
 	}
 
+	static public function monthDayShort(date : Date, ?culture : Culture) : String {
+		if (null == culture)
+			culture = Culture.defaultCulture;
+		return format(date, "%b %d", culture, false);
+	}
+
 	static public function dateYMD(date : Date, ?culture : Culture) : String {
 		if (null == culture)
 			culture = Culture.defaultCulture;

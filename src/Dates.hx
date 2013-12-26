@@ -38,6 +38,7 @@ class Dates
 			date.format("MN");		October
 			date.format("MS");		Oct
 			date.format("MD");		October 16
+			date.format("MDS");		Oct 16
 			date.format("WD");		2
 			date.format("WDN");		Tuesday
 			date.format("WDS");		Tue
@@ -98,6 +99,8 @@ class Dates
 				return function(d) return FormatDate.monthNameShort(d, culture);
 			case 'MD':
 				return function(d) return FormatDate.monthDay(d, culture);
+			case 'MDS':
+				return function(d) return FormatDate.monthDayShort(d, culture);
 			case 'WD':
 				return function(d) return FormatDate.weekDay(d, culture);
 			case 'WDN':
