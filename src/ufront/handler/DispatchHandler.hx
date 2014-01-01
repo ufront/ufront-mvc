@@ -193,13 +193,13 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 			}
 			catch ( e:DispatchError ) {
 				var p = HttpError.fakePosition( context.actionContext.controller, context.actionContext.action, context.actionContext.args );
-				#if debug context.ufError( 'Caught dispatch error in DispatchHandler.executeAction while executing ${p.className}.${p.methodName}.(${p.customParams.join(",")})' ); #end
+				#if debug context.ufError( 'Caught dispatch error in DispatchHandler.executeAction while executing ${p.className}.${p.methodName}(${p.customParams.join(",")})' ); #end
 				t.trigger( Failure(dispatchErrorToHttpError(e,p)) );
 			}
 			catch ( e:Dynamic ) {
 				// Fake the position the error came from...
 				var p = HttpError.fakePosition( context.actionContext.controller, context.actionContext.action, context.actionContext.args );
-				#if debug context.ufError( 'Caught unknown error in DispatchHandler.executeAction while executing ${p.className}.${p.methodName}.(${p.customParams.join(",")})' ); #end
+				#if debug context.ufError( 'Caught unknown error in DispatchHandler.executeAction while executing ${p.className}.${p.methodName}(${p.customParams.join(",")})' ); #end
 				t.trigger( Failure(HttpError.wrap(e,p)) ); 
 			}
 
@@ -212,7 +212,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 					context.actionResult.executeResult( context.actionContext )
 				catch ( e:Dynamic ) {
 					var p = HttpError.fakePosition( context.actionContext, "executeResult", ["actionContext"] );
-					#if debug context.ufError( 'Caught error in DispatchHandler.executeAction while executing ${p.className}.${p.methodName}.(${p.customParams.join(",")})' ); #end
+					#if debug context.ufError( 'Caught error in DispatchHandler.executeAction while executing ${p.className}.${p.methodName}(${p.customParams.join(",")})' ); #end
 					Future.sync( Failure(HttpError.wrap(e)) );
 				}
 		}
