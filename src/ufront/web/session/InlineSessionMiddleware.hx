@@ -16,14 +16,15 @@ using Types;
 **/
 class InlineSessionMiddleware implements UFMiddleware
 {
-	var alwaysStart:Bool;
-
 	/**
-		@param alwaysStart - should we start a session for every request, or only if one already exists?  If false, one will only be started if init() is called specifically on one request (for example, when they log in).  From there onwards it will initialize with each request.
+		Should we start a session for every request, or only if one already exists?  
+		If false, one will only be started if init() is called specifically on one request.  
+		(For example, when they log in).  
+		From there onwards it will initialize with each request.
 	**/
-	public function new( ?alwaysStart=false ) {
-		this.alwaysStart = alwaysStart;
-	}
+	public static var alwaysStart:Bool;
+
+	public function new() {}
 
 	/**
 		Start the session if a SessionID exists in the request, or if `alwaysStart` is true.
