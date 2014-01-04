@@ -311,6 +311,13 @@ class FileSession implements UFHttpSessionState
 	}
 
 	/**
+		Force the session to be committed at the end of this request
+	**/
+	public inline function triggerCommit():Void {
+		commitFlag = true;
+	}
+
+	/**
 		Regenerate the ID for this session, renaming the file on the server and sending a new session to the 
 	**/
 	public function regenerateID():Surprise<String,String> {

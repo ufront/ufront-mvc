@@ -53,6 +53,9 @@ interface UFHttpSessionState
 	/** Commit the request.  Return a surprise, either notifying you of completion or giving an error message if it failed. **/
 	public function commit():Surprise<Noise,String>;
 
+	/** Flag this session for a commit.  This will happen automatically if you call `set`, `remove`, `clear`, or `regenerateID`, but this can be useful if a value has updated without "set" being called. **/
+	public function triggerCommit():Void;
+
 	/** 
 		Regenerate the session ID, making the changes on the server and informing the client.  
 
