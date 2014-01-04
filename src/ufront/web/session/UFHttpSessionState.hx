@@ -5,9 +5,9 @@ import tink.CoreApi;
 /**
 	An interface describing an open HTTP session.
 
-	The methods are similar to Map(), with `get`, `set`, `exists`, `remove` and `clear`.
+	The methods are similar to `Map`, with `get()`, `set()`, `exists()`, `remove()` and `clear()`.
 
-	There are also some methods to do with the actual session, not the data inside it: `dispose`, `id` and `setLifeTime`.
+	There are also some methods to do with the actual session, not the data inside it: `init()`, `isActive()`, `getID()`, `close()`, `commit()`, `regenerateID()` and `setExpiry()`.
 	
 	@author Franco Ponticelli
 	@author Jason O'Neil
