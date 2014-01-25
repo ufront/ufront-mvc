@@ -37,9 +37,10 @@ class DetoxResult<W:DOMCollection> extends ActionResult
 	}
 
 	// TODO: move somewhere else?
-	public static var defaultLayout:IDetoxLayout;
+	public static var defaultLayoutFactory:Void->IDetoxLayout;
 	static function getDefaultLayout() {
-		if (defaultLayout==null) defaultLayout = new DefaultDetoxLayout();
-		return defaultLayout;
+		return 
+			if ( defaultLayoutFactory!=null ) defaultLayoutFactory();
+			else new DefaultDetoxLayout();
 	}
 }
