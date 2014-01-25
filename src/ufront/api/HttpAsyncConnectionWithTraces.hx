@@ -49,11 +49,6 @@ class HttpAsyncConnectionWithTraces extends HttpAsyncConnection
 	// Code mostly copied from super class, but the onData() response has been modified to output traces
 	override public function call( params:Array<Dynamic>, ?onResult:Dynamic->Void ) {
 
-		#if debug
-			// Track the call-stack in case there's an error (not possible on safari/IE currently)
-			var callStack = try CallStack.callStack() catch(e:Dynamic) [Module('Stack traces not supported in this browser...')];
-		#end
-
 		// Set up the remoting call
 		var h = new haxe.Http(__data.url);
 		#if (neko && no_remoting_shutdown)
@@ -122,20 +117,13 @@ class HttpAsyncConnectionWithTraces extends HttpAsyncConnection
 			}
 
 			if( ok && onResult != null ) {
-				try onResult(ret) catch (e:Dynamic) {
-					trace ('  Error: $e');
-					#if debug 
-						var cs = CallStack.toString(callStack);
-						// var es = CallStack.toString( CallStack.exceptionStack() ); // ExceptionStack appears to always be unavailable at this point.
-						trace ( '  During callback for remoting call: ${__path.join(".")}(${params.join(", ")})' );
-						// trace ( '  ExceptionStack: $es'.replace("\n","\n    ") );
-						trace ( '  CallStack: $cs'.replace("\n","\n    ") );
-						#if js 
-							trace ("  Launching Debugger...");
-							js.Lib.debug();
-						#end
-					#end
-				}
+				// It is actually easier to debug these errors if we don't catch them, because the browser
+				// debugger can then provide a stack trace.  
+				#if debug
+					onResult(ret);
+				#else
+					try onResult(ret) catch (e:Dynamic) trace ('  Error: $e');
+				#end
 			}
 		};
 		h.onError = error;
