@@ -1,6 +1,6 @@
 package ufront.view;
 
-import haxe.ds.StringMap;
+import ufront.view.TemplateData;
 
 /**
 	A type representing a template that is ready to render a template with the given TemplateData.
@@ -17,10 +17,17 @@ import haxe.ds.StringMap;
 	```
 **/
 abstract UFTemplate( TemplateData->String ) from TemplateData->String to TemplateData->String {
+	
+	public function new( cb:TemplateData->String ) this = cb;
+
 	/** 
 		Execute the template with the given data. 
 
 		Notice that `data:TemplateData` is a trampoline type and can accept `haxe.ds.StringMap`, a `Dynamic` Object, or an `Iterable` combination of these.
 	**/
-	public inline function execute( data:TemplateData ):String return this(data);
+	public inline function execute( data:TemplateData ):String return {
+		// Haxe 3.0.1 won't allow me to call this() directly, it gives `Field this cannot be accessed for reading`.
+		var cb = this;
+		cb(data);
+	}
 }
