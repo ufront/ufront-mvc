@@ -12,18 +12,18 @@ class Sync {
 	/**
 		Return a Success(Noise) to satisfy Surprise<Noise,T>
 	**/
-	public static inline function success():Surprise<Noise,HttpError> {
+	public static function success<F>():Surprise<Noise,F> {
 		if ( s==null ) s = Future.sync( Success(Noise) );
-		return s;
+		return cast s;
 	}
-	static var s:Surprise<Noise,HttpError>;
+	static var s:Surprise<Noise,Dynamic>;
 
 	/**
 		Return a Failure(HttpError) to satisfy Surprise<T,HttpError>
 
 		Will wrap your error with `HttpError.internalServerError(err)`
 	**/
-	public static inline function httpError( ?msg:String, ?err:Dynamic, ?p:Pos ):Surprise<Noise,HttpError> {
+	public static inline function httpError<S>( ?msg:String, ?err:Dynamic, ?p:Pos ):Surprise<S,HttpError> {
 		return Future.sync( Failure( HttpError.wrap(err,msg,p) ) );
 	}
 

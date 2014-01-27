@@ -13,6 +13,7 @@ import ufront.app.UFMiddleware;
 import ufront.app.UFErrorHandler;
 import ufront.handler.ErrorPageHandler;
 import ufront.web.session.InlineSessionMiddleware;
+import ufront.web.upload.TmpFileUploadMiddleware;
 
 /**
 	Small configuration options that affect a ufront application.
@@ -76,7 +77,9 @@ typedef UfrontConfiguration = {
 	?responseMiddleware:Array<UFResponseMiddleware>,
 	
 	/**
-		The error handlers to use with this application
+		The error handlers to use with this application.
+
+		Default is `[ new ErrorPageHandler() ]`.
 	**/
 	?errorHandlers:Array<UFErrorHandler>,
 
@@ -110,7 +113,7 @@ typedef UfrontConfiguration = {
 	/**
 		A method which can be used to generate a session for the current request, as required.
 
-		By default, this is `FileSession.create.bind(_, "sessions", null, 0)`
+		By default, this is `FileSession.getFactory("sessions", null, 0)`
 
 		This means using `ufront.web.session.FileSession`, saving to the "sessions" folder, with a default session variable name, and an expiry of 0 (when window closed)
 	**/
@@ -119,9 +122,11 @@ typedef UfrontConfiguration = {
 	/**
 		A method which can be used to generate an AuthHandler for the current request, as required.
 
-		By default, this is `EasyAuth.create.bind(_,null)`
+		If using the ufront-easyauth library, the default value is `EasyAuth.getFactory()`
 
 		This means it will create an `ufront.auth.EasyAuth` handler using the current session, and the default variable name to store the ID in the session.
+
+		If no using ufront-easyauth, the default value is `YesBoss.getFactory()`
 	**/
 	?authFactory:UFAuthFactory
 }
@@ -139,6 +144,7 @@ class DefaultUfrontConfiguration {
 	**/
 	public static function get():UfrontConfiguration {
 		var inlineSession = new InlineSessionMiddleware();
+		var uploadMiddleware = new TmpFileUploadMiddleware();
 		return {
 			urlRewrite:true,
 			basePath:'/',
@@ -149,8 +155,8 @@ class DefaultUfrontConfiguration {
 			apis: cast CompileTime.getAllClasses( UFApi ),
 			viewEngine: new FileViewEngine(),
 			sessionFactory: FileSession.getFactory("sessions", null, 0),
-			requestMiddleware: [inlineSession],
-			responseMiddleware: [inlineSession],
+			requestMiddleware: [uploadMiddleware,inlineSession],
+			responseMiddleware: [inlineSession,uploadMiddleware],
 			errorHandlers: [ new ErrorPageHandler() ],
 			authFactory: 
 				#if ufront_easyauth 

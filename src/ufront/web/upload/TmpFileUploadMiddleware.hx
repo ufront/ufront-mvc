@@ -1,0 +1,115 @@
+package ufront.web.upload;
+
+import sys.io.File;
+import sys.FileSystem;
+import sys.io.FileOutput;
+import ufront.web.context.HttpContext;
+import ufront.app.UFMiddleware;
+import ufront.app.HttpApplication;
+import tink.CoreApi;
+import ufront.web.upload.TmpFileUploadSync;
+import ufront.core.Sync;
+using haxe.io.Path;
+using Dates;
+
+/**
+	If the HttpRequest is multipart, parse it, and store any uploads in a temporary file, adding them to `httpRequest.files`
+
+	Any post variables encountered in the multipart will be added to `httpRequest.post`.
+
+	This middleware will need to be called before `httpRequest.post` or `httpRequest.params` is ever accessed.
+	It is probably wise to run this as your very first middleware.
+
+	The response middleware will delete the temporary file at the end of the request.
+	
+	@author Jason O'Neil
+**/
+class TmpFileUploadMiddleware implements UFMiddleware
+{
+	/**
+		Sub-directory to save temporary uploads to.
+
+		This should represent a path, relative to `context.contentDirectory`.
+
+		Default is "uf-upload-tmp"
+	**/
+	public static var subDir:String = "uf-upload-tmp";
+
+	var files:Array<TmpFileUploadSync>;
+
+	public function new() {
+		trace ("in upload constructor");
+		files = [];
+	}
+
+	/**
+		Start the session if a SessionID exists in the request, or if `alwaysStart` is true.
+
+		If the chosen `subDir` does not exist, it will attempt to create it, but only one level deep - it will not recursively create directories for you.
+	**/
+	public function requestIn( ctx:HttpContext ):Surprise<Noise,HttpError> {
+		trace ("in upload requestIn");
+		try {
+			var file:FileOutput = null,
+			    postName:String = null,
+			    origFileName:String = null,
+			    size:Int = 0,
+			    tmpFilePath:String = null,
+			    dateStr = Date.now().format( "%Y%m%d-%H%M" ),
+			    dir = ctx.contentDirectory+subDir.addTrailingSlash();
+
+			if ( !FileSystem.exists(dir) ) try FileSystem.createDirectory( dir ) catch ( e:Dynamic ) throw 'Failed to create upload directory: $e';
+
+			function onPart( pName, fName ) {
+				trace ("in upload part: " + pName);
+				// Start writing to a temp file
+				postName = pName;
+				origFileName = fName;
+				size = 0;
+				while ( file==null ) {
+					tmpFilePath = dir+dateStr+"-"+Random.string(10)+".tmp";
+					if ( !FileSystem.exists(tmpFilePath) ) file = File.write( tmpFilePath );
+				}
+				return Sync.success();
+			}
+			function onData( bytes, pos, len ) {
+				// Write this chunk
+				size += len;
+				file.writeBytes( bytes, pos, len );
+				return Sync.success();
+			}
+			function onEndPart() {
+				// Close the file, create our FileUpload object and add it to the request
+				file.close();
+				var tmpFile = new TmpFileUploadSync( tmpFilePath, postName, origFileName, size );
+				ctx.request.files.set( postName, tmpFile );
+				files.push( tmpFile );
+				return Sync.success();
+			}
+			return 
+				ctx.request.parseMultipart( onPart, onData, onEndPart )
+				.map( function(result) switch result {
+					case Success(s): return Success( s );
+					case Failure(f): return Failure( HttpError.wrap(f) );
+				});
+		}
+		catch ( e:Dynamic ) return Sync.httpError( "Failed to process multipart form data in TmpFileUploadMiddleware.requestIn()", e );
+	}
+
+	/**
+		Delete the temporary file at the end of the request
+	**/
+	public function responseOut( ctx:HttpContext ):Surprise<Noise,HttpError> {
+		var errors = [];
+		for ( f in files ) {
+			switch f.deleteTemporaryFile() {
+				case Failure( e ): errors.push( e );
+				default:
+			}
+		}
+		return 
+			if ( errors.length>0 ) Sync.httpError( "Failed to delete one or more temporary upload files", errors );
+			else Sync.success();
+	}
+}
+

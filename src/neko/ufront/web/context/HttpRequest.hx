@@ -10,28 +10,34 @@ import thx.error.Error;
 import thx.sys.Lib;
 import ufront.web.upload.*;
 import ufront.web.UserAgent;
+import ufront.core.MultiValueMap;
 import haxe.ds.StringMap;
+import ufront.web.context.HttpRequest.OnPartCallback;
+import ufront.web.context.HttpRequest.OnDataCallback;
+import ufront.web.context.HttpRequest.OnEndPartCallback;
+import ufront.core.Sync;
+using tink.CoreApi;
 using Strings;
 using StringTools;
 
 class HttpRequest extends ufront.web.context.HttpRequest
 {
-	public static function encodeName(s : String)
+	public static function encodeName(s:String)
 	{
 		return s.urlEncode().replace('.', '%2E');
 	}
 	
 	public function new()
 	{
-		_uploadHandler = new EmptyUploadHandler();
 		_init();
+		_parsed = false;
 	}
 	
 	override function get_queryString()
 	{
 		if (null == queryString) {
 			var v = _get_params_string();
-			queryString = (v!=null) ? new String(v) : null;
+			queryString = (v!=null) ? new String(v):null;
 			if( v == null )
 				queryString = null;
 			else
@@ -58,76 +64,98 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		return postString;
 	}
 	
-	var _uploadHandler : UFHttpUploadHandler;
-	var _parsed : Bool;
-	function _parseMultipart()
+	var _parsed:Bool;
+
+	/**
+		parseMultipart implementation method for mod_neko.
+
+		Please see documentation on `ufront.web.context.HttpRequest.parseMultipart` for general information.
+
+		Specific implementation details for neko:
+
+		- This uses the `parse_multipart_data` function from the `mod_neko` NDLL, which is also used by `neko.Web.parseMultipart`.
+		- Because of this, `onPart` and `onData` will run synchronously - the moment the callback finishes, the next callback will continue.
+		- We suggest on neko you only use callbacks which can run synchronously.
+		- `onEndPart` will not be called until all `onPart` and `onData` functions have finished firing.
+		- 
+	**/
+	override public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error>
 	{
-		if (_parsed)
-			return;
+		// Prevent this running more than once.
+		if (_parsed) return throw new Error('parseMultipart() can only been called once');
 		_parsed = true;
-		var post = get_post();
-		var handler = _uploadHandler;
-		var isFile = false, partName = null, firstData = false, lastWasFile = false;
-		var onPart = function(pn : String, pf : String)
-		{
-			if (lastWasFile)
-			{
-				// close previous upload
-				handler.uploadEnd();
-			}
-			isFile = null != pf && "" != pf;
-			partName = pn.urlDecode();
-			if (isFile)
-			{
-				post.set(partName, pf);
-				handler.uploadStart(partName, pf);
-				firstData = true;
+
+		// Default values, prepare for processing
+		if ( onPart==null ) onPart = function(_,_) return Sync.of( Success(Noise) );
+		if ( onData==null ) onData = function(_,_,_) return Sync.of( Success(Noise) );
+		if ( onEndPart==null ) onEndPart = function() return Sync.of( Success(Noise) );
+		var post = get_post(),
+		    noParts = true,
+		    isFile = false, 
+		    partName = null,
+		    fileName = null,
+		    lastWasFile = false,
+		    currentContent = null,
+		    callbackFutures = [],
+		    errors = [];
+		
+		// callbacks for processing data
+		function processCallbackResult( surprise:Surprise<Noise,Error> ) {
+			callbackFutures.push( surprise );
+			surprise.handle( function(outcome) {
+				switch outcome {
+					case Failure(err): errors.push( err.toString() );
+					default: 
+				}
+			});
+		}
+		function doEndOfPart() {
+			if ( lastWasFile ) processCallbackResult( onEndPart() );
+			else if ( currentContent!=null ) post.add( partName, currentContent );
+		}
+		function doPart( partName:String, fileName:String ) {
+			doEndOfPart();
+			noParts = false;
+			isFile = null!=fileName && ""!=fileName;
+			currentContent = null;
+			partName = partName.urlDecode();
+			if (isFile) {
+				post.add(partName, fileName);
+				processCallbackResult( onPart(partName,fileName) );
 				lastWasFile = true;
 			} else {
 				lastWasFile = false;
 			}
 		};
-		var onData = function(bytes : Bytes, pos : Int, len : Int)
-		{
-			if (firstData)
-			{
-				firstData = false;
-				if (isFile)
-				{
-					if (len > 0)
-					{
-						handler.uploadProgress(bytes, pos, len);
-					}
-				} else {
-					post.set(partName, bytes.readString(pos, len));
-				}
-			} else {
-				if (isFile)
-				{
-					if(len > 0)
-						handler.uploadProgress(bytes, pos, len);
-				} else {
-					post.set(partName, post.get(partName) + bytes.readString(pos, len));
-				}
+		function doData( bytes:Bytes, pos:Int, len:Int ) {
+			if ( isFile ) {
+				if (len > 0) processCallbackResult( onData(bytes,pos,len) );
+			}
+			else {
+				if ( currentContent==null ) currentContent = "";
+				currentContent += bytes.readString(pos,len);
 			}
 		};
-		_parse_multipart(
-			function(p,f) { onPart(new String(p),if( f == null ) null else new String(f)); },
-			function(buf,pos,len) { onData(untyped new haxe.io.Bytes(__dollar__ssize(buf),buf),pos,len); }
-		);
-		if (isFile)
-		{
-			// close last upload
-			handler.uploadEnd();
-		}
-	}
 
-	override public function setUploadHandler(handler : UFHttpUploadHandler)
-	{
-		if (_parsed)
-			throw new Error("multipart has been already parsed");
-		_uploadHandler = handler;
-		_parseMultipart();
+		// Call mod_neko's "parse_multipart_data" using the callbacks above
+		try {
+			_parse_multipart(
+				function(p,f) { doPart(new String(p),if( f == null ) null else new String(f)); },
+				function(buf,pos,len) { doData(new haxe.io.Bytes(untyped __dollar__ssize(buf),buf),pos,len); }
+			);
+		}
+		catch ( e:Dynamic ) errors.push( 'Failed to run _parse_multipart: $e' );
+
+		// Finish everything up, check there are no errors, return accordingly.
+		if ( noParts==false ) doEndOfPart();
+		if ( callbackFutures.length>0 ) {
+			return Future.ofMany( callbackFutures ).flatMap( function(_) {
+				return
+					if ( errors.length==0 ) Sync.of( Success(Noise) )
+					else Sync.of( Failure(Error.withData('Error parsing multipart request data', errors)) );
+			});
+		}
+		else return Sync.of( Success(Noise) );
 	}
 	
 	override function get_query()
@@ -147,12 +175,12 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	override function get_post()
 	{
 		if (httpMethod == "GET")
-			return new StringMap();
+			return new MultiValueMap();
 		if (null == post)
 		{
 			post = getHashFromString(postString);
-			if (!post.iterator().hasNext())
-				_parseMultipart();
+			if ( Lambda.empty(post) && _parsed==false )
+				parseMultipart();
 		}
 		return post;
 	}
@@ -162,11 +190,11 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		if (null == cookies)
 		{
 			var p = _get_cookies();
-			cookies = new StringMap<String>();
+			cookies = new MultiValueMap();
 			var k = "";
 			while( p != null ) {
 				untyped k.__s = p[0];
-				cookies.set(k,new String(p[1]));
+				cookies.add(k,new String(p[1]));
 				p = untyped p[2];
 			}
 		}
@@ -210,7 +238,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 			clientHeaders = new StringMap();
 			var v = _get_client_headers();
 			while( v != null ) {
-				clientHeaders.set(new String(v[0]), new String(v[1]));
+				clientHeaders.add(new String(v[0]), new String(v[1]));
 				v = cast v[2];
 			}
 		}
@@ -240,7 +268,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	{
 		if (null == authorization)
 		{
-			authorization = { user : null, pass : null };
+			authorization = { user:null, pass:null };
 			var h = clientHeaders.get("Authorization");
 			var reg = ~/^Basic ([^=]+)=*$/;
 			if( h != null && reg.match(h) ){
@@ -258,30 +286,30 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	}
 	
 	static var paramPattern = ~/^([^=]+)=(.*?)$/;
-	static function getHashFromString(s : String)
+	static function getHashFromString(s:String):MultiValueMap<String>
 	{
-		var hash = new StringMap();
+		var qm = new MultiValueMap();
 		for (part in s.split("&"))
 		{
 			if (!paramPattern.match(part))
 				continue;
-			hash.set(
+			qm.add(
 				StringTools.urlDecode(paramPattern.matched(1)),
 				StringTools.urlDecode(paramPattern.matched(2)));
 		}
-		return hash;
+		return qm;
 	}
 	
-	static var _get_params_string : Dynamic;
-	static var _get_post_data : Dynamic;
-	static var _get_cookies : Dynamic;
-	static var _get_host_name : Dynamic;
-	static var _get_client_ip : Dynamic;
-	static var _get_uri : Dynamic;
-	static var _get_client_headers : Dynamic;
-	static var _get_cwd : Dynamic;
-	static var _get_http_method : Dynamic;
-	static var _parse_multipart : Dynamic;
+	static var _get_params_string:Dynamic;
+	static var _get_post_data:Dynamic;
+	static var _get_cookies:Dynamic;
+	static var _get_host_name:Dynamic;
+	static var _get_client_ip:Dynamic;
+	static var _get_uri:Dynamic;
+	static var _get_client_headers:Dynamic;
+	static var _get_cwd:Dynamic;
+	static var _get_http_method:Dynamic;
+	static var _parse_multipart:Dynamic;
 	static var _inited = false;
 	static function _init()
 	{

@@ -6,24 +6,29 @@
 package php.ufront.web.context;
 
 import haxe.io.Bytes;
-import thx.error.Error;
 import thx.sys.Lib;
 import ufront.web.upload.*;
+import ufront.web.context.HttpRequest.OnPartCallback;
+import ufront.web.context.HttpRequest.OnDataCallback;
+import ufront.web.context.HttpRequest.OnEndPartCallback;
 import ufront.web.UserAgent;
+import ufront.core.MultiValueMap;
 import haxe.ds.StringMap;
+import ufront.core.Sync;
+using tink.CoreApi;
 using Strings;
 using StringTools;
 
 class HttpRequest extends ufront.web.context.HttpRequest
 {
-	public static function encodeName(s : String)
+	public static function encodeName(s:String)
 	{
 		return s.urlEncode().replace('.', '%2E');
 	}
 	
 	public function new()
 	{
-		_uploadHandler = new EmptyUploadHandler();
+		_parsed = false;
 	}
 	
 	override function get_queryString()
@@ -51,62 +56,102 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		return postString;
 	}
 	
-	var _uploadHandler : UFHttpUploadHandler;
-	var _parsed : Bool;
-	function _parseMultipart()
+	var _parsed:Bool;
+
+	override public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error>
 	{
-		if (_parsed)
-			return;
+		if (_parsed) return throw new Error('parseMultipart() can only been called once');
 		_parsed = true;
+
 		var post = get_post();
-		var handler = _uploadHandler;
-		if(!untyped __call__("isset", __php__("$_FILES"))) return;
-		var parts : Array<String> = untyped __call__("new _hx_array",__call__("array_keys", __php__("$_FILES")));
-		untyped for(part in parts) {
-			var info : Dynamic = __php__("$_FILES[$part]");
-			var file : String = info['name'];
-			var tmp : String = info['tmp_name'];
-			
-			//var name = __call__("urldecode", part);
-			var name = StringTools.urldecode(part);
-			post.set(name, file);
-			
-			if (tmp == '')
-				continue;
-			
-			var err : Int = info['error'];
+		if( untyped __call__("isset", __php__("$_FILES")) ) {
 
-			if(err > 0) {
-				switch(err) {
-					case 1: throw new Error("The uploaded file exceeds the max size of {0}", untyped __call__('ini_get', 'upload_max_filesize'));
-					case 2: throw new Error("The uploaded file exceeds the max file size directive specified in the HTML form (max is {0})", untyped __call__('ini_get', 'post_max_size'));
-					case 3: throw new Error("The uploaded file was only partially uploaded");
-					case 4: continue; // No file was uploaded
-					case 6: throw new Error("Missing a temporary folder");
-					case 7: throw new Error("Failed to write file to disk");
-					case 8: throw new Error("File upload stopped by extension");
+			var parts:Array<String> = untyped __call__("new _hx_array",__call__("array_keys", __php__("$_FILES")));
+			var errors = [];
+			var allPartFutures = [];
+
+			if ( onPart==null ) onPart = function(_,_) return Sync.of( Success(Noise) );
+			if ( onData==null ) onData = function(_,_,_) return Sync.of( Success(Noise) );
+			if ( onEndPart==null ) onEndPart = function() return Sync.of( Success(Noise) );
+
+			for(part in parts) {
+				// Extract the info from PHP's $_FILES
+				var info:Dynamic = untyped __php__("$_FILES[$part]");
+				var file:String = untyped info['name'];
+				var tmp:String = untyped info['tmp_name'];
+				var name = StringTools.urlDecode(part);
+				if (tmp == '') continue;
+				
+				// Handle any errors
+				var err:Int = untyped info['error'];
+				if(err > 0) {
+					switch(err) {
+						case 1: 
+							var maxSize = untyped __call__('ini_get', 'upload_max_filesize');
+							errors.push('The uploaded file exceeds the max size of $maxSize');
+						case 2: 
+							var maxSize = untyped __call__('ini_get', 'post_max_size');
+							errors.push('The uploaded file exceeds the max file size directive specified in the HTML form (max is $maxSize)');
+						case 3: errors.push('The uploaded file was only partially uploaded');
+						case 4: // No file was uploaded
+						case 6: errors.push('Missing a temporary folder');
+						case 7: errors.push('Failed to write file to disk');
+						case 8: errors.push('File upload stopped by extension');
+					}
+					continue;
 				}
-			}
-			handler.uploadStart(name, file);
-			var h = __call__("fopen", tmp, "r");
-			var bsize = 8192;
-			while (!__call__("feof", h)) {
-				var buf : String = __call__("fread", h, bsize);
-				var size : Int = __call__("strlen", buf);
-				handler.uploadProgress(Bytes.ofString(buf), 0, size);
-			}
-			untyped __call__("fclose", h);
-			handler.uploadEnd();
-			untyped __call__("unlink", tmp);
-		}
-	}
 
-	override public function setUploadHandler(handler : UFHttpUploadHandler)
-	{
-		if (_parsed)
-			throw new Error("multipart has been already parsed");
-		_uploadHandler = handler;
-		_parseMultipart();
+				// Prepare for parsing the file
+				var fileResource:Dynamic = null;
+				var bsize = 8192;
+				var currentPos = 0;
+				var partFinishedTrigger = Future.trigger();
+				allPartFutures.push( partFinishedTrigger.asFuture() );
+
+				// Helper function for processing the results of our callback functions.
+				function processResult( surprise:Surprise<Noise,Error>, andThen:Void->Void ) {
+					surprise.handle( function(outcome) {
+						switch outcome {
+							case Success(err): 
+								andThen();
+							case Failure(err): 
+								errors.push( err.toString() );
+								try untyped __call__("fclose", fileResource) catch (e:Dynamic) errors.push( 'Failed to close upload tmp file: $e' );
+								try untyped __call__("unlink", tmp) catch (e:Dynamic) errors.push( 'Failed to delete upload tmp file: $e' );
+								partFinishedTrigger.trigger( outcome );
+						}
+					});
+				}
+
+				// Function to read chunks of the file, and close when done
+				function readNextPart() {
+					if ( false==untyped __call__("feof", fileResource) ) {
+						// Read this line, call onData, and then read the next part
+						var buf:String = untyped __call__("fread", fileResource, bsize);
+						var size:Int = untyped __call__("strlen", buf);
+						processResult( onData(Bytes.ofString(buf),currentPos,size), function() readNextPart() );
+						currentPos += size;
+					}
+					else {
+						// close the file, call onEndPart(), and delete the temp file
+						untyped __call__("fclose", fileResource);
+						processResult( onEndPart(), function() untyped __call__("unlink",tmp) );
+					}
+				}
+
+				// Call `onPart`, then open the file, then start reading
+				processResult( onPart(name,file), function() {
+					fileResource = untyped __call__("fopen", tmp, "r");
+					readNextPart();
+				});
+			}
+
+			return Future.ofMany( allPartFutures ).map( function(_) {
+				if ( errors.length==0 ) return Success(Noise);
+				else return Failure(Error.withData('Error parsing multipart request data', errors));
+			});
+		}
+		else return Sync.of( Success(Noise) );
 	}
 	
 	override function get_query()
@@ -121,28 +166,41 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	override function get_post()
 	{
 		if (httpMethod == "GET")
-			return new StringMap();
+			return new MultiValueMap();
 		if (null == post)
 		{
 			post = getHashFromString(postString);
-			if (!post.iterator().hasNext())
+			if ( Lambda.empty(post) )
 			{
-				untyped if (__call__("isset", __php__("$_POST")))
+				if (untyped __call__("isset", __php__("$_POST")))
 				{
-					var na : php.NativeArray = __call__("array");
-					__php__("foreach($_POST as $k => $v) { $na[urldecode($k)] = $v; }");
-					var h = php.Lib.hashOfAssociativeArray(na);
-					for (k in h.keys())
-						post.set(k, h.get(k));
+					var postNames:Array<String> = untyped __call__( "new _hx_array",__call("array_keys", __php__("$_POST" )));
+
+					for ( name in postNames ) {
+						var val:Dynamic = untyped __php__("$_POST[$name]");
+						if ( untyped __call__("is_array", val) ) {
+							// For each value in the array, add it to our post object.
+							var h = php.Lib.hashOfAssociativeArray( val );
+							for ( k in h.keys() )
+								if ( untyped __call__("is_string", val) )
+									post.add( k, h.get(k) );
+								// else: Note that we could try recurse here if there's another array, but for now I'm 
+								// giving ufront a rule: only single level `fruit[]` type input arrays are supported,
+								// any recursion goes beyond this, so let's not bother.
+						}
+						else if ( untyped __call__("is_string", val) ) {
+							post.add( name, cast val );
+						}
+					}
 				}
 			}
 			if (untyped __call__("isset", __php__("$_FILES")))
 			{
-				var parts : Array<String> = untyped __call__("new _hx_array",__call__("array_keys", __php__("$_FILES")));
+				var parts:Array<String> = untyped __call__("new _hx_array",__call__("array_keys", __php__("$_FILES")));
 				untyped for (part in parts) {
-					var file : String = __php__("$_FILES[$part]['name']");
+					var file:String = __php__("$_FILES[$part]['name']");
 					var name = StringTools.urldecode(part);
-					post.set(name, file);
+					post.add(name, file);
 				}
 			}
 		}
@@ -181,7 +239,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	{
 		if (null == uri)
 		{
-			var s : String = untyped __php__("$_SERVER['REQUEST_URI']");
+			var s:String = untyped __php__("$_SERVER['REQUEST_URI']");
 			uri = s.split("?")[0];
 		}
 		return uri;
@@ -191,11 +249,11 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	{
 		if (null == clientHeaders)
 		{
-			clientHeaders = new StringMap();
+			clientHeaders = new MultiValueMap();
 			var h = Lib.hashOfAssociativeArray(untyped __php__("$_SERVER"));
 			for(k in h.keys()) {
 				if(k.substr(0,5) == "HTTP_") {
-					clientHeaders.set(k.substr(5).toLowerCase().replace("_", "-").ucwords(), h.get(k));
+					clientHeaders.add(k.substr(5).toLowerCase().replace("_", "-").ucwords(), h.get(k));
 				}
 			}
 			if (h.exists("CONTENT_TYPE"))
@@ -228,7 +286,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	{
 		if (null == authorization)
 		{
-			authorization = { user : null, pass : null };
+			authorization = { user:null, pass:null };
 			untyped if(__php__("isset($_SERVER['PHP_AUTH_USER'])"))
 			{
 				authorization.user = __php__("$_SERVER['PHP_AUTH_USER']");
@@ -239,21 +297,21 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	}
 	
 	static var paramPattern = ~/^([^=]+)=(.*?)$/;
-	static function getHashFromString(s : String)
+	static function getHashFromString(s:String):MultiValueMap<String>
 	{
-		var hash = new StringMap();
+		var qm = new MultiValueMap();
 		for (part in s.split("&"))
 		{
 			if (!paramPattern.match(part))
 				continue;
-			hash.set(
+			qm.add(
 				StringTools.urlDecode(paramPattern.matched(1)),
 				StringTools.urlDecode(paramPattern.matched(2)));
 		}
-		return hash;
+		return qm;
 	}
 	
-	static function getHashFrom(a : php.NativeArray)
+	static function getHashFrom(a:php.NativeArray)
 	{
 		if(untyped __call__("get_magic_quotes_gpc"))
 			untyped __php__("reset($a); while(list($k, $v) = each($a)) $a[$k] = stripslashes((string)$v)");
