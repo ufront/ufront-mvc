@@ -141,7 +141,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		try {
 			_parse_multipart(
 				function(p,f) { doPart(new String(p),if( f == null ) null else new String(f)); },
-				function(buf,pos,len) { doData(new haxe.io.Bytes(untyped __dollar__ssize(buf),buf),pos,len); }
+				function(buf,pos,len) { doData(untyped new haxe.io.Bytes(__dollar__ssize(buf),buf),pos,len); }
 			);
 		}
 		catch ( e:Dynamic ) errors.push( 'Failed to run _parse_multipart: $e' );
