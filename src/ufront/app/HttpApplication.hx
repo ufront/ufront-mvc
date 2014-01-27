@@ -349,8 +349,9 @@ class HttpApplication
 				done.trigger( Success(Noise) );
 			}
 			else {
+				var moduleCb = m.a;
 				var moduleResult = 
-					try m.a( ctx ) 
+					try moduleCb( ctx ) 
 					catch ( e:Dynamic ) {
 						var pos = m.b;
 						#if (!macro && debug) ctx.ufLog( 'Caught error $e while executing module ${pos.className}.${pos.methodName} in HttpApplication.executeModules()' ); #end
