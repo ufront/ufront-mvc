@@ -207,7 +207,7 @@ class ViewResult extends ActionResult {
 					finalOut = viewOut;
 				}
 				else {
-					combinedData["viewContent"] = viewOut;
+					combinedData.set( "viewContent", viewOut );
 					try 
 						finalOut = layout.execute( combinedData ) 
 					catch 
