@@ -162,7 +162,7 @@ class DefaultUfrontConfiguration {
 				#if ufront_easyauth 
 					EasyAuth.getFactory()
 				#else 
-					YesBoss.getFactory() 
+					YesBossAuthHandler.getFactory() 
 				#end
 		}
 	}
