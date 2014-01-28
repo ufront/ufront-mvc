@@ -162,6 +162,7 @@ class ErrorPageHandler implements UFErrorHandler
 	/**
 		Turns an `Array<StackItem>` into an `Array<String>`, ready to print.
 	**/
+	@:access( haxe.CallStack )
 	public static function errorStackItems( stack:Array<StackItem> ):Array<String> {
 		var arr = [];
 
@@ -170,31 +171,8 @@ class ErrorPageHandler implements UFErrorHandler
 			stack = stack.slice( 2 );
 		#end
 
-		for( item in stack )
-			arr.push( stackItemToString(item) );
+		var arr = CallStack.toString( stack ).split( "\n" );
 
 		return arr;
-	}
-
-	private static function stackItemToString( s:StackItem ) {
-		switch( s ) {
-			case Module( m ):
-				return 'module $m';
-			case CFunction:
-				return "a C function";
-			case FilePos( s, file, line ):
-				var r = "";
-				if( s != null ) {
-					r += stackItemToString( s ) + " (";
-				}
-				r += '$file line $line';
-				if( s != null ) 
-					r += ")";
-				return r;
-			case Method( cname, meth ):
-				return '$cname.$meth';
-			case #if (haxe_ver >= 3.1) LocalFunction(n) #else Lambda(n) #end:
-				return 'local function #$n';
-		}
 	}
 }
