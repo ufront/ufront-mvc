@@ -1,6 +1,7 @@
 package ufront.handler;
 
 import haxe.PosInfos;
+import ufront.web.Controller;
 import ufront.web.Dispatch;
 import ufront.app.UFInitRequired;
 import ufront.app.UFRequestHandler;
@@ -98,6 +99,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 		public function dispose( app:HttpApplication ):Surprise<Noise,HttpError> {
 			dispatchConfig = null;
 			dispatch = null;
+			injector = null;
 			return Sync.success();
 		}
 
@@ -157,7 +159,16 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 					// Inject into our controller (if it already has been injected, no matter...)
 					switch Type.typeof( dispatch.controller ) {
 						case TClass( cl ): 
-							requestInjector.injectInto( dispatch.controller );
+							if ( Std.is(dispatch.controller, Controller) ) {
+								// Set "context", which will do injection on the controller as well
+								var c:Controller = cast dispatch.controller;
+								if ( c.context==null )
+									c.context = actionContext;
+							}
+							else {
+								// Do normal injection
+								requestInjector.injectInto( dispatch.controller );
+							}
 						default:
 					}
 				});

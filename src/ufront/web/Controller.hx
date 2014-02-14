@@ -2,6 +2,8 @@ package ufront.web;
 
 import haxe.PosInfos;
 import ufront.web.context.ActionContext;
+import ufront.web.result.ActionResult;
+using tink.CoreApi;
 
 /**
 	A simple base controller class.  
@@ -17,13 +19,24 @@ class Controller
 
 		This is usually injected by `ufront.web.DispatchModule`.
 	**/
-	@inject public var context:ActionContext;
+	public var context(default,set):ActionContext;
 
 	/**
 		Empty constructor.  
 		Included so that you don't need to manually specify a constructor in your controller when you don't need it.
 	**/
-	public function new() {}
+	public function new( ?context:ActionContext ) {
+		if ( context!=null ) this.context = context;
+	}
+
+	function set_context( c:ActionContext ) {
+		if ( c!=null ) c.httpContext.injector.injectInto(this);
+		return this.context = c;
+	}
+
+	public function execute():Surprise<ActionResult,HttpError> {
+		return Future.sync( Failure(HttpError.internalServerError('Field execute() in ufront.web.Controller is an abstract method, please override it in ${this.toString()} ')) );
+	}
 
 	/**
 		A default toString() to aid in debugging.  Just prints the current class name.
