@@ -38,7 +38,6 @@ class TmpFileUploadMiddleware implements UFMiddleware
 	var files:Array<TmpFileUploadSync>;
 
 	public function new() {
-		trace ("in upload constructor");
 		files = [];
 	}
 
@@ -48,7 +47,6 @@ class TmpFileUploadMiddleware implements UFMiddleware
 		If the chosen `subDir` does not exist, it will attempt to create it, but only one level deep - it will not recursively create directories for you.
 	**/
 	public function requestIn( ctx:HttpContext ):Surprise<Noise,HttpError> {
-		trace ("in upload requestIn");
 		try {
 			var file:FileOutput = null,
 			    postName:String = null,
@@ -61,7 +59,6 @@ class TmpFileUploadMiddleware implements UFMiddleware
 			if ( !FileSystem.exists(dir) ) try FileSystem.createDirectory( dir ) catch ( e:Dynamic ) throw 'Failed to create upload directory: $e';
 
 			function onPart( pName, fName ) {
-				trace ("in upload part: " + pName);
 				// Start writing to a temp file
 				postName = pName;
 				origFileName = fName;
