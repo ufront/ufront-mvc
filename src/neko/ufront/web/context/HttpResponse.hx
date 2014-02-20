@@ -11,12 +11,10 @@ import thx.error.Error;
 using StringTools;
 
 class HttpResponse extends ufront.web.context.HttpResponse
-{      
-	var _flushed : Bool;
+{
 	public function new()
 	{
 		super();
-		_flushed = false; 
 		_init();
 	}
 	

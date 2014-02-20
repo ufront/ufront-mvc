@@ -75,6 +75,7 @@ class HttpResponse
 	var _buff:StringBuf;
 	var _headers:HashList<String>;
 	var _cookies:StringMap<HttpCookie>;
+	var _flushed:Bool;
 
 	/**
 		Use DEFAULT_CHARSET, DEFAULT_STATUS.  contentType is null by default.
@@ -84,6 +85,16 @@ class HttpResponse
 		contentType = null;
 		charset = DEFAULT_CHARSET;
 		status = DEFAULT_STATUS;
+		_flushed = false;
+	}
+
+	/**
+		Prevent the response from flushing.
+
+		This is useful if some code has written to the output manually, rather than writing to the response.
+	**/
+	public function preventFlush():Void {
+		_flushed = true;
 	}
 
 	/**

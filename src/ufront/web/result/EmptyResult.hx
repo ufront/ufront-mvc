@@ -10,9 +10,13 @@ import ufront.core.Sync;
 
 class EmptyResult extends ActionResult
 {
-	public function new(){}
+	var preventFlush:Bool;
+	public function new( ?preventFlush=false ){
+		this.preventFlush = preventFlush;
+	}
 	
 	override public function executeResult( actionContext:ActionContext ) {
+		if ( preventFlush ) actionContext.response.preventFlush();
 		return Sync.success();
 	}
 }

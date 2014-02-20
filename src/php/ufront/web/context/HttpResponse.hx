@@ -12,14 +12,6 @@ using StringTools;
 
 class HttpResponse extends ufront.web.context.HttpResponse
 {
-	var _flushed : Bool;
-	
-	public function new()
-	{
-		super();
-		_flushed = false;
-	}
-	
 	override function flush()
 	{
 		if (_flushed) return;

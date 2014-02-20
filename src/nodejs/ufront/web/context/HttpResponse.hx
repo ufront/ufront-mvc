@@ -11,13 +11,12 @@ using StringTools;
 
 class HttpResponse extends ufront.web.HttpResponse
 {    
-	var _flushed : Bool; 
 	var _r : Response;
+
 	public function new(response : Response)
 	{
 		super();
 		_r = response;
-		_flushed = false;
 	}
 	
 	override function flush()
