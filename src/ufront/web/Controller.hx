@@ -70,7 +70,9 @@ using tink.CoreApi;
 
 	The build macro should not effect any existing fields other than `execute()`.
 **/
+#if !macro
 @:autoBuild( ufront.web.ControllerMacros.processRoutesAndGenerateExecuteFunction() )
+#end
 class Controller
 {
 	/** 
