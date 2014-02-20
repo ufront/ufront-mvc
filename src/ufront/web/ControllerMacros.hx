@@ -478,7 +478,7 @@ class ControllerMacros {
 		// Execute the call, wrap the results
 		var functionCall = { expr: ECall(fnIdent,fnArgs), pos: p };
 		var wrappedFunctionCall = wrapReturnExpression( functionCall, routeInfo.action.name, routeInfo.voidReturn, lines );
-		lines.push( macro var result:tink.core.Future.Surprise<ufront.web.result.ActionResult,ufront.web.HttpError> = cast $wrappedFunctionCall );
+		lines.push( macro var result:tink.core.Future.Surprise<ufront.web.result.ActionResult,ufront.web.HttpError> = $wrappedFunctionCall );
 
 		var setContextActionResult = macro setContextActionResultWhenFinished( result );
 		lines.push( setContextActionResult );
