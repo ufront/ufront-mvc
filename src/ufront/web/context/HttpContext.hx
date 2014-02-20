@@ -11,7 +11,6 @@ import thx.error.NullArgument;
 import ufront.web.url.filter.UFUrlFilter;
 import thx.error.AbstractMethod;
 import ufront.web.session.*;
-import ufront.web.result.ActionResult;
 import ufront.auth.*;
 import ufront.web.url.*;
 import ufront.web.url.filter.*;
@@ -99,9 +98,6 @@ class HttpContext
 
 	/** The `ActionContext` used in processing the request. Will be null until the application has processed it's dispatch **/
 	public var actionContext:ActionContext;
-
-	/** The `ActionResult` that came from processing the request. Will be null until the action has been executed. **/
-	public var actionResult:ActionResult;
 
 	/**
 		The completion progress of the current request. Setting these values will affect the flow of the request.

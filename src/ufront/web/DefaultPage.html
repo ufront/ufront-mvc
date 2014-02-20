@@ -11,7 +11,7 @@
 			<p>Your new Ufront App is almost ready to go. You will need to add some routes and let ufront know about them:</p>
 			<pre><code>
 	app = new UfrontApplication({
-		dispatchConfig: ufront.web.Dispatch.make( new Routes() );
+		indexController: MySiteController,
 	});
 	app.execute();
 			</code></pre>

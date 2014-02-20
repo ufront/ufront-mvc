@@ -72,17 +72,15 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 		}
 	
 		/** 
-			Construct using a dispatchConfig 
+			Constructor 
 
 			Example usage:
 
 			```
 			var routes = new MyRoutes();
 			var dispatchConfig = ufront.web.Dispatch.make( routes );
-			var dispatchModule = new DispatchModule( dispatchConfig );
-
-			// or, more concisely:
-			new DispatchModule( ufront.web.Dispatch.make(new MyRouteOrController()) );
+			var dispatchHandler = new DispatchHandler();
+			dispatchHandler.loadRoutesConfig( dispatchConfig );
 			```
 		**/
 		public function new() {
@@ -121,7 +119,6 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 		function processRequest( context:HttpContext ):Outcome<Noise,HttpError> {
 			// Update the contexts
 			var actionContext = new ActionContext( context );
-			context.actionContext = actionContext;
 			
 			// Set up the injector 
 			var requestInjector = injector.createChildInjector();
@@ -199,7 +196,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 			try {
 				// TODO - make this async...
 				var result = dispatch.executeDispatchRequest();
-				context.actionResult = createActionResult( result );
+				context.actionContext.actionResult = createActionResult( result );
 				t.trigger( Success(Noise) );
 			}
 			catch ( e:DispatchError ) {
@@ -220,7 +217,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 		function executeResult( context:HttpContext ):Surprise<Noise,HttpError> {
 			return
 				try 
-					context.actionResult.executeResult( context.actionContext )
+					context.actionContext.actionResult.executeResult( context.actionContext )
 				catch ( e:Dynamic ) {
 					var p = HttpError.fakePosition( context.actionContext, "executeResult", ["actionContext"] );
 					#if debug context.ufError( 'Caught error in DispatchHandler.executeAction while executing ${p.className}.${p.methodName}(${p.customParams.join(",")})' ); #end
@@ -255,7 +252,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 
 }
 
-class DefaultRoutes extends ufront.web.Controller {
+class DefaultRoutes extends ufront.web.DispatchController {
 	static var _emptyUfrontString = CompileTime.readFile( "ufront/web/DefaultPage.html" );
 	function doDefault( d:Dispatch ) {
 		ufTrace("Your Ufront App is almost ready.");

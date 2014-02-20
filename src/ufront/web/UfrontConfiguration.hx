@@ -1,5 +1,6 @@
 package ufront.web;
 
+import ufront.api.UFApiContext;
 import ufront.view.FileViewEngine;
 import ufront.view.UFViewEngine;
 import ufront.web.Controller;
@@ -21,6 +22,28 @@ import ufront.web.upload.TmpFileUploadMiddleware;
 	Used in `ufront.web.UfrontApplication`
 **/
 typedef UfrontConfiguration = {
+
+	/**
+		The index controller that handles standard web requests.
+
+		This controller will handle all requests given to `ufront.handler.MVCHandler`.
+		It may use sub-controllers to handle some requests.
+
+		This is typed as `IndexController` so that we know it can be constructed using a single argument: the `ufront.web.context.ActionContext`.
+
+		Default = `ufront.web.DefaultController`
+	**/
+	?indexController:Class<IndexController>,
+
+	/**
+		The `UFApiContext` API to expose with ufront-remoting.
+
+		If null, the remoting module will not be enabled.
+
+		Default = null.
+	**/
+	?remotingApi:Class<UFApiContext>,
+
 	/** 
 		Is mod_rewrite or similar being used?  
 		If not, query strings will be filtered out of the URLs.
@@ -146,6 +169,8 @@ class DefaultUfrontConfiguration {
 		var inlineSession = new InlineSessionMiddleware();
 		var uploadMiddleware = new TmpFileUploadMiddleware();
 		return {
+			indexController:DefaultController,
+			remotingApi:null,
 			urlRewrite:true,
 			basePath:'/',
 			contentDirectory:'uf-content',
@@ -166,4 +191,30 @@ class DefaultUfrontConfiguration {
 				#end
 		}
 	}
+}
+
+/**
+	A simple controller to use if no other is specified.
+**/
+class DefaultController extends ufront.web.Controller {
+	@:route( '/*' )
+	function showMessage() {
+		ufTrace("Your Ufront App is almost ready.");
+		return CompileTime.readFile( "ufront/web/DefaultPage.html" );
+	}
+}
+
+/**
+	Hold onto this for when I write some unit tests...
+**/
+class TestController extends ufront.web.Controller {
+	@:route( '/' ) public function home() return "Home";
+	@:route( '/staff.html' ) public function staff() return "Staff";
+	@:route( '/staff/$name/' ) public function viewStaff( name:String ) return 'Staff: $name';
+	@:route( '/contact/', GET ) public function contact() return "Contact <form method='POST' action='/contact/'><input type='submit'/></form>";
+	@:route( '/contact/', POST ) public function emailContact( args:{ subject:String, ?amount:Int } ) return 'Send email about ${args.subject}';
+	@:route( '/pages/*' ) public function pageCatchAll( rest:Array<String> ) return new ufront.web.result.ContentResult( rest.join("/"), "text/html" );
+	@:route( '/void/' ) public function voidReturn() { Sys.println('void return'); };
+	
+	@:route( '/default/*' ) public var d:DefaultController;
 }
