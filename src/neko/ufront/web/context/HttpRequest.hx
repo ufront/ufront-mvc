@@ -37,13 +37,12 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	{
 		if (null == queryString) {
 			var v = _get_params_string();
-			queryString = (v!=null) ? new String(v):null;
-			if( v == null )
-				queryString = null;
-			else
-				queryString = new String(v);
-			if (null == queryString)
-				queryString = "";
+			queryString = (v!=null) ? new String(v) : "";
+			
+			var indexOfHash = queryString.indexOf("#");
+			if (indexOfHash>-1) {
+				queryString = queryString.substring( 0, indexOfHash );
+			}
 		}
 		return queryString;
 	}
