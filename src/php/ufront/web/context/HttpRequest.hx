@@ -169,9 +169,8 @@ class HttpRequest extends ufront.web.context.HttpRequest
 			return new MultiValueMap();
 		if (null == post)
 		{
-			post = getHashFromString(postString);
-			if ( Lambda.empty(post) )
-			{
+			if ( "multipart/form-data"==clientHeaders.get("ContentType") ) {
+				post = new MultiValueMap();
 				if (untyped __call__("isset", __php__("$_POST")))
 				{
 					var postNames:Array<String> = untyped __call__( "new _hx_array",__call("array_keys", __php__("$_POST" )));
@@ -181,12 +180,13 @@ class HttpRequest extends ufront.web.context.HttpRequest
 						if ( untyped __call__("is_array", val) ) {
 							// For each value in the array, add it to our post object.
 							var h = php.Lib.hashOfAssociativeArray( val );
-							for ( k in h.keys() )
+							for ( k in h.keys() ) {
 								if ( untyped __call__("is_string", val) )
 									post.add( k, h.get(k) );
 								// else: Note that we could try recurse here if there's another array, but for now I'm 
 								// giving ufront a rule: only single level `fruit[]` type input arrays are supported,
 								// any recursion goes beyond this, so let's not bother.
+							}
 						}
 						else if ( untyped __call__("is_string", val) ) {
 							post.add( name, cast val );
@@ -194,6 +194,10 @@ class HttpRequest extends ufront.web.context.HttpRequest
 					}
 				}
 			}
+			else {
+				post = getHashFromString(postString);
+			}
+
 			if (untyped __call__("isset", __php__("$_FILES")))
 			{
 				var parts:Array<String> = untyped __call__("new _hx_array",__call__("array_keys", __php__("$_FILES")));

@@ -53,12 +53,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 			return "";
 		if (null == postString) {
 			var v = _get_post_data();
-			if( v == null )
-				postString = null;
-			else
-				postString = new String(v);
-			if (null == postString)
-				postString = "";
+			postString = (v!=null) ? new String(v) : "";
 		}
 		return postString;
 	}
@@ -175,11 +170,13 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	{
 		if (httpMethod == "GET")
 			return new MultiValueMap();
-		if (null == post)
-		{
-			post = getHashFromString(postString);
-			if ( Lambda.empty(post) && _parsed==false )
-				parseMultipart();
+		if ( null==post ) {
+			if ( "multipart/form-data"==clientHeaders.get("ContentType") ) {
+				if ( _parsed==false ) parseMultipart();
+			}
+			else {
+				post = getHashFromString(postString);
+			}
 		}
 		return post;
 	}
