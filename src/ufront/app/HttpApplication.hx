@@ -399,8 +399,8 @@ class HttpApplication
 			//   - the LogHandlers
 			//   - the "flush" stage...
 			// rethrow the error, and hopefully they'll come to this line number and figure out what happened.
-			Sys.println( 'You had an error after your error handler had already run.  Last active module: $currentModule<br/>');
-			throw err;
+			var msg = 'You had an error after your error handler had already run.  Last active module: $currentModule.';
+			throw '$msg  $err. Error data: ${err.data}';
 		}
 	}
 
