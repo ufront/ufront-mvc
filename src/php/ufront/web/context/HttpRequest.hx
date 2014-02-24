@@ -213,8 +213,13 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	
 	override function get_cookies()
 	{
-		if (null == cookies)
-			cookies = Lib.hashOfAssociativeArray(untyped __php__("$_COOKIE"));
+		if (null == cookies) {
+			cookies = new MultiValueMap();
+			var h = Lib.hashOfAssociativeArray(untyped __php__("$_COOKIE"));
+			for ( k in h.keys() ) {
+				cookies.add( k, h.get(k) );
+			}
+		}
 		return cookies;
 	}
 	
