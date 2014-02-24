@@ -310,6 +310,20 @@ class ControllerMacros {
 	}
 
 	/**
+		Check if a complex type is either optional (has a ?), or is `Null<T>`
+	**/
+	static function isComplexTypeOptional( argType:ComplexType ) {
+		switch argType {
+			case TOptional(_): 
+				return true;
+			case TPath(tpath):
+				return ( tpath.name==null && tpath.pack.length==0 );
+			case _: 
+				return false;
+		}
+	}
+
+	/**
 		Process an `args:{}` argument on a routing function.
 
 		Return AKParams if it is all good.
@@ -326,7 +340,9 @@ class ControllerMacros {
 						var member:Member = f;
 						var paramVar = member.getVar().sure();
 						var argType = getRouteArgType( paramVar.type ).sure();
-						var optional = member.extractMeta(":optional").isSuccess();
+						var hasOptionalMeta = member.extractMeta(":optional").isSuccess();
+						var isNullable = isComplexTypeOptional( paramVar.type );
+						var optional = hasOptionalMeta || isNullable;
 						params.push({
 							name: f.name,
 							type: argType,
@@ -502,7 +518,7 @@ class ControllerMacros {
 			case AKPart( name, partNum, type ):
 				var ident = name.resolve();
 				var expr = macro uriParts[$v{partNum}];
-				var lines = createReadExprForType( name, expr, type );
+				var lines = createReadExprForType( name, expr, type, false );
 				return { ident: ident, lines: lines };
 			case AKParams( params, allParamsOptional ):
 				var lines = [];
@@ -511,7 +527,8 @@ class ControllerMacros {
 				for ( p in params ) {
 
 					// If it is not optional, add check to make sure it is present
-					if ( p.optional==false && allParamsOptional==false ) {
+					var isOptional = p.optional || allParamsOptional;
+					if ( false==isOptional ) {
 						var checkExists = macro if ( !params.exists($v{p.name}) ) throw ufront.web.HttpError.badRequest();
 						lines.push( checkExists );
 					}
@@ -519,7 +536,7 @@ class ControllerMacros {
 					var tmpIdentName = '_param_tmp_'+p.name;
 					var tmpIdent = tmpIdentName.resolve();
 					var getValueExpr = macro params.get($v{p.name});
-					for ( l in createReadExprForType(tmpIdentName, getValueExpr, p.type) ) {
+					for ( l in createReadExprForType(tmpIdentName, getValueExpr, p.type, isOptional) ) {
 						lines.push( l );
 					}
 					fields.push( { field: p.name, expr: tmpIdent } );
@@ -545,7 +562,7 @@ class ControllerMacros {
 		- validates the input
 		- declares and sets the value of the ident
 	**/
-	static function createReadExprForType( identName:String, readExpr:ExprOf<String>, type:RouteArgType ):Array<Expr> {
+	static function createReadExprForType( identName:String, readExpr:ExprOf<String>, type:RouteArgType, optional:Bool ):Array<Expr> {
 		// Reification of `macro var $i{identName} = $readExpr` isn't working, so I'm using this helper
 		function createVarDecl( name:String, expr:Expr ) {
 			return { 
@@ -565,11 +582,11 @@ class ControllerMacros {
 			case SATInt: 
 				var declaration = createVarDecl( identName, macro Std.parseInt($readExpr) );
 				var check = macro if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest();
-				[declaration, check];
+				( optional ) ? [declaration] : [declaration,check];
 			case SATFloat:
 				var declaration = createVarDecl( identName, macro Std.parseFloat($readExpr) );
 				var check = macro if (Math.isNan($i{identName})) throw ufront.web.HttpError.badRequest();
-				[declaration, check];
+				( optional ) ? [declaration] : [declaration,check];
 			case SATBool: 
 				var readStr = macro var v = $readExpr;
 				var transformToBool = createVarDecl( identName, macro (v!="false" && v!="0" && v!="null") );
