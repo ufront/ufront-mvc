@@ -257,7 +257,11 @@ class HttpRequest extends ufront.web.context.HttpRequest
 			var h = Lib.hashOfAssociativeArray(untyped __php__("$_SERVER"));
 			for(k in h.keys()) {
 				if(k.substr(0,5) == "HTTP_") {
-					clientHeaders.add(k.substr(5).toLowerCase().replace("_", "-").ucwords(), h.get(k));
+					var headerName:String = k.substr(5).toLowerCase().replace("_", "-").ucwords();
+					var headerValues:String = h.get(k);
+					for ( val in headerValues.split(",") ) {
+						clientHeaders.add(headerName, val.trim());
+					}
 				}
 			}
 			if (h.exists("CONTENT_TYPE"))

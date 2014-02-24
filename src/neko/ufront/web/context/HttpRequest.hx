@@ -234,7 +234,11 @@ class HttpRequest extends ufront.web.context.HttpRequest
 			clientHeaders = new StringMap();
 			var v = _get_client_headers();
 			while( v != null ) {
-				clientHeaders.add(new String(v[0]), new String(v[1]));
+				var headerName = new String(v[0]);
+				var headerValues = new String(v[1]);
+				for ( val in headerValues.split(",") ) {
+					clientHeaders.add( headerName, val.trim() );
+				}
 				v = cast v[2];
 			}
 		}
