@@ -29,7 +29,7 @@ class ActionResult {
 		else {
 			var actionResultValue = Types.as( resultValue, ActionResult );
 			if ( actionResultValue==null ) {
-				actionResultValue = new ContentResult( Std.string(resultValue), "text/html" );
+				actionResultValue = new ContentResult( Std.string(resultValue) );
 			}
 			return actionResultValue;
 		}
