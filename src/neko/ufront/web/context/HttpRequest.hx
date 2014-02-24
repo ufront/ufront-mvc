@@ -269,17 +269,16 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		if (null == authorization)
 		{
 			authorization = { user:null, pass:null };
-			var h = clientHeaders.get("Authorization");
 			var reg = ~/^Basic ([^=]+)=*$/;
+			var h = clientHeaders.get("Authorization");
 			if( h != null && reg.match(h) ){
 				var val = reg.matched(1);
 				untyped val = new String(_base_decode(val.__s,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".__s));
 				var a = val.split(":");
 				if( a.length != 2 ){
-					throw new Error("Unable to decode authorization.");
+					throw "Unable to decode authorization.";
 				}
-				authorization.user = a[0];
-				authorization.pass = a[1];
+				authorization = {user: a[0],pass: a[1]};
 			}
 		}
 		return authorization;
@@ -310,6 +309,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	static var _get_cwd:Dynamic;
 	static var _get_http_method:Dynamic;
 	static var _parse_multipart:Dynamic;
+	static var _base_decode = Lib.load("std","base_decode",2);
 	static var _inited = false;
 	static function _init()
 	{
