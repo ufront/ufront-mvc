@@ -37,7 +37,6 @@ class ControllerMacros {
 		for ( member in classBuilder ) if ( !member.isStatic ) {
 			switch getRouteAndMethodFromMember(member) {
 				case Success( routeAndMethod ):
-					
 					switch member.kind {
 						case FFun(fn):
 							var routeInfo = getRouteInfoFromFn( member, fn, routeAndMethod );
@@ -194,13 +193,16 @@ class ControllerMacros {
 		var finalPart = routeParts[routeParts.length-1];
 		var catchAll = finalPart!=null && finalPart.endsWith("*");
 		var method = routeAndMethod.b;
-		var args = getArgumentInfo( fn.args, routeParts, member.pos );
+		var argumentInfo = getArgumentInfo( fn.args, routeParts, member.pos );
+		var args = argumentInfo.a;
+		var requiredLength = argumentInfo.b;
 		if ( catchAll ) routeParts.pop();
 		var voidReturn = checkIfReturnVoid( fn );
 
 		return {
 			action: member,
 			routeParts: routeParts,
+			requiredLength: requiredLength,
 			catchAll: catchAll,
 			method: method,
 			args: args,
@@ -247,8 +249,18 @@ class ControllerMacros {
 
 	/**
 		Given arguments on a routing function, extract info about the type of argument so we can use it in routing.
+
+		Return a pair containing an Array<ArgumentKind>, and the number of required route parts
 	**/
-	static function getArgumentInfo( fnArgs:Array<FunctionArg>, routeParts:Array<String>, pos:Pos ) {
+	static function getArgumentInfo( fnArgs:Array<FunctionArg>, routeParts:Array<String>, pos:Pos ):Pair<Array<ArgumentKind>,Int> {
+		var requiredLength = routeParts.length;
+
+		// If the final part is a wildcard, then it means that part isn't required.
+		// We check here rather than where there is an argument, because sometimes you can have a wildcard but no "rest:Array<String>" arg, 
+		// and in that case we still want to lower the required parts..
+		if ( routeParts[routeParts.length-1]=="*" ) 
+			requiredLength--;
+
 		var argumentInfo = [];
 		for ( arg in fnArgs ) {
 			if ( arg.type!=null ) {
@@ -264,22 +276,39 @@ class ControllerMacros {
 					if ( routeParts.length>0 && routeParts[routeParts.length-1]=="*" ) {
 						argKind = AKRest;
 					}
-					else
-						Context.error( 'The final part of your route "${routeParts.join("/")}" was not a "*" wildcard, so you cannot use a `rest:Array<String>` argument.', pos );
+					else Context.error( 'The final part of your route "${routeParts.join("/")}" was not a "*" wildcard, so you cannot use a `rest:Array<String>` argument.', pos );
 
 				}
 				else {
 
-					switch getRouteArgType( arg.type ) {
-						case Success(routeArgType):
-							var routePartIndex = routeParts.indexOf("$"+arg.name);
-							if ( routePartIndex!=-1 ) 
-								argKind = AKPart( arg.name, routePartIndex, routeArgType );
-							else
-								Context.error( 'The argument `${arg.name}` was not supplied in route "${routeParts.join("/")}".', pos ); 
-						case Failure(_):
+					var routePartIndex = routeParts.indexOf( "$"+arg.name );
+					if ( routePartIndex==-1 ) 
+						Context.error( 'The argument `${arg.name}` was not supplied in route "${routeParts.join("/")}".', pos ); 
+
+					var isOptional = arg.opt || arg.value!=null;
+					if ( isOptional ) {
+						// After an optional route part, all remaining route parts should be optional
+						for ( i in routePartIndex...routeParts.length ) {
+							var part = routeParts[i];
+							var arg = getFunctionArgFromRoutePart( fnArgs, part );
+							if ( arg==null || (arg.opt==false && arg.value==null) )
+								Context.error( 'The argument `${arg.name}` was optional, but the route part "$part" which came after it was not optional.', pos );
+						}
+
+						if ( requiredLength>routePartIndex )
+							requiredLength = routePartIndex;
 					}
 
+					switch getRouteArgType( arg.type ) {
+						case Success(routeArgType):
+							var defaultVal = 
+								if ( isOptional && arg.value!=null ) arg.value
+								else if ( isOptional ) macro null
+								else null
+							;
+							argKind = AKPart( arg.name, routePartIndex, routeArgType, isOptional, defaultVal );
+						case Failure(_):
+					}
 				}
 
 				if ( argKind==null ) {
@@ -292,7 +321,19 @@ class ControllerMacros {
 			}
 			else Context.warning( 'Please provide explicit type information for argument ${arg.name}', pos );
 		}
-		return argumentInfo;
+		return new Pair( argumentInfo, requiredLength );
+	}
+
+	/**
+		Given a route part, eg `$id`, and a list of function args, find the correct arg, eg `id:Int`
+	**/
+	static function getFunctionArgFromRoutePart( fnArgs:Array<FunctionArg>, routePart:String ):FunctionArg {
+		if ( routePart.charAt(0)!="$" ) 
+			return null;
+
+		var argName = routePart.substr(1);
+		var arg = [ for (a in fnArgs) if (a.name==argName) a ][0];
+		return arg;
 	}
 
 	/**
@@ -429,11 +470,18 @@ class ControllerMacros {
 		}
 
 		// Check the length is correct
-		var numParts = routeInfo.routeParts.length;
-		if ( routeInfo.catchAll )
-			conditions.push( macro $v{numParts}<=uriParts.length );
-		else 
-			conditions.push( macro $v{numParts}==uriParts.length );
+		var minParts = routeInfo.requiredLength;
+		var maxParts = routeInfo.routeParts.length;
+		if ( routeInfo.catchAll ) {
+			if ( minParts>0 )
+				conditions.push( macro $v{minParts}<=uriParts.length );
+		}
+		else if ( minParts==maxParts ) {
+			conditions.push( macro $v{minParts}==uriParts.length );
+		}
+		else {
+			conditions.push( macro ($v{minParts}<=uriParts.length && $v{maxParts}>=uriParts.length) );
+		}
 
 		var pos = 0;
 		for ( part in routeInfo.routeParts ) {
@@ -442,26 +490,12 @@ class ControllerMacros {
 				conditions.push( macro uriParts[$v{pos}]==$v{part} );
 			}
 			else {
-				// Check capture segments not empty...
-				conditions.push( macro uriParts[$v{pos}].length>0 );
+				// Check required capture segments exist and are not empty...
+				if ( pos<minParts )
+					conditions.push( macro uriParts[$v{pos}].length>0 );
 			}
 			pos++;
 		}
-
-		//Commenting param check out for now - I think it would be better to let the route match,
-		//and throw a HttpError.badRequest() if a param is missing...
-		// Check all params exist
-		// for ( arg in routeInfo.args ) switch arg {
-		// 	case AKParams( params, allOptional ):
-		// 		if ( false==allOptional ) {
-		// 			for ( param in params ) {
-		// 				param.name;
-		// 				if ( false==param.optional )
-		// 					conditions.push( macro params.exists($v{param.name}) );
-		// 			}
-		// 		}
-		// 	default:
-		// }
 
 		return createBooleanAndChain( conditions );
 	}
@@ -515,9 +549,12 @@ class ControllerMacros {
 	**/
 	static function makeExprToReadArgFromRequest( arg:ArgumentKind ):{ ident:Expr, lines:Array<Expr> } {
 		switch arg {
-			case AKPart( name, partNum, type ):
+			case AKPart( name, partNum, type, optional, defaultValue ):
 				var ident = name.resolve();
-				var expr = macro uriParts[$v{partNum}];
+				var expr = 
+					if ( optional ) macro (uriParts[$v{partNum}]!=null && uriParts[$v{partNum}]!="") ? uriParts[$v{partNum}] : $defaultValue
+					else macro uriParts[$v{partNum}]
+				;
 				var lines = createReadExprForType( name, expr, type, false );
 				return { ident: ident, lines: lines };
 			case AKParams( params, allParamsOptional ):
@@ -759,6 +796,7 @@ class ControllerMacros {
 typedef RouteInfo = {
 	action:Member,
 	routeParts:Array<String>,
+	requiredLength:Int,
 	catchAll:Bool,
 	method:Null<String>,
 	args:Array<ArgumentKind>,
@@ -766,7 +804,7 @@ typedef RouteInfo = {
 }
 
 enum ArgumentKind {
-	AKPart( name:String, partNum:Int, type:RouteArgType );
+	AKPart( name:String, partNum:Int, type:RouteArgType, optional:Bool, defaultValue:Expr );
 	AKParams( params:Array<{ name:String, type:RouteArgType, optional:Bool }>, ?allOptional:Bool );
 	AKRest;
 }
