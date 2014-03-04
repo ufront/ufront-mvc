@@ -14,34 +14,6 @@ class FilePathResult extends FileResult
 {
 	static var BUF_SIZE = 4096;
 
-
-	static var extMap = [
-		// @todo: add complete list from http://en.wikipedia.org/wiki/Internet_media_type#List_of_common_media_types
-		
-		// Image
-		"jpg" => "image/jpeg",
-		"jpeg" => "image/jpeg",
-		"png" => "image/png",
-		"gif" => "image/gif",
-		"svg" => "image/svg+xml",
-		"tiff" => "image/tiff",
-
-		// Application (not exhaustive)
-		"zip" => "application/zip",
-		"atom" => "application/atom+xml",
-		"json" => "application/json",
-		"js" => "application/javascript",
-		"ogg" => "application/ogg",
-		"pdf" => "application/pdf",
-		"ps" => "application/postscript",
-		"rdf" => "application/rdf",
-		"rss" => "application/rss",
-		"woff" => "application/woff",
-		"xml" => "application/xml",
-		"dtd" => "application/xml-dtd",
-		"gz" => "application/gzip",
-	];
-
 	/** Gets or sets the path of the file that is sent to the response. */
 	public var fileName:String;
 	
@@ -51,11 +23,6 @@ class FilePathResult extends FileResult
 		@param fileDownloadName - file name to display to the client.  Default is null.  If non-null value is supplied, the file will be forced as a download to the client.
 	**/
 	public function new( ?fileName:String, ?contentType:String, ?fileDownloadName:String ) {
-		if ( contentType==null ) {
-			var ext = fileName.extension();
-			if ( extMap.exists(ext) ) contentType = extMap[ext];
-		}
-
 		super( contentType, fileDownloadName );
 		this.fileName = fileName;
 	}

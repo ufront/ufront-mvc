@@ -7,9 +7,9 @@ import ufront.core.Sync;
 class BytesResult extends FileResult
 {
 	/** The bytes of the file to be written to the response **/
-	public var bytes : Bytes;
+	public var bytes:Bytes;
 
-	public function new(?bytes : Bytes, ?contentType : String, ?fileDownloadName) {
+	public function new( ?bytes:Bytes, ?contentType:String, ?fileDownloadName:String ) {
 		super(contentType, fileDownloadName);
 		this.bytes = bytes;
 	}
