@@ -100,6 +100,7 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 	function processRequest( context:HttpContext ):Surprise<Noise,HttpError> {
 		var actionContext = new ActionContext( context );
 		setupRequestInjector( context );
+		actionContext.handler = this;
 
 		// Create the controller, inject into it, execute it...
 		try {
@@ -130,4 +131,6 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 				Future.sync( Failure(HttpError.wrap(e)) );
 			}
 	}
+
+	public function toString() return "ufront.handler.MVCHandler";
 }

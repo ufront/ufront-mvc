@@ -175,10 +175,7 @@ class ApiMacros
 	static function getClientConstructorField()
 	{
 		clientConstructorBlock = macro {
-			cnx = ufront.api.HttpAsyncConnectionWithTraces.urlConnect(url);
-			cnx.setErrorHandler(function (e:{ err:Dynamic, stack:String }) {
-				errorHandler(e.err, e.stack);
-			}); 
+			cnx = ufront.api.HttpAsyncConnectionWithTraces.urlConnect(url,errorHandler);
 		}
 		return {
 			pos: classPos,
@@ -191,7 +188,7 @@ class ApiMacros
 					expr: clientConstructorBlock,
 					args: [
 						{ value: null, type: macro :String, opt: false, name: "url" },
-						{ value: null, type: macro :Dynamic->String->Void, opt: false, name: "errorHandler" },
+						{ value: null, type: macro :ufront.api.HttpAsyncConnectionWithTraces.RemotingError->Void, opt: false, name: "errorHandler" },
 					]
 				}
 			),

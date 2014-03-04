@@ -48,8 +48,11 @@ class RemotingLogger implements UFLogHandler
 	function formatMessage( m:Message ):String {
 		// Make sure everything is toString()'d before we serialize it
 		m.msg = try Std.string( m.msg ) catch ( e:Dynamic ) "ERROR: unable to format message in RemotingLogger.formatMessage";
-		if ( m.pos.customParams != null)
-			m.pos.customParams = m.pos.customParams.map( function (v) return Std.string(v) );
+		if ( m.pos.customParams != null) {
+			m.pos.customParams = m.pos.customParams.map( function (v) {
+				return try Std.string(v) catch ( e:Dynamic ) "ERROR: unable to format customParams in RemotingLogger.formatMessage";
+			});
+		}
 
 		return "hxt" + haxe.Serializer.run(m);
 	}

@@ -70,9 +70,14 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 	public function handleRequest( httpContext:HttpContext ):Surprise<Noise,HttpError> {
 		var doneTrigger = Future.trigger();
 		if ( httpContext.request.clientHeaders.exists("X-Haxe-Remoting") ) {
-			
+			var actionContext = new ActionContext( httpContext );
+
 			// Set up the injector
 			var requestInjector = injector.createChildInjector();
+			requestInjector.mapValue( HttpContext, httpContext );
+			requestInjector.mapValue( HttpRequest, httpContext.request );
+			requestInjector.mapValue( HttpResponse, httpContext.response );
+			requestInjector.mapValue( ActionContext, actionContext );
 			requestInjector.mapValue( UFAuthHandler, httpContext.auth );
 			requestInjector.mapValue( Array, httpContext.messages, "messages" );
 			requestInjector.mapValue( String, httpContext.contentDirectory, "contentDirectory" );
@@ -105,7 +110,7 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 					throw 'Remoting call did not have parameter `__x` which describes which API call to make.  Aborting';
 				
 				// Execute the response ... TODO... can we make this support async?
-				remotingResponse = processRequest( params["__x"], context );
+				remotingResponse = processRequest( params["__x"], context, actionContext );
 				r.setOk();
 			}
 			catch ( e:Dynamic ) {
@@ -128,11 +133,20 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 		return doneTrigger.asFuture();
 	}
 
-	function processRequest( requestData:String, ctx:Context ):String {
+	@:access(haxe.remoting.Context)
+	function processRequest( requestData:String, ctx:Context, actionContext:ActionContext ):String {
 		var u = new Unserializer( requestData );
 		var path:Array<String> = u.unserialize();
-		var args:Array<String> = u.unserialize();
+		var args:Array<Dynamic> = u.unserialize();
+
+		var className = path.copy();
+		actionContext.handler = this;
+		actionContext.action = path[path.length-1];
+		actionContext.controller = ctx.objects.get( actionContext.action );
+		actionContext.args = args;
+
 		var data = ctx.call( path, args );
+
 		var s = new Serializer();
 		s.serialize( data );
 		return "hxr" + s.toString();
@@ -156,4 +170,6 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 			return '$serializedException';
 		#end
 	}
+
+	public function toString() return "ufront.handler.RemotingHandler";
 }

@@ -17,4 +17,5 @@ import ufront.web.HttpError;
 **/
 interface UFRequestHandler {
 	public function handleRequest( ctx:HttpContext ):Surprise<Noise,HttpError>;
+	public function toString():String;
 }

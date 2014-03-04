@@ -149,6 +149,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 				// Listen for when the controller, action and args have been decided so we can set our "context" object up...
 				dispatch.onProcessDispatchRequest.handle(function() {
 					// Update the actionContext
+					actionContext.handler = this;
 					actionContext.controller = dispatch.controller;
 					actionContext.action = dispatch.action;
 					actionContext.args = dispatch.arguments;
@@ -249,7 +250,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 		}
 	#end
 
-
+	public function toString() return "ufront.handler.DispatchHandler";
 }
 
 class DefaultRoutes extends ufront.web.DispatchController {

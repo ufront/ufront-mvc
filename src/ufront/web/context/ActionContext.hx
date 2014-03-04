@@ -28,6 +28,9 @@ class ActionContext
 	/** A link to the current `UFAuthHandler` **/
 	public var auth(get, null):UFAuthHandler<UFAuthUser>;
 
+	/** The UFRequestHandler that was used in this request.  Will be null until the request is handled. **/
+	public var handler:Null<{}>;
+
 	/** The controller that was used in this request.  Will be null until the request is handled. **/
 	public var controller:Null<{}>;
 
