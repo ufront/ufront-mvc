@@ -104,7 +104,6 @@ class ErrorPageHandler implements UFErrorHandler
 		var pos = showStack ? '<p class="error-pos">&gt; ${error.printPos()}</p>' : '';
 		
 		var exceptionStackItems = errorStackItems( CallStack.exceptionStack() );
-		var callStackItems = errorStackItems( CallStack.callStack() );
 
 		var exceptionStack = 
 			if ( showStack && exceptionStackItems.length>0 ) 
@@ -112,17 +111,10 @@ class ErrorPageHandler implements UFErrorHandler
 					<pre><code>' + exceptionStackItems.join("\n") + '</pre></code>
 				</div>'
 			else "";
-
-		var callStack = 
-			if ( showStack && callStackItems.length>0 ) 
-				'<div class="error-call-stack"><h3>Call Stack:</h3>
-					<pre><code>' + callStackItems.join("\n") + '</pre></code>
-				</div>'
-			else "";
 		
 		var content = '
 			<summary class="error-summary"><h1 class="error-message">$error</h1></summary>
-			<details class="error-details"> $inner $pos $exceptionStack $callStack </details>
+			<details class="error-details"> $inner $pos $exceptionStack</details>
 		';
 
 		return content;
