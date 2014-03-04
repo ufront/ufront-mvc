@@ -555,7 +555,7 @@ class ControllerMacros {
 					if ( optional ) macro (uriParts[$v{partNum}]!=null && uriParts[$v{partNum}]!="") ? uriParts[$v{partNum}] : $defaultValue
 					else macro uriParts[$v{partNum}]
 				;
-				var lines = createReadExprForType( name, expr, type, false );
+				var lines = createReadExprForType( name, expr, type, optional );
 				return { ident: ident, lines: lines };
 			case AKParams( params, allParamsOptional ):
 				var lines = [];
