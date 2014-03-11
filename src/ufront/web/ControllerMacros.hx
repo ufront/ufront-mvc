@@ -151,11 +151,7 @@ class ControllerMacros {
 			var fnName = "execute_"+varMember.name;
 			switch varType {
 				case TPath(p):
-					var typeNameParts = p.pack.copy();
-					typeNameParts.push( p.name );
-					var varTypeName = typeNameParts.join(".");
-
-					var fnBody:Expr = macro return ( new $varTypeName(context) ).execute();
+					var fnBody:Expr = macro return ( new $p(context) ).execute();
 					var fnReturnType:ComplexType = macro :tink.CoreApi.Surprise<ufront.web.result.ActionResult,ufront.web.HttpError>;
 					var fn:Function = {
 						ret: fnReturnType,
