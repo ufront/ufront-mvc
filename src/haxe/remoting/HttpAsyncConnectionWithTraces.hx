@@ -19,10 +19,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-package ufront.api;
+package haxe.remoting;
 
 import haxe.remoting.AsyncConnection;
 import haxe.remoting.HttpAsyncConnection;
+import haxe.remoting.RemotingError;
 import ufront.log.Message;
 import haxe.CallStack;
 using StringTools;
@@ -68,14 +69,14 @@ class HttpAsyncConnectionWithTraces extends HttpAsyncConnection
 			responseCode = status;
 		}
 
-		h.onData = processResponse.bind( _, onResult, remotingCallString );
+		h.onData = RemotingUtil.processResponse.bind( _, onResult, __data.error, remotingCallString );
 
 		h.onError = function(errorData) {
 			if ( 500==responseCode ) {
 				// We got an internal error HTTP response code, which may have been from our remoting handler.
 				// Therefore, unpack it.  It is likely there was an exception server side that has been serialized.
 				// If it was a different kind of 500 error, it will throw a NoRemotingResult.
-				processResponse( h.responseData, onResult, remotingCallString );
+				RemotingUtil.processResponse( h.responseData, onResult, __data.error, remotingCallString );
 			}
 			else {
 				// We got an error HTTP response code, and it was not a 500, so is not from our remoting handler.
@@ -89,96 +90,8 @@ class HttpAsyncConnectionWithTraces extends HttpAsyncConnection
 		h.request(true);
 	}
 
-	function processResponse( response:String, onResult:Dynamic->Void, remotingCallString:String ) {
-		var ret = null;
-		var errorHandler = __data.error;
-		var stack:String = null;
-		var hxrFound = false;
-		var errFound = false;
-		for (line in response.split('\n')) {
-			if (line=="") continue;
-			try {
-				switch (line.substr(0,3)) {
-					case "hxr":
-						var s = new haxe.Unserializer(line.substr(3));
-						ret = 
-							try s.unserialize() 
-							catch(e:Dynamic) throw UnserializeFailed( remotingCallString, line.substr(3), '$e' )
-						;
-						hxrFound = true;
-					case "hxt":
-						var s = new haxe.Unserializer(line.substr(3));
-						var m:Message = 
-							try s.unserialize() 
-							catch(e:Dynamic) throw UnserializeFailed( remotingCallString, line.substr(3), '$e' )
-						;
-						#if js 
-							var extras = 
-								if ( m.pos!=null && m.pos.customParams!=null ) " "+m.pos.customParams.join(" ")
-								else "";
-							var msg = '[R]${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';
-							var c = js.Browser.window.console;
-							switch m.type {
-								case Trace: c.log( msg );
-								case Log: c.info( msg );
-								case Warning: c.warn( msg );
-								case Error: c.error( msg );
-							}
-						#else
-							m.pos.fileName="[R]"+m.pos.fileName;
-							haxe.Log.trace('[${m.type}]${m.msg}', m.pos);
-						#end
-					case "hxs":
-						var s = new haxe.Unserializer(line.substr(3));
-						stack = 
-							try s.unserialize() 
-							catch(e:Dynamic) throw UnserializeFailed( remotingCallString, line.substr(3), '$e' )
-						;
-					case "hxe":
-						var s = new haxe.Unserializer(line.substr(3));
-						ret = 
-							try s.unserialize() 
-							catch(e:Dynamic) throw ServerSideException( remotingCallString, e, stack )
-						;
-					default:
-						throw UnserializeFailed( remotingCallString, line, "Invalid line in response" );
-				}
-			}
-			catch( err:Dynamic ) {
-				errFound = true;
-				errorHandler( err );
-			}
-		}
-
-		if ( false==errFound ) {
-			if ( false==hxrFound ) throw NoRemotingResult( remotingCallString, response );
-			
-			// It is actually easier to debug these errors if we don't catch them, because the browser
-			// debugger can then provide a stack trace.  
-			#if debug
-				onResult( ret );
-			#else
-				try onResult( ret ) catch (e:Dynamic) errorHandler( ClientCallbackException(remotingCallString, e) );
-			#end
-		}
-	}
-
 	public static function urlConnect( url:String, errorHandler:RemotingError->Void ) {
-		var handler = function( e:Dynamic ) {
-			if ( Std.is(e,RemotingError) )
-				errorHandler(e);
-			else
-				errorHandler( UnknownException(e) );
-		}
+		var handler = RemotingUtil.wrapErrorHandler( errorHandler );
 		return new HttpAsyncConnectionWithTraces({ url:url, error:handler },[]);
 	}
-}
-
-enum RemotingError {
-	HttpError( callString:String, responseCode:Int, responseData:String );
-	ServerSideException( callString:String, e:Dynamic, stack:String );
-	ClientCallbackException( callString:String, e:Dynamic );
-	UnserializeFailed( callString:String, troubleLine:String, err:String );
-	NoRemotingResult( callString:String, responseData:String );
-	UnknownException( e:Dynamic );
 }

@@ -175,7 +175,7 @@ class ApiMacros
 	static function getClientConstructorField()
 	{
 		clientConstructorBlock = macro {
-			cnx = ufront.api.HttpAsyncConnectionWithTraces.urlConnect(url,errorHandler);
+			cnx = haxe.remoting.HttpAsyncConnectionWithTraces.urlConnect(url,errorHandler);
 		}
 		return {
 			pos: classPos,
@@ -188,7 +188,7 @@ class ApiMacros
 					expr: clientConstructorBlock,
 					args: [
 						{ value: null, type: macro :String, opt: false, name: "url" },
-						{ value: null, type: macro :ufront.api.HttpAsyncConnectionWithTraces.RemotingError->Void, opt: false, name: "errorHandler" },
+						{ value: null, type: macro :haxe.remoting.RemotingError->Void, opt: false, name: "errorHandler" },
 					]
 				}
 			),
