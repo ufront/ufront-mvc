@@ -39,8 +39,8 @@ class ViewResult extends ActionResult {
 
 		For now it has no effect different to the normal constructor.
 	**/
-	public static function create( ?data:TemplateData, ?viewPath:String, ?templatingEngine:TemplatingEngine, ?pos:PosInfos ):ViewResult {
-		return new ViewResult( data, viewPath, templatingEngine, pos );
+	public static function create( ?data:TemplateData, ?viewPath:String, ?templatingEngine:TemplatingEngine ):ViewResult {
+		return new ViewResult( data, viewPath, templatingEngine );
 	}
 	
 	// public macro function check():Expr {
@@ -66,36 +66,15 @@ class ViewResult extends ActionResult {
 
 		You can optionally specify a custom `viewPath` or a specific `templatingEngine`.
 
-		If `viewPath` is not specified, the call site of this constructor will be used to infer the `viewPath`.
-		This will usually be the action on one of your controllers which calls `new ViewResult`.
-		For example if you are in a controller called `PostsController` and you are in an action called `viewPost`, the inferred `viewPath` will be `posts/viewPost`.
-		This will match a template with that path, using whichever extension your templating engines support, and using the first template to match.
-		
-		Some small transformations: 
-
-		- On the controller:
-			- The package is discarded, only the section after the final "." is kept
-			- The first letter of your controller name will be made lowercase. 
-			- If your controller name ends with "Controller", it will not be included in the view.
-		- On the action:
- 			- If the action name begins with "do", it will be removed
-			- The first letter of your action name will be made lowercase.
+		If `viewPath` is not specified, the `actionContext` will be used to choose a view during `executeResult`.  
+		See the documentation on `executeResult` for details.
 	**/
-	public function new( ?data:TemplateData, ?viewPath:String, ?templatingEngine:TemplatingEngine, ?pos:PosInfos ) {
-		
+	public function new( ?data:TemplateData, ?viewPath:String, ?templatingEngine:TemplatingEngine ) {
 		this.viewPath = viewPath;
 		this.templatingEngine = templatingEngine;
 		this.data = (data!=null) ? data : {};
 		this.helpers = {};
 		this.layout = null;
-
-		if ( viewPath==null ) {
-			var ct = pos.className.split(".").pop().lcfirst();
-			if ( ct.endsWith("Controller") ) 
-				ct = ct.substr( 0, ct.length-10 );
-			var action = pos.methodName.startsWith("do") ? pos.methodName.substr(2).lcfirst() : pos.methodName.lcfirst();
-			this.viewPath = '$ct/$action';
-		}
 	}
 
 	/**
@@ -145,6 +124,23 @@ class ViewResult extends ActionResult {
 		- Once loaded, execute the view template with our given data
 		- If a layout is used, execute the layout with the same data, inserting our view into the `viewContent` variable of the layout
 		- Write the final output to the `ufront.web.context.HttpResponse`
+
+		If `viewPath` was not specified or was null, we will infer the viewPath from the actionContext.
+		The following rules apply:
+
+		If `viewPath` was not specified or is null, the `actionContext` will be used to determine a view based on the controller / action used for the request.
+		For example if you are in a controller called `PostsController` and you are in an action called `viewPost`, the inferred `viewPath` will be `posts/viewPost`.
+		This will match a template with that path, using whichever extension your templating engines support, and using the first template to match, for example `post/viewPost.html`.
+		
+		Some small transformations that occur while inferring the view path: 
+
+		- __On the controller:__
+			- The package is discarded, only the section after the final "." is kept
+			- The first letter of your controller name will be made lowercase. 
+			- If your controller name ends with "Controller", it will not be included in the view.
+		- __On the action:__
+ 			- If the action name begins with "do", it will be removed
+			- The first letter of your action name will be made lowercase.
 	**/
 	override function executeResult( actionContext:ActionContext ) {
 		
@@ -153,7 +149,19 @@ class ViewResult extends ActionResult {
 		if (viewEngine==null) return Sync.httpError( "Failed to find a UFViewEngine in ViewResult.executeResult(), please make sure that one is made available in your application's injector" );
 
 		// Combine the data and the helpers
-		var combinedData = TemplateData.fromMany( [globalHelpers, helpers, data] );
+		var combinedData = TemplateData.fromMany( [globalValues, helpers, data] );
+
+		// Figure out the viewPath if it was not supplied.
+		if ( viewPath==null ) {
+			var controller = Type.getClassName( Type.getClass(actionContext.controller) ).split( "." ).pop().lcfirst();
+			if ( controller.endsWith("Controller") ) 
+				controller = controller.substr( 0, controller.length-10 );
+			var action = actionContext.action;
+			if ( action.startsWith("do") )
+				action = action.substr(2);
+			action = action.lcfirst();
+			viewPath = '$controller/$action';
+		}
 
 		// Get the layout future
 		var layoutReady:Surprise<Null<UFTemplate>,Error>;
