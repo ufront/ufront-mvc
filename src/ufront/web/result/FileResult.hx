@@ -64,7 +64,7 @@ class FileResult extends ActionResult
 	**/
 	public function setContentTypeByFilename( ?filename:String ) {
 		if ( filename==null ) filename = fileDownloadName;
-		if( null!=fileDownloadName ) {
+		if( null!=filename ) {
 			var ext = filename.extension();
 			if ( extMap.exists(ext) ) contentType = extMap[ext];
 		}
