@@ -149,87 +149,81 @@ class Dates
 		nearest 7 days, but the epoch didn't begin on a sunday or monday, so that's probably wrong
 		
 		@param time The unix time in milliseconds.  See date.getTime()
-		@param period Either "second", "minute", "hour", "day", "week", "month" or "year"
-		@param mode Defines whether to snap up (1), snap down (-1) or round (0)
+		@param period Either: Second, Minute, Hour, Day, Week, Month or Year
+		@param mode Either: Up, Down or Round
 		
 		@return the unix time of the snapped date (In milliseconds).  Or 0 if "period" was invalid.
 	**/
-	public static function snap(time : Float, period : String, mode = 0) : Float
+	public static function snap(time : Float, period : TimePeriod, ?mode : SnapMode) : Float
 	{
-		if (mode < 0)
-		{
-			switch(period)
-			{
-				case "second":
-					return Math.floor(time / 1000.0) * 1000.0;
-				case "minute":
-					return Math.floor(time / 60000.0) * 60000.0;
-				case "hour":
-					return Math.floor(time / 3600000.0) * 3600000.0;
-				case "day":
-					var d = Date.fromTime(time);
-					return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0).getTime();
-				case "week":
-					return Math.floor(time / (7.0 * 24.0 * 3600000.0)) * (7.0 * 24.0 * 3600000.0);
-				case "month":
-					var d = Date.fromTime(time);
-					return new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0).getTime();
-				case "year":
-					var d = Date.fromTime(time);
-					return new Date(d.getFullYear(), 0, 1, 0, 0, 0).getTime();
-				default:
-					return 0;
-			}
-		} else if (mode > 0)
-		{
-			switch(period)
-			{
-				case "second":
-					return Math.ceil(time / 1000.0) * 1000.0;
-				case "minute":
-					return Math.ceil(time / 60000.0) * 60000.0;
-				case "hour":
-					return Math.ceil(time / 3600000.0) * 3600000.0;
-				case "day":
-					var d = Date.fromTime(time);
-					return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 0, 0, 0).getTime();
-				case "week":
-					return Math.ceil(time / (7.0 * 24.0 * 3600000.0)) * (7.0 * 24.0 * 3600000.0);
-				case "month":
-					var d = Date.fromTime(time);
-					return new Date(d.getFullYear(), d.getMonth() + 1, 1, 0, 0, 0).getTime();
-				case "year":
-					var d = Date.fromTime(time);
-					return new Date(d.getFullYear() + 1, 0, 1, 0, 0, 0).getTime();
-				default:
-					return 0;
-			}
-		} else {
-			switch(period)
-			{
-				case "second":
-					return Math.round(time / 1000.0) * 1000.0;
-				case "minute":
-					return Math.round(time / 60000.0) * 60000.0;
-				case "hour":
-					return Math.round(time / 3600000.0) * 3600000.0;
-				case "day":
-					var d = Date.fromTime(time),
-						mod = (d.getHours() >= 12) ? 1 : 0;
-					return new Date(d.getFullYear(), d.getMonth(), d.getDate() + mod, 0, 0, 0).getTime();
-				case "week":
-					return Math.round(time / (7.0 * 24.0 * 3600000.0)) * (7.0 * 24.0 * 3600000.0);
-				case "month":
-					var d = Date.fromTime(time),
-						mod = d.getDate() > Math.round(DateTools.getMonthDays(d) / 2) ? 1 : 0;
-					return new Date(d.getFullYear(), d.getMonth() + mod, 1, 0, 0, 0).getTime();
-				case "year":
-					var d = Date.fromTime(time),
-						mod = time > new Date(d.getFullYear(), 6, 2, 0, 0, 0).getTime() ? 1 : 0;
-					return new Date(d.getFullYear() + mod, 0, 1, 0, 0, 0).getTime();
-				default:
-					return 0;
-			}
+		if ( mode==null ) mode = Round;
+		switch(mode) {
+			case Down: 
+				switch(period)
+				{
+					case Second:
+						return Math.floor(time / 1000.0) * 1000.0;
+					case Minute:
+						return Math.floor(time / 60000.0) * 60000.0;
+					case Hour:
+						return Math.floor(time / 3600000.0) * 3600000.0;
+					case Day:
+						var d = Date.fromTime(time);
+						return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0).getTime();
+					case Week:
+						return Math.floor(time / (7.0 * 24.0 * 3600000.0)) * (7.0 * 24.0 * 3600000.0);
+					case Month:
+						var d = Date.fromTime(time);
+						return new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0).getTime();
+					case Year:
+						var d = Date.fromTime(time);
+						return new Date(d.getFullYear(), 0, 1, 0, 0, 0).getTime();
+				}
+			case Up: 
+				switch(period)
+				{
+					case Second:
+						return Math.ceil(time / 1000.0) * 1000.0;
+					case Minute:
+						return Math.ceil(time / 60000.0) * 60000.0;
+					case Hour:
+						return Math.ceil(time / 3600000.0) * 3600000.0;
+					case Day:
+						var d = Date.fromTime(time);
+						return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 0, 0, 0).getTime();
+					case Week:
+						return Math.ceil(time / (7.0 * 24.0 * 3600000.0)) * (7.0 * 24.0 * 3600000.0);
+					case Month:
+						var d = Date.fromTime(time);
+						return new Date(d.getFullYear(), d.getMonth() + 1, 1, 0, 0, 0).getTime();
+					case Year:
+						var d = Date.fromTime(time);
+						return new Date(d.getFullYear() + 1, 0, 1, 0, 0, 0).getTime();
+				}
+			case Round: 
+				switch(period)
+				{
+					case Second:
+						return Math.round(time / 1000.0) * 1000.0;
+					case Minute:
+						return Math.round(time / 60000.0) * 60000.0;
+					case Hour:
+						return Math.round(time / 3600000.0) * 3600000.0;
+					case Day:
+						var d = Date.fromTime(time),
+							mod = (d.getHours() >= 12) ? 1 : 0;
+						return new Date(d.getFullYear(), d.getMonth(), d.getDate() + mod, 0, 0, 0).getTime();
+					case Week:
+						return Math.round(time / (7.0 * 24.0 * 3600000.0)) * (7.0 * 24.0 * 3600000.0);
+					case Month:
+						var d = Date.fromTime(time),
+							mod = d.getDate() > Math.round(DateTools.getMonthDays(d) / 2) ? 1 : 0;
+						return new Date(d.getFullYear(), d.getMonth() + mod, 1, 0, 0, 0).getTime();
+					case Year:
+						var d = Date.fromTime(time),
+							mod = time > new Date(d.getFullYear(), 6, 2, 0, 0, 0).getTime() ? 1 : 0;
+						return new Date(d.getFullYear() + mod, 0, 1, 0, 0, 0).getTime();
+				}
 		}
 	}
 
@@ -240,40 +234,39 @@ class Dates
 		
 		@param time The unix time in milliseconds.  See date.getTime()
 		@param day Day to snap to.  Either "sunday", "monday", "tuesday" etc. Case insensitive.
-		@param mode Whether to go the next day (positive), the previous day (negative), or in the current week (0, default).
+		@param mode Whether to go the next day (Up), the previous day (Down), or in the current week (Round, default).
 		@param firstDayOfWk The first day of the week.  Default to 0 (Sunday).  Monday = 1.
 		
 		@throws String if invalid weekday was entered.
 		
 		@return The unix time of the day you have snapped to.
 	**/
-	public static function snapToWeekDay(time : Float, day : String, ?mode=0, ?firstDayOfWk = 0)
+	public static function snapToWeekDay(time : Float, day : Weekday, ?snapMode : SnapMode, ?firstDayOfWk : Weekday)
 	{
+		if ( snapMode==null ) snapMode = Round;
+		if ( firstDayOfWk==null ) firstDayOfWk = Sunday;
 		var d = Date.fromTime(time).getDay();
 		
-		var s = FormatDate.weekDayNumFromName(day);
+		var s:Int = day;
 		if (s == -1) throw new Error("unknown week day '{0}'", day);
 
-		if (mode < 0) 
+		switch (snapMode) 
 		{
-			// get the previous occurence of that day (backward in time)
-			if (s > d) s = s - 7;
-			return time - (d-s) * 24 * 60 * 60 * 1000; 
-		}
-		else if (mode > 0) 
-		{
-			// get the next occurence of that day (forward in time)
-			if (s < d) s = s + 7;
-			return time + (s-d) * 24 * 60 * 60 * 1000;
-		}
-		else 
-		{
-			// get whichever occurence happened in the current week.
+			case Down:
+				// get the previous occurence of that day (backward in time)
+				if (s > d) s = s - 7;
+				return time - (d-s) * 24 * 60 * 60 * 1000; 
+			case Up:
+				// get the next occurence of that day (forward in time)
+				if (s < d) s = s + 7;
+				return time + (s-d) * 24 * 60 * 60 * 1000;
+			case Round:
+				// get whichever occurence happened in the current week.
 
-			if (s < firstDayOfWk) s = s+7;
-			if (d < firstDayOfWk)  d = d+7;
-			// var offset = s-d;
-			return time + (s-d) * 24 * 60 * 60 * 1000;
+				if (s < (firstDayOfWk:Int)) s = s+7;
+				if (d < (firstDayOfWk:Int))  d = d+7;
+				// var offset = s-d;
+				return time + (s-d) * 24 * 60 * 60 * 1000;
 		}
 	}
 
@@ -455,3 +448,45 @@ class Dates
 	}
 }
 
+@:enum
+abstract Weekday(Int) from Int to Int {
+	var Sunday = 0;
+	var Monday = 1;
+	var Tuesday = 2;
+	var Wednesday = 3;
+	var Thursday = 4;
+	var Friday = 5;
+	var Saturday = 6;
+}
+
+@:enum
+abstract Month(Int) from Int to Int {
+	var January = 0;
+	var February = 1;
+	var March = 2;
+	var April = 3;
+	var May = 4;
+	var June = 5;
+	var July = 6;
+	var August = 7;
+	var September = 8;
+	var October = 9;
+	var November = 10;
+	var December = 11;
+}
+
+enum TimePeriod {
+	Second;
+	Minute;
+	Hour;
+	Day;
+	Week;
+	Month;
+	Year;
+}
+
+enum SnapMode {
+	Up;
+	Down;
+	Round;
+}
