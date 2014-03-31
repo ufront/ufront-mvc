@@ -8,7 +8,7 @@ class RemotingUtil {
 		var ret = null;
 		var stack:String = null;
 		var hxrFound = false;
-		var errFound = false;
+		var errors = [];
 		for (line in response.split('\n')) {
 			if (line=="") continue;
 			try {
@@ -59,12 +59,11 @@ class RemotingUtil {
 				}
 			}
 			catch( err:Dynamic ) {
-				errFound = true;
-				onError( err );
+				errors.push( err );
 			}
 		}
 
-		if ( false==errFound ) {
+		if ( errors.length==0 ) {
 			if ( false==hxrFound ) throw NoRemotingResult( remotingCallString, response );
 			
 			// It is actually easier to debug these errors if we don't catch them, because the browser
@@ -74,6 +73,9 @@ class RemotingUtil {
 			#else
 				try onResult( ret ) catch (e:Dynamic) onError( ClientCallbackException(remotingCallString, e) );
 			#end
+		}
+		else {
+			for ( err in errors ) onError( err );
 		}
 	}
 

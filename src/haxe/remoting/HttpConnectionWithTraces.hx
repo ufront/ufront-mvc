@@ -21,6 +21,8 @@
  */
 package haxe.remoting;
 
+import haxe.remoting.RemotingError;
+
 class HttpConnectionWithTraces extends haxe.remoting.HttpConnection {
 
 	public static var TIMEOUT = 10.;
@@ -43,23 +45,39 @@ class HttpConnectionWithTraces extends haxe.remoting.HttpConnection {
 		s.serialize(params);
 		h.setHeader("X-Haxe-Remoting","1");
 		h.setParameter("__x",s.toString());
-		h.onData = function(d) { data = d; };
-		h.onStatus = function(s) { status = s; };
-		h.onError = function(e) { throw '$e \n${h.responseData}'; };
 
-		OKAY... 
-		Can we change this to behave pretty similar to the async call() method? 
-		We need to somehow 
-		 - process the result, regardless of error code
-		 - if there are traces, trace them (or have an onTrace dynamic function?)
-		 - if there is an exception, make sure we process all the lines first, because traces come after exceptions
-		 - throw RemotingError rather than have onError... (use onError=function(re) throw re;)
+		// Set up the remoting data/error callbacks
+		var remotingCallString = __path.join(".")+"("+params.join(",")+")";
+		var responseCode:Int;
+		var result:Dynamic;
 
+		function onResult(v:Dynamic) { result = v; }
+		function onError(v:Dynamic) { throw v; }
+		
+		h.onStatus = function(status) {
+			responseCode = status;
+		}
+
+		h.onData = RemotingUtil.processResponse.bind( _, onResult, onError, remotingCallString );
+
+		h.onError = function(errorData) {
+			if ( 500==responseCode ) {
+				// We got an internal error HTTP response code, which may have been from our remoting handler.
+				// Therefore, unpack it.  It is likely there was an exception server side that has been serialized.
+				// If it was a different kind of 500 error, it will throw a NoRemotingResult.
+				RemotingUtil.processResponse( h.responseData, onResult, onError, remotingCallString );
+			}
+			else {
+				// We got an error HTTP response code, and it was not a 500, so is not from our remoting handler.
+				// This may be due to a server being inaccessible etc.
+				onError( HttpError(remotingCallString, responseCode, h.responseData) );
+			}
+		}
+
+		// Run the request
 		h.request(true);
-		if( data.substr(0,3) != "hxr" )
-			throw "Invalid response : '"+data+"'";
-		data = data.substr(3);
-		return new haxe.Unserializer(data).unserialize();
+
+		return result;
 	}
 
 	#if (js || neko || php)
