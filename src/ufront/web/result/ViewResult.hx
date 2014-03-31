@@ -26,7 +26,7 @@ class ViewResult extends ActionResult {
 	// Statics
 	//
 
-	public static var globalHelpers:TemplateData = {};
+	public static var globalValues:TemplateData = {};
 
 	//
 	// Macros

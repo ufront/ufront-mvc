@@ -62,9 +62,9 @@ abstract TemplateData({}) {
 		return m;
 	}
 
-	@:from public static function fromMany( datas:Iterable<TemplateData> ):TemplateData {
+	@:from public static function fromMany( dataSets:Iterable<TemplateData> ):TemplateData {
 		var m:TemplateData = new TemplateData( {} );
-		for ( d in datas ) {
+		for ( d in dataSets ) {
 			m.setObject( d.toObject() );
 		}
 		return m;
