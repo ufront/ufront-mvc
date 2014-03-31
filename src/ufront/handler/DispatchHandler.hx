@@ -1,7 +1,7 @@
 package ufront.handler;
 
 import haxe.PosInfos;
-import ufront.web.Controller;
+import ufront.web.DispatchController;
 import ufront.web.Dispatch;
 import ufront.app.UFInitRequired;
 import ufront.app.UFRequestHandler;
@@ -157,9 +157,9 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 					// Inject into our controller (if it already has been injected, no matter...)
 					switch Type.typeof( dispatch.controller ) {
 						case TClass( cl ): 
-							if ( Std.is(dispatch.controller, Controller) ) {
+							if ( Std.is(dispatch.controller, DispatchController) ) {
 								// Set "context", which will do injection on the controller as well
-								var c:Controller = cast dispatch.controller;
+								var c:DispatchController = cast dispatch.controller;
 								if ( c.context==null )
 									c.context = actionContext;
 							}
