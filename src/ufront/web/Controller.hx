@@ -2,6 +2,7 @@ package ufront.web;
 
 import haxe.EnumFlags;
 import haxe.PosInfos;
+import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
 import ufront.web.result.ActionResult;
 import ufront.web.result.EmptyResult;
@@ -78,23 +79,23 @@ class Controller
 	/** 
 		The Action Context.  
 
-		This is set in the constructor, or can be set manually.  
-
-		When context is set to a non-null value, the injector for the current request will be used to inject dependencies into this controller:
-
-		    `context.httpContext.injector.injectInto( this )`
+		This is set via the constructor.
 	**/
-	public var context(default,set):ActionContext;
+	public var context(default,null):ActionContext;
 
 	/**
 		Create a new `Controller` instance.
 
-		@param context Set the `context` property.  
-		               Currently this is optional for backwards compatibility, but may become required in a future version.
-		               If you do not set context `context` via the constructor, you must set it before calling `execute`.
+		The injector from the current request context will be used to inject dependencies into this controller:
+
+		    `context.httpContext.injector.injectInto( this )`
+
+		@param context Set the `context` property, and use the current request context's injector to perform dependency injection on this controller.
 	**/
-	public function new( ?context:ActionContext ) {
-		if ( context!=null ) this.context = context;
+	public function new( context:ActionContext ) {
+		NullArgument.throwIfNull( context );
+		context.httpContext.injector.injectInto( this );
+		this.context = context;
 	}
 
 	/**
@@ -109,11 +110,6 @@ class Controller
 	**/
 	public function execute():Surprise<ActionResult,HttpError> {
 		return Future.sync( Failure(HttpError.internalServerError('Field execute() in ufront.web.Controller is an abstract method, please override it in ${this.toString()} ')) );
-	}
-
-	function set_context( c:ActionContext ) {
-		if ( c!=null ) c.httpContext.injector.injectInto(this);
-		return this.context = c;
 	}
 
 	/**
