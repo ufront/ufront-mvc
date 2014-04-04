@@ -74,10 +74,6 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 
 			// Set up the injector
 			var requestInjector = injector.createChildInjector();
-			requestInjector.mapValue( HttpContext, httpContext );
-			requestInjector.mapValue( HttpRequest, httpContext.request );
-			requestInjector.mapValue( HttpResponse, httpContext.response );
-			requestInjector.mapValue( ActionContext, actionContext );
 			requestInjector.mapValue( UFAuthHandler, httpContext.auth );
 			requestInjector.mapValue( Array, httpContext.messages, "messages" );
 			requestInjector.mapValue( String, httpContext.contentDirectory, "contentDirectory" );
