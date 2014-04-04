@@ -1,5 +1,6 @@
 package ufront.log;
 
+import sys.FileSystem;
 import sys.io.File;
 import ufront.app.*;
 import haxe.PosInfos;
@@ -7,6 +8,7 @@ import sys.io.FileOutput;
 import ufront.web.context.HttpContext;
 import ufront.core.Sync;
 using Types;
+using haxe.io.Path;
 
 /**
 	Trace module that logs traces to a file.
@@ -42,8 +44,6 @@ class FileLogger implements UFLogHandler implements UFInitRequired
 
 	/** the currently open file **/
 	var file:FileOutput;
-
-	// var file:
 	
 	/**
 		Initiate the new module.  Specify the path to the file that you will be logging to.
@@ -68,6 +68,17 @@ class FileLogger implements UFLogHandler implements UFInitRequired
 
 	public function log( context:HttpContext, appMessages:Array<Message> ) {
 		if ( file==null ) {
+			var logFile = context.contentDirectory+path;
+			
+			function createDir( dir:String ) {
+				if ( !FileSystem.exists(dir) ) {
+					// Check parent exists (or create it) first
+					createDir( dir.directory() );
+					FileSystem.createDirectory( dir );
+				}
+			}
+			createDir( logFile.directory() );
+
 			file = File.append( context.contentDirectory + path );
 		}
 
