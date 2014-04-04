@@ -3,6 +3,7 @@ package ufront.web.upload;
 import sys.io.File;
 import sys.FileSystem;
 import sys.io.FileOutput;
+import ufront.sys.SysUtil;
 import ufront.web.context.HttpContext;
 import ufront.app.UFMiddleware;
 import ufront.app.HttpApplication;
@@ -56,7 +57,7 @@ class TmpFileUploadMiddleware implements UFMiddleware
 			    dateStr = Date.now().format( "%Y%m%d-%H%M" ),
 			    dir = ctx.contentDirectory+subDir.addTrailingSlash();
 
-			if ( !FileSystem.exists(dir) ) try FileSystem.createDirectory( dir ) catch ( e:Dynamic ) throw 'Failed to create upload directory: $e';
+			SysUtil.mkdir( dir );
 
 			function onPart( pName, fName ) {
 				// Start writing to a temp file

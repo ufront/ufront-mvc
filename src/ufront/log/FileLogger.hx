@@ -5,6 +5,7 @@ import sys.io.File;
 import ufront.app.*;
 import haxe.PosInfos;
 import sys.io.FileOutput;
+import ufront.sys.SysUtil;
 import ufront.web.context.HttpContext;
 import ufront.core.Sync;
 using Types;
@@ -70,14 +71,7 @@ class FileLogger implements UFLogHandler implements UFInitRequired
 		if ( file==null ) {
 			var logFile = context.contentDirectory+path;
 			
-			function createDir( dir:String ) {
-				if ( !FileSystem.exists(dir) ) {
-					// Check parent exists (or create it) first
-					createDir( dir.directory() );
-					FileSystem.createDirectory( dir );
-				}
-			}
-			createDir( logFile.directory() );
+			SysUtil.mkdir( logFile.directory() );
 
 			file = File.append( context.contentDirectory + path );
 		}

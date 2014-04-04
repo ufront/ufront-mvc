@@ -3,6 +3,7 @@ package ufront.web.session;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
+import ufront.sys.SysUtil;
 import ufront.web.context.HttpContext;
 import ufront.web.HttpCookie;
 import ufront.web.session.UFHttpSessionState;
@@ -161,14 +162,7 @@ class FileSession implements UFHttpSessionState
 		var t = Future.trigger();
 		
 		if ( !started ) {
-			function createDir( dir:String ) {
-				if ( !FileSystem.exists(dir) ) {
-					// Check parent exists (or create it) first
-					createDir( dir.directory() );
-					FileSystem.createDirectory( dir );
-				}
-			}
-			createDir( savePath.removeTrailingSlashes() );
+			SysUtil.mkdir( savePath.removeTrailingSlashes() );
 
 			var id = getID();
 
