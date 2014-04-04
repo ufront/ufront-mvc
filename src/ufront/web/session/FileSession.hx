@@ -13,6 +13,7 @@ import haxe.Unserializer;
 import thx.error.NullArgument;
 import tink.CoreApi;
 using StringTools;
+using haxe.io.Path;
 
 /**
 	A session implementation using flat files.
@@ -160,64 +161,70 @@ class FileSession implements UFHttpSessionState
 		var t = Future.trigger();
 		
 		if ( !started ) {
-			if( FileSystem.exists(savePath.substr(0, -1)) ) {
-				var id = getID();
-
-				var file : String;
-				var fileData : String;
-
-				// Try to restore an existing session
-				if ( id!=null ) {
-					testValidId( id );
-					file = getSessionFilePath( id );
-					if ( !FileSystem.exists(file) ) {
-						id = null;
-					}
-					else {
-						fileData = try File.getContent( file ) catch ( e:Dynamic ) null;
-						if ( fileData!=null ) {
-							try 
-								sessionData = cast( Unserializer.run(fileData), StringMap<Dynamic> )
-							catch ( e:Dynamic ) 
-								fileData = null; // invalid data
-						}
-						if ( fileData==null ) {
-							// delete file and start new session
-							id = null;
-							try FileSystem.deleteFile( file ) catch( e:Dynamic ) {}; 
-						}
-					}
+			function createDir( dir:String ) {
+				if ( !FileSystem.exists(dir) ) {
+					// Check parent exists (or create it) first
+					createDir( dir.directory() );
+					FileSystem.createDirectory( dir );
 				}
-
-				// No session existed, or it was invalid - start a new one
-				if( id==null ) {
-					sessionData = new StringMap<Dynamic>();
-					started = true;
-
-					do {
-						id = generateSessionID();
-						file = savePath + id + ".sess";
-					} while( FileSystem.exists(file) );
-					
-					// Create the file so no one else takes it
-					File.saveContent( file, "" );
-
-					var expire = ( expiry==0 ) ? null : DateTools.delta( Date.now(), 1000.0*expiry );
-					var path = '/'; // TODO: Set cookie path to application path, right now it's global.
-					var domain = null; 
-					var secure = false;
-
-					var sessionCookie = new HttpCookie( sessionName, id, expire, domain, path, secure );
-					context.response.setCookie( sessionCookie );
-
-					commit();
-				}
-
-				sessionID = id;
-				started = true;
-				t.trigger( Success(Noise) );
 			}
-			else t.trigger( Failure('Neko session savepath not found: ' + savePath.substr(0, -1)) );
+			createDir( savePath.removeTrailingSlashes() );
+
+			var id = getID();
+
+			var file : String;
+			var fileData : String;
+
+			// Try to restore an existing session
+			if ( id!=null ) {
+				testValidId( id );
+				file = getSessionFilePath( id );
+				if ( !FileSystem.exists(file) ) {
+					id = null;
+				}
+				else {
+					fileData = try File.getContent( file ) catch ( e:Dynamic ) null;
+					if ( fileData!=null ) {
+						try 
+							sessionData = cast( Unserializer.run(fileData), StringMap<Dynamic> )
+						catch ( e:Dynamic ) 
+							fileData = null; // invalid data
+					}
+					if ( fileData==null ) {
+						// delete file and start new session
+						id = null;
+						try FileSystem.deleteFile( file ) catch( e:Dynamic ) {}; 
+					}
+				}
+			}
+
+			// No session existed, or it was invalid - start a new one
+			if( id==null ) {
+				sessionData = new StringMap<Dynamic>();
+				started = true;
+
+				do {
+					id = generateSessionID();
+					file = savePath + id + ".sess";
+				} while( FileSystem.exists(file) );
+				
+				// Create the file so no one else takes it
+				File.saveContent( file, "" );
+
+				var expire = ( expiry==0 ) ? null : DateTools.delta( Date.now(), 1000.0*expiry );
+				var path = '/'; // TODO: Set cookie path to application path, right now it's global.
+				var domain = null; 
+				var secure = false;
+
+				var sessionCookie = new HttpCookie( sessionName, id, expire, domain, path, secure );
+				context.response.setCookie( sessionCookie );
+
+				commit();
+			}
+
+			sessionID = id;
+			started = true;
+			t.trigger( Success(Noise) );
 		}
 		else t.trigger( Success(Noise) );
 
