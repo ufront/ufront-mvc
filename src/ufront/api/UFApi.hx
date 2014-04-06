@@ -24,49 +24,49 @@ class UFApi
 	public function new() {}
 	
 	/**
-		The messages array.  This must be injected for `ufTrace`, `ufLog`, `ufWarn` and `ufError` to function correctly.
+		The messages list.  This must be injected for `ufTrace`, `ufLog`, `ufWarn` and `ufError` to function correctly.
 
-		When called from a web context, this will usually be the same array as the current HttpContext's `messages` array.
+		When called from a web context, this will usually result in the HttpContext's `messages` array being pushed to.
 	**/
-	@inject("messages") public var messages:Array<Message>;
+	@inject public var messages:MessageList;
 
 	/**
 		A shortcut to `HttpContext.ufTrace`
 
-		A `messages` array must be injected for these to function correctly.  `ufront.module.DispatchModule` and `ufront.rmeoting.RemotingModule` inject this correctly.
+		A `messages` array must be injected for these to function correctly.  Use `ufront.handler.MVCHandler` and `ufront.handler.RemotingHandler` to inject this correctly.
 	**/
 	@:noCompletion
-	public inline function ufTrace( msg:Dynamic, ?pos:PosInfos ) {
+	inline function ufTrace( msg:Dynamic, ?pos:PosInfos ) {
 		messages.push({ msg: msg, pos: pos, type:Trace });
 	}
 
 	/**
 		A shortcut to `HttpContext.ufLog`
 
-		A `messages` array must be injected for these to function correctly.  `ufront.module.DispatchModule` and `ufront.rmeoting.RemotingModule` inject this correctly.
+		A `messages` array must be injected for these to function correctly.  Use `ufront.handler.MVCHandler` and `ufront.handler.RemotingHandler` to inject this correctly.
 	**/
 	@:noCompletion
-	public inline function ufLog( msg:Dynamic, ?pos:PosInfos ) {
+	inline function ufLog( msg:Dynamic, ?pos:PosInfos ) {
 		messages.push({ msg: msg, pos: pos, type:Log });
 	}
 
 	/**
 		A shortcut to `HttpContext.ufWarn`
 
-		A `messages` array must be injected for these to function correctly.  `ufront.module.DispatchModule` and `ufront.rmeoting.RemotingModule` inject this correctly.
+		A `messages` array must be injected for these to function correctly.  Use `ufront.handler.MVCHandler` and `ufront.handler.RemotingHandler` to inject this correctly.
 	**/
 	@:noCompletion
-	public inline function ufWarn( msg:Dynamic, ?pos:PosInfos ) {
+	inline function ufWarn( msg:Dynamic, ?pos:PosInfos ) {
 		messages.push({ msg: msg, pos: pos, type:Warning });
 	}
 
 	/**
 		A shortcut to `HttpContext.ufError`
 
-		A `messages` array must be injected for these to function correctly.  `ufront.module.DispatchModule` and `ufront.rmeoting.RemotingModule` inject this correctly.
+		A `messages` array must be injected for these to function correctly.  Use `ufront.handler.MVCHandler` and `ufront.handler.RemotingHandler` to inject this correctly.
 	**/
 	@:noCompletion
-	public inline function ufError( msg:Dynamic, ?pos:PosInfos ) {
+	inline function ufError( msg:Dynamic, ?pos:PosInfos ) {
 		messages.push({ msg: msg, pos: pos, type:Error });
 	}
 
@@ -78,3 +78,4 @@ class UFApi
 		return Type.getClassName( Type.getClass(this) );
 	}
 }
+

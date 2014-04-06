@@ -58,6 +58,7 @@ class FileLogger implements UFLogHandler implements UFInitRequired
 		return Sync.success();
 	}
 
+	/** Close the log file, dispose of the module **/
 	public function dispose( app:HttpApplication ) {
 		path = null;
 		if ( file!=null ) {
@@ -67,6 +68,7 @@ class FileLogger implements UFLogHandler implements UFInitRequired
 		return Sync.success();
 	}
 
+	/** Write any messages from the context or application. **/
 	public function log( context:HttpContext, appMessages:Array<Message> ) {
 		if ( file==null ) {
 			var logFile = context.contentDirectory+path;
@@ -82,10 +84,10 @@ class FileLogger implements UFLogHandler implements UFInitRequired
 		file.writeString( '${Date.now()} [${req.httpMethod}] [${req.uri}] from [${req.clientIP}]$sessionID, response: [${res.status} ${res.contentType}]\n' );
 
 		for( msg in context.messages )
-			file.writeString( format(msg) );
+			file.writeString( '\t${format(msg)}\n' );
 		if ( appMessages!=null) {
 			for( msg in appMessages )
-				file.writeString( format(msg) );
+				file.writeString( '\t${format(msg)}\n' );
 		}
 
 		file.flush();
@@ -94,10 +96,10 @@ class FileLogger implements UFLogHandler implements UFInitRequired
 	}
 
 	static var REMOVENL = ~/[\n\r]/g;
-	static function format( msg:Message ) {
+	public static function format( msg:Message ) {
 		var text = REMOVENL.replace( Dynamics.string(msg.msg), '\\n' );
 		var type = Type.enumConstructor( msg.type );
 		var pos = msg.pos;
-		return '\t[$type] ${pos.className}.${pos.methodName}(${pos.lineNumber}): $text\n';
+		return '[$type] ${pos.className}.${pos.methodName}(${pos.lineNumber}): $text';
 	}
 }

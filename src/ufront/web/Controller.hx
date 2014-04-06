@@ -125,7 +125,7 @@ class Controller
 		A shortcut to `context.httpContext.ufTrace()`
 	**/
 	@:noCompletion
-	public inline function ufTrace( msg:Dynamic, ?pos:PosInfos ) {
+	inline function ufTrace( msg:Dynamic, ?pos:PosInfos ) {
 		context.httpContext.ufTrace( msg, pos );
 	}
 
@@ -133,7 +133,7 @@ class Controller
 		A shortcut to `context.httpContext.ufLog()`
 	**/
 	@:noCompletion
-	public inline function ufLog( msg:Dynamic, ?pos:PosInfos ) {
+	inline function ufLog( msg:Dynamic, ?pos:PosInfos ) {
 		context.httpContext.ufLog( msg, pos );
 	}
 
@@ -141,7 +141,7 @@ class Controller
 		A shortcut to `context.httpContext.ufWarn()`
 	**/
 	@:noCompletion
-	public inline function ufWarn( msg:Dynamic, ?pos:PosInfos ) {
+	inline function ufWarn( msg:Dynamic, ?pos:PosInfos ) {
 		context.httpContext.ufWarn( msg, pos );
 	}
 
@@ -149,7 +149,7 @@ class Controller
 		A shortcut to `context.httpContext.ufError()`
 	**/
 	@:noCompletion
-	public inline function ufError( msg:Dynamic, ?pos:PosInfos ) {
+	inline function ufError( msg:Dynamic, ?pos:PosInfos ) {
 		context.httpContext.ufError( msg, pos );
 	}
 

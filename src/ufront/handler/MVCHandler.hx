@@ -1,6 +1,7 @@
 package ufront.handler;
 
 import haxe.PosInfos;
+import ufront.log.Message;
 import ufront.web.Controller;
 import ufront.web.Dispatch;
 import ufront.app.UFInitRequired;
@@ -83,7 +84,7 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 		requestInjector.mapValue( UFAuthHandler, context.auth );
 		if (context.auth!=null) requestInjector.mapValue( UFAuthUser, context.auth.currentUser );
 		requestInjector.mapValue( ActionContext, context.actionContext );
-		requestInjector.mapValue( Array, context.messages, "messages" );
+		requestInjector.mapValue( MessageList, new MessageList(context.messages) );
 		requestInjector.mapValue( String, context.contentDirectory, "contentDirectory" );
 		requestInjector.mapValue( String, context.request.scriptDirectory, "scriptDirectory" );
 

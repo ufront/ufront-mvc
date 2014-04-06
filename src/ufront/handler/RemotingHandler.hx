@@ -5,6 +5,7 @@ import haxe.Serializer;
 import haxe.Unserializer;
 import haxe.CallStack;
 import ufront.app.HttpApplication;
+import ufront.log.Message;
 import ufront.web.HttpError;
 import ufront.web.result.*;
 import ufront.web.context.*;
@@ -75,11 +76,10 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 			// Set up the injector
 			var requestInjector = injector.createChildInjector();
 			requestInjector.mapValue( UFAuthHandler, httpContext.auth );
-			requestInjector.mapValue( Array, httpContext.messages, "messages" );
+			requestInjector.mapValue( MessageList, new MessageList(httpContext.messages) );
 			requestInjector.mapValue( String, httpContext.contentDirectory, "contentDirectory" );
 
 			// Map the specific implementations for auth and session
-			requestInjector.mapValue( Type.getClass( httpContext.session ), httpContext.session );
 			requestInjector.mapValue( Type.getClass( httpContext.auth ), httpContext.auth );
 
 			// Expose this injector to the HttpContext
