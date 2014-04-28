@@ -389,7 +389,7 @@ class ControllerMacros {
 					return AKParams( params, allOptional );
 				}
 				catch ( e:Dynamic ) {
-					var msg = 'Failed to parse function argument `args`.  The args object must contain only the types String, Int, Float and Bool.';
+					var msg = 'Failed to parse function argument `args`.  The args object must contain only the types String, Int, Float and Bool. \n$e';
 					Context.error( msg, pos );
 				}
 			case _: 
