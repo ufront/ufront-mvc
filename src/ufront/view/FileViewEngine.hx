@@ -4,18 +4,19 @@ import sys.FileSystem;
 import sys.io.File;
 import haxe.ds.Option;
 using tink.CoreApi;
+using haxe.io.Path;
 
 class FileViewEngine extends UFViewEngine {
 	
 	/** The content directory for your app.  This value should be injected. **/
-	@inject("contentDirectory") public var contentDir:String;
+	@inject("scriptDirectory") public var scriptDir:String;
 
 	/** The relative path to your views inside the content directory.  This value is set in the constructor. **/
 	public var path(default,null):String;
 
-	/** The absolute path to your views.  Basically `contentDir+path+'/'` **/
+	/** The absolute path to your views.  Basically `scriptDir+path+'/'` **/
 	public var viewDirectory(get,null):String;
-	function get_viewDirectory() return contentDir+path+'/';
+	function get_viewDirectory() return scriptDir+path.addTrailingSlash();
 
 	/**
 		@param path - path (relative to your content-directory) where your views are stored.  Default is "view"
