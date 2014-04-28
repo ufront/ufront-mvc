@@ -58,6 +58,12 @@ interface UFAuthHandler<T>
 	**/
 	function requirePermissions( permissions:Iterable<EnumValue> ) : Void;
 
+	/**
+		Given a String containing the user ID, find the appropriate UFAuthUser object.
+		The user ID should match the one provided by `ufront.auth.UFAuthUser.userID`.
+	**/
+	function getUserByID( id:String ) : Null<T>;
+
 	/** 
 		The currently logged in user.  Will be null if no user is logged in.
 

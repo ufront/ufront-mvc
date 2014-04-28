@@ -29,6 +29,8 @@ class YesBossAuthHandler<T:UFAuthUser> implements UFAuthHandler<T>
 	public function requirePermission( permission:EnumValue ) {}
 
 	public function requirePermissions( permissions:Iterable<EnumValue> ) {}
+	
+	public function getUserByID( id:String ):Null<T> return null;
 
 	public var currentUser(get,set):Null<T>;
 

@@ -18,4 +18,11 @@ interface UFAuthUser
 		All permissions must be satisfied for it to return true.
 	**/
 	function can( ?permission:EnumValue, ?permissions:Iterable<EnumValue> ) : Bool;
+
+	/**
+		A getter to give a string representing a unique identifier for this user.
+
+		This could be a database ID, a username, email, URL, or anything - the important thing is it is unique for this type of AuthHandler.
+	**/
+	var userID(get,null) : String;
 }
