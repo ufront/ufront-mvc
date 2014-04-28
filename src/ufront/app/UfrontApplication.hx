@@ -125,8 +125,8 @@ class UfrontApplication extends HttpApplication
 			mvcHandler.injector.mapClass( controller, controller );
 		
 		for ( api in configuration.apis ) {
-			remotingHandler.injector.mapClass( api, api );
-			mvcHandler.injector.mapClass( api, api );
+			remotingHandler.injector.mapSingleton( api );
+			mvcHandler.injector.mapSingleton( api );
 		}
 
 		// Set up handlers and middleware
