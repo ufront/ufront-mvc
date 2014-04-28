@@ -80,8 +80,10 @@ class FileLogger implements UFLogHandler implements UFInitRequired
 
 		var req = context.request;
 		var res = context.response;
-		var sessionID = ( context.isSessionActive() ) ? ' with session [${context.session.getID()}]' : "";
-		file.writeString( '${Date.now()} [${req.httpMethod}] [${req.uri}] from [${req.clientIP}]$sessionID, response: [${res.status} ${res.contentType}]\n' );
+		var userDetails = req.clientIP;
+		if ( context.sessionID!=null ) userDetails += ' ${context.sessionID}';
+		if ( context.currentUserID!=null ) userDetails += ' ${context.currentUserID}';
+		file.writeString( '${Date.now()} [${req.httpMethod}] [${req.uri}] from [$userDetails], response: [${res.status} ${res.contentType}]\n' );
 
 		for( msg in context.messages )
 			file.writeString( '\t${format(msg)}\n' );
