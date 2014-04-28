@@ -90,11 +90,32 @@ class HttpContext
 	public var session(get, null):UFHttpSessionState;
 
 	/**
-		The current auth handler 
+		The current session ID.
+
+		This is a shortcut for `session.id`, but will return null if `session` is null.
+	**/
+	public var sessionID(get, null):String;
+
+	/**
+		The current auth handler.
 
 		If no auth handler is provided, but authFactory is set, that will be used to create a session.
 	**/
 	public var auth(get, null):UFAuthHandler<UFAuthUser>;
+
+	/**
+		The current user.
+
+		This is a shortcut for `auth.currentUser`, but will return null if `auth` is null.
+	**/
+	public var currentUser(get, null):UFAuthUser;
+
+	/**
+		The current user.
+
+		This is a shortcut for `auth.currentUser.id`, but will return null if `auth` or `auth.currentUser` is null.
+	**/
+	public var currentUserID(get, null):String;
 
 	/** The `ActionContext` used in processing the request. Will be null until the application has processed it's dispatch **/
 	public var actionContext:ActionContext;
@@ -270,6 +291,18 @@ class HttpContext
 		if( null==_auth && authFactory!=null && session!=null )
 			_auth = authFactory.create( this );
 		return _auth;
+	}
+
+	inline function get_sessionID() {
+		return (null!=_session) ? _session.id : null;
+	}
+
+	inline function get_currentUser() {
+		return (null!=auth) ? auth.currentUser : null;
+	}
+
+	inline function get_currentUserID() {
+		return (null!=auth && null!=auth.currentUser) ? auth.currentUser.userID : null;
 	}
 }
 
