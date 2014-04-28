@@ -14,6 +14,9 @@ import tink.CoreApi;
 **/
 interface UFHttpSessionState
 {
+	/** The ID of the current session **/
+	public var id(get,null):String;
+
 	/**
 		Initiate the session (either read existing or start new session) and prepare so other operations can happen synchronously 
 
@@ -40,9 +43,6 @@ interface UFHttpSessionState
 
 	/** Return whether or not there is already an active session. **/
 	public function isActive():Bool;
-
-	/** Return the ID of the current session **/
-	public function getID():String;
 
 	/** Flag the current session for removal.  The session data and session ID should be set to null and when `commit()` is called and the session should be removed from the server. **/
 	public function close():Void;
