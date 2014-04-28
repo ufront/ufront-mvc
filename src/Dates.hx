@@ -61,7 +61,7 @@ class Dates
 		@param culture The culture to use.
 		```
 	**/
-	public static function format(d : Date, ?param : String, ?params : Array<String>, ?culture : Culture)
+	public static function format(d : Date, ?param : String, ?params : Array<String>, ?culture : Culture):String
 	{
 		return formatf(param, params, culture)(d);
 	}
@@ -71,7 +71,7 @@ class Dates
 	
 		@see format()
 	**/
-	public static function formatf(?param : String, ?params : Array<String>, ?culture : Culture)
+	public static function formatf(?param : String, ?params : Array<String>, ?culture : Culture):Date->String
 	{
 		params = FormatParams.params(param, params, 'D');
 		var format = params.shift();
@@ -325,68 +325,92 @@ class Dates
 		@throws Error if the month is not between 0 and 11.
 	**/
 	public static function numDaysInThisMonth(d:Date) return numDaysInMonth(d.getMonth(), d.getFullYear());
+	
+	/**
+		Perform a delta by creating a new Date object, rather than incrementing a timestamp.
+
+		This is important when the length of the delta is not a guaranteed number of seconds, for example: 
+		
+		- a month may have a differing number of days, 
+		- a day may not be exactly 24 hours if Daylight Savings begins or ends during that day,
+		- a year may be 365 or or 366 days depending on the year.
+	**/
+	public static function dateBasedDelta( d:Date, ?yearDelta:Int=0, ?monthDelta:Int=0, ?dayDelta:Int=0, ?hourDelta:Int=0, ?minDelta:Int=0, ?secDelta:Int=0, ?msDelta:Int=0 ):Date {
+		var year = d.getFullYear()+yearDelta;
+		var month = d.getMonth()+monthDelta;
+		var day = d.getDate()+dayDelta;
+		var hour = d.getHours()+hourDelta;
+		var min = d.getMinutes()+minDelta;
+		var sec = d.getSeconds()+secDelta;
+		
+		// Wrap values that are too large
+		while ( sec>60 ) { sec -= 60; min++; }
+		while ( min>60 ) { min -= 60; hour++; }
+		while ( hour>23 ) { hour -= 24; day++; }
+		while ( hour>23 ) { hour -= 24; day++; }
+			
+		var daysInMonth = numDaysInMonth(month,year);
+		while ( day>daysInMonth || month>11 ) {
+			if ( day>daysInMonth ) {
+				day -= daysInMonth;
+				month++;
+			}
+			if ( month>11 ) {
+				month -= 12;
+				year++;
+			}
+			daysInMonth = numDaysInMonth( month, year );
+		}
+		
+		var d = new Date( year, month, day, hour, min, sec );
+		return DateTools.delta( d, msDelta );
+	}
 
 	/** Return a new date, offset by `numSec` seconds */
-	inline public static function deltaSec(d, numSec:Int) return DateTools.delta(d, numSec*1000);
+	public inline static function deltaSec(d:Date, numSec:Int):Date return DateTools.delta(d, numSec*1000);
 
 	/** Return a new date, offset by `numMin` minutes */
-	inline public static function deltaMin(d, numMin:Int) return DateTools.delta(d, numMin*60*1000);
+	public inline static function deltaMin(d:Date, numMin:Int):Date return DateTools.delta(d, numMin*60*1000);
 	
 	/** Return a new date, offset by `numHrs` hours */
-	inline public static function deltaHour(d, numHrs:Int) return DateTools.delta(d, numHrs*60*60*1000);
+	public inline static function deltaHour(d:Date, numHrs:Int):Date return DateTools.delta(d, numHrs*60*60*1000);
 	
 	/** Return a new date, offset by `numDays` days */
-	inline public static function deltaDay(d, numDays:Int) return DateTools.delta(d, numDays*24*60*60*1000);
+	public static inline function deltaDay(d:Date, numDays:Int):Date {
+		return dateBasedDelta( d, 0, 0, numDays );
+	}
 	
 	/** Return a new date, offset by `numWks` weeks */
-	inline public static function deltaWeek(d, numWks:Int) return DateTools.delta(d, numWks*7*24*60*60*1000);
+	public static inline function deltaWeek(d:Date, numWks:Int):Date {
+		return dateBasedDelta( d, 0, 0, numWks*7 );
+	}
 	
 	/** Return a new date, offset by `numMonths` months */
-	public static function deltaMonth(d:Date, numMonths:Int) 
-	{
-		// var daysInMonth = numDaysInThisMonth(d);
-		// return DateTools.delta(d, numMonths*daysInMonth*24*60*60*1000);
-
-		var newM = d.getMonth() + numMonths;
-		var newY = d.getFullYear();
-
-		while (newM > 11)
-		{
-			newM = newM - 12;
-			newY++;
-		}
-		while (newM < 0)
-		{
-			newM = newM + 12;
-			newY--;
-		}
-
-		return new Date(newY, newM, d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds());
+	public static inline function deltaMonth(d:Date, numMonths:Int):Date {
+		return dateBasedDelta( d, 0, numMonths );
 	}
 	
 	/** Return a new date, offset by `numYrs` years */
-	public static function deltaYear(d:Date, numYrs:Int) 
-	{
-		var newY = d.getFullYear() + numYrs;
-		return new Date(newY, d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds());
+	public static inline function deltaYear(d:Date, numYrs:Int):Date {
+		return dateBasedDelta( d, numYrs );
 	}
 
 	/** Returns a new date, exactly 1 year before the given date/time. */
-	inline public static function prevYear(d) return deltaYear(d, -1);
+	inline public static function prevYear(d:Date):Date return deltaYear(d, -1);
 	/** Returns a new date, exactly 1 year after the given date/time. */
-	inline public static function nextYear(d) return deltaYear(d, 1);
+	inline public static function nextYear(d:Date):Date return deltaYear(d, 1);
 	/** Returns a new date, exactly 1 month before the given date/time. */
-	inline public static function prevMonth(d) return deltaMonth(d, -1);
+	inline public static function prevMonth(d:Date):Date return deltaMonth(d, -1);
 	/** Returns a new date, exactly 1 month after the given date/time. */
-	inline public static function nextMonth(d) return deltaMonth(d, 1);
+	inline public static function nextMonth(d:Date):Date return deltaMonth(d, 1);
 	/** Returns a new date, exactly 1 week before the given date/time. */
-	inline public static function prevWeek(d) return deltaWeek(d, -1);
+	inline public static function prevWeek(d:Date):Date return deltaWeek(d, -1);
 	/** Returns a new date, exactly 1 week after the given date/time. */
-	inline public static function nextWeek(d) return deltaWeek(d, 1);
+	inline public static function nextWeek(d:Date):Date return deltaWeek(d, 1);
 	/** Returns a new date, exactly 1 day before the given date/time. */
-	inline public static function prevDay(d) return deltaDay(d, -1);
+	inline public static function prevDay(d:Date):Date return deltaDay(d, -1);
 	/** Returns a new date, exactly 1 day after the given date/time. */
-	inline public static function nextDay(d) return deltaDay(d, 1);
+	inline public static function nextDay(d:Date):Date return deltaDay(d, 1);
 
 
 	static var _reparse = ~/^\d{4}-\d\d-\d\d(( |T)\d\d:\d\d(:\d\d(\.\d{1,3})?)?)?Z?$/;
@@ -406,7 +430,7 @@ class Dates
 		@return True if the string can be parsed as a date. 
 		@see `Dates.parse()`
 	**/
-	public static function canParse(s : String)
+	public static function canParse(s : String):Bool
 	{
 		return _reparse.match(s);
 	}
@@ -442,7 +466,7 @@ class Dates
 		@param b Second Date to compare.
 		@return 1 if A is before B, -1 if B is before A and 0 if they represent the same point in time.
 	**/
-	inline public static function compare(a : Date, b : Date)
+	inline public static function compare(a : Date, b : Date):Int
 	{
 		return Floats.compare(a.getTime(), b.getTime());
 	}
