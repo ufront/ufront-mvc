@@ -82,11 +82,14 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 		requestInjector.mapValue( HttpResponse, context.response );
 		requestInjector.mapValue( UFHttpSessionState, context.session );
 		requestInjector.mapValue( UFAuthHandler, context.auth );
+		requestInjector.mapValue( UFAuthUser, context.currentUser );
 		if (context.auth!=null) requestInjector.mapValue( UFAuthUser, context.auth.currentUser );
 		requestInjector.mapValue( ActionContext, context.actionContext );
 		requestInjector.mapValue( MessageList, new MessageList(context.messages) );
 		requestInjector.mapValue( String, context.contentDirectory, "contentDirectory" );
 		requestInjector.mapValue( String, context.request.scriptDirectory, "scriptDirectory" );
+		requestInjector.mapValue( String, context.sessionID, "sessionID" );
+		requestInjector.mapValue( String, context.currentUserID, "currentUserID" );
 
 		// Map the specific implementations for auth and session
 		requestInjector.mapValue( Type.getClass( context.session ), context.session );

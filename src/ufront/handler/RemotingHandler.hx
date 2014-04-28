@@ -37,7 +37,14 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 
 		`UfrontApplication` will add mappings for each API class by default.
 
-		We will create a child injector for each remoting request that also maps a `ufront.auth.UFAuthHandler` instance for checking auth in your API, and a `messages:Array<Message>` array so our APIs can log messages in a generic way whether running in a web context or not.
+		We will create a child injector for each remoting request that also maps: 
+
+		- a `ufront.auth.UFAuthHandler` instance for checking auth in your API, 
+		- a `ufront.log.MessageList` array so our APIs can log messages in a generic way whether or not they are running in a web context.
+		- a `ufront.auth.UFAuthUser` the current user so we can check permissions.
+		- a `contentDirectory:String` so we can access user/app generated files.
+		- a `sessionID:String` so we can use the session ID for logging / analytics purposes.  This does not give you read/write access to the session.
+		- a `currentUserID:String` so we can use the user ID for logging / analytics purposes.
 	**/
 	public var injector(default,null):Injector;
 	
@@ -77,7 +84,10 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 			var requestInjector = injector.createChildInjector();
 			requestInjector.mapValue( UFAuthHandler, httpContext.auth );
 			requestInjector.mapValue( MessageList, new MessageList(httpContext.messages) );
+			requestInjector.mapValue( UFAuthUser, httpContext.currentUser );
 			requestInjector.mapValue( String, httpContext.contentDirectory, "contentDirectory" );
+			requestInjector.mapValue( String, httpContext.sessionID, "sessionID" );
+			requestInjector.mapValue( String, httpContext.currentUserID, "currentUserID" );
 
 			// Map the specific implementations for auth and session
 			requestInjector.mapValue( Type.getClass( httpContext.auth ), httpContext.auth );
