@@ -83,7 +83,6 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 		requestInjector.mapValue( UFHttpSessionState, context.session );
 		requestInjector.mapValue( UFAuthHandler, context.auth );
 		requestInjector.mapValue( UFAuthUser, context.currentUser );
-		if (context.auth!=null) requestInjector.mapValue( UFAuthUser, context.auth.currentUser );
 		requestInjector.mapValue( ActionContext, context.actionContext );
 		requestInjector.mapValue( MessageList, new MessageList(context.messages) );
 		requestInjector.mapValue( String, context.contentDirectory, "contentDirectory" );
