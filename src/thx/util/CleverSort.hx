@@ -115,6 +115,6 @@ class CleverSort
 		statements.push( macro return 0 );
 
 		// Return it as an expression: arr.sort(sortFn);
-		return macro $arr.sort($sortFn);
+		return macro try $arr.sort($sortFn) catch( e:Dynamic ) {};
 	}
 }
