@@ -236,6 +236,10 @@ class FileSession implements UFHttpSessionState
 		var t = Future.trigger();
 		var handled = false;
 
+		if ( regenerateFlag ) {
+			handled = true;
+			t.trigger( Failure("NotImplemented: use regenerated ID to rename file and update cookie") );
+		}
 		if ( commitFlag && sessionData!=null ) {
 			handled = true;
 			try {
@@ -252,10 +256,6 @@ class FileSession implements UFHttpSessionState
 			handled = true;
 			t.trigger( Failure("NotImplemented: close the session, delete the file, expire the cookie") );
 		}
-		if ( regenerateFlag ) {
-			handled = true;
-			t.trigger( Failure("NotImplemented: use regenerated ID to rename file and update cookie") );
-		}
 		if ( expiryFlag ) {
 			handled = true;
 			t.trigger( Failure("NotImplemented: change expiry on cookie") );
@@ -271,7 +271,7 @@ class FileSession implements UFHttpSessionState
 	**/
 	public inline function get( name:String ):Dynamic {
 		checkStarted();
-		return sessionData.get( name );
+		return sessionData!=null ? sessionData.get( name ) : null;
 	}
 
 	/**
@@ -281,8 +281,10 @@ class FileSession implements UFHttpSessionState
 	**/
 	public inline function set( name:String, value:Dynamic ):Void {
 		init();
-		sessionData.set( name, value );
-		commitFlag = true;
+		if ( sessionData!=null ) {
+			sessionData.set( name, value );
+			commitFlag = true;
+		}
 	}
 
 	/**
@@ -291,7 +293,7 @@ class FileSession implements UFHttpSessionState
 	public inline function exists( name:String ):Bool {
 		if ( !isActive() ) return false;
 		checkStarted();
-		return sessionData.exists( name );
+		return sessionData!=null && sessionData.exists( name );
 	}
 
 	/**
@@ -299,8 +301,10 @@ class FileSession implements UFHttpSessionState
 	**/
 	public inline function remove( name:String ):Void {
 		checkStarted();
-		sessionData.remove(name);
-		commitFlag = true;
+		if ( sessionData!=null ) {
+			sessionData.remove(name);
+			commitFlag = true;
+		}
 	}
 
 	/**
@@ -321,7 +325,7 @@ class FileSession implements UFHttpSessionState
 	}
 
 	/**
-		Regenerate the ID for this session, renaming the file on the server and sending a new session to the 
+		Regenerate the ID for this session, renaming the file on the server and sending a new session ID to the cookie.
 	**/
 	public function regenerateID():Surprise<String,String> {
 		var t = Future.trigger();
@@ -358,9 +362,11 @@ class FileSession implements UFHttpSessionState
 	public function close():Void {
 		init();
 		sessionData = null;
-		sessionID = null;
 		closeFlag = true;
-		commitFlag = true;
+	}
+
+	public function toString():String {
+		return sessionData!=null ? sessionData.toString() : "{}";
 	}
 
 	// Private methods 
