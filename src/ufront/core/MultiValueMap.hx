@@ -137,10 +137,10 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> to Str
 
 		If `map` is null, this will return an empty `MultiValueMap`.
 	**/
-	@:from public static function fromStringMap<T>( map:StringMap<T> ):MultiValueMap<T> {
+	@:from public static function fromStringMap<T>( stringMap:StringMap<T> ):MultiValueMap<T> {
 		var qm = new MultiValueMap();
-		if ( map!=null ) for ( key in map.keys() ) {
-			qm.set( key, map.get(key) );
+		if ( stringMap!=null ) for ( key in stringMap.keys() ) {
+			qm.set( key, stringMap.get(key) );
 		}
 		return qm;
 	}
