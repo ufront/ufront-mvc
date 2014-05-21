@@ -51,7 +51,8 @@ class ErrorPageHandler implements UFErrorHandler
 		
 		// Pass the error to our log...
 		var callStack = #if debug " "+CallStack.toString( CallStack.exceptionStack() ) #else "" #end;
-		ctx.ufError( 'Handling error: $httpError$callStack' );
+		var inner = (httpError!=null && httpError.data!=null) ? ' (${httpError.data})' : "";
+		ctx.ufError( 'Handling error: $httpError$inner $callStack' );
 
 		if ( !ctx.completion.has(CRequestHandlersComplete) ) {
 			var showStack = #if debug true #else false #end;
