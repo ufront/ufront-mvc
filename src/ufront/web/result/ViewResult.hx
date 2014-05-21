@@ -169,13 +169,10 @@ class ViewResult extends ActionResult {
 			var layoutPath = try actionContext.httpContext.injector.getInstance( String, "defaultLayout" ) catch (e:Dynamic) null;
 			layout = Some( new Pair(layoutPath,null) );
 		}
-		if ( layout!=null ) {
-			layoutReady = switch layout {
-				case Some( layoutData ): viewEngine.getTemplate( layoutData.a, layoutData.b );
-				case None: Future.sync( Success(null) );
-			}
+		layoutReady = switch layout {
+			case Some( layoutData ): viewEngine.getTemplate( layoutData.a, layoutData.b );
+			default: Future.sync( Success(null) );
 		}
-		else layoutReady = Future.sync( Success(null) );
 
 		// Get the template future
 		var templateReady = viewEngine.getTemplate( viewPath, templatingEngine );
