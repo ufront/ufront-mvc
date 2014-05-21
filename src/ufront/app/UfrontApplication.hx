@@ -90,18 +90,6 @@ class UfrontApplication extends HttpApplication
 		Initialize a new UfrontApplication with the given configurations.
 
 		@param	?optionsIn		Options for UfrontApplication.  See `DefaultUfrontConfiguration` for details.  Any missing values will imply defaults should be used.
-		
-		Example usage: 
-
-		```
-		var routes = new MyRoutes();
-		var dispatchConfig = ufront.web.Dispatch.make( routes );
-		var configuration = new UfrontConfiguration(false); 
-		var ufrontApp = new UfrontApplication({
-			dispatchConfig: Dispatch.make( new MyRoutes() );
-		} , configuration, myapp.Api );
-		ufrontApp.execute();
-		```
 
 		This will redirect `haxe.Log.trace` to a local function which adds trace messages to the `messages` property of this application.  You will need to use an appropriate tracing module to view these.
 	**/
@@ -125,8 +113,8 @@ class UfrontApplication extends HttpApplication
 			mvcHandler.injector.mapClass( controller, controller );
 		
 		for ( api in configuration.apis ) {
-			remotingHandler.injector.mapSingleton( api );
-			mvcHandler.injector.mapSingleton( api );
+			remotingHandler.injector.mapClass( api, api );
+			mvcHandler.injector.mapClass( api, api );
 		}
 
 		// Set up handlers and middleware
