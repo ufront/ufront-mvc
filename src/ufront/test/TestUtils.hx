@@ -1,17 +1,17 @@
 package ufront.test;
 
 import ufront.web.context.*;
-import ufront.web.error.HttpError;
+import ufront.web.HttpError;
 import ufront.web.session.UFHttpSessionState;
 import ufront.auth.*;
 import thx.error.*;
 import thx.collection.*;
 import haxe.PosInfos;
 import massive.munit.Assert;
-import ufront.web.Dispatch;
-import haxe.web.Dispatch.DispatchConfig;
-import ufront.application.UfrontApplication;
+import ufront.web.Controller;
+import ufront.app.UfrontApplication;
 import ufront.web.UfrontConfiguration;
+import minject.Injector;
 using mockatoo.Mockatoo;
 using tink.core.Outcome;
 
@@ -47,10 +47,13 @@ class TestUtils
 		* The request, response, session and auth return either the supplied value, or are mocked
 		* `setUrlFilters` and `generateUri` call the real methods.
 	**/
-	public static function mockHttpContext( uri:String, ?method:String, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser> )
+	public static function mockHttpContext( uri:String, ?method:String, ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser> )
 	{
 		// Check the supplied arguments
 		NullArgument.throwIfNull( uri );
+		if ( injector==null ) {
+			injector = new Injector();
+		}
 		if ( request==null ) {
 			// request = HttpRequest.mock();
 			request.uri.returns( uri );
@@ -65,7 +68,7 @@ class TestUtils
 		if (auth==null) auth = UFAuthHandler.mock([UFAuthUser]);
 
 		// Build the HttpContext with our mock objects
-		var ctx = new HttpContext( request, response, session, auth, [] );
+		var ctx = new HttpContext( injector, request, response, session, auth, [] );
 		return ctx;
 	}
 	/**
@@ -75,19 +78,19 @@ class TestUtils
 
 		If an error is encountered, the exception is returned as a Failure.
 	**/
-	public static function testRoute( context:HttpContext, dispatchCfg:DispatchConfig ):Outcome<RouteTestResult,HttpError> {
+	public static function testRoute( context:HttpContext, controller:Class<IndexController> ):Outcome<RouteTestResult,HttpError> {
 		var ufrontConf:UfrontConfiguration = {
-			dispatchConfig: dispatchCfg,
+			indexController: controller,
 			urlRewrite: true,
 			basePath: "/",
 			logFile: null,
-			disableBrowserTrace: true
+			disableBrowserTrace: true,
+			errorHandlers: []
 		}
 		var app = new UfrontApplication( ufrontConf );
-		app.errorModule.catchErrors = false;
 		var result = try {
 			app.execute( context );
-			Success( { app: app, context: context, d:app.dispatchModule.dispatch } );
+			Success( { app: app, context: context } );
 		}
 		catch (e:HttpError) {
 			Failure(e);
@@ -122,14 +125,15 @@ class TestUtils
 	**/
 	public static function assertSuccess( result:Outcome<RouteTestResult,HttpError>, ?controller:Class<Dynamic>, ?action:String, ?args:Array<Dynamic>, ?p:PosInfos ):RouteTestResult {
 		switch ( result ) {
-			case Success( successResults ): 
-				var d = successResults.d;
+			case Success( successResult ):
+
+				var ctx = successResult.context.actionContext;
 
 				// If a controller type was specified, check it
 				if ( controller!=null ) {
-					if ( !Std.is(d.controller, controller) ) {
+					if ( !Std.is(ctx.controller, controller) ) {
 						var expectedName = Type.getClassName(controller);
-						var actualName = Type.getClassName( Type.getClass(d.controller) );
+						var actualName = Type.getClassName( Type.getClass(ctx.controller) );
 						if ( expectedName!=actualName ) {
 							Assert.fail( '[$actualName] was not equal to expected controller type [$expectedName] after dispatching', p );
 						}
@@ -138,24 +142,24 @@ class TestUtils
 
 				// If an action was specified, check it
 				if ( action!=null )
-					if ( action!=d.action )
-						Assert.fail( '[${d.action}] was not equal to expected action [$action] after dispatching', p );
+					if ( action!=ctx.action )
+						Assert.fail( '[${ctx.action}] was not equal to expected action [$action] after dispatching', p );
 
 				// If an args array was specified, check length and args
 				if ( args!=null ) {
-					var sameLength = ( d.arguments.length==args.length );
+					var sameLength = ( ctx.args.length==args.length );
 
 					var sameArgs = true;
 					if ( sameLength ) 
 						for ( i in 0...args.length ) 
-							if ( args[i] != d.arguments[i] )
+							if ( args[i] != ctx.args[i] )
 								sameArgs = false;
 					
 					if ( !sameLength || !sameArgs ) 
-						Assert.fail( '[${d.arguments.length}] argument(s) [${d.arguments.join(",")}] was not equal to expected [${args.length}] argument(s) [${args.join(",")}]', p );
+						Assert.fail( '[${ctx.args.length}] argument(s) [${ctx.args.join(",")}] was not equal to expected [${args.length}] argument(s) [${args.join(",")}]', p );
 				}
 
-				return successResults;
+				return successResult;
 
 			case Failure( f ): 
 				Assert.fail( 'Expected routing to succeed, but it did not (failed with error $f)', p );
@@ -196,6 +200,5 @@ class TestUtils
 
 typedef RouteTestResult = { 
 	app: UfrontApplication, 
-	context: HttpContext,
-	d: Dispatch
+	context: HttpContext
 }

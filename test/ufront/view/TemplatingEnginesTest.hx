@@ -3,11 +3,11 @@ package ufront.view;
 import massive.munit.util.Timer;
 import massive.munit.Assert;
 import massive.munit.async.AsyncFactory;
-import ufront.view.TemplateEngines;
+import ufront.view.TemplatingEngines;
 
 class TemplatingEnginesTest 
 {
-	var instance:TemplateEngines; 
+	var instance:TemplatingEngines;
 	
 	public function new() 
 	{
