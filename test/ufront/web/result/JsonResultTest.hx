@@ -7,8 +7,6 @@ import ufront.web.result.JsonResult;
 
 class JsonResultTest 
 {
-	var instance:JsonResult<Dynamic>; 
-	
 	public function new() 
 	{
 		
@@ -37,6 +35,6 @@ class JsonResultTest
 	@Test
 	public function testExample():Void
 	{
-		Assert.fail("Tests not implemented yet");
+		Assert.isTrue(false);
 	}
 }

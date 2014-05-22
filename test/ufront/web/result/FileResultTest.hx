@@ -37,6 +37,6 @@ class FileResultTest
 	@Test
 	public function testExample():Void
 	{
-		Assert.fail("Tests not implemented yet");
+		Assert.isTrue(false);
 	}
 }
