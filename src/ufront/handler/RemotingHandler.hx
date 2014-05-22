@@ -15,7 +15,6 @@ import ufront.app.*;
 import ufront.auth.*;
 import ufront.core.Sync;
 import tink.CoreApi;
-import ufront.core.AsyncSignal;
 
 /**
 	Checks if a request is a remoting request and processes accordingly.

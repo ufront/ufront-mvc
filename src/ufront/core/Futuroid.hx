@@ -23,7 +23,7 @@ abstract Futuroid<T>( Future<T> ) from Future<T> to Future<T> {
 		this = f;
 
 	@:from inline static function fromSync( v:T )
-		new Futuroid( Future.sync(v) );
+		return new Futuroid( Future.sync(v) );
 
 	public inline function asFuture():Future<T>
 		return this;

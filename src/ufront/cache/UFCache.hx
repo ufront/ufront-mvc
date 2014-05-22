@@ -4,13 +4,13 @@ import tink.CoreApi;
 import ufront.core.Futuroid;
 
 interface UFCacheConnection<T> {
-	public function for( namespace:String ):UFCache<T>
+	public function getNamespace( namespace:String ):UFCache<T>;
 }
 
 interface UFCache<T> {
 	public function get( id:String ):Surprise<T,CacheError>;
 	public function set( id:String, value:Futuroid<T> ):Surprise<T,CacheError>;
-	public function getOrSet( id:String, ?fn:Void->Futuroid<T> );
+	public function getOrSet( id:String, ?fn:Void->Futuroid<T> ):Surprise<T,CacheError>;
 	public function clear():Surprise<Noise,CacheError>;
 }
 

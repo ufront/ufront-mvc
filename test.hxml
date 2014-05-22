@@ -1,18 +1,33 @@
-## Neko
+## Generic for all targets
+
 -main TestMain
--lib munit
--lib hamcrest
--lib mockatoo
--cp src
--cp test
--lib hxevents
--lib erazor
--lib minject
+
+# Things needed for ufront-mvc
+
 -lib random
 -lib compiletime
--lib hscript
--dce no
+-lib minject
+-lib tink_core
+-lib tink_macro
+-lib mockatoo
+-cp src
+
+# Things need for tests
+-lib munit
+-lib detox
+-cp test
+
 --each
+
+## Neko
 
 -neko build/neko_test.n
 -xml doc/neko.xml
+
+--next
+## PHP
+
+-php build
+--php-lib php
+--php-front php_test.php
+-xml doc/php.xml

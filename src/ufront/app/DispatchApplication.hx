@@ -36,6 +36,7 @@ package ufront.app;
 	@author Andreas Soderlund
 	@author Franco Ponticelli
 **/
+@:deprecated
 class DispatchApplication extends HttpApplication
 {
 	#if !macro 

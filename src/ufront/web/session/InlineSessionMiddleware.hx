@@ -4,7 +4,6 @@ import ufront.web.context.HttpContext;
 import ufront.app.UFMiddleware;
 import ufront.app.HttpApplication;
 import tink.CoreApi;
-import ufront.core.AsyncCallback;
 import ufront.web.HttpError;
 import ufront.core.Sync;
 using Types;

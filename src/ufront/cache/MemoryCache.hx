@@ -10,7 +10,7 @@ class MemoryCacheConnection<T> implements UFCacheConnection<T> {
 	public function new() 
 		caches = new Map();
 	
-	public function for( namespace:String ):UFCache<T>
+	public function getNamespace( namespace:String ):UFCache<T>
 		return
 			if ( caches.exists(namespace) )
 				caches[namespace]
@@ -48,18 +48,18 @@ class MemoryCache<T> implements UFCache<T> implements UFCacheSync<T> {
 	}
 
 	public function get( id:String ):Surprise<T,CacheError> 
-		return Future.sync( get(id) );
+		return Future.sync( getSync(id) );
 
 	public function set( id:String, value:Futuroid<T> ):Surprise<T,CacheError> 
-		return f.map( function(v:T) return Success(map[id]=v) );
+		return value.map( function(v:T) return Success(map[id]=v) );
 
 	public function getOrSet( id:String, ?fn:Void->Futuroid<T> ):Surprise<T,CacheError> 
 		return 
 			if ( map.exists(id) )
-				Success( map[id] )
+				Future.sync( Success(map[id]) )
 			else
 				fn().map( function(v:T) return Success(map[id]=v) );
 
 	public function clear():Surprise<Noise,CacheError> 
-		return Future.sync( clear() );
+		return Future.sync( clearSync() );
 }

@@ -112,6 +112,13 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> to Str
 		}
 	}
 
+	/**
+		Remove all values for a given key
+
+		If the `key` is null, the result is unspecified.
+	**/
+	public inline function remove( key:String ) return this.remove( key );
+
 	inline function stripArrayFromName( name:String ) {
 		return name.endsWith("[]") ? name.substr(0,name.length-2) : name;
 	}
