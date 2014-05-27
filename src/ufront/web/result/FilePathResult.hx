@@ -2,6 +2,7 @@ package ufront.web.result;
 
 #if server
 	import sys.io.File;
+	import sys.FileSystem;
 #end
 import haxe.io.Bytes;
 import haxe.io.Eof;
@@ -31,12 +32,16 @@ class FilePathResult extends FileResult
 		super.executeResult( actionContext );
 		#if server
 			if ( null!=fileName ) {
+				if ( !FileSystem.exists(fileName) )
+					throw HttpError.pageNotFound();
+
 				try {
 					var bytes = File.getBytes( fileName );
 					actionContext.response.writeBytes( bytes, 0, bytes.length );
 					return Sync.success();
-				} catch (e:Dynamic) {
-					return Sync.httpError( 'Failed to read $fileName: $e' );
+				}
+				catch (e:Dynamic) {
+					throw HttpError.internalServerError( 'Failed to read file $fileName in FilePathResult: $e', e );
 				}
 			}
 		#end
