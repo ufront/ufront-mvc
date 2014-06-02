@@ -81,7 +81,7 @@ class HttpRequest extends ufront.web.HttpRequest
 						handler.uploadProgress(partName, bytes, pos, len);
 					}
 				} else {
-					post.set(partName, bytes.readString(pos, len));
+					post.set(partName, bytes.getString(pos, len));
 				}
 			} else {
 				if (isFile)
@@ -89,7 +89,7 @@ class HttpRequest extends ufront.web.HttpRequest
 					if(len > 0)
 						handler.uploadProgress(partName, bytes, pos, len);
 				} else {
-					post.set(partName, post.get(partName) + bytes.readString(pos, len));
+					post.set(partName, post.get(partName) + bytes.getString(pos, len));
 				}
 			}
 		};
