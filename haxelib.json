@@ -5,14 +5,14 @@
   "tags": ["ufront","web","framework","mvc","neko","php"],
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
-  "releasenote": "Improvements to FileResult and FilePathResult",
-  "version": "1.0.0-beta.5",
+  "releasenote": "Many small improvements and fixes, Haxe 3.1.3/3.2 compatibility.",
+  "version": "1.0.0-beta.6",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
-    "random": "",
-    "compiletime": "",
-    "minject": "",
-    "tink_core": "",
-    "tink_macro": ""
+    "random": "1.4.0",
+    "compiletime": "2.4.0",
+    "minject": "1.3.0",
+    "tink_core": "1.0.0-rc.2",
+    "tink_macro": "0.3.0-beta"
   }
 }
