@@ -35,3 +35,12 @@ class ActionResult {
 		}
 	}
 }
+
+/** A typedef shortcut for an action return type that either gives a valid result or a HttpError **/
+typedef ActionOutcome = Outcome<ActionResult,HttpError>;
+
+/** A typedef shortcut for a Future that will contain an ActionResult **/
+typedef FutureActionResult = Future<ActionResult>;
+
+/** A typedef shortcut for a Future that will contain either an ActionResult or a HttpError **/
+typedef FutureActionOutcome = Future<ActionOutcome>;

@@ -108,7 +108,7 @@ class Controller
 		Please note this is an abstract method.  
 		Each child class will have an override, provided by a build macro, that has the appropriate code for that class.
 	**/
-	public function execute():Surprise<ActionResult,HttpError> {
+	public function execute():FutureActionOutcome {
 		return Future.sync( Failure(HttpError.internalServerError('Field execute() in ufront.web.Controller is an abstract method, please override it in ${this.toString()} ')) );
 	}
 
