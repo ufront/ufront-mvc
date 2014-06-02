@@ -48,7 +48,8 @@ class TmpFileUploadMiddleware implements UFMiddleware
 		If the chosen `subDir` does not exist, it will attempt to create it, but only one level deep - it will not recursively create directories for you.
 	**/
 	public function requestIn( ctx:HttpContext ):Surprise<Noise,HttpError> {
-		try {
+
+		if ( ctx.request.httpMethod.toLowerCase()=="post" && ctx.request.isMultipart() ) {
 			var file:FileOutput = null,
 			    postName:String = null,
 			    origFileName:String = null,
@@ -66,7 +67,9 @@ class TmpFileUploadMiddleware implements UFMiddleware
 				size = 0;
 				while ( file==null ) {
 					tmpFilePath = dir+dateStr+"-"+Random.string(10)+".tmp";
-					if ( !FileSystem.exists(tmpFilePath) ) file = File.write( tmpFilePath );
+					if ( !FileSystem.exists(tmpFilePath) ) {
+						file = File.write( tmpFilePath );
+					}
 				}
 				return Sync.success();
 			}
@@ -78,36 +81,41 @@ class TmpFileUploadMiddleware implements UFMiddleware
 			}
 			function onEndPart() {
 				// Close the file, create our FileUpload object and add it to the request
-				file.close();
-				var tmpFile = new TmpFileUploadSync( tmpFilePath, postName, origFileName, size );
-				ctx.request.files.set( postName, tmpFile );
-				files.push( tmpFile );
+				if ( file!=null ) {
+					file.close();
+					var tmpFile = new TmpFileUploadSync( tmpFilePath, postName, origFileName, size );
+					ctx.request.files.add( postName, tmpFile );
+					files.push( tmpFile );
+				}
 				return Sync.success();
 			}
 			return 
 				ctx.request.parseMultipart( onPart, onData, onEndPart )
-				.map( function(result) switch result {
+				.map( function(result) {
+					switch result {
 					case Success(s): return Success( s );
 					case Failure(f): return Failure( HttpError.wrap(f) );
+				}
 				});
 		}
-		catch ( e:Dynamic ) return Sync.httpError( "Failed to process multipart form data in TmpFileUploadMiddleware.requestIn()", e );
+		else return Sync.success();
 	}
 
 	/**
 		Delete the temporary file at the end of the request
 	**/
 	public function responseOut( ctx:HttpContext ):Surprise<Noise,HttpError> {
-		var errors = [];
-		for ( f in files ) {
-			switch f.deleteTemporaryFile() {
-				case Failure( e ): errors.push( e );
-				default:
+		if ( ctx.request.httpMethod.toLowerCase()=="post" && ctx.request.isMultipart() ) {
+			var errors = [];
+			for ( f in files ) {
+				switch f.deleteTemporaryFile() {
+					case Failure( e ): errors.push( e );
+					default:
+				}
 			}
+			if ( errors.length>0 ) 
+				return Sync.httpError( "Failed to delete one or more temporary upload files", errors );
 		}
-		return 
-			if ( errors.length>0 ) Sync.httpError( "Failed to delete one or more temporary upload files", errors );
-			else Sync.success();
+		return Sync.success();
 	}
 }
-

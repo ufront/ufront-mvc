@@ -66,8 +66,8 @@ class HttpContext
 		this.urlFilters = ( urlFilters!=null ) ? urlFilters : [];
 		this.contentDir = contentDir;
 
-		this.sessionFactory = injector.getInstance( UFSessionFactory );
-		this.authFactory = injector.getInstance( UFAuthFactory );
+		try this.sessionFactory = injector.getInstance( UFSessionFactory ) catch (e:Dynamic) {}
+		try this.authFactory = injector.getInstance( UFAuthFactory ) catch (e:Dynamic) {}
 		
 		messages = [];
 		completion = new EnumFlags<RequestCompletion>();
@@ -117,7 +117,7 @@ class HttpContext
 	**/
 	public var currentUserID(get, null):String;
 
-	/** The `ActionContext` used in processing the request. Will be null until the application has processed it's dispatch **/
+	/** The `ActionContext` used in processing the request. Will be null until the application has found a handler for the request. **/
 	public var actionContext:ActionContext;
 
 	/**

@@ -111,7 +111,7 @@ class HttpResponse
 	/**
 		Will clear existing headers, cookies and content
 	**/
-	public function clear() {
+	public function clear():Void {
 		clearCookies();
 		clearHeaders();
 		clearContent();
@@ -120,28 +120,28 @@ class HttpResponse
 	/**
 		Clear any cookies set in this response so far.
 	**/
-	public function clearCookies() {
+	public function clearCookies():Void {
 		_cookies = new StringMap();
 	}
 
 	/**
 		Clear the content set in this response so far.
 	**/
-	public function clearContent() {
+	public function clearContent():Void {
 		_buff = new StringBuf();
 	}
 
 	/**
 		Clear the headers set in this response so far.
 	**/
-	public function clearHeaders() {
+	public function clearHeaders():Void {
 		_headers = new HashList();
 	}
 
 	/**
 		Write a string to the HTTP response
 	**/
-	public function write( s:String ) {
+	public function write( s:String ):Void {
 		if( null!=s )
 			_buff.add( s );
 	}
@@ -149,21 +149,21 @@ class HttpResponse
 	/**
 		Write a single character to the HTTP response
 	**/
-	public function writeChar( c:Int ) {
+	public function writeChar( c:Int ):Void {
 		_buff.addChar( c );
 	}
 
 	/**
 		Write a number of bytes to the HTTP response
 	**/
-	public function writeBytes( b:Bytes, pos:Int, len:Int ) {
+	public function writeBytes( b:Bytes, pos:Int, len:Int ):Void {
 		_buff.add( b.getString(pos, len) );
 	}
 
 	/**
 		Set a HTTP Header on the response
 	**/
-	public function setHeader( name:String, value:String ) {
+	public function setHeader( name:String, value:String ):Void {
 		NullArgument.throwIfNull( name );
 		NullArgument.throwIfNull( value );
 		_headers.set( name, value );
@@ -172,7 +172,7 @@ class HttpResponse
 	/**
 		Set a HTTP Cookie on the response
 	**/
-	public function setCookie( cookie:HttpCookie ) {
+	public function setCookie( cookie:HttpCookie ):Void {
 		_cookies.set( cookie.name, cookie );
 	}
 
@@ -186,7 +186,7 @@ class HttpResponse
 	/**
 		Get the `StringMap` of Cookies set in this response
 	**/
-	public function getCookies() {
+	public function getCookies():StringMap<HttpCookie> {
 		return _cookies;
 	}
 
@@ -195,7 +195,7 @@ class HttpResponse
 
 		A HashList is basically a StringMap, but it preserves the order of the items (headers in this case)
 	**/
-	public function getHeaders() {
+	public function getHeaders():HashList<String> {
 		return _headers;
 	}
 
@@ -204,7 +204,7 @@ class HttpResponse
 
 		If URL is null, the `Location` header will be removed.
 	**/
-	public function redirect( url:String ) {
+	public function redirect( url:String ):Void {
 		status = FOUND;
 		redirectLocation = url;
 	}
@@ -212,28 +212,28 @@ class HttpResponse
 	/**
 		Set the HTTP Response Code to `DEFAULT_STATUS` (200)
 	**/
-	public function setOk() {
+	public function setOk():Void {
 		status = DEFAULT_STATUS;
 	}
 
 	/**
 		Set the HTTP Response Code to `UNAUTHORIZED` (401)
 	**/
-	public function setUnauthorized() {
+	public function setUnauthorized():Void {
 		status = UNAUTHORIZED;
 	}
 
 	/**
 		Set the HTTP Response Code to `NOT_FOUND` (404)
 	**/
-	public function setNotFound() {
+	public function setNotFound():Void {
 		status = NOT_FOUND;
 	}
 
 	/**
 		Set the HTTP Response Code to `INTERNAL_SERVER_ERROR` (500)
 	**/
-	public function setInternalError() {
+	public function setInternalError():Void {
 		status = INTERNAL_SERVER_ERROR;
 	}
 
@@ -242,7 +242,7 @@ class HttpResponse
 
 		If URL is null, the `Location` header will be removed.
 	**/
-	public function permanentRedirect( url:String ) {
+	public function permanentRedirect( url:String ):Void {
 		status = MOVED_PERMANENTLY;
 		redirectLocation = url;
 	}
@@ -250,22 +250,22 @@ class HttpResponse
 	/**
 		A shortcut to tell whether the current status indicates this response is a redirect (true) or not (false)
 	**/
-	public function isRedirect() {
+	public function isRedirect():Bool {
 		return Math.floor( status/100 ) == 3;
 	}
 
 	/**
 		A shortcut to tell whether the current status indicates this response is a permanent redirect (true) or not (false)
 	**/
-	public function isPermanentRedirect() {
+	public function isPermanentRedirect():Bool {
 		return status == MOVED_PERMANENTLY;
 	}
 
-	function get_contentType() {
+	function get_contentType():String {
 		return _headers.get( CONTENT_TYPE );
 	}
 
-	function set_contentType(v:String) {
+	function set_contentType(v:String):String {
 		if ( null==v )
 			_headers.set( CONTENT_TYPE, DEFAULT_CONTENT_TYPE )
 		else
@@ -273,11 +273,11 @@ class HttpResponse
 		return v;
 	}
 
-	function get_redirectLocation() {
+	function get_redirectLocation():String {
 		return _headers.get( LOCATION );
 	}
 
-	function set_redirectLocation( v:String ) {
+	function set_redirectLocation( v:String ):String {
 		if ( null==v )
 			_headers.remove( LOCATION )
 		else

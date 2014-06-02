@@ -6,6 +6,7 @@ import thx.error.NotImplemented;
 import ufront.web.upload.FileUpload;
 import ufront.core.MultiValueMap;
 using tink.CoreApi;
+using StringTools;
 
 /**
 	A description of the current HttpRequest.
@@ -45,7 +46,7 @@ class HttpRequest
 		In that example, if you would like to access all the various values of `name`, you can use `request.params.getAll("name")` or separately access `request.cookies` or `request.post`.
 	**/
 	@:isVar public var params(get, null):MultiValueMap<String>;
-	function get_params() {
+	function get_params():MultiValueMap<String> {
 		if ( null==params ) {
 			params = MultiValueMap.combine( [cookies,query,post] );
 		}
@@ -58,7 +59,7 @@ class HttpRequest
 		Will return an empty String if there are no GET parameters.
 	**/
 	public var queryString(get, null):String;
-	function get_queryString() return throw new AbstractMethod();
+	function get_queryString():String return throw new AbstractMethod();
 
 	/**
 		The POST query parameters.
@@ -66,13 +67,13 @@ class HttpRequest
 		Will return an empty String if there are no GET parameters.
 	**/
 	public var postString(get, null):String;
-	function get_postString() return throw new AbstractMethod();
+	function get_postString():String return throw new AbstractMethod();
 
 	/**
 		The GET query parameters for this request.
 	**/
 	public var query(get, null):MultiValueMap<String>;
-	function get_query() return throw new AbstractMethod();
+	function get_query():MultiValueMap<String> return throw new AbstractMethod();
 
 	/**
 		The POST parameters for this request.
@@ -85,7 +86,7 @@ class HttpRequest
 		If any files were uploaded, they will appear in the "post" values with their parameter name, and the value will contain the original filename of the upload.
 	**/
 	public var post(get, null):MultiValueMap<String>;
-	function get_post() return throw new AbstractMethod();
+	function get_post():MultiValueMap<String> return throw new AbstractMethod();
 
 	/**
 		File uploads that were part of a POST / multipart request.
@@ -93,7 +94,7 @@ class HttpRequest
 		Please note this is not populated automatically, you must use some request middleware to process the multipart data and populate the `files` with appropriate FileUploads.
 	**/
 	public var files(get, null):MultiValueMap<FileUpload>;
-	function get_files() {
+	function get_files():MultiValueMap<FileUpload> {
 		if ( null==files ) {
 			files = new MultiValueMap();
 		}
@@ -104,19 +105,19 @@ class HttpRequest
 		The Cookie parameters for this request.
 	**/
 	public var cookies(get, null):MultiValueMap<String>;
-	function get_cookies() return throw new AbstractMethod();
+	function get_cookies():MultiValueMap<String> return throw new AbstractMethod();
 
 	/**
 		The host name of the current server
 	**/
 	public var hostName(get, null):String;
-	function get_hostName() return throw new AbstractMethod();
+	function get_hostName():String return throw new AbstractMethod();
 
 	/**
 		The Client's IP address
 	**/
 	public var clientIP(get, null):String;
-	function get_clientIP() return throw new AbstractMethod();
+	function get_clientIP():String return throw new AbstractMethod();
 
 	/**
 		The Uri requested in this HTTP request.
@@ -124,19 +125,19 @@ class HttpRequest
 		This is the URI before any filters have been applied.
 	**/
 	public var uri(get, null):String;
-	function get_uri() return throw new AbstractMethod();
+	function get_uri():String return throw new AbstractMethod();
 
 	/**
 		The client headers supplied in the request.  
 	**/
 	public var clientHeaders(get, null):MultiValueMap<String>;
-	function get_clientHeaders() return throw new AbstractMethod();
+	function get_clientHeaders():MultiValueMap<String> return throw new AbstractMethod();
 
 	/**
 		Information about the user agent that made the request.
 	**/
 	public var userAgent(get, null):UserAgent;
-	function get_userAgent() return throw new AbstractMethod();
+	function get_userAgent():UserAgent return throw new AbstractMethod();
 
 	/**
 		The HTTP method used for the request.
@@ -146,7 +147,7 @@ class HttpRequest
 		Case sensitivity depends on the environement.
 	**/
 	public var httpMethod(get, null):String;
-	function get_httpMethod() return throw new AbstractMethod();
+	function get_httpMethod():String return throw new AbstractMethod();
 
 	/**
 		The path of the currently executing script.
@@ -158,7 +159,7 @@ class HttpRequest
 		@todo confirm this always has a traling slash.  It appears to...
 	**/
 	public var scriptDirectory(get, null):String;
-	function get_scriptDirectory() return throw new AbstractMethod();
+	function get_scriptDirectory():String return throw new AbstractMethod();
 
 	/**
 		Gives the username and password supplied by the "Authorization" client header.
@@ -170,7 +171,16 @@ class HttpRequest
 		TODO: document how to trigger this authorization header.
 	**/
 	public var authorization(get, null):{ user:String, pass:String };
-	function get_authorization() return throw new AbstractMethod();
+	function get_authorization():{ user:String, pass:String } return throw new AbstractMethod();
+
+	/**
+		Check if the current request is a multipart/form-data request.
+
+		This is a shortcut for: `clientHeaders["Content-Type"].startsWith("multipart/form-data")`
+	**/
+	public function isMultipart():Bool {
+		return clientHeaders.exists("Content-Type") && clientHeaders["Content-Type"].startsWith("multipart/form-data");
+	}
 
 	/**
 		Parse the multipart data of this request.
@@ -185,7 +195,7 @@ class HttpRequest
 
 		In each platform's implementation of `parseMultipart()`, it should take care of parsing post variables to `request.post`, and then call the `onPart`, `onData` and `onEndPart` for each file upload.
 
-		You should only call `parseMultipart()` a maximum of once per request, and an exception will be thrown if you attempt to call it again.
+		You should only call `parseMultipart()` a maximum of once per request, and an exception will be thrown if you attempt to call it more than once.
 
 		If this method is called on a request which was not multipart encoded, the result is unspecified.
 		

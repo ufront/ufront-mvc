@@ -60,7 +60,12 @@ class HttpRequest extends ufront.web.context.HttpRequest
 
 	override public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error>
 	{
-		if (_parsed) return throw new Error('parseMultipart() can only been called once');
+		if ( !isMultipart() )
+			return Sync.success();
+
+		if (_parsed) 
+			return throw new Error('parseMultipart() can only been called once');
+		
 		_parsed = true;
 
 		var post = get_post();
@@ -169,11 +174,11 @@ class HttpRequest extends ufront.web.context.HttpRequest
 			return new MultiValueMap();
 		if (null == post)
 		{
-			if ( "multipart/form-data"==clientHeaders.get("ContentType") ) {
+			if ( isMultipart() ) {
 				post = new MultiValueMap();
 				if (untyped __call__("isset", __php__("$_POST")))
 				{
-					var postNames:Array<String> = untyped __call__( "new _hx_array",__call("array_keys", __php__("$_POST" )));
+					var postNames:Array<String> = untyped __call__( "new _hx_array",__call__("array_keys", __php__("$_POST" )));
 
 					for ( name in postNames ) {
 						var val:Dynamic = untyped __php__("$_POST[$name]");
@@ -201,9 +206,9 @@ class HttpRequest extends ufront.web.context.HttpRequest
 			if (untyped __call__("isset", __php__("$_FILES")))
 			{
 				var parts:Array<String> = untyped __call__("new _hx_array",__call__("array_keys", __php__("$_FILES")));
-				untyped for (part in parts) {
-					var file:String = __php__("$_FILES[$part]['name']");
-					var name = StringTools.urldecode(part);
+				for (part in parts) {
+					var file:String = untyped __php__("$_FILES[$part]['name']");
+					var name = StringTools.urlDecode(part);
 					post.add(name, file);
 				}
 			}

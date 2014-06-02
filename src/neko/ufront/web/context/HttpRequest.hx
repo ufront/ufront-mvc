@@ -75,20 +75,25 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	**/
 	override public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error>
 	{
+		if ( !isMultipart() )
+			return Sync.success();
+
 		// Prevent this running more than once.
-		if (_parsed) return throw new Error('parseMultipart() can only been called once');
+		if (_parsed)
+			throw "parseMultipart() has been called more than once.";
+
 		_parsed = true;
 
 		// Default values, prepare for processing
 		if ( onPart==null ) onPart = function(_,_) return Sync.of( Success(Noise) );
 		if ( onData==null ) onData = function(_,_,_) return Sync.of( Success(Noise) );
 		if ( onEndPart==null ) onEndPart = function() return Sync.of( Success(Noise) );
-		var post = get_post(),
-		    noParts = true,
+
+		post = new MultiValueMap();
+		var noParts = true,
 		    isFile = false, 
 		    partName = null,
 		    fileName = null,
-		    lastWasFile = false,
 		    currentContent = null,
 		    callbackFutures = [],
 		    errors = [];
@@ -104,41 +109,61 @@ class HttpRequest extends ufront.web.context.HttpRequest
 			});
 		}
 		function doEndOfPart() {
-			if ( lastWasFile ) processCallbackResult( onEndPart() );
-			else if ( currentContent!=null ) post.add( partName, currentContent );
+			if ( isFile ) {
+				processCallbackResult( onEndPart() );
+			}
+			else if ( currentContent!=null ) {
+				// Sys.println( 'SET: $partName = $currentContent<br />' );
+				post.add( partName, currentContent );
+			}
 		}
-		function doPart( partName:String, fileName:String ) {
+		function doPart( newPartName:String, newPartFilename:String ) {
 			doEndOfPart();
 			noParts = false;
-			isFile = null!=fileName && ""!=fileName;
 			currentContent = null;
-			partName = partName.urlDecode();
-			if (isFile) {
-				post.add(partName, fileName);
-				processCallbackResult( onPart(partName,fileName) );
-				lastWasFile = true;
-			} else {
-				lastWasFile = false;
+			partName = newPartName.urlDecode();
+			isFile = false;
+			// Sys.println( 'PART $partName : FILE $newPartFilename <br />' );
+			if ( null!=newPartFilename ) {
+				if ( ""!=newPartFilename ) {
+					fileName = newPartFilename.urlDecode();
+					post.add(partName, fileName);
+					processCallbackResult( onPart(partName,fileName) );
+					isFile = true;
+				}
 			}
 		};
 		function doData( bytes:Bytes, pos:Int, len:Int ) {
 			if ( isFile ) {
+				// Sys.println( 'Is a file, do something!<br />' );
 				if (len > 0) processCallbackResult( onData(bytes,pos,len) );
 			}
 			else {
 				if ( currentContent==null ) currentContent = "";
-				currentContent += bytes.readString(pos,len);
+				currentContent += bytes.getString(pos,len);
+
+				// Sys.println( 'Append content: $currentContent<br />' );
 			}
 		};
 
 		// Call mod_neko's "parse_multipart_data" using the callbacks above
 		try {
 			_parse_multipart(
-				function(p,f) { doPart(new String(p),if( f == null ) null else new String(f)); },
-				function(buf,pos,len) { doData(untyped new haxe.io.Bytes(__dollar__ssize(buf),buf),pos,len); }
+				function(p,f) { 
+					var partName = new String(p);
+					var fileName = if( f == null ) null else new String(f);
+					doPart( partName, fileName ); 
+				},
+				function(buf,pos,len) {
+					var data = untyped new haxe.io.Bytes(__dollar__ssize(buf),buf);
+					doData(data,pos,len); 
+				}
 			);
 		}
-		catch ( e:Dynamic ) errors.push( 'Failed to run _parse_multipart: $e' );
+		catch ( e:Dynamic ) {
+			var err = 'Failed to run _parse_multipart: $e';
+			errors.push( err );
+		}
 
 		// Finish everything up, check there are no errors, return accordingly.
 		if ( noParts==false ) doEndOfPart();
@@ -171,7 +196,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		if (httpMethod == "GET")
 			return new MultiValueMap();
 		if ( null==post ) {
-			if ( "multipart/form-data"==clientHeaders.get("ContentType") ) {
+			if ( isMultipart() ) {
 				if ( _parsed==false ) parseMultipart();
 			}
 			else {
