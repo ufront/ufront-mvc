@@ -30,7 +30,7 @@ class Sync {
 	/**
 		Alias for `tink.core.Future.sync(v)`
 	**/
-	public static function of<T>( v:T ) {
+	public static function of<T>( v:T ):Future<T> {
 		return Future.sync( v );
 	}
 }

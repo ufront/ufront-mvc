@@ -18,6 +18,7 @@ import tink.CoreApi;
 
 	Some of the methods of `Future` are mirrored here, inline, for your convenience.  If you need the full Future API you can use `asFuture`, or auto-cast to a `Future<T>`
 **/
+@:forward( handle, map, flatMap )
 abstract Futuroid<T>( Future<T> ) from Future<T> to Future<T> {
 	inline function new(f:Future<T>)
 		this = f;
@@ -27,13 +28,4 @@ abstract Futuroid<T>( Future<T> ) from Future<T> to Future<T> {
 
 	public inline function asFuture():Future<T>
 		return this;
-
-	public inline function handle(cb)
-		return this.handle( cb );
-
-	public inline function map(cb)
-		return this.map( cb );
-
-	public inline function flatMap(cb)
-		return this.flatMap( cb );
 }

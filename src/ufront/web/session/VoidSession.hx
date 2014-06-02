@@ -11,13 +11,13 @@ import tink.CoreApi;
 **/
 class VoidSession implements UFHttpSessionState
 {
-	public static function create( context:HttpContext ) : UFHttpSessionState {
-		return new VoidSession( context );
+	public static function create() : UFHttpSessionState {
+		return new VoidSession();
 	}
 
 	public var id(get,null):String;
 
-	public function new( context:HttpContext ) {}
+	public function new() {}
 
 	public function setExpiry( e:Int ) {}
 

@@ -11,6 +11,7 @@ import massive.munit.Assert;
 import ufront.web.Controller;
 import ufront.app.UfrontApplication;
 import ufront.web.UfrontConfiguration;
+import ufront.core.MultiValueMap;
 import minject.Injector;
 using mockatoo.Mockatoo;
 using tink.core.Outcome;
@@ -47,7 +48,7 @@ class TestUtils
 		* The request, response, session and auth return either the supplied value, or are mocked
 		* `setUrlFilters` and `generateUri` call the real methods.
 	**/
-	public static function mockHttpContext( uri:String, ?method:String, ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser> )
+	public static function mockHttpContext( uri:String, ?method:String, ?params:MultiValueMap<String>, ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser> )
 	{
 		// Check the supplied arguments
 		NullArgument.throwIfNull( uri );
@@ -55,16 +56,18 @@ class TestUtils
 			injector = new Injector();
 		}
 		if ( request==null ) {
-			// request = HttpRequest.mock();
+			request = HttpRequest.mock();
 			request.uri.returns( uri );
-			request.params.returns( new CascadeHash([]) );
+			request.params.returns( (params!=null) ? params : new MultiValueMap() );
 			request.httpMethod.returns( (method!=null) ? method.toUpperCase() : "GET" );
 		}
 		if ( response==null ) {
 			response = HttpResponse.spy();
 			response.flush().stub();
 		}
-		if (session==null) session = UFHttpSessionState.mock();
+		if ( session==null ) {
+			session = UFHttpSessionState.mock();
+        }
 		if (auth==null) auth = UFAuthHandler.mock([UFAuthUser]);
 
 		// Build the HttpContext with our mock objects
@@ -140,12 +143,12 @@ class TestUtils
 					}
 				}
 
-				// If an action was specified, check it
+				// If an action was specified, check it matches.
 				if ( action!=null )
 					if ( action!=ctx.action )
 						Assert.fail( '[${ctx.action}] was not equal to expected action [$action] after dispatching', p );
 
-				// If an args array was specified, check length and args
+				// If an args array was specified, check length and args match.
 				if ( args!=null ) {
 					var sameLength = ( ctx.args.length==args.length );
 

@@ -14,7 +14,7 @@ using StringTools;
 	- Because of the PHP limitation, other platforms (neko etc) ignore a `[]` at the end of a parameter name.
 	- Complex lists, such as the following, are not supported: `<input name="person[1][firstName]" />`, only simple "[]" is supported: `<input name="person[]">`
 **/
-abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> to StringMap<Array<T>> {
+abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> from Map<String,Array<T>> to StringMap<Array<T>> to Map<String,Array<T>> {
 	/** Create a new MultiValueMap **/
 	public inline function new() this = new StringMap();
 
@@ -166,7 +166,9 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> to Str
 		var qm = new MultiValueMap();
 		for ( map in maps ) {
 			for ( key in map.keys() ) {
-				qm.add( key, map.get(key) );
+				for( val in map.getAll(key) ) {
+					qm.add( key, map.get(key) );
+				}
 			}
 		}
 		return qm;

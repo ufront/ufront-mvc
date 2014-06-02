@@ -4,11 +4,10 @@ import massive.munit.util.Timer;
 import massive.munit.Assert;
 import massive.munit.async.AsyncFactory;
 import ufront.core.Sync;
+import tink.CoreApi;
 
 class SyncTest 
 {
-	var instance:Sync; 
-	
 	public function new() 
 	{
 		
@@ -35,8 +34,34 @@ class SyncTest
 	}
 	
 	@Test
-	public function testExample():Void
+	public function testSyncOf():Void
 	{
-		Assert.isTrue(false);
+		var f = Sync.of('Hello');
+		var val:String;
+		f.handle( function(str) val = str );
+		Assert.areEqual( "Hello", val );
+	}
+	
+	@Test
+	public function testSyncSuccess():Void
+	{
+		var f = Sync.success();
+		var val;
+		f.handle( function(v) val = v );
+		Assert.isTrue( val.match(Success(Noise)) );
+	}
+	
+	@Test
+	public function testSyncHttpError():Void
+	{
+		var f = Sync.httpError( "Message", ["error"] );
+		var val;
+		f.handle( function(v) val = v );
+		switch val {
+			case Failure(httpError):
+				Assert.areEqual( '500 Error: Message', httpError.toString() );
+				Assert.areEqual( "error", httpError.data[0] );
+			default: Assert.fail('Expected a failure');
+		}
 	}
 }
