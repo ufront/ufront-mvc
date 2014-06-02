@@ -118,6 +118,13 @@ class RequestCache implements UFMiddleware
 		return Sync.success();
 	}
 	
+	/**
+		Clear all cached pages.
+	**/
+	public function invalidate():Surprise<Noise,CacheError> {
+		return cache.clear();
+	}
+	
 	static var metaName = "cacheRequest";
 	static function hasCacheMeta( meta:Dynamic<Array<Dynamic>> ) {
 		return Reflect.hasField(meta,metaName);
