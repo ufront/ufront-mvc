@@ -157,7 +157,7 @@ class HttpResponse
 		Write a number of bytes to the HTTP response
 	**/
 	public function writeBytes( b:Bytes, pos:Int, len:Int ):Void {
-		_buff.add( b.getString(pos, len) );
+		_buff.add( b.readString(pos, len) );
 	}
 
 	/**

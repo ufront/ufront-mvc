@@ -140,7 +140,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 			}
 			else {
 				if ( currentContent==null ) currentContent = "";
-				currentContent += bytes.getString(pos,len);
+				currentContent += bytes.readString(pos,len);
 
 				// Sys.println( 'Append content: $currentContent<br />' );
 			}
