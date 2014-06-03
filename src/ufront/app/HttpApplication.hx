@@ -160,7 +160,7 @@ class HttpApplication
 
 		This method is chainable.
 	**/
-	public function inject<T>( cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton=false, ?named:String ) {
+	public function inject<T>( cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton=false, ?named:String ):HttpApplication {
 		if ( val!=null ) injector.mapValue( cl, val, named )
 		else {
 			if (cl2==null) 
@@ -226,34 +226,34 @@ class HttpApplication
 	/**
 		Add one or more `UFRequestMiddleware` items to this HttpApplication. This method is chainable.
 	**/
-	inline public function addRequestMiddleware( ?middlewareItem:UFRequestMiddleware, ?middleware:Iterable<UFRequestMiddleware> )
+	inline public function addRequestMiddleware( ?middlewareItem:UFRequestMiddleware, ?middleware:Iterable<UFRequestMiddleware> ):HttpApplication
 		return addModule( requestMiddleware, middlewareItem, middleware );
 
 	/**
 		Add one or more `UFRequestHandler`s to this HttpApplication. This method is chainable.
 	**/
-	inline public function addRequestHandler( ?handler:UFRequestHandler, ?handlers:Iterable<UFRequestHandler> )
+	inline public function addRequestHandler( ?handler:UFRequestHandler, ?handlers:Iterable<UFRequestHandler> ):HttpApplication
 		return addModule( requestHandlers, handler, handlers );
 
 	/**
 		Add one or more `UFErrorHandler`s to this HttpApplication. This method is chainable.
 	**/
-	inline public function addErrorHandler( ?handler:UFErrorHandler, ?handlers:Iterable<UFErrorHandler> )
+	inline public function addErrorHandler( ?handler:UFErrorHandler, ?handlers:Iterable<UFErrorHandler> ):HttpApplication
 		return addModule( errorHandlers, handler, handlers );
 
 	/**
 		Add one or more `UFRequestMiddleware` items to this HttpApplication. This method is chainable.
 	**/
-	inline public function addResponseMiddleware( ?middlewareItem:UFResponseMiddleware, ?middleware:Iterable<UFResponseMiddleware> )
+	inline public function addResponseMiddleware( ?middlewareItem:UFResponseMiddleware, ?middleware:Iterable<UFResponseMiddleware> ):HttpApplication
 		return addModule( responseMiddleware, middlewareItem, middleware );
 
 	/**
 		Add some `UFRequestMiddleware` to this HttpApplication. This method is chainable.
 	**/
-	inline public function addLogHandler( ?logger:UFLogHandler, ?loggers:Iterable<UFLogHandler> ) 
+	inline public function addLogHandler( ?logger:UFLogHandler, ?loggers:Iterable<UFLogHandler> ):HttpApplication
 		return addModule( logHandlers, logger, loggers );
 
-	function addModule<T>( modulesArr:Array<T>, ?newModule:T, ?newModules:Iterable<T> ) {
+	function addModule<T>( modulesArr:Array<T>, ?newModule:T, ?newModules:Iterable<T> ):HttpApplication {
 		if (newModule!=null) { 
 			injector.injectInto( newModule ); 
 			modulesArr.push( newModule ); 
@@ -283,7 +283,7 @@ class HttpApplication
 		If at any point this HttpApplication is marked as complete, the chain stops and `_conclude()` is run.
 	**/
 	@:access(ufront.web.context.HttpContext)
-	public function execute( ?httpContext:HttpContext ) {
+	public function execute( ?httpContext:HttpContext ):Surprise<Noise,HttpError> {
 		
 		if (httpContext == null) httpContext = HttpContext.create( injector, urlFilters );
 		else httpContext.setUrlFilters( urlFilters );
@@ -309,7 +309,8 @@ class HttpApplication
 		allDone.handle( function() {} );
 
 		#if (debug && (neko || php))
-			// Sync targets... we can test if the async callbacks finished
+			// Do a quick check that the async code actually completed, and if not, inform which module dropped the ball.
+			// For now we are only testing sync targets, in future we may provide a "timeout" on async targets to perform a similar test.
 			if ( httpContext.completion.has(CFlushComplete)==false ) {
 				// We need to prevent macro-time seeing this code as "Pos" for them is "haxe.macro.Pos" not "haxe.PosInfos"
 				var msg = 'Async callbacks never completed.  ';
@@ -376,7 +377,7 @@ class HttpApplication
 		
 		Then mark the middleware and requestHandlers as complete, so the `execute` function can log, flush and finish the request.
 	**/
-	function handleError( err:HttpError, ctx:HttpContext, doneTrigger:FutureTrigger<Outcome<Noise,HttpError>> ) {
+	function handleError( err:HttpError, ctx:HttpContext, doneTrigger:FutureTrigger<Outcome<Noise,HttpError>> ):Void {
 		if ( !ctx.completion.has(CErrorHandlersComplete) ) {
 
 			var errHandlerModules = prepareModules(errorHandlers,"handleError",[err]);
@@ -404,7 +405,7 @@ class HttpApplication
 		}
 	}
 
-	function flush( ctx:HttpContext ) {
+	function flush( ctx:HttpContext ):Noise {
 		if ( !ctx.completion.has(CFlushComplete) ) {
 			ctx.response.flush();
 			ctx.completion.set(CFlushComplete);
@@ -415,7 +416,7 @@ class HttpApplication
 	/**
 		Add a URL filter to be used in the HttpContext for `getRequestUri` and `generateUri`
 	**/
-	public function addUrlFilter( filter:UFUrlFilter ) {
+	public function addUrlFilter( filter:UFUrlFilter ):Void {
 		NullArgument.throwIfNull( filter );
 		urlFilters.push( filter );
 	}
@@ -423,7 +424,7 @@ class HttpApplication
 	/**
 		Remove existing URL filters
 	**/
-	public function clearUrlFilters() {
+	public function clearUrlFilters():Void {
 		urlFilters = [];
 	}
 

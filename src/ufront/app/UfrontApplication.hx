@@ -13,10 +13,12 @@ import ufront.web.Dispatch;
 import ufront.web.session.*;
 import ufront.web.url.filter.*;
 import ufront.web.Controller;
+import ufront.web.HttpError;
 import ufront.web.UfrontConfiguration;
 import ufront.web.session.UFHttpSessionState;
 import ufront.auth.*;
 import ufront.api.UFApi;
+using tink.CoreApi;
 #if ufront_easyauth
 	import ufront.auth.EasyAuth;
 #end
@@ -156,7 +158,7 @@ class UfrontApplication extends HttpApplication
 
 		The first time this runs, `initOnFirstExecute()` will be called, which runs some more initialization that requires the HttpContext to be ready before running.
 	**/
-	override public function execute( ?httpContext:HttpContext ) {
+	override public function execute( ?httpContext:HttpContext ):Surprise<Noise,HttpError> {
 		// Set up HttpContext for the request
 		if ( httpContext==null ) httpContext = HttpContext.create( injector, urlFilters, configuration.contentDirectory );
 
@@ -167,7 +169,7 @@ class UfrontApplication extends HttpApplication
 	}
 
 	static var firstRun = true;
-	function initOnFirstExecute( httpContext:HttpContext ) {
+	function initOnFirstExecute( httpContext:HttpContext ):Void {
 		firstRun = false;
 		
 		inject( String, httpContext.request.scriptDirectory, "scriptDirectory" );
@@ -185,7 +187,7 @@ class UfrontApplication extends HttpApplication
 
 		Returns itself so chaining is enabled.
 	**/
-	public inline function loadApi( apiContext:Class<UFApiContext> ) {
+	public inline function loadApi( apiContext:Class<UFApiContext> ):UfrontApplication {
 		remotingHandler.loadApi( apiContext );
 		return this;
 	}
@@ -195,12 +197,12 @@ class UfrontApplication extends HttpApplication
 
 		Some ready-to-go templating engines are included `ufront.view.TemplatingEngines`.
 	**/
-	public inline function addTemplatingEngine( engine:TemplatingEngine ) {
+	public inline function addTemplatingEngine( engine:TemplatingEngine ):UfrontApplication {
 		viewEngine.addTemplatingEngine( engine );
 		return this;
 	}
 
-	override public function inject<T>( cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton=false, ?named:String ):UfrontApplication {
+	override public function inject<T>( cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton:Bool=false, ?named:String ):UfrontApplication {
 		return cast super.inject( cl, val, cl2, singleton, named );
 	}
 }
