@@ -356,7 +356,6 @@ class HttpApplication
 					catch ( e:Dynamic ) {
 						var pos = m.b;
 						#if (!macro && debug) ctx.ufLog( 'Caught error $e while executing module ${pos.className}.${pos.methodName} in HttpApplication.executeModules()' ); #end
-						ctx.ufLog( 'ufLog' );
 						Future.sync( Failure( HttpError.wrap(e,null,pos) ) );
 					}
 
@@ -391,7 +390,7 @@ class HttpApplication
 					return Sync.success();
 				};
 
-			allDone.handle( doneTrigger.trigger );
+			allDone.handle( doneTrigger.trigger.bind(Failure(err)) );
 		}
 		else {
 			// This is bad: we are in `handleError` after `handleError` has already been called...

@@ -208,7 +208,9 @@ class HttpContext
 
 	var contentDir:String;
 	function get_contentDirectory() {
-		return Path.addTrailingSlash( request.scriptDirectory ) + Path.addTrailingSlash( contentDir );
+		return 
+			if (request.scriptDirectory!=null) Path.addTrailingSlash(request.scriptDirectory) + Path.addTrailingSlash( contentDir );
+			else Path.addTrailingSlash( contentDir );
 	}
 	
 	/**

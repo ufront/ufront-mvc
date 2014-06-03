@@ -1,8 +1,6 @@
 package ufront.core;
 
-import massive.munit.util.Timer;
-import massive.munit.Assert;
-import massive.munit.async.AsyncFactory;
+import utest.Assert;
 import ufront.core.Futuroid;
 import tink.CoreApi;
 import mockatoo.Mockatoo.*;
@@ -18,49 +16,32 @@ class FuturoidTest
 		
 	}
 	
-	@BeforeClass
-	public function beforeClass():Void
-	{
-	}
+	public function beforeClass():Void {}
 	
-	@AfterClass
-	public function afterClass():Void
-	{
-	}
+	public function afterClass():Void {}
 	
-	@Before
-	public function setup():Void
-	{
+	public function setup():Void {
 		trigger = Future.trigger();
 		future = trigger.asFuture();
 	}
 	
-	@After
-	public function tearDown():Void
-	{
-	}
+	public function teardown():Void {}
 	
-	@Test
-	public function testFromFuture():Void
-	{
+	public function testFromFuture():Void {
 		var futuroid:Futuroid<Int> = future;
-		Assert.areEqual( future, futuroid );
+		Assert.equals( future, futuroid );
 	}
 	
-	@Test
-	public function testFromSync():Void
-	{
+	public function testFromSync():Void {
 		var futuroid:Futuroid<Int> = 10;
 		var value:Int;
 		futuroid.handle( function(i:Int) {
 			value = i;
 		});
-		Assert.areEqual( 10, value );
+		Assert.equals( 10, value );
 	}
 	
-	@Test
-	public function testForwarding():Void
-	{
+	public function testForwarding():Void {
 		var handledValue:Int;
 		var mappedValue:String;
 		var flatMappedValue:Float;
@@ -69,8 +50,8 @@ class FuturoidTest
 		futuroid.map( function(i) return 'number $i' ).handle( function(i) mappedValue = i);
 		futuroid.flatMap( function(i) return Future.sync(i+0.1) ).handle( function(i) flatMappedValue = i);
 		trigger.trigger( 10 );
-		Assert.areEqual( 10, handledValue );
-		Assert.areEqual( 'number 10', mappedValue );
-		Assert.areEqual( 10.1, flatMappedValue );
+		Assert.equals( 10, handledValue );
+		Assert.equals( 'number 10', mappedValue );
+		Assert.equals( 10.1, flatMappedValue );
 	}
 }

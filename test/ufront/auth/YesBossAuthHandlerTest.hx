@@ -1,8 +1,6 @@
 package ufront.auth;
 
-import massive.munit.util.Timer;
-import massive.munit.Assert;
-import massive.munit.async.AsyncFactory;
+import utest.Assert;
 import ufront.auth.YesBossAuthHandler;
 
 class YesBossAuthHandlerTest
@@ -14,29 +12,15 @@ class YesBossAuthHandlerTest
 		
 	}
 	
-	@BeforeClass
-	public function beforeClass():Void
-	{
-	}
+	public function beforeClass():Void {}
 	
-	@AfterClass
-	public function afterClass():Void
-	{
-	}
+	public function afterClass():Void {}
 	
-	@Before
-	public function setup():Void
-	{
-	}
+	public function setup():Void {}
 	
-	@After
-	public function tearDown():Void
-	{
-	}
+	public function teardown():Void {}
 	
-	@Test
-	public function testExample():Void
-	{
-		Assert.isTrue(false);
+	public function testExample():Void {
+		Assert.fail( "Tests not written yet" );
 	}
 }

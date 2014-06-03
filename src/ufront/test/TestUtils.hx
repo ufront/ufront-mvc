@@ -7,14 +7,14 @@ import ufront.auth.*;
 import thx.error.*;
 import thx.collection.*;
 import haxe.PosInfos;
-import massive.munit.Assert;
+import utest.Assert;
 import ufront.web.Controller;
 import ufront.app.UfrontApplication;
 import ufront.web.UfrontConfiguration;
 import ufront.core.MultiValueMap;
 import minject.Injector;
 using mockatoo.Mockatoo;
-using tink.core.Outcome;
+using tink.CoreApi;
 
 /**
 	A set of functions to make it easier to mock and test various ufront classes and interfaces.
@@ -60,6 +60,7 @@ class TestUtils
 			request.uri.returns( uri );
 			request.params.returns( (params!=null) ? params : new MultiValueMap() );
 			request.httpMethod.returns( (method!=null) ? method.toUpperCase() : "GET" );
+			request.clientHeaders.returns( new MultiValueMap() );
 		}
 		if ( response==null ) {
 			response = HttpResponse.spy();
@@ -81,7 +82,7 @@ class TestUtils
 
 		If an error is encountered, the exception is returned as a Failure.
 	**/
-	public static function testRoute( context:HttpContext, controller:Class<IndexController> ):Outcome<RouteTestResult,HttpError> {
+	public static function testRoute( context:HttpContext, controller:Class<IndexController> ):RouteTestOutcome {
 		var ufrontConf:UfrontConfiguration = {
 			indexController: controller,
 			urlRewrite: true,
@@ -91,14 +92,10 @@ class TestUtils
 			errorHandlers: []
 		}
 		var app = new UfrontApplication( ufrontConf );
-		var result = try {
-			app.execute( context );
-			Success( { app: app, context: context } );
-		}
-		catch (e:HttpError) {
-			Failure(e);
-		}
-		return result;
+        return app.execute( context ).map( function(outcome) return switch outcome {
+            case Success(_): return Success( { app: app, context: context } );
+            case Failure(httpError): return Failure( httpError );
+        });
 	}
 
 	/**
@@ -126,11 +123,12 @@ class TestUtils
 		var app = "/home/".mockHttpContext().testRoute().assertSuccess(HomeController, "doDefault", []);
 		```
 	**/
-	public static function assertSuccess( result:Outcome<RouteTestResult,HttpError>, ?controller:Class<Dynamic>, ?action:String, ?args:Array<Dynamic>, ?p:PosInfos ):RouteTestResult {
-		switch ( result ) {
+	public static function assertSuccess( result:RouteTestOutcome, ?controller:Class<Dynamic>, ?action:String, ?args:Array<Dynamic>, ?p:PosInfos ):Future<RouteTestResult> {
+		var doneCallback = Assert.createAsync( function() {} );
+		var future = result.map(function (outcome) switch outcome {
 			case Success( successResult ):
-
 				var ctx = successResult.context.actionContext;
+				Assert.notNull( ctx );
 
 				// If a controller type was specified, check it
 				if ( controller!=null ) {
@@ -150,24 +148,24 @@ class TestUtils
 
 				// If an args array was specified, check length and args match.
 				if ( args!=null ) {
-					var sameLength = ( ctx.args.length==args.length );
-
-					var sameArgs = true;
-					if ( sameLength ) 
-						for ( i in 0...args.length ) 
-							if ( args[i] != ctx.args[i] )
-								sameArgs = false;
-					
-					if ( !sameLength || !sameArgs ) 
-						Assert.fail( '[${ctx.args.length}] argument(s) [${ctx.args.join(",")}] was not equal to expected [${args.length}] argument(s) [${args.join(",")}]', p );
+					Assert.equals( args.length, ctx.args.length, 'Expected ${args.length} arguments for MVC action, but only had ${ctx.args.length}' );
+					for ( i in 0...args.length ) {
+						var expected = args[i];
+						var actual = ctx.args[i];
+						Assert.same( expected, actual, true, 'Expected MVC action argument ${i+1} to be $expected, but was $actual' );
+					}
 				}
-
+				doneCallback();
 				return successResult;
 
 			case Failure( f ): 
-				Assert.fail( 'Expected routing to succeed, but it did not (failed with error $f)', p );
+				var exceptionStack = haxe.CallStack.toString(haxe.CallStack.exceptionStack());
+				Assert.fail( 'Expected routing to succeed, but it did not (failed with error $f, ${f.data} ${exceptionStack})', p );
+				doneCallback();
 				return null;
-		}
+		});
+		future.handle( function(_) {} );
+		return future;
 	}
 
 	/**
@@ -187,17 +185,25 @@ class TestUtils
 		var error = "/home/".mockHttpContext().testRoute().assertFailure(404);
 		```
 	**/
-	public static function assertFailure( result:Outcome<RouteTestResult,HttpError>, ?code:Null<Int>, ?p:PosInfos ):Dynamic {
-		switch ( result ) {
-			case Success( _ ): 
-				Assert.fail( 'Expected routing to fail, but it was a success', p );
-				return null;
-			case Failure( failure ): 
-				if ( code!=null )
-					if ( code!=failure.code )
-						Assert.fail( 'Failure code [${failure.code}] was not equal to expected failure code [$code]', p );
+	public static function assertFailure( result:RouteTestOutcome, ?code:Null<Int>, ?p:PosInfos ):Future<HttpError> {
+		var doneCallback = Assert.createAsync(function() {});
+		var future = result.map(function processOutcome(outcome) {
+			switch outcome {
+				case Success( _ ): 
+					Assert.fail( 'Expected routing to fail, but it was a success', p );
+					doneCallback();
+					return null;
+				case Failure( failure ): 
+					if ( code!=null )
+						if ( code!=failure.code )
+							Assert.fail( 'Failure code [${failure.code}] was not equal to expected failure code [$code]', p );
+					Assert.isTrue(true);
+					doneCallback();
 				return failure;
-		}
+			}
+		});
+		future.handle( function(_) {} );
+		return future;
 	}
 }
 
@@ -205,3 +211,4 @@ typedef RouteTestResult = {
 	app: UfrontApplication, 
 	context: HttpContext
 }
+typedef RouteTestOutcome = Surprise<RouteTestResult, HttpError>;

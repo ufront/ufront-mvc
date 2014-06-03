@@ -13,7 +13,7 @@
 -cp src
 
 # Things need for tests
--lib munit
+-lib utest
 -lib detox
 -cp test
 
