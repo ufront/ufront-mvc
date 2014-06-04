@@ -10,7 +10,7 @@ import ufront.web.context.HttpContext;
 	
 	@author Jason O'Neil
 **/
-class YesBossAuthHandler<T:UFAuthUser> implements UFAuthHandler<T>
+class YesBossAuthHandler implements UFAuthHandler<UFAuthUser>
 {
 	public function new() {}
 
@@ -18,9 +18,9 @@ class YesBossAuthHandler<T:UFAuthUser> implements UFAuthHandler<T>
 
 	public function requireLogin() {}
 	
-	public function isLoggedInAs( user:T ) return true;
+	public function isLoggedInAs( user:UFAuthUser ) return true;
 
-	public function requireLoginAs( user:T ) {}
+	public function requireLoginAs( user:UFAuthUser ) {}
 
 	public function hasPermission( permission:EnumValue ) return true;
 
@@ -30,18 +30,25 @@ class YesBossAuthHandler<T:UFAuthUser> implements UFAuthHandler<T>
 
 	public function requirePermissions( permissions:Iterable<EnumValue> ) {}
 	
-	public function getUserByID( id:String ):Null<T> return null;
+	public function getUserByID( id:String ):Null<UFAuthUser> return new BossUser();
 
-	public var currentUser(get,set):Null<T>;
+	public var currentUser(get,set):Null<UFAuthUser>;
 
-	function get_currentUser() return null;
-	function set_currentUser( u:T ) return u;
+	function get_currentUser() return new BossUser();
+	function set_currentUser( u:Null<UFAuthUser> ) return u;
 
 	static var _factory:YesBossFactory;
 	public static function getFactory() {
 		if (_factory==null) _factory = new YesBossFactory();
 		return _factory;
 	}
+}
+
+class BossUser implements ufront.auth.UFAuthUser {
+	public var userID(get,null):String;
+	public function new() {}
+	public function can( ?p:EnumValue, ?ps:Iterable<EnumValue> ):Bool return true;
+	function get_userID() return "The Boss";
 }
 
 class YesBossFactory implements UFAuthFactory {
