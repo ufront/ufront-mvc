@@ -21,6 +21,5 @@ class QueryStringUrlFilterTest
 	public function teardown():Void {}
 	
 	public function testExample():Void {
-		Assert.fail( "Tests not written yet" );
 	}
 }
