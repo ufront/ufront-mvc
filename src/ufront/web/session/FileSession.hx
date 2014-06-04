@@ -1,9 +1,6 @@
 package ufront.web.session;
 
 import haxe.io.Path;
-import sys.FileSystem;
-import sys.io.File;
-import ufront.sys.SysUtil;
 import ufront.web.context.HttpContext;
 import ufront.web.HttpCookie;
 import ufront.web.session.UFHttpSessionState;
@@ -13,6 +10,11 @@ import haxe.Serializer;
 import haxe.Unserializer;
 import thx.error.NullArgument;
 import tink.CoreApi;
+#if sys
+	import sys.FileSystem;
+	import sys.io.File;
+	import ufront.sys.SysUtil;
+#end
 using StringTools;
 using haxe.io.Path;
 
@@ -130,7 +132,7 @@ class FileSession implements UFHttpSessionState
 
 		This can only be set in the constructor.
 	**/
-	public var expiry(default,null):Int;
+	public var expiry(default,null):Null<Int>;
 
 	/**
 		The save path for the session files.
@@ -161,70 +163,74 @@ class FileSession implements UFHttpSessionState
 		This is called before any other operations which require access to the current session.
 	**/
 	public function init():Surprise<Noise,String> {
-		var t = Future.trigger();
-		
-		if ( !started ) {
-			SysUtil.mkdir( savePath.removeTrailingSlashes() );
+		#if sys
+			var t = Future.trigger();
 
-			var id = get_id();
+			if ( !started ) {
+				SysUtil.mkdir( savePath.removeTrailingSlashes() );
 
-			var file : String;
-			var fileData : String;
+				var id = get_id();
 
-			// Try to restore an existing session
-			if ( id!=null ) {
-				testValidId( id );
-				file = getSessionFilePath( id );
-				if ( !FileSystem.exists(file) ) {
-					id = null;
-				}
-				else {
-					fileData = try File.getContent( file ) catch ( e:Dynamic ) null;
-					if ( fileData!=null ) {
-						try 
-							sessionData = cast( Unserializer.run(fileData), StringMap<Dynamic> )
-						catch ( e:Dynamic ) 
-							fileData = null; // invalid data
-					}
-					if ( fileData==null ) {
-						// delete file and start new session
+				var file : String;
+				var fileData : String;
+
+				// Try to restore an existing session
+				if ( id!=null ) {
+					testValidId( id );
+					file = getSessionFilePath( id );
+					if ( !FileSystem.exists(file) ) {
 						id = null;
-						try FileSystem.deleteFile( file ) catch( e:Dynamic ) {}; 
+					}
+					else {
+						fileData = try File.getContent( file ) catch ( e:Dynamic ) null;
+						if ( fileData!=null ) {
+							try 
+								sessionData = cast( Unserializer.run(fileData), StringMap<Dynamic> )
+							catch ( e:Dynamic ) 
+								fileData = null; // invalid data
+						}
+						if ( fileData==null ) {
+							// delete file and start new session
+							id = null;
+							try FileSystem.deleteFile( file ) catch( e:Dynamic ) {}; 
+						}
 					}
 				}
-			}
 
-			// No session existed, or it was invalid - start a new one
-			if( id==null ) {
-				sessionData = new StringMap<Dynamic>();
+				// No session existed, or it was invalid - start a new one
+				if( id==null ) {
+					sessionData = new StringMap<Dynamic>();
+					started = true;
+
+					do {
+						id = generateSessionID();
+						file = savePath + id + ".sess";
+					} while( FileSystem.exists(file) );
+
+					// Create the file so no one else takes it
+					File.saveContent( file, "" );
+
+					var expire = ( expiry==0 ) ? null : DateTools.delta( Date.now(), 1000.0*expiry );
+					var path = '/'; // TODO: Set cookie path to application path, right now it's global.
+					var domain = null; 
+					var secure = false;
+
+					var sessionCookie = new HttpCookie( sessionName, id, expire, domain, path, secure );
+					context.response.setCookie( sessionCookie );
+
+					commit();
+				}
+
+				sessionID = id;
 				started = true;
-
-				do {
-					id = generateSessionID();
-					file = savePath + id + ".sess";
-				} while( FileSystem.exists(file) );
-				
-				// Create the file so no one else takes it
-				File.saveContent( file, "" );
-
-				var expire = ( expiry==0 ) ? null : DateTools.delta( Date.now(), 1000.0*expiry );
-				var path = '/'; // TODO: Set cookie path to application path, right now it's global.
-				var domain = null; 
-				var secure = false;
-
-				var sessionCookie = new HttpCookie( sessionName, id, expire, domain, path, secure );
-				context.response.setCookie( sessionCookie );
-
-				commit();
+				t.trigger( Success(Noise) );
 			}
+			else t.trigger( Success(Noise) );
 
-			sessionID = id;
-			started = true;
-			t.trigger( Success(Noise) );
-		}
-		else t.trigger( Success(Noise) );
-
-		return t.asFuture();
+			return t.asFuture();
+		#else
+			return throw "Not implemented";
+		#end
 	}
 
 	/**
@@ -233,37 +239,41 @@ class FileSession implements UFHttpSessionState
 		Throws a String if the commit failed (usually because of no permission to write to disk)
 	**/
 	public function commit():Surprise<Noise,String> {
-		var t = Future.trigger();
-		var handled = false;
+		#if sys
+			var t = Future.trigger();
+			var handled = false;
 
-		if ( regenerateFlag ) {
-			handled = true;
-			t.trigger( Failure("NotImplemented: use regenerated ID to rename file and update cookie") );
-		}
-		if ( commitFlag && sessionData!=null ) {
-			handled = true;
-			try {
-				var filePath = getSessionFilePath(sessionID);
-				var content = Serializer.run(sessionData);
-				File.saveContent(filePath, content);
-				t.trigger( Success(Noise) );
+			if ( regenerateFlag ) {
+				handled = true;
+				t.trigger( Failure("NotImplemented: use regenerated ID to rename file and update cookie") );
 			}
-			catch( e:Dynamic ) {
-				t.trigger( Failure('Unable to save session: $e') );
+			if ( commitFlag && sessionData!=null ) {
+				handled = true;
+				try {
+					var filePath = getSessionFilePath(sessionID);
+					var content = Serializer.run(sessionData);
+					File.saveContent(filePath, content);
+					t.trigger( Success(Noise) );
+				}
+				catch( e:Dynamic ) {
+					t.trigger( Failure('Unable to save session: $e') );
+				}
 			}
-		}
-		if ( closeFlag ) {
-			handled = true;
-			t.trigger( Failure("NotImplemented: close the session, delete the file, expire the cookie") );
-		}
-		if ( expiryFlag ) {
-			handled = true;
-			t.trigger( Failure("NotImplemented: change expiry on cookie") );
-		}
+			if ( closeFlag ) {
+				handled = true;
+				t.trigger( Failure("NotImplemented: close the session, delete the file, expire the cookie") );
+			}
+			if ( expiryFlag ) {
+				handled = true;
+				t.trigger( Failure("NotImplemented: change expiry on cookie") );
+			}
 
-		if ( !handled ) t.trigger( Success(Noise) );
+			if ( !handled ) t.trigger( Success(Noise) );
 
-		return t.asFuture();
+			return t.asFuture();
+		#else
+			return throw "Not implemented";
+		#end
 	}
 
 	/**

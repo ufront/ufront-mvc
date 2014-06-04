@@ -31,3 +31,29 @@
 --php-lib php
 --php-front php_test.php
 -xml doc/php.xml
+
+#--next
+### Python
+#
+#-python build/python_test.py
+#-xml doc/python.xml
+
+#--next
+### Java
+#
+#-java build/
+#-xml doc/java.xml
+
+--next
+## Javascript (Browser)
+
+-js build/test_js_browser.js
+-xml doc/js_browser.xml
+
+
+#--next
+### Javascript (Node)
+#
+#-lib nodejs
+#-js build/test_js_node.js
+#-xml doc/js_node.xml

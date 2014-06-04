@@ -1,9 +1,11 @@
 package ufront.web.upload;
 
-import sys.io.File;
-import sys.FileSystem;
-import sys.io.FileOutput;
-import ufront.sys.SysUtil;
+#if sys
+	import sys.io.File;
+	import sys.FileSystem;
+	import sys.io.FileOutput;
+	import ufront.sys.SysUtil;
+#end
 import ufront.web.context.HttpContext;
 import ufront.app.UFMiddleware;
 import ufront.app.HttpApplication;
@@ -50,53 +52,61 @@ class TmpFileUploadMiddleware implements UFMiddleware
 	public function requestIn( ctx:HttpContext ):Surprise<Noise,HttpError> {
 
 		if ( ctx.request.httpMethod.toLowerCase()=="post" && ctx.request.isMultipart() ) {
-			var file:FileOutput = null,
-			    postName:String = null,
-			    origFileName:String = null,
-			    size:Int = 0,
-			    tmpFilePath:String = null,
-			    dateStr = Date.now().format( "%Y%m%d-%H%M" ),
-			    dir = ctx.contentDirectory+subDir.addTrailingSlash();
+			#if sys
+				var file:FileOutput = null,
+					postName:String = null,
+					origFileName:String = null,
+					size:Int = 0,
+					tmpFilePath:String = null,
+					dateStr = Date.now().format( "%Y%m%d-%H%M" ),
+					dir = ctx.contentDirectory+subDir.addTrailingSlash();
 
-			SysUtil.mkdir( dir );
+				SysUtil.mkdir( dir );
 
-			function onPart( pName, fName ) {
-				// Start writing to a temp file
-				postName = pName;
-				origFileName = fName;
-				size = 0;
-				while ( file==null ) {
-					tmpFilePath = dir+dateStr+"-"+Random.string(10)+".tmp";
-					if ( !FileSystem.exists(tmpFilePath) ) {
-						file = File.write( tmpFilePath );
+				function onPart( pName, fName ) {
+					// Start writing to a temp file
+					postName = pName;
+					origFileName = fName;
+					size = 0;
+					while ( file==null ) {
+						tmpFilePath = dir+dateStr+"-"+Random.string(10)+".tmp";
+						#if sys
+							if ( !FileSystem.exists(tmpFilePath) ) {
+								file = File.write( tmpFilePath );
+							}
+						#else
+							throw "Not implemented";
+						#end
 					}
+					return Sync.success();
 				}
-				return Sync.success();
-			}
-			function onData( bytes, pos, len ) {
-				// Write this chunk
-				size += len;
-				file.writeBytes( bytes, pos, len );
-				return Sync.success();
-			}
-			function onEndPart() {
-				// Close the file, create our FileUpload object and add it to the request
-				if ( file!=null ) {
-					file.close();
-					var tmpFile = new TmpFileUploadSync( tmpFilePath, postName, origFileName, size );
-					ctx.request.files.add( postName, tmpFile );
-					files.push( tmpFile );
+				function onData( bytes, pos, len ) {
+					// Write this chunk
+					size += len;
+					file.writeBytes( bytes, pos, len );
+					return Sync.success();
 				}
-				return Sync.success();
-			}
-			return 
-				ctx.request.parseMultipart( onPart, onData, onEndPart )
-				.map( function(result) {
-					switch result {
-					case Success(s): return Success( s );
-					case Failure(f): return Failure( HttpError.wrap(f) );
+				function onEndPart() {
+					// Close the file, create our FileUpload object and add it to the request
+					if ( file!=null ) {
+						file.close();
+						var tmpFile = new TmpFileUploadSync( tmpFilePath, postName, origFileName, size );
+						ctx.request.files.add( postName, tmpFile );
+						files.push( tmpFile );
+					}
+					return Sync.success();
 				}
-				});
+				return 
+					ctx.request.parseMultipart( onPart, onData, onEndPart )
+					.map( function(result) {
+						switch result {
+						case Success(s): return Success( s );
+						case Failure(f): return Failure( HttpError.wrap(f) );
+					}
+					});
+			#else
+				return throw "Not implemented";
+			#end
 		}
 		else return Sync.success();
 	}

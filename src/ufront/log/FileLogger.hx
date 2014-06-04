@@ -1,10 +1,12 @@
 package ufront.log;
 
-import sys.FileSystem;
-import sys.io.File;
+#if sys
+	import sys.FileSystem;
+	import sys.io.File;
+	import sys.io.FileOutput;
+#end
 import ufront.app.*;
 import haxe.PosInfos;
-import sys.io.FileOutput;
 import ufront.sys.SysUtil;
 import ufront.web.context.HttpContext;
 import ufront.core.Sync;
@@ -43,9 +45,11 @@ class FileLogger implements UFLogHandler implements UFInitRequired
 	/** the relative path to the log file **/
 	var path:String;
 
-	/** the currently open file **/
-	var file:FileOutput;
-	
+	#if sys
+		/** the currently open file **/
+		var file:FileOutput;
+	#end
+
 	/**
 		Initiate the new module.  Specify the path to the file that you will be logging to.
 	**/
@@ -61,40 +65,46 @@ class FileLogger implements UFLogHandler implements UFInitRequired
 	/** Close the log file, dispose of the module **/
 	public function dispose( app:HttpApplication ) {
 		path = null;
-		if ( file!=null ) {
-			file.close();
-			file = null;
-		}
+		#if sys
+			if ( file!=null ) {
+				file.close();
+				file = null;
+			}
+		#end
 		return Sync.success();
 	}
 
 	/** Write any messages from the context or application. **/
 	public function log( context:HttpContext, appMessages:Array<Message> ) {
-		if ( file==null ) {
-			var logFile = context.contentDirectory+path;
-			
-			SysUtil.mkdir( logFile.directory() );
+		#if sys
+			if ( file==null ) {
+				var logFile = context.contentDirectory+path;
 
-			file = File.append( context.contentDirectory + path );
-		}
+				SysUtil.mkdir( logFile.directory() );
 
-		var req = context.request;
-		var res = context.response;
-		var userDetails = req.clientIP;
-		if ( context.sessionID!=null ) userDetails += ' ${context.sessionID}';
-		if ( context.currentUserID!=null ) userDetails += ' ${context.currentUserID}';
-		file.writeString( '${Date.now()} [${req.httpMethod}] [${req.uri}] from [$userDetails], response: [${res.status} ${res.contentType}]\n' );
+				file = File.append( context.contentDirectory + path );
+			}
 
-		for( msg in context.messages )
-			file.writeString( '\t${format(msg)}\n' );
-		if ( appMessages!=null) {
-			for( msg in appMessages )
+			var req = context.request;
+			var res = context.response;
+			var userDetails = req.clientIP;
+			if ( context.sessionID!=null ) userDetails += ' ${context.sessionID}';
+			if ( context.currentUserID!=null ) userDetails += ' ${context.currentUserID}';
+			file.writeString( '${Date.now()} [${req.httpMethod}] [${req.uri}] from [$userDetails], response: [${res.status} ${res.contentType}]\n' );
+
+			for( msg in context.messages )
 				file.writeString( '\t${format(msg)}\n' );
-		}
+			if ( appMessages!=null) {
+				for( msg in appMessages )
+					file.writeString( '\t${format(msg)}\n' );
+			}
 
-		file.flush();
+			file.flush();
 
-		return Sync.success();
+			return Sync.success();
+		#else
+			return throw "Not implemented";
+		#end
 	}
 
 	static var REMOVENL = ~/[\n\r]/g;

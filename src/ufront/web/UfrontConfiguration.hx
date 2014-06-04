@@ -214,7 +214,7 @@ class TestController extends ufront.web.Controller {
 	@:route( '/contact/', GET ) public function contact() return "Contact <form method='POST' action='/contact/'><input type='submit'/></form>";
 	@:route( '/contact/', POST ) public function emailContact( args:{ subject:String, ?amount:Int } ) return 'Send email about ${args.subject}';
 	@:route( '/pages/*' ) public function pageCatchAll( rest:Array<String> ) return new ufront.web.result.ContentResult( rest.join("/"), "text/html" );
-	@:route( '/void/' ) public function voidReturn() { Sys.println('void return'); };
+	@:route( '/void/' ) public function voidReturn() { #if sys Sys.println('void return'); #else trace('void return'); #end };
 	
 	@:route( '/default/*' ) public var d:DefaultController;
 }

@@ -1,7 +1,9 @@
 package ufront.view;
 
-import sys.FileSystem;
-import sys.io.File;
+#if sys
+	import sys.FileSystem;
+	import sys.io.File;
+#end
 import haxe.ds.Option;
 using tink.CoreApi;
 using haxe.io.Path;
@@ -27,15 +29,17 @@ class FileViewEngine extends UFViewEngine {
 		this.path = path;
 	}
 
-	/**
-		Check if a file exists, and read a file from the file system using the synchronous `sys.FileSystem` api from the standard library.
-	**/
-	override public function getTemplateString( path:String ):Surprise<Option<String>,Error> {
-		var fullPath = viewDirectory+path;
-		try {
-			if ( FileSystem.exists(fullPath) ) return Future.sync( Success(Some(File.getContent(fullPath))) );
-			else return Future.sync( Success(None) );
+	#if sys
+		/**
+			Check if a file exists, and read a file from the file system using the synchronous `sys.FileSystem` api from the standard library.
+		**/
+		override public function getTemplateString( path:String ):Surprise<Option<String>,Error> {
+			var fullPath = viewDirectory+path;
+			try {
+				if ( FileSystem.exists(fullPath) ) return Future.sync( Success(Some(File.getContent(fullPath))) );
+				else return Future.sync( Success(None) );
+			}
+			catch ( e:Dynamic ) return Future.sync( Failure(Error.withData('Failed to load template $path', e)) );
 		}
-		catch ( e:Dynamic ) return Future.sync( Failure(Error.withData('Failed to load template $path', e)) );
-	}
+	#end
 }
