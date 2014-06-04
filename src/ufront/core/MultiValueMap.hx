@@ -167,7 +167,7 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> from M
 		for ( map in maps ) {
 			for ( key in map.keys() ) {
 				for( val in map.getAll(key) ) {
-					qm.add( key, map.get(key) );
+					qm.add( key, val );
 				}
 			}
 		}

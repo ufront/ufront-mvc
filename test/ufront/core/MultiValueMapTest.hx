@@ -167,6 +167,9 @@ class MultiValueMapTest
 		Assert.isTrue( combined.exists("value") );
 		Assert.equals( 3, combined.getAll("value").length );
 		Assert.equals( "300", combined.get("value") );
+		Assert.equals( "100", combined.getAll("value")[0] );
+		Assert.equals( "200", combined.getAll("value")[1] );
+		Assert.equals( "300", combined.getAll("value")[2] );
 		
 		Assert.isTrue( combined.exists("author") );
 		Assert.equals( "Jason", combined.get("author") );
