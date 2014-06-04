@@ -25,8 +25,8 @@ class HttpRequest
 		return 
 			#if php 
 				new php.ufront.web.context.HttpRequest();
-			#elseif 
-				neko new neko.ufront.web.context.HttpRequest();
+			#elseif neko 
+				new neko.ufront.web.context.HttpRequest();
 			#else
 				throw new NotImplemented();
 			#end

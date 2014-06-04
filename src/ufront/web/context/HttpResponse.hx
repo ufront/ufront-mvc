@@ -82,9 +82,6 @@ class HttpResponse
 	**/
 	public function new() {
 		clear();
-		contentType = null;
-		charset = DEFAULT_CHARSET;
-		status = DEFAULT_STATUS;
 		_flushed = false;
 	}
 
@@ -109,12 +106,15 @@ class HttpResponse
 	public function flush():Void { throw new NotImplemented(); }
 
 	/**
-		Will clear existing headers, cookies and content
+		Will clear existing headers, cookies, content and status.
 	**/
 	public function clear():Void {
 		clearCookies();
 		clearHeaders();
 		clearContent();
+		contentType = null;
+		charset = DEFAULT_CHARSET;
+		status = DEFAULT_STATUS;
 	}
 
 	/**
