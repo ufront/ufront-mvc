@@ -111,8 +111,9 @@ class UfrontApplication extends HttpApplication
 		
 		// Map some default injector rules
 		
-		for ( controller in configuration.controllers ) 
+		for ( controller in configuration.controllers ) {
 			mvcHandler.injector.mapClass( controller, controller );
+		}
 		
 		for ( api in configuration.apis ) {
 			remotingHandler.injector.mapClass( api, api );
@@ -171,7 +172,6 @@ class UfrontApplication extends HttpApplication
 	static var firstRun = true;
 	function initOnFirstExecute( httpContext:HttpContext ):Void {
 		firstRun = false;
-		
 		inject( String, httpContext.request.scriptDirectory, "scriptDirectory" );
 		inject( String, httpContext.contentDirectory, "contentDirectory" );
 		
