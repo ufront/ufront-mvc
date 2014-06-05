@@ -1,6 +1,7 @@
 package ufront.web;
 
 import thx.error.NullArgument;
+using Dates;
 
 /**
 	A class describing a Http Cookie.
@@ -52,7 +53,7 @@ class HttpCookie
 		var buf = new StringBuf();
 		buf.add(value);
 		if ( expires != null )
-			addPair(buf, "expires", DateTools.format(expires, "%a, %d-%b-%Y %H:%M:%S GMT"));
+			addPair(buf, "expires", expires.format("%a, %d-%b-%Y %T %Z"));
 		addPair(buf, "domain", domain);
 		addPair(buf, "path", path);
 		if (secure)
