@@ -58,6 +58,7 @@ class TestUtils
 		if ( request==null ) {
 			request = HttpRequest.mock();
 			request.uri.returns( uri );
+			request.scriptDirectory.returns( "." );
 			request.params.returns( (params!=null) ? params : new MultiValueMap() );
 			request.httpMethod.returns( (method!=null) ? method.toUpperCase() : "GET" );
 			request.clientHeaders.returns( new MultiValueMap() );
