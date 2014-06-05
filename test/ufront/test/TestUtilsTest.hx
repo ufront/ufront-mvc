@@ -61,7 +61,7 @@ class TestUtilsTest
 		Assert.equals( auth, mock3.auth );
 	}
 	
-	public function testRoute():Void {
+	public function testTestRoute():Void {
 		var outcome1 = "/".mockHttpContext().testRoute( TestController ).handle( verifyTestRoute.bind(_,true) );
 		var outcome2 = "/error".mockHttpContext().testRoute( TestController ).handle( verifyTestRoute.bind(_,false) );
 		var outcome3 = "/404".mockHttpContext().testRoute( TestController ).handle( verifyTestRoute.bind(_,false) );
@@ -132,7 +132,7 @@ class TestUtilsTest
 		"/error".mockHttpContext().testRoute( TestController ).assertFailure( 500 );
 		"/failure".mockHttpContext().testRoute( TestController ).assertFailure( 500 );
 		"/user/not-an-int".mockHttpContext().testRoute( TestController ).assertFailure( 400 );
-		        
+		
 		// Then test some cases which accidentally pass.
 		expectFailure( function() {
 			"/".mockHttpContext().testRoute( TestController ).assertFailure(404);

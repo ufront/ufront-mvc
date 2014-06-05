@@ -106,22 +106,15 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 		actionContext.handler = this;
 
 		// Create the controller, inject into it, execute it...
-		try {
-			var controller:IndexController = Type.createInstance( indexController, [actionContext] );
-			var resultFuture = 
-				controller.execute() >>
-				function(result:ActionResult):Noise {
-					context.actionContext.actionResult = result;
-					return Noise;
-				}
-			;
-			return resultFuture;
-		}
-		catch ( e:Dynamic ) {			
-			var p = HttpError.fakePosition( context.actionContext.controller, context.actionContext.action, context.actionContext.args );
-			#if debug context.ufError( 'Caught unknown error in DispatchHandler.executeAction while executing ${p.className}.${p.methodName}(${p.customParams.join(",")})' ); #end
-			return Future.sync( Failure(HttpError.wrap(e,p)) ); 
-		}
+		var controller:IndexController = Type.createInstance( indexController, [actionContext] );
+		var resultFuture = 
+			controller.execute() >>
+			function(result:ActionResult):Noise {
+				context.actionContext.actionResult = result;
+				return Noise;
+			}
+		;
+		return resultFuture;
 	}
 
 	function executeResult( context:HttpContext ):Surprise<Noise,HttpError> {

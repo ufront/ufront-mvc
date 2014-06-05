@@ -316,7 +316,7 @@ class HttpApplication
 			// For now we are only testing sync targets, in future we may provide a "timeout" on async targets to perform a similar test.
 			if ( httpContext.completion.has(CFlushComplete)==false ) {
 				// We need to prevent macro-time seeing this code as "Pos" for them is "haxe.macro.Pos" not "haxe.PosInfos"
-				var msg = 'Async callbacks never completed.  ';
+				var msg = 'Async callbacks never completed for URI ${httpContext.getRequestUri()}:  ';
 				#if !macro
 					msg += 'The last active module was ${currentModule.className}.${currentModule.methodName}(${currentModule.customParams.join(", ")})';
 				#end
@@ -383,15 +383,19 @@ class HttpApplication
 		if ( !ctx.completion.has(CErrorHandlersComplete) ) {
 
 			var errHandlerModules = prepareModules(errorHandlers,"handleError",[err]);
+			var resMidModules = prepareModules(responseMiddleware,"responseOut");
+			var logHandModules = prepareModules(logHandlers,"log",[_,messages]);
 
 			var allDone = 
 				executeModules( errHandlerModules, ctx, CErrorHandlersComplete ) >>
 				function (n:Noise) {
 					// Mark the handler as complete.  (It will continue on with the Middleware, Logging and Flushing stages)
-					ctx.completion.set( CErrorHandlersComplete );
 					ctx.completion.set( CRequestHandlersComplete );
 					return Sync.success();
-				};
+				} >>
+				function (n:Noise) return executeModules( resMidModules, ctx, CResponseMiddlewareComplete) >> 
+				function (n:Noise) return executeModules( logHandModules, ctx, CLogHandlersComplete ) >>
+				function (n:Noise) return flush( ctx );
 
 			allDone.handle( doneTrigger.trigger.bind(Failure(err)) );
 		}
