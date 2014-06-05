@@ -1,7 +1,8 @@
 package ufront.app;
 
-#if macro 
+#if macro
 	import haxe.macro.Expr;
+	using tink.MacroApi;
 #end
 import ufront.web.url.filter.UFUrlFilter;
 import ufront.core.Sync;
@@ -109,7 +110,7 @@ class HttpApplication
 	var modulesReady:Surprise<Noise,HttpError>;
 
 	/** A position representing the current module.  Useful for diagnosing if something in our async chain never completed. **/
-	var currentModule:PosInfos;
+	var currentModule:Pos;
 
 	///// End Events /////
 
@@ -351,12 +352,12 @@ class HttpApplication
 			}
 			else {
 				var moduleCb = m.a;
+				currentModule = m.b;
 				var moduleResult = 
 					try moduleCb( ctx ) 
 					catch ( e:Dynamic ) {
-						var pos = m.b;
-						#if (!macro && debug) ctx.ufLog( 'Caught error $e while executing module ${pos.className}.${pos.methodName} in HttpApplication.executeModules()' ); #end
-						Future.sync( Failure( HttpError.wrap(e,null,pos) ) );
+						#if (debug && !macro) ctx.ufLog( 'Caught error $e while executing module ${currentModule.className}.${currentModule.methodName} in HttpApplication.executeModules()' ); #end
+						Future.sync( Failure( HttpError.wrap(e,null,currentModule) ) );
 					}
 
 				moduleResult.handle( function (result) {
@@ -444,7 +445,7 @@ class HttpApplication
 			case EArrayDecl( args ):
 				argsToBind = args;
 				for ( a in args ) {
-					if ( !tink.macro.Exprs.isWildcard(a) ) 
+					if ( !a.isWildcard() ) 
 						argsForPos.push( a );
 					else
 						argsForPos.push( "{HttpContext}" );
