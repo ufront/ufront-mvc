@@ -29,20 +29,6 @@ using Lambda;
 **/
 class UFViewEngine {
 
-	#if macro
-
-		/**
-			This method is required at macro time, and is used by `ufront.web.result.ViewResult.check` to check that all required templates are available.
-
-			At this point in time each `UFViewEngine` class only needs to guarantee that the template is available, the required infrastructure to check that it parses, compiles or has the correct variables is not available.
-		**/
-		public function checkTemplate( path:String, ?templatingEngine:TemplatingEngine ):Outcome<Null<String>,Error> {
-			Context.error( "UFViewEngine.checkTemplate() not implemented yet", Context.currentPos() );
-			return null;
-		}
-
-	#end
-
 	var engines:Array<TemplatingEngine>;
 	var cache:Map<String,Pair<String,UFTemplate>>;
 
