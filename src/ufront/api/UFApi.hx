@@ -28,7 +28,7 @@ class UFApi
 
 		When called from a web context, this will usually result in the HttpContext's `messages` array being pushed to.
 	**/
-	@inject public var messages:MessageList;
+	@:noCompletion @inject public var messages:MessageList;
 
 	/**
 		A shortcut to `HttpContext.ufTrace`
