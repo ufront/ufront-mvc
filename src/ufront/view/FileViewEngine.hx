@@ -8,38 +8,55 @@ import haxe.ds.Option;
 using tink.CoreApi;
 using haxe.io.Path;
 
+/**
+	A UFViewEngine that loads views from the filesystem on the web server.
+
+	This currently only has a synchronous implementation on "sys" platforms.
+**/
 class FileViewEngine extends UFViewEngine {
 	
-	/** The content directory for your app.  This value should be injected. **/
+	/** The script directory for your app. This value should be injected. **/
 	@inject("scriptDirectory") public var scriptDir:String;
 
-	/** The relative path to your views inside the content directory.  This value is set in the constructor. **/
+	/** The relative path to your views inside the script directory. This value is set in the constructor. **/
 	public var path(default,null):String;
 
-	/** The absolute path to your views.  Basically `scriptDir+path+'/'` **/
+	/** Is `path` absolute (true) or relative to `scriptDir` (false)? This value is set in the constructor. **/
+	public var isPathAbsolute(default,null):Bool;
+
+	/** The absolute path to your views.  Basically `$scriptDir$path/` (or `$path/` if path is absolute). **/
 	public var viewDirectory(get,null):String;
-	function get_viewDirectory() return scriptDir+path.addTrailingSlash();
+	function get_viewDirectory() return isPathAbsolute ? path.addTrailingSlash() : scriptDir+path.addTrailingSlash();
 
 	/**
 		@param path - path (relative to your content-directory) where your views are stored.  Default is "view"
-		@param ?cachingEnabled - (default is true)
+		@param ?isPathAbsolute - is this path absolute (true) or relative to the script directory (false)? Default is false.
+		@param ?cachingEnabled - should we cache views in memory between requests? Default is true.
 	**/
-	public function new( ?path="view", ?cachingEnabled=true ) {
+	public function new( ?path="view", ?isPathAbsolute=false, ?cachingEnabled=true ) {
 		super(cachingEnabled);
 		this.path = path;
+		this.isPathAbsolute = isPathAbsolute;
 	}
 
-	#if sys
-		/**
-			Check if a file exists, and read a file from the file system using the synchronous `sys.FileSystem` api from the standard library.
-		**/
-		override public function getTemplateString( path:String ):Surprise<Option<String>,Error> {
-			var fullPath = viewDirectory+path;
-			try {
+	/**
+		Check if a file exists, and read a file from the file system using the synchronous `sys.FileSystem` api from the standard library.
+
+		A pull request for a NodeJS asynchronous implementation is invited.
+
+		@param viewRelativePath The relative path to the view. Please note this path is not checked for "../" or similar path hacks, so be wary of using user inputted data here.
+		@return A future (resolved synchronously) containing details on if the template existed at the given path or not, or a failure if there was an unexpected error.
+	**/
+	override public function getTemplateString( viewRelativePath:String ):Surprise<Option<String>,Error> {
+		var fullPath = viewDirectory+viewRelativePath;
+		try {
+			#if sys
 				if ( FileSystem.exists(fullPath) ) return Future.sync( Success(Some(File.getContent(fullPath))) );
 				else return Future.sync( Success(None) );
-			}
-			catch ( e:Dynamic ) return Future.sync( Failure(Error.withData('Failed to load template $path', e)) );
+			#else
+				throw "No implementation for non-sys platforms in FileViewEngine.getTemplateString().";
+			#end
 		}
-	#end
+		catch ( e:Dynamic ) return Future.sync( Failure(Error.withData('Failed to load template $viewRelativePath', e)) );
+	}
 }

@@ -22,7 +22,7 @@ using StringTools;
 
 	No string conversion or escaping happens at this level, that is up to the templating engine.
 **/
-abstract TemplateData({}) {
+abstract TemplateData({}) to {} {
 	
 	inline function new( obj:{} )
 		this = obj;

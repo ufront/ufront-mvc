@@ -1,5 +1,6 @@
 package ufront.view;
 
+#if mustache import mustache.Mustache; #end
 using tink.CoreApi;
 
 /**
@@ -64,7 +65,7 @@ class TemplatingEngines {
 		static function get_hxtemplo() return {
 			factory: function ( tplString ):UFTemplate { 
 				var t = templo.Template.fromString( tplString );
-				return function (data:TemplateData) return t.execute( data.toObject() ); 
+				return function (data:TemplateData) return t.execute( data ); 
 			},
 			type: "templo.Template",
 			extensions: ["mtt"]
@@ -98,7 +99,7 @@ class TemplatingEngines {
 				return function (data:TemplateData) return t.execute( data.toObject() ); 
 			},
 			type: "erazor.Template",
-			extensions: ["mustache"]
+			extensions: ["erazor"]
 		}
 	#end
 
