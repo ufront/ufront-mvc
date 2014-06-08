@@ -2,6 +2,7 @@ package ufront.api;
 
 import haxe.PosInfos;
 import ufront.log.Message;
+import ufront.auth.*;
 
 /** 
 	This class provides a build macro that will take some extra precautions to make
@@ -17,18 +18,29 @@ import ufront.log.Message;
 class UFApi 
 {
 	/**
+		The current `ufront.auth.UFAuthHandler`.
+
+		You can use this to check permissions etc.
+
+		This is inserted via dependency injection.
+	**/
+	@inject public var auth:UFAuthHandler<UFAuthUser>;
+	
+	/**
+		The messages list.
+
+		When called from a web context, this will usually result in the HttpContext's `messages` array being pushed to so your log handlers can handle the messages appropriately.
+
+		This is inserted via dependency injection, and must be injected for `ufTrace`, `ufLog`, `ufWarn` and `ufError` to function correctly.
+	**/
+	@:noCompletion @inject public var messages:MessageList;
+
+	/**
 		A default constructor.  
 
 		This has no effect, it just exists so you don't need to create a constructor on every child class. 
 	**/
 	public function new() {}
-	
-	/**
-		The messages list.  This must be injected for `ufTrace`, `ufLog`, `ufWarn` and `ufError` to function correctly.
-
-		When called from a web context, this will usually result in the HttpContext's `messages` array being pushed to.
-	**/
-	@:noCompletion @inject public var messages:MessageList;
 
 	/**
 		A shortcut to `HttpContext.ufTrace`

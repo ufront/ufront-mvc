@@ -149,7 +149,7 @@ typedef UfrontConfiguration = {
 
 		This means it will create an `ufront.auth.EasyAuth` handler using the current session, and the default variable name to store the ID in the session.
 
-		If no using ufront-easyauth, the default value is `YesBoss.getFactory()`
+		If not using ufront-easyauth, the default value is `YesBoss.getFactory()`
 	**/
 	?authFactory:UFAuthFactory
 }
