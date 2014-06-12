@@ -1,7 +1,7 @@
-package ufront.web.session;
+package ufront.middleware;
 
 import utest.Assert;
-import ufront.web.session.InlineSessionMiddleware;
+import ufront.middleware.InlineSessionMiddleware;
 
 class InlineSessionMiddlewareTest 
 {

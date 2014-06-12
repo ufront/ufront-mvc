@@ -13,7 +13,7 @@ import ufront.module.*;
 import ufront.app.UFMiddleware;
 import ufront.app.UFErrorHandler;
 import ufront.handler.ErrorPageHandler;
-import ufront.web.session.InlineSessionMiddleware;
+import ufront.middleware.InlineSessionMiddleware;
 import ufront.web.upload.TmpFileUploadMiddleware;
 
 /**

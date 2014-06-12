@@ -18,7 +18,7 @@ using tink.CoreApi;
 	
 	@author Jason O'Neil
 **/
-class RequestCache implements UFMiddleware
+class RequestCacheMiddleware implements UFMiddleware
 {
 	public static var contentTypesToCache:Array<String> = [
 		"text/plain",
