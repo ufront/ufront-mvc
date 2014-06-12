@@ -4,8 +4,10 @@ import haxe.io.Bytes;
 import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
 import ufront.core.Sync;
-import sys.FileSystem;
 import ufront.web.HttpError;
+#if sys
+	import sys.FileSystem;
+#end
 using haxe.io.Path;
 using StringTools;
 
@@ -34,19 +36,23 @@ class DirectFilePathResult extends ActionResult
 
 	override function executeResult( actionContext:ActionContext ) {
 		NullArgument.throwIfNull( actionContext );
-		filePath = filePath.normalize();
-		if ( !FileSystem.exists(filePath) ) {
-			throw HttpError.pageNotFound();
-		}
-		var scriptDir = actionContext.request.scriptDirectory;
-		if ( filePath.startsWith(scriptDir) ) {
-			var url = filePath.substr( scriptDir.removeTrailingSlashes().length );
-			return new RedirectResult( url, true ).executeResult( actionContext );
-		}
-		else {
-			var result = new FilePathResult( filePath );
-			result.setContentTypeByFilename( filePath.withoutDirectory() );
-			return result.executeResult( actionContext );
-		}
+		#if sys
+			filePath = filePath.normalize();
+			if ( !FileSystem.exists(filePath) ) {
+				throw HttpError.pageNotFound();
+			}
+			var scriptDir = actionContext.httpContext.request.scriptDirectory;
+			if ( filePath.startsWith(scriptDir) ) {
+				var url = filePath.substr( scriptDir.removeTrailingSlashes().length );
+				return new RedirectResult( url, true ).executeResult( actionContext );
+			}
+			else {
+				var result = new FilePathResult( filePath );
+				result.setContentTypeByFilename( filePath.withoutDirectory() );
+				return result.executeResult( actionContext );
+			}
+		#else
+			return throw "Not implemented on non sys platforms.";
+		#end
 	}
 }

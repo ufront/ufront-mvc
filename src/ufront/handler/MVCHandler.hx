@@ -21,7 +21,7 @@ import ufront.web.context.*;
 import ufront.core.*;
 
 /**
-	Uses `ufront.web.Dispatch` to match the URL to a controller action and it's parameters.
+	Uses a `ufront.web.Controller` to execute a controller for the current request.
 
 	@author Jason O'Neil
 **/
@@ -106,7 +106,7 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 		actionContext.handler = this;
 
 		// Create the controller, inject into it, execute it...
-		var controller:IndexController = Type.createInstance( indexController, [actionContext] );
+		var controller:IndexController = Type.createInstance( indexController, [context] );
 		var resultFuture = 
 			controller.execute() >>
 			function(result:ActionResult):Noise {

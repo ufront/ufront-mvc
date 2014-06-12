@@ -14,6 +14,7 @@ class TestAll
 		runner.addCase( new JsonResultTest() );
 		runner.addCase( new BytesResultTest() );
 		runner.addCase( new EmptyResultTest() );
+		runner.addCase( new DirectFilePathResultTest() );
 		runner.addCase( new FilePathResultTest() );
 		runner.addCase( new ActionResultTest() );
 	}

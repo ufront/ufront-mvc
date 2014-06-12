@@ -411,12 +411,12 @@ class ControllerMacros {
 
 		// Build the function
 		var fnBody:Expr = macro {
-			var uriParts = context.uriParts;
+			var uriParts = context.actionContext.uriParts;
 			var params = context.request.params;
 			var method = context.request.httpMethod;
 
-			context.controller = this;
-			context.action = "execute";
+			context.actionContext.controller = this;
+			context.actionContext.action = "execute";
 
 			try {
 				// The bulk of the processing for each route
@@ -426,7 +426,7 @@ class ControllerMacros {
 				return throw ufront.web.HttpError.pageNotFound();
 			}
 			catch ( e:Dynamic ) {
-				return ufront.core.Sync.httpError( 'Uncaught error while executing '+context.controller+'.'+context.action+'()', e );
+				return ufront.core.Sync.httpError( 'Uncaught error while executing '+context.actionContext.controller+'.'+context.actionContext.action+'()', e );
 			}
 
 		}
@@ -515,11 +515,11 @@ class ControllerMacros {
 				lines.push( l );
 		}
 
-		lines.push( macro context.action = $v{routeInfo.action.name} );
-		lines.push( macro context.args = $a{fnArgs} );
+		lines.push( macro context.actionContext.action = $v{routeInfo.action.name} );
+		lines.push( macro context.actionContext.args = $a{fnArgs} );
 
 		// Splice the uriParts so that parts relevant to this execute don't affect subdispatching...
-		lines.push( macro context.uriParts.splice(0,$v{routeInfo.routeParts.length}) );
+		lines.push( macro context.actionContext.uriParts.splice(0,$v{routeInfo.routeParts.length}) );
 
 		// Execute the call, wrap the results
 		var functionCall = { expr: ECall(fnIdent,fnArgs), pos: p };
@@ -582,7 +582,7 @@ class ControllerMacros {
 				return { ident: ident, lines: lines };
 			case AKRest: 
 				var ident = "rest".resolve();
-				var expr = macro var rest = context.uriParts;
+				var expr = macro var rest = context.actionContext.uriParts;
 				return { ident: ident, lines: [ expr ] };
 		}
 	}

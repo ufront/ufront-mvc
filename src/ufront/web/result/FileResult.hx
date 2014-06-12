@@ -74,10 +74,10 @@ class FileResult extends ActionResult
 		NullArgument.throwIfNull( actionContext );
 
 		if( null!=contentType )
-			actionContext.response.contentType = contentType;
+			actionContext.httpContext.response.contentType = contentType;
 		
 		if( null!=fileDownloadName )
-			actionContext.response.setHeader( "content-disposition", 'attachment; filename=$fileDownloadName' );
+			actionContext.httpContext.response.setHeader( "content-disposition", 'attachment; filename=$fileDownloadName' );
 
 		return Sync.success();
 	}

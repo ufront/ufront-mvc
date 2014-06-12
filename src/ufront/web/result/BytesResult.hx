@@ -16,7 +16,7 @@ class BytesResult extends FileResult
 	
 	override function executeResult( actionContext:ActionContext ) {
 		super.executeResult(actionContext);
-		actionContext.response.writeBytes(bytes, 0, bytes.length);
+		actionContext.httpContext.response.writeBytes(bytes, 0, bytes.length);
 		return Sync.success();
 	}
 }

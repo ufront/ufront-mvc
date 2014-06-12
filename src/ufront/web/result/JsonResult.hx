@@ -18,9 +18,9 @@ class JsonResult<T> extends ActionResult
 	override function executeResult( actionContext:ActionContext ) {
 		NullArgument.throwIfNull(actionContext);
 
-		actionContext.response.contentType = "application/json";
+		actionContext.httpContext.response.contentType = "application/json";
 		var serialized = Json.encode(content);
-		actionContext.response.write(serialized);
+		actionContext.httpContext.response.write(serialized);
 		return Sync.success();
 	}
 }

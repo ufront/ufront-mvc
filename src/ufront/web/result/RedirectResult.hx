@@ -21,11 +21,11 @@ class RedirectResult extends ActionResult
 
 	override function executeResult( actionContext:ActionContext ) {
 		// Clear content and headers, but not cookies
-		actionContext.response.clearContent();
-		actionContext.response.clearHeaders();
+		actionContext.httpContext.response.clearContent();
+		actionContext.httpContext.response.clearHeaders();
 
-		if(permanentRedirect) actionContext.response.permanentRedirect( url );
-		else actionContext.response.redirect( url );
+		if(permanentRedirect) actionContext.httpContext.response.permanentRedirect( url );
+		else actionContext.httpContext.response.redirect( url );
 		
 		return Sync.success();
 	}

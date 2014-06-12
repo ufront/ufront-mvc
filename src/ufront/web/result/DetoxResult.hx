@@ -96,8 +96,8 @@ package ufront.web.result;
             layout.mapData( data );
 
             var dt = (docType!=null) ? docType : defaultDocType;
-            actionContext.response.contentType = (contentType!=null) ? contentType : defaultContentType;
-            actionContext.response.write( dt + layout.html() );
+            actionContext.httpContext.response.contentType = (contentType!=null) ? contentType : defaultContentType;
+            actionContext.httpContext.response.write( dt + layout.html() );
 
             return Sync.success();
         }

@@ -16,7 +16,7 @@ class EmptyResult extends ActionResult
 	}
 	
 	override public function executeResult( actionContext:ActionContext ) {
-		if ( preventFlush ) actionContext.response.preventFlush();
+		if ( preventFlush ) actionContext.httpContext.response.preventFlush();
 		return Sync.success();
 	}
 }

@@ -9,24 +9,16 @@ using StringTools;
 /**
 	A context describing the result returned by an action.
 
-	Contains the `HttpContext`, it's children, the controller, action and arguments used.
+	Contains the `HttpContext`, as well as the utilised UFRequestHandler, controller, action, arguments and result.
+
+	It is useful for helping know how to present a response to the client, and is used in the `ufront.web.result.ActionResult` classes.
+
+	It is also helpful for logging and for unit testing - so we can be sure our requests are being acted upon in the way we expect.
 **/
 class ActionContext
 {
 	/** A link to the full `HttpContext` **/
 	public var httpContext(default, null):HttpContext;
-
-	/** A link to the full `HttpRequest` **/
-	public var request(get, null):HttpRequest;
-
-	/** A link to the full `HttpResponse` **/
-	public var response(get, null):HttpResponse;
-
-	/** A link to the current `UFHttpSessionState` **/
-	public var session(get, null):UFHttpSessionState;
-
-	/** A link to the current `UFAuthHandler` **/
-	public var auth(get, null):UFAuthHandler<UFAuthUser>;
 
 	/** The UFRequestHandler that was used in this request.  Will be null until the request is handled. **/
 	public var handler:Null<{}>;
@@ -55,22 +47,14 @@ class ActionContext
 	public var uriParts(get, null):Array<String>;
 
 	/** Create a new ActionContext.  HttpContext is required. **/
-	public function new( httpContext:HttpContext, ?controller:{}, ?action:String, ?args:Array<Dynamic> ) {
+	public function new( httpContext:HttpContext ) {
 		NullArgument.throwIfNull( httpContext );
 
 		this.httpContext = httpContext;
-		this.controller = controller;
-		this.action = action;
-		this.args = args;
 
 		// set the back-reference from HttpContext
 		httpContext.actionContext = this;
 	}
-	
-	inline function get_request() return httpContext.request;
-	inline function get_response() return httpContext.response;
-	inline function get_session() return httpContext.session;
-	inline function get_auth() return httpContext.auth;
 
 	function get_uriParts() {
 		if ( uriParts==null ) {

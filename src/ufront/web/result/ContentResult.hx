@@ -16,9 +16,9 @@ class ContentResult extends ActionResult {
 
 	override public function executeResult( actionContext:ActionContext ) {
 		if( null!=contentType )
-			actionContext.response.contentType = contentType;
+			actionContext.httpContext.response.contentType = contentType;
 
-		actionContext.response.write( content );
+		actionContext.httpContext.response.write( content );
 		return Sync.success();
 	}
 }

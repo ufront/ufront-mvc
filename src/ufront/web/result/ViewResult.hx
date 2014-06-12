@@ -330,8 +330,8 @@ class ViewResult extends ActionResult {
 				}
 
 				// Write to the response
-				actionContext.response.contentType = "text/html";
-				actionContext.response.write( finalOut );
+				actionContext.httpContext.response.contentType = "text/html";
+				actionContext.httpContext.response.write( finalOut );
 
 				return Success( Noise );
 			}
