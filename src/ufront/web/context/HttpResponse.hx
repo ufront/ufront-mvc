@@ -224,6 +224,16 @@ class HttpResponse
 	}
 
 	/**
+		Ask the browser to retrieve a username/password from the user.
+
+		This is a shortcut for `setUnauthorized()` and `setHeader("WWW-Authenticate", "Basic realm="+message)`.
+	**/
+	public function requireAuthentication( message:String ) {
+		setUnauthorized();
+		setHeader( "WWW-Authenticate", 'Basic realm="$message"' );
+	}
+
+	/**
 		Set the HTTP Response Code to `NOT_FOUND` (404)
 	**/
 	public function setNotFound():Void {

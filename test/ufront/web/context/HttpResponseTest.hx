@@ -131,6 +131,13 @@ class HttpResponseTest
 		response.contentType = null;
 		Assert.equals( "text/html", response.getHeaders().get("Content-type") );
 	}
+	
+	public function testRequireAuthentication() {
+		var response = new HttpResponseMock();
+		response.requireAuthentication( "Login plz" );
+		Assert.equals( 401, response.status );
+		Assert.equals( 'Basic realm="Login plz"', response.getHeaders().get("WWW-Authenticate") );
+	}
 }
 
 class HttpResponseMock extends HttpResponse {
