@@ -24,8 +24,13 @@ using StringTools;
 **/
 abstract TemplateData({}) to {} {
 	
-	inline function new( obj:{} )
-		this = obj;
+	/**
+		Create a template data object.
+
+		@param obj The object to use.  If null a new TemplateData object with no values will be used.
+	**/
+	public inline function new( ?obj:{} )
+		this = (obj!=null) ? obj : {};
 
 	/**
 		Convert into a `Dynamic<Dynamic>` anonymous object.
