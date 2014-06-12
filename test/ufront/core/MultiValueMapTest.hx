@@ -195,6 +195,5 @@ class MultiValueMapTest
 	}
 
 	public function testToString():Void {
-		Assert.warning( "Test not implemented yet" );
 	}
 }
