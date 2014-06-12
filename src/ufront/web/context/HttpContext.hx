@@ -31,14 +31,14 @@ class HttpContext
 
 		`urlFilters` will be an empty array if not supplied.
 	**/
-	public static function create( ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?contentDir="uf-content" ) {
+	public static function create( ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
 		if( null==injector )
 			injector = new Injector();
 		if( null==request )
 			request = HttpRequest.create();
 		if( null==response )
 			response = HttpResponse.create();
-		return new HttpContext( injector, request, response, session, auth, urlFilters, contentDir );
+		return new HttpContext( injector, request, response, session, auth, urlFilters, relativeContentDir );
 	}
 
 	/**
@@ -50,9 +50,9 @@ class HttpContext
 
 		`urlFilters` will be used for `getRequestUri()` and `generateUri()`.  By default it is an empty array.
 
-		`contentDir` is used to help specify the path of `contentDirectory`, relative to `request.scriptDirectory`.  Default value is `uf-content`
+		`relativeContentDir` is used to help specify the path of `contentDirectory`, relative to `request.scriptDirectory`.  Default value is `uf-content`
 	**/
-	public function new( injector:Injector, request:HttpRequest, response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?contentDir="uf-content" ) {
+	public function new( injector:Injector, request:HttpRequest, response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
 
 		NullArgument.throwIfNull( injector );
 		NullArgument.throwIfNull( response );
@@ -64,7 +64,7 @@ class HttpContext
 		this._session = session;
 		this._auth = auth;
 		this.urlFilters = ( urlFilters!=null ) ? urlFilters : [];
-		this.contentDir = contentDir;
+		this.relativeContentDir = relativeContentDir;
 
 		try this.sessionFactory = injector.getInstance( UFSessionFactory ) catch (e:Dynamic) {}
 		try this.authFactory = injector.getInstance( UFAuthFactory ) catch (e:Dynamic) {}
@@ -198,7 +198,7 @@ class HttpContext
 
 		It can be used to store sessions, log files, cache, uploaded files etc.
 		
-		The value is essentially `${request.scriptDirectory}/${contentDir}/`, where `contentDir` is the value that was supplied to the constructor.
+		The value is essentially `${request.scriptDirectory}/$relativeContentDir/`, where `relativeContentDir` is the value that was supplied to the constructor.
 
 		If using `ufront.application.UfrontApplication`, this value can be set with the `contentDirectory` setting in your `ufront.web.Configuration` initialization settings.
 
@@ -206,11 +206,19 @@ class HttpContext
 	**/
 	public var contentDirectory(get,null):String;
 
-	var contentDir:String;
+	var relativeContentDir:String;
+	var _contentDir:String;
 	function get_contentDirectory() {
-		return 
-			if (request.scriptDirectory!=null) Path.addTrailingSlash(request.scriptDirectory) + Path.addTrailingSlash( contentDir );
-			else Path.addTrailingSlash( contentDir );
+		if ( _contentDir==null ) {
+			if (request.scriptDirectory!=null) 
+				_contentDir = Path.addTrailingSlash(request.scriptDirectory) + Path.addTrailingSlash( relativeContentDir );
+			else
+				_contentDir = Path.addTrailingSlash( relativeContentDir );
+
+			_contentDir = Path.normalize( _contentDir );
+		}
+		return _contentDir;
+			
 	}
 	
 	/**
