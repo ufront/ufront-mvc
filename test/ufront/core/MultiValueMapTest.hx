@@ -193,4 +193,8 @@ class MultiValueMapTest
 		Assert.equals( 2, emptyMap.getAll("value").length );
 		Assert.equals( 0, emptyMap.getAll("value")[0] );
 	}
+
+	public function testToString():Void {
+		Assert.warning( "Test not implemented yet" );
+	}
 }

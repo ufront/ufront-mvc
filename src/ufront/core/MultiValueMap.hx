@@ -119,6 +119,23 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> from M
 	**/
 	public inline function remove( key:String ) return this.remove( key );
 
+	/**
+		Create a string representation of the current map.
+	**/
+	public function toString():String {
+		var sb = new StringBuf();
+		sb.add( "[" );
+		for ( key in keys() ) {
+			sb.add( '\n\t$key = [' );
+			sb.add( getAll(key).join(", ") );
+			sb.add( "]" );
+		}
+		if ( sb.length>1 )
+			sb.add( "\n" );
+		sb.add( "]" );
+		return sb.toString();
+	}
+
 	inline function stripArrayFromName( name:String ) {
 		return name.endsWith("[]") ? name.substr(0,name.length-2) : name;
 	}
