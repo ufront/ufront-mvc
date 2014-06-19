@@ -9,17 +9,14 @@ using Types;
 /**
 	Trace module that adds a "hxt" line to haxe remoting call, that can work with `ufront.api.HttpAsyncConnectionWithTraces`
 
-	When `onLogRequest` is fired, this will flush the messages (traces, logs, warnings and errors) from the current context to the remoting response.
+	When `log` is fired, this will flush the messages (traces, logs, warnings and errors) from the current context to the remoting response.
 
-	If `-debug` is defined, any application level messages (not necessarily associated with this request) will also be sent to the remoting response.
-		
+	If `-debug` is defined, any application level messages (those from "trace" rather than "ufTrace", which may not necessarily be associated with this request) will also be sent to the remoting response.
+
 	If the `HttpResponse` output type is not "application/x-haxe-remoting", the traces will not be displayed.
 **/
 class RemotingLogger implements UFLogHandler
 {
-	/** A reference to the applications messages, so we can also flush those if required **/
-	var appMessages:Array<Message>;
-
 	public function new() {}
 
 	public function log( httpContext:HttpContext, appMessages:Array<Message> ) {
@@ -40,18 +37,15 @@ class RemotingLogger implements UFLogHandler
 				httpContext.response.write( '\n' + results.join("\n") );
 			}
 		}
-		
 
 		return Sync.success();
 	}
 
-	function formatMessage( m:Message ):String {
-		// Make sure everything is toString()'d before we serialize it
-		m.msg = try Std.string( m.msg ) catch ( e:Dynamic ) "ERROR: unable to format message in RemotingLogger.formatMessage";
+	public static function formatMessage( m:Message ):String {
+		// Make sure everything is converted to a String before we serialize it.
+		m.msg = ''+m.msg;
 		if ( m.pos.customParams != null) {
-			m.pos.customParams = m.pos.customParams.map( function (v) {
-				return try Std.string(v) catch ( e:Dynamic ) "ERROR: unable to format customParams in RemotingLogger.formatMessage";
-			});
+			m.pos.customParams = [ for (p in m.pos.customParams) ""+p ];
 		}
 
 		return "hxt" + haxe.Serializer.run(m);
