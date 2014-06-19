@@ -200,6 +200,7 @@ class DispatchTest {
 
 	public function testRuntimeDispatch() {
 		// This is just a copy for runtimeReturnDispatch(), so no need for individual tests.
+		Assert.isTrue( true );
 	}
 
 	public function testRuntimeReturnDispatch() {
