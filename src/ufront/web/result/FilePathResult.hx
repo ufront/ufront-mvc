@@ -37,7 +37,7 @@ class FilePathResult extends FileResult
 
 				try {
 					var bytes = File.getBytes( fileName );
-					actionContext.response.writeBytes( bytes, 0, bytes.length );
+					actionContext.httpContext.response.writeBytes( bytes, 0, bytes.length );
 					return Sync.success();
 				}
 				catch (e:Dynamic) {
