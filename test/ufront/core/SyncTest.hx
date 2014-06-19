@@ -39,7 +39,8 @@ class SyncTest
 		f.handle( function(v) val = v );
 		switch val {
 			case Failure(httpError):
-				Assert.equals( '500 Error: Message', httpError.toString() );
+				Assert.equals( 500, httpError.code );
+				Assert.equals( 'Message', httpError.message );
 				Assert.equals( "error", httpError.data[0] );
 			default: Assert.fail('Expected a failure');
 		}

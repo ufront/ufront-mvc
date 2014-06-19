@@ -2,7 +2,6 @@ package ufront.web.result;
 
 import tink.CoreApi;
 import ufront.web.context.ActionContext;
-import ufront.web.HttpError;
 import ufront.core.Sync;
 using Types;
 
@@ -11,7 +10,7 @@ using Types;
 **/
 class ActionResult {
 	/** Enables processing of the result of an action method by a custom type that inherits from the ActionResult class. */
-	public function executeResult( actionContext:ActionContext ):Surprise<Noise,HttpError> {
+	public function executeResult( actionContext:ActionContext ):Surprise<Noise,Error> {
 		return Sync.success();
 	}
 
@@ -36,11 +35,11 @@ class ActionResult {
 	}
 }
 
-/** A typedef shortcut for an action return type that either gives a valid result or a HttpError **/
-typedef ActionOutcome = Outcome<ActionResult,HttpError>;
+/** A typedef shortcut for an action return type that either gives a valid result or a Error **/
+typedef ActionOutcome = Outcome<ActionResult,Error>;
 
 /** A typedef shortcut for a Future that will contain an ActionResult **/
 typedef FutureActionResult = Future<ActionResult>;
 
-/** A typedef shortcut for a Future that will contain either an ActionResult or a HttpError **/
+/** A typedef shortcut for a Future that will contain either an ActionResult or a Error **/
 typedef FutureActionOutcome = Future<ActionOutcome>;

@@ -21,7 +21,7 @@ using tink.CoreApi;
 	- An `execute()` method which for each sub-class:
 		- decides which method to execute as the "action" for this request based upon the URI and parameters
 		- from the URI and HTTP parameters, extract variables required for the chosen action
-		- return a `tink.core.Surprise`, that holds either an `ActionResult` or a `HttpError`
+		- return a `tink.core.Surprise`, that holds either an `ActionResult` or a `Error`
 	- Dependency injection.  When `context` is set, the injector in the current HttpContext is used to provide dependency injection to this controller.
 	- Shortcuts to `ufTrace()`, `ufLog()`, `ufWarn()` and `ufError()` that can be used in your controller code.
 	- A `toString()` method that prints the current class name, helpful when logging debug information.
@@ -47,17 +47,17 @@ using tink.CoreApi;
 
 	- Each action must return a value
 	- Possible return values are:
-		- `Surprise<ActionResult,HttpError>`
+		- `Surprise<ActionResult,Error>`
 		- `Surprise<Dynamic,Dynamic>`
 		- `Future<Dynamic>`
-		- `Outcome<ActionResult,HttpError>`
-		- `Outcome<Dynamic,HttpError>`
+		- `Outcome<ActionResult,Error>`
+		- `Outcome<Dynamic,Error>`
 		- `ActionResult`
 		- `Dynamic`
 
-	Each different return type will be handled by `execute()`, and wrapped appropriately so that execute will always return a `Surprise<ActionResult,HttpError>`.
+	Each different return type will be handled by `execute()`, and wrapped appropriately so that execute will always return a `Surprise<ActionResult,Error>`.
 
-	Please note that if an exception is thrown in one of your actions, it will be caught and turned into an appropriate `HttpError` object to be handled by your application's error handlers.
+	Please note that if an exception is thrown in one of your actions, it will be caught and turned into an appropriate `Error` object to be handled by your application's error handlers.
 	
 	#### Build macro
 
@@ -103,7 +103,7 @@ class Controller
 
 		This will anazlyze the URI and the given Http Parameters, and match it to the appropriate action using the `@:route()` metadata.
 
-		It will wrap the return result of your action in an `ActionResult` or `HttpError`.
+		It will wrap the return result of your action in an `ActionResult` or `Error`.
 
 		Please note this is an abstract method.  
 		Each child class will have an override, provided by a build macro, that has the appropriate code for that class.
@@ -157,7 +157,7 @@ class Controller
 	// You probably don't need to touch these unless you're working on a new way to generate the execute() method.
 
 	/** Based on a set of enum flags, wrap as required.  If null, return an appropriately wrapped EmptyResult() **/
-	function wrapResult( result:Dynamic, wrappingRequired:EnumFlags<WrapRequired> ):Surprise<ActionResult,HttpError> {
+	function wrapResult( result:Dynamic, wrappingRequired:EnumFlags<WrapRequired> ):Surprise<ActionResult,Error> {
 		if ( result==null ) {
 			var actionResult:ActionResult = new EmptyResult( true );
 			return Future.sync( Success(actionResult) );
@@ -165,7 +165,7 @@ class Controller
 		else {
 			var future:Future<Dynamic> = wrappingRequired.has(WRFuture) ? wrapInFuture( result ) : cast result;
 			var surprise:Surprise<Dynamic,Dynamic> = wrappingRequired.has(WROutcome) ? wrapInOutcome( future ) : cast future;
-			var finalResult:Surprise<ActionResult,HttpError> = wrappingRequired.has(WRResultOrError) ? wrapResultOrError( surprise ) : cast surprise;
+			var finalResult:Surprise<ActionResult,Error> = wrappingRequired.has(WRResultOrError) ? wrapResultOrError( surprise ) : cast surprise;
 			return finalResult;
 		}
 	}
@@ -178,13 +178,13 @@ class Controller
 
 	/** A helper to wrap a return result in a Future **/
 	@:noCompletion @:noDoc @:noUsing
-	function wrapInOutcome<T>( future:Future<T> ):Surprise<T,HttpError> {
+	function wrapInOutcome<T>( future:Future<T> ):Surprise<T,Error> {
 		return future.map( function(result) return Success( result ) );
 	}
 
 	/** A helper to wrap a return result in a Future **/
 	@:noCompletion @:noDoc @:noUsing
-	function wrapResultOrError( surprise:Surprise<Dynamic,Dynamic> ):Surprise<ActionResult,HttpError> {
+	function wrapResultOrError( surprise:Surprise<Dynamic,Dynamic> ):Surprise<ActionResult,Error> {
 		return surprise.map( function(outcome) return switch outcome {
 			case Success(result): Success( ActionResult.wrap(result) );
 			case Failure(error): Failure( HttpError.wrap(error) );
@@ -193,7 +193,7 @@ class Controller
 
 	/** A helper to set context.actionResult once the result of execute() has finished loading. **/
 	@:noCompletion @:noDoc @:noUsing
-	function setContextActionResultWhenFinished( result:Surprise<ActionResult,HttpError> ) {
+	function setContextActionResultWhenFinished( result:Surprise<ActionResult,Error> ) {
 		result.handle( function (outcome) switch outcome {
 			case Success(ar): context.actionContext.actionResult = ar;
 			case _:
@@ -220,7 +220,7 @@ typedef IndexController = {
 	function new( c:HttpContext ):Void;
 
 	/** The controller execute function.  Auto-generated by macro on `ufront.web.Controller` **/
-	function execute():Surprise<ActionResult,HttpError>;
+	function execute():Surprise<ActionResult,Error>;
 }
 
 enum WrapRequired {

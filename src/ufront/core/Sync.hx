@@ -19,11 +19,11 @@ class Sync {
 	static var s:Surprise<Noise,Dynamic>;
 
 	/**
-		Return a Failure(HttpError) to satisfy Surprise<T,HttpError>
+		Return a Failure(Error) to satisfy Surprise<T,HttpError>
 
 		Will wrap your error with `HttpError.internalServerError(err)`
 	**/
-	public static function httpError<S>( ?msg:String, ?err:Dynamic, ?p:Pos ):Surprise<S,HttpError> {
+	public static function httpError<S>( ?msg:String, ?err:Dynamic, ?p:Pos ):Surprise<S,Error> {
 		return Future.sync( Failure( HttpError.wrap(err,msg,p) ) );
 	}
 

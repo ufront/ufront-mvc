@@ -6,7 +6,6 @@ import haxe.Unserializer;
 import haxe.CallStack;
 import ufront.app.HttpApplication;
 import ufront.log.Message;
-import ufront.web.HttpError;
 import ufront.web.result.*;
 import ufront.web.context.*;
 import minject.Injector;
@@ -62,19 +61,19 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 	}
 
 	/** Initializes a module and prepares it to handle remoting requests. */
-	public function init( app ):Surprise<Noise,HttpError> {
+	public function init( app ):Surprise<Noise,Error> {
 		injector.parentInjector = app.injector;
 		return Sync.success();
 	}
 
 	/** Disposes of the resources (other than memory) that are used by the module. */
-	public function dispose( app ):Surprise<Noise,HttpError> {
+	public function dispose( app ):Surprise<Noise,Error> {
 		injector = null;
 		apis = null;
 		return Sync.success();
 	}
 
-	public function handleRequest( httpContext:HttpContext ):Surprise<Noise,HttpError> {
+	public function handleRequest( httpContext:HttpContext ):Surprise<Noise,Error> {
 		var doneTrigger = Future.trigger();
 		if ( httpContext.request.clientHeaders.exists("X-Haxe-Remoting") ) {
 			var actionContext = new ActionContext( httpContext );

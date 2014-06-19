@@ -5,8 +5,6 @@ import ufront.web.HttpError;
 
 class HttpErrorTest 
 {
-	var instance:HttpError; 
-	
 	public function new() 
 	{
 		

@@ -4,6 +4,7 @@ import haxe.PosInfos;
 import ufront.log.Message;
 import ufront.web.DispatchController;
 import ufront.web.Dispatch;
+import ufront.web.HttpError;
 import ufront.app.UFInitRequired;
 import ufront.app.UFRequestHandler;
 import haxe.web.Dispatch.DispatchConfig;
@@ -17,7 +18,6 @@ import haxe.web.Dispatch.DispatchError;
 	import ufront.web.session.UFHttpSessionState;
 	import ufront.auth.*;
 	import minject.Injector;
-	import ufront.web.HttpError;
 	import ufront.web.result.*;
 	import ufront.web.context.*;
 	import ufront.core.*;
@@ -89,13 +89,13 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 			injector.mapValue( Injector, injector );
 		}
 
-		public function init( application:HttpApplication ):Surprise<Noise,HttpError> {
+		public function init( application:HttpApplication ):Surprise<Noise,Error> {
 			injector.parentInjector = application.injector;
 			return Sync.success();
 		}
 
 		/** Disposes of the resources (other than memory) that are used by the module. */
-		public function dispose( app:HttpApplication ):Surprise<Noise,HttpError> {
+		public function dispose( app:HttpApplication ):Surprise<Noise,Error> {
 			dispatchConfig = null;
 			dispatch = null;
 			injector = null;
@@ -103,7 +103,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 		}
 
 		/** Initializes a module and prepares it to handle requests. */
-		public function handleRequest( ctx:HttpContext ):Surprise<Noise,HttpError> {
+		public function handleRequest( ctx:HttpContext ):Surprise<Noise,Error> {
 			if ( dispatchConfig==null )
 				dispatchConfig = Dispatch.make( new DefaultRoutes() );
 
@@ -117,7 +117,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 			}
 		}
 
-		function processRequest( context:HttpContext ):Outcome<Noise,HttpError> {
+		function processRequest( context:HttpContext ):Outcome<Noise,Error> {
 			// Update the contexts
 			var actionContext = new ActionContext( context );
 			
@@ -186,8 +186,8 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 			catch ( e:DispatchError ) return Failure( dispatchErrorToHttpError(e) );
 		}
 
-		function executeAction( context:HttpContext ):Surprise<Noise,HttpError> {
-			var t:FutureTrigger<Outcome<Noise,HttpError>> = Future.trigger();
+		function executeAction( context:HttpContext ):Surprise<Noise,Error> {
+			var t:FutureTrigger<Outcome<Noise,Error>> = Future.trigger();
 
 			// Update the Dispatch details (in case a module/middleware changed them)
 			dispatch.controller = context.actionContext.controller;
@@ -216,7 +216,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 			return t.asFuture();
 		}
 
-		function executeResult( context:HttpContext ):Surprise<Noise,HttpError> {
+		function executeResult( context:HttpContext ):Surprise<Noise,Error> {
 			return
 				try 
 					context.actionContext.actionResult.executeResult( context.actionContext )
@@ -227,7 +227,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 				}
 		}
 
-		function dispatchErrorToHttpError( e:DispatchError, ?p:PosInfos ):HttpError {
+		function dispatchErrorToHttpError( e:DispatchError, ?p:PosInfos ):Error {
 			return switch ( e ) {
 				case DENotFound( part ): HttpError.pageNotFound( p );
 				case DEInvalidValue: HttpError.badRequest( p );

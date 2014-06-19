@@ -2,7 +2,6 @@ package ufront.app;
 
 import tink.CoreApi;
 import ufront.web.context.HttpContext;
-import ufront.web.HttpError;
 
 /**
 	An interface representing Middleware that is applied both before and after processing the request.
@@ -30,7 +29,7 @@ interface UFMiddleware extends UFRequestMiddleware extends UFResponseMiddleware 
 	The `requestIn()` method should return a Surprise - a Future letting you know when the outcome of the operation once it is complete - was it a success (continue with the request) or a failure (throw to the error handler)
 **/
 interface UFRequestMiddleware {
-	public function requestIn( ctx:HttpContext ):Surprise<Noise,HttpError>;
+	public function requestIn( ctx:HttpContext ):Surprise<Noise,Error>;
 }
 
 /**
@@ -50,5 +49,5 @@ interface UFRequestMiddleware {
 	The `responseOut()` method should return a Surprise - a Future letting you know when the outcome of the operation once it is complete - was it a success (continue with the request) or a failure (throw to the error handler)
 **/
 interface UFResponseMiddleware {
-	public function responseOut( ctx:HttpContext ):Surprise<Noise,HttpError>;
+	public function responseOut( ctx:HttpContext ):Surprise<Noise,Error>;
 }

@@ -3,7 +3,6 @@ package ufront.test;
 import haxe.PosInfos;
 import utest.Assertation;
 import utest.Assert;
-import ufront.web.HttpError;
 import ufront.web.context.*;
 import ufront.web.session.UFHttpSessionState;
 import ufront.auth.UFAuthHandler;
@@ -68,7 +67,7 @@ class TestUtilsTest
 		
 	}
 	
-	function verifyTestRoute( outcome:Outcome<RouteTestResult,HttpError>, shouldBeSuccess:Bool, ?p:PosInfos ) {
+	function verifyTestRoute( outcome:Outcome<RouteTestResult,Error>, shouldBeSuccess:Bool, ?p:PosInfos ) {
 		switch outcome {
 			case Success(obj):
 				Assert.notNull( obj.app, p );

@@ -1,7 +1,6 @@
 package ufront.test;
 
 import ufront.web.context.*;
-import ufront.web.HttpError;
 import ufront.web.session.UFHttpSessionState;
 import ufront.auth.*;
 import thx.error.*;
@@ -176,7 +175,7 @@ class TestUtils
 
 		If the result failed as expected:
 	
-		* if `code` is specified, it will be checked against the code of the `ufront.web.error.HttpError`
+		* if `code` is specified, it will be checked against the code of the `tink.core.Error`
 		* if the codes do not match, `Assert.fail()` will be called.
 		* the caught exception will be returned for inspection.
 
@@ -186,7 +185,7 @@ class TestUtils
 		var error = "/home/".mockHttpContext().testRoute().assertFailure(404);
 		```
 	**/
-	public static function assertFailure( result:RouteTestOutcome, ?code:Null<Int>, ?p:PosInfos ):Future<HttpError> {
+	public static function assertFailure( result:RouteTestOutcome, ?code:Null<Int>, ?p:PosInfos ):Future<Error> {
 		var doneCallback = Assert.createAsync(function() {});
 		var future = result.map(function processOutcome(outcome) {
 			switch outcome {
@@ -212,4 +211,4 @@ typedef RouteTestResult = {
 	app: UfrontApplication, 
 	context: HttpContext
 }
-typedef RouteTestOutcome = Surprise<RouteTestResult, HttpError>;
+typedef RouteTestOutcome = Surprise<RouteTestResult, Error>;

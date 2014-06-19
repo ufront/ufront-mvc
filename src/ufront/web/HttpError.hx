@@ -4,75 +4,61 @@ import tink.core.Error;
 using tink.CoreApi;
 
 /**
-	A base class for various Http error messages.
-
-	@todo Now that `code` is included in tink.core.Error, explore if this is needed. Probably not.
+	Some helpers for error functions.
 **/
-class HttpError extends Error {
-
-	@:keep override public function toString() {
-		return '$code Error: $message';
-	}
-
-	override public function printPos() {
-		return super.printPos();
-	}
+class HttpError {
 
 	/**
-		Wrap an existing error into a HttpError
+		Wrap an existing error into a Error
 
-		- If it was a HttpError already, return it as is
-		- If it was a tink.core.Error, use code 500, copy it's message, pos and data.
+		- If it was an Error already, return it as is
 		- If it was a normal exception, use code 500, with "Internal Server Error" as the message, the exception as the data, and the pos that call site for `wrap()` as the pos.
 	**/
-	static public function wrap( e:Dynamic, ?msg="Internal Server Error", ?pos:Pos ):HttpError {
-		if ( Std.is(e, HttpError) ) return cast e;
-		else if ( Std.is(e, Error) ) return internalServerError( e.message, e.data, e.pos );
-		else return HttpError.internalServerError( msg, e, pos );
+	static public function wrap( e:Dynamic, ?msg="Internal Server Error", ?pos:Pos ):Error {
+		if ( Std.is(e, Error) ) return cast e;
+		else return Error.withData( InternalError, msg, e, pos );
 	}
 
 	/**
 		A Http 400 "Bad Request" error
 	**/
-	static public inline function badRequest( ?pos ):HttpError {
-		return new HttpError(400, "Bad Request", pos);
+	static public inline function badRequest( ?pos ):Error {
+		return new Error(400, "Bad Request", pos);
 	}
 
 	/**
 		A Http 500 "Internal Server Error", optionally containing the inner error
 	**/
-	static public function internalServerError( ?msg="Internal Server Error", ?inner:Dynamic, ?pos ):HttpError {
-		var e = new HttpError( 500, msg, pos );
-		e.data = inner;
-		return e;
+	static public function internalServerError( ?msg="Internal Server Error", ?inner:Dynamic, ?pos ):Error {
+		return Error.withData( 500, msg, inner, pos );
 	}
 
 	/**
 		A Http 405 "Method Not Allowed" error
 	**/
-	static public function methodNotAllowed( ?pos ):HttpError {
-		return new HttpError( 405, "Method Not Allowed", pos );
+	static public function methodNotAllowed( ?pos ):Error {
+		return new Error( 405, "Method Not Allowed", pos );
 	}
 
 	/**
 		A Http 404 "Page Not Found" error
 	**/
-	static public function pageNotFound( ?pos ):HttpError {
-		return new HttpError( 404, "Page Not Found", pos );
+	static public function pageNotFound( ?pos ):Error {
+		return new Error( 404, "Page Not Found", pos );
 	}
 
 	/**
 		A Http 401 "Unauthorized Access" error
 	**/
-	static public function unauthorized( ?pos ):HttpError {
-		return new HttpError( 401, "Unauthorized Access", pos );
+	static public function unauthorized( ?pos ):Error {
+		return new Error( 401, "Unauthorized Access", pos );
 	}
 
 	/**
 		A Http 422 "Unprocessable Entity" error
 	**/
-	static public function unprocessableEntity( ?pos ):HttpError {
-		return new HttpError( 422, "Unprocessable Entity", pos );
+	static public function unprocessableEntity( ?pos ):Error {
+		return new Error( 422, "Unprocessable Entity", pos );
 	}
 
 	/**

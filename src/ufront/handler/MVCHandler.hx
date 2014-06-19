@@ -3,11 +3,9 @@ package ufront.handler;
 import haxe.PosInfos;
 import ufront.log.Message;
 import ufront.web.Controller;
-import ufront.web.Dispatch;
 import ufront.app.UFInitRequired;
 import ufront.app.UFRequestHandler;
-import haxe.web.Dispatch.DispatchConfig;
-import haxe.web.Dispatch.DispatchError;
+import ufront.web.HttpError;
 import ufront.app.HttpApplication;
 import tink.CoreApi;
 import ufront.web.context.*;
@@ -15,7 +13,6 @@ import ufront.web.result.ActionResult;
 import ufront.web.session.UFHttpSessionState;
 import ufront.auth.*;
 import minject.Injector;
-import ufront.web.HttpError;
 import ufront.web.result.*;
 import ufront.web.context.*;
 import ufront.core.*;
@@ -56,19 +53,19 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 		injector.mapValue( Injector, injector );
 	}
 
-	public function init( application:HttpApplication ):Surprise<Noise,HttpError> {
+	public function init( application:HttpApplication ):Surprise<Noise,Error> {
 		injector.parentInjector = application.injector;
 		return Sync.success();
 	}
 
 	/** Disposes of the resources (other than memory) that are used by the module. */
-	public function dispose( app:HttpApplication ):Surprise<Noise,HttpError> {
+	public function dispose( app:HttpApplication ):Surprise<Noise,Error> {
 		injector = null;
 		return Sync.success();
 	}
 
 	/** Initializes a module and prepares it to handle requests. */
-	public function handleRequest( ctx:HttpContext ):Surprise<Noise,HttpError> {
+	public function handleRequest( ctx:HttpContext ):Surprise<Noise,Error> {
 		return 
 			processRequest( ctx ) >>
 			function (r:Noise) return executeResult( ctx );
@@ -100,7 +97,7 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 		return requestInjector;
 	}
 
-	function processRequest( context:HttpContext ):Surprise<Noise,HttpError> {
+	function processRequest( context:HttpContext ):Surprise<Noise,Error> {
 		var actionContext = new ActionContext( context );
 		setupRequestInjector( context );
 		actionContext.handler = this;
@@ -117,7 +114,7 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 		return resultFuture;
 	}
 
-	function executeResult( context:HttpContext ):Surprise<Noise,HttpError> {
+	function executeResult( context:HttpContext ):Surprise<Noise,Error> {
 		return
 			try 
 				context.actionContext.actionResult.executeResult( context.actionContext )

@@ -2,7 +2,6 @@ package ufront.app;
 
 import tink.CoreApi;
 import ufront.web.context.HttpContext;
-import ufront.web.HttpError;
 
 /**
 	Represents an object that can handle a `HttpRequest`, process as required, and write the `HttpResponse`.
@@ -16,6 +15,6 @@ import ufront.web.HttpError;
 	If the outcome was a success, the response middleware, logging and flushing stages will then take place.
 **/
 interface UFRequestHandler {
-	public function handleRequest( ctx:HttpContext ):Surprise<Noise,HttpError>;
+	public function handleRequest( ctx:HttpContext ):Surprise<Noise,Error>;
 	public function toString():String;
 }

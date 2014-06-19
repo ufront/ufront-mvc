@@ -28,7 +28,7 @@ class InlineSessionMiddleware implements UFMiddleware
 	/**
 		Start the session if a SessionID exists in the request, or if `alwaysStart` is true.
 	**/
-	public function requestIn( ctx:HttpContext ):Surprise<Noise,HttpError> {
+	public function requestIn( ctx:HttpContext ):Surprise<Noise,Error> {
 		return 
 			if ( alwaysStart || ctx.session.isActive() ) 
 				ctx.session.init() >>
@@ -42,7 +42,7 @@ class InlineSessionMiddleware implements UFMiddleware
 	/**
 		If the session is active, commit the session before finishing the request.
 	**/
-	public function responseOut( ctx:HttpContext ):Surprise<Noise,HttpError> {
+	public function responseOut( ctx:HttpContext ):Surprise<Noise,Error> {
 		return 
 			if ( ctx.session.isActive() ) 
 				ctx.session.commit() >>

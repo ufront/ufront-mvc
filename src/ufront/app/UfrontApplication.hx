@@ -13,7 +13,6 @@ import ufront.web.Dispatch;
 import ufront.web.session.*;
 import ufront.web.url.filter.*;
 import ufront.web.Controller;
-import ufront.web.HttpError;
 import ufront.web.UfrontConfiguration;
 import ufront.web.session.UFHttpSessionState;
 import ufront.auth.*;
@@ -159,7 +158,7 @@ class UfrontApplication extends HttpApplication
 
 		The first time this runs, `initOnFirstExecute()` will be called, which runs some more initialization that requires the HttpContext to be ready before running.
 	**/
-	override public function execute( ?httpContext:HttpContext ):Surprise<Noise,HttpError> {
+	override public function execute( ?httpContext:HttpContext ):Surprise<Noise,Error> {
 		// Set up HttpContext for the request
 		if ( httpContext==null ) httpContext = HttpContext.create( injector, urlFilters, configuration.contentDirectory );
 

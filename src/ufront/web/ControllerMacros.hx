@@ -152,7 +152,7 @@ class ControllerMacros {
 			switch varType {
 				case TPath(p):
 					var fnBody:Expr = macro return ( new $p(context) ).execute();
-					var fnReturnType:ComplexType = macro :tink.CoreApi.Surprise<ufront.web.result.ActionResult,ufront.web.HttpError>;
+					var fnReturnType:ComplexType = macro :tink.CoreApi.Surprise<ufront.web.result.ActionResult,tink.core.Error>;
 					var fn:Function = {
 						ret: fnReturnType,
 						args: [],
@@ -431,7 +431,7 @@ class ControllerMacros {
 
 		}
 
-		var fnReturnType:ComplexType = macro :tink.CoreApi.Surprise<ufront.web.result.ActionResult,ufront.web.HttpError>;
+		var fnReturnType:ComplexType = macro :tink.CoreApi.Surprise<ufront.web.result.ActionResult,tink.core.Error>;
 		var fn:Function = {
 			ret: fnReturnType,
 			args: [],
@@ -524,7 +524,7 @@ class ControllerMacros {
 		// Execute the call, wrap the results
 		var functionCall = { expr: ECall(fnIdent,fnArgs), pos: p };
 		var wrappedFunctionCall = wrapReturnExpression( functionCall, routeInfo.action.name, routeInfo.voidReturn, lines );
-		lines.push( macro var result:tink.core.Future.Surprise<ufront.web.result.ActionResult,ufront.web.HttpError> = $wrappedFunctionCall );
+		lines.push( macro var result:tink.core.Future.Surprise<ufront.web.result.ActionResult,tink.core.Error> = $wrappedFunctionCall );
 
 		var setContextActionResult = macro setContextActionResultWhenFinished( result );
 		lines.push( setContextActionResult );
@@ -637,10 +637,10 @@ class ControllerMacros {
 		Otherwise, it uses `wrapResult` metadata added during an `onGenerate` macro to decide what wrapping is required, and passes that information to `wrapResult`.
 		For details see `addRouteWrappingMetadata` (a build macro on ufront.web.Controller).
 	
-		This returns a correctly typed expression to use with `result:Surprise<ActionResult,HttpError> = $expr`
+		This returns a correctly typed expression to use with `result:Surprise<ActionResult,Error> = $expr`
 		This will also add extra expressions to a `lines` array, meaning they will be added before the `result=` line above.
 	**/
-	static function wrapReturnExpression( returnExpr:Expr, routeName:String, voidReturn:Bool, lines:Array<Expr> ):ExprOf<Surprise<ActionResult,HttpError>> {
+	static function wrapReturnExpression( returnExpr:Expr, routeName:String, voidReturn:Bool, lines:Array<Expr> ):ExprOf<Surprise<ActionResult,Error>> {
 		if ( voidReturn ) {
 			lines.push( returnExpr );
 			return macro wrapResult(null, haxe.EnumFlags.ofInt(0));
@@ -689,14 +689,14 @@ class ControllerMacros {
 
 		Basic rules:
 
-		- If it is already `Surprise<ActionResult,HttpError>`, use as is
-		- If it is `Surprise<Dynamic,Dynamic>`, require wrapping in ActionResult/HttpError
+		- If it is already `Surprise<ActionResult,Error>`, use as is
+		- If it is `Surprise<Dynamic,Dynamic>`, require wrapping in ActionResult/Error
 		- If it is `Future<ActionResult>`, require wrapping in Outcome
-		- If it is `Future<Dynamic>`, require wrapping in Outcome and ActionResult/HttpError
-		- If it is `Outcome<ActionResult,HttpError>`, require wrapping in Future
-		- If it is `Outcome<Dynamic,Dynamic>`, require wrapping in Future, ActionResult/HttpError
+		- If it is `Future<Dynamic>`, require wrapping in Outcome and ActionResult/Error
+		- If it is `Outcome<ActionResult,Error>`, require wrapping in Future
+		- If it is `Outcome<Dynamic,Dynamic>`, require wrapping in Future, ActionResult/Error
 		- If it is `ActionResult`, require wrapping in Future, Outcome
-		- If it is `Dynamic`, require wrapping in Future, Outcome and ActionResult/HttpError
+		- If it is `Dynamic`, require wrapping in Future, Outcome and ActionResult/Error
 		- If it is void, leave it, our other macros will pass "null" to the `wrapResult` method of the controller and an EmptyResult will be generated, appropriately wrapped.
 	**/
 	static function getResultWrapFlagsForReturnType( returnType:Type ):EnumFlags<WrapRequired> {
@@ -706,7 +706,7 @@ class ControllerMacros {
 			flags.set(WROutcome);
 			flags.set(WRResultOrError);
 		}
-		else if ( returnType.unify((macro :tink.core.Future.Surprise<ufront.web.result.ActionResult,ufront.web.HttpError>).toType()) ) {
+		else if ( returnType.unify((macro :tink.core.Future.Surprise<ufront.web.result.ActionResult,tink.core.Error>).toType()) ) {
 			// no wrapping required
 		}
 		else if ( returnType.unify((macro :tink.core.Future.Surprise<Dynamic,Dynamic>).toType()) ) {
@@ -719,7 +719,7 @@ class ControllerMacros {
 			flags.set(WROutcome);
 			flags.set(WRResultOrError);
 		}
-		else if ( returnType.unify((macro :tink.core.Outcome<ufront.web.result.ActionResult,ufront.web.HttpError>).toType()) ) {
+		else if ( returnType.unify((macro :tink.core.Outcome<ufront.web.result.ActionResult,tink.core.Error>).toType()) ) {
 			flags.set(WRFuture);
 		}
 		else if ( returnType.unify((macro :tink.core.Outcome<Dynamic,Dynamic>).toType()) ) {

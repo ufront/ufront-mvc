@@ -2,12 +2,10 @@ package ufront.handler;
 
 import haxe.CallStack;
 import tink.core.Error;
-import ufront.web.HttpError;
 import ufront.app.*;
 import ufront.core.Sync;
 import ufront.web.context.HttpContext;
 import haxe.ds.StringMap;
-import thx.error.Error;
 using DynamicsT;
 using Strings;
 using Types;
@@ -15,7 +13,7 @@ using Types;
 /**
 	A module which adds an error handler to your application.
 
-	If an error is of the type `ufront.web.error.HttpError`, it will display the details of the given error.
+	If an error is of the type `tink.core.Error`, it will display the details of the given error.
 
 	Otherwise, it will wrap the exception with `ufront.web.HttpError.internalServerError()`.
 
@@ -46,8 +44,8 @@ class ErrorPageHandler implements UFErrorHandler
 		TODO: give more options for processing different kinds of errors
 		TODO: figure out async support
 	**/
-	@:access( ufront.web.HttpError )
-	public function handleError( httpError:HttpError, ctx:HttpContext ) {
+	@:access( tink.core.Error )
+	public function handleError( httpError:Error, ctx:HttpContext ) {
 		
 		// Pass the error to our log...
 		var callStack = #if debug " "+CallStack.toString( CallStack.exceptionStack() ) #else "" #end;
@@ -99,7 +97,8 @@ class ErrorPageHandler implements UFErrorHandler
 		</details>
 		```
 	**/
-	dynamic public function renderErrorContent( error:HttpError, ?showStack:Bool=false ):String {
+	@:access( tink.core.TypedError )
+	dynamic public function renderErrorContent( error:Error, ?showStack:Bool=false ):String {
 		
 		var inner = (null!=error.data) ? '<p class="error-data">${error.data}</p>':"";
 		var pos = showStack ? '<p class="error-pos">&gt; ${error.printPos()}</p>' : '';
@@ -147,7 +146,7 @@ class ErrorPageHandler implements UFErrorHandler
 
 		To change the look of your error messages, edit either `renderErrorContent` or `renderErrorPage`.
 	**/
-	public function renderError( error:HttpError, ?showStack:Bool ):String {
+	public function renderError( error:Error, ?showStack:Bool ):String {
 		var content = renderErrorContent( error, showStack );
 		return renderErrorPage( error.toString(), content );
 	}

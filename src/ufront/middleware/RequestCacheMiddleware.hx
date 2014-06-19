@@ -4,7 +4,6 @@ import ufront.web.context.HttpContext;
 import ufront.web.context.HttpResponse;
 import ufront.app.UFMiddleware;
 import ufront.core.Sync;
-import ufront.web.HttpError;
 import ufront.cache.UFCache;
 import haxe.rtti.Meta;
 using tink.CoreApi;
@@ -52,7 +51,7 @@ class RequestCacheMiddleware implements UFMiddleware
 		See if a cache exists for this URI. 
 		If it does, mirror the cached request and mark the request as complete.
 	**/
-	public function requestIn( ctx:HttpContext ):Surprise<Noise,HttpError> {
+	public function requestIn( ctx:HttpContext ):Surprise<Noise,Error> {
 		if ( cache==null ) {
 			cache = cacheConnection.getNamespace("ufront.middleware.RequestCache");
 		}
@@ -89,7 +88,7 @@ class RequestCacheMiddleware implements UFMiddleware
 	/**
 		Check if the request was cacheable.  If it was, attempt to cache it.
 	**/
-	public function responseOut( ctx:HttpContext ):Surprise<Noise,HttpError> {
+	public function responseOut( ctx:HttpContext ):Surprise<Noise,Error> {
 		// If it's a get request and we have data about the controller/action used
 		if ( ctx.request.httpMethod.toLowerCase()=="get" && ctx.actionContext!=null && ctx.actionContext.controller!=null && ctx.actionContext.action!=null ) {
 			
@@ -102,7 +101,7 @@ class RequestCacheMiddleware implements UFMiddleware
 
 				if ( hasCacheMeta(controllerMeta) || hasCacheMeta(fieldMeta) ) {
 					var uri = ctx.request.uri;
-					return cache.set( uri, ctx.response ) >> function(result:Outcome<HttpResponse,CacheError>):Outcome<Noise,HttpError> {
+					return cache.set( uri, ctx.response ) >> function(result:Outcome<HttpResponse,CacheError>):Outcome<Noise,Error> {
 						switch result {
 							case Failure(e):
 								// This isn't fatal, so just log the error and continue.

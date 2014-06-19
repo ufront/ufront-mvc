@@ -49,7 +49,7 @@ class TmpFileUploadMiddleware implements UFMiddleware
 
 		If the chosen `subDir` does not exist, it will attempt to create it, but only one level deep - it will not recursively create directories for you.
 	**/
-	public function requestIn( ctx:HttpContext ):Surprise<Noise,HttpError> {
+	public function requestIn( ctx:HttpContext ):Surprise<Noise,Error> {
 
 		if ( ctx.request.httpMethod.toLowerCase()=="post" && ctx.request.isMultipart() ) {
 			#if sys
@@ -114,7 +114,7 @@ class TmpFileUploadMiddleware implements UFMiddleware
 	/**
 		Delete the temporary file at the end of the request
 	**/
-	public function responseOut( ctx:HttpContext ):Surprise<Noise,HttpError> {
+	public function responseOut( ctx:HttpContext ):Surprise<Noise,Error> {
 		if ( ctx.request.httpMethod.toLowerCase()=="post" && ctx.request.isMultipart() ) {
 			var errors = [];
 			for ( f in files ) {

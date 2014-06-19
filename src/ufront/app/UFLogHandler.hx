@@ -2,7 +2,6 @@ package ufront.app;
 
 import tink.CoreApi;
 import ufront.web.context.HttpContext;
-import ufront.web.HttpError;
 import ufront.log.Message;
 
 /**
@@ -22,5 +21,5 @@ import ufront.log.Message;
 	The `log()` method should return a Surprise - a Future letting you know when the outcome of the operation once it is complete - was it a success (you can continue) or a failure (throw to the error handler)
 **/
 interface UFLogHandler {
-	public function log( ctx:HttpContext, appMessages:Array<Message> ):Surprise<Noise,HttpError>;
+	public function log( ctx:HttpContext, appMessages:Array<Message> ):Surprise<Noise,Error>;
 }

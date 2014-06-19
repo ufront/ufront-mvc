@@ -9,8 +9,8 @@ import ufront.core.Sync;
 import minject.Injector;
 import ufront.app.UFMiddleware;
 import ufront.web.context.HttpContext;
-import ufront.auth.*;
 import ufront.web.HttpError;
+import ufront.auth.*;
 import ufront.log.Message;
 import thx.error.NullArgument;
 import haxe.PosInfos;
@@ -107,7 +107,7 @@ class HttpApplication
 	/**
 		A future trigger, for internal use, that lets us tell if all our modules (middleware and handlers) are ready for use
 	**/
-	var modulesReady:Surprise<Noise,HttpError>;
+	var modulesReady:Surprise<Noise,Error>;
 
 	/** A position representing the current module.  Useful for diagnosing if something in our async chain never completed. **/
 	var currentModule:Pos;
@@ -179,12 +179,12 @@ class HttpApplication
 	/**
 		Perform `init()` on any handlers or middleware that require it
 	**/
-	public function init():Surprise<Noise,HttpError> {
+	public function init():Surprise<Noise,Error> {
 		if ( modulesReady==null ) {
 			var futures = [];
 			for ( module in getModulesThatRequireInit() )
 				futures.push( module.init(this) );
-			modulesReady = Future.ofMany( futures ).map( function(outcomes:Array<Outcome<Noise,HttpError>>) { 
+			modulesReady = Future.ofMany( futures ).map( function(outcomes:Array<Outcome<Noise,Error>>) { 
 				for (o in outcomes) {
 					switch o {
 						case Failure(err): return Failure(err); // pass the failure on... 
@@ -200,7 +200,7 @@ class HttpApplication
 	/**
 		Perform `dispose()` on any handlers or middleware that require it
 	**/
-	public function dispose():Surprise<Noise,HttpError> {
+	public function dispose():Surprise<Noise,Error> {
 		var futures = [];
 		for ( module in getModulesThatRequireInit() )
 			futures.push( module.dispose(this) );
@@ -286,7 +286,7 @@ class HttpApplication
 		If at any point this HttpApplication is marked as complete, the chain stops and `_conclude()` is run.
 	**/
 	@:access(ufront.web.context.HttpContext)
-	public function execute( ?httpContext:HttpContext ):Surprise<Noise,HttpError> {
+	public function execute( ?httpContext:HttpContext ):Surprise<Noise,Error> {
 		
 		if (httpContext == null) httpContext = HttpContext.create( injector, urlFilters );
 		else httpContext.setUrlFilters( urlFilters );
@@ -340,8 +340,8 @@ class HttpApplication
 
 		Returns a future that will prove
 	**/
-	function executeModules( modules:Array<Pair<HttpContext->Surprise<Noise,HttpError>,Pos>>, ctx:HttpContext, ?flag:RequestCompletion ):Surprise<Noise,HttpError> {
-		var done:FutureTrigger<Outcome<Noise,HttpError>> = Future.trigger();
+	function executeModules( modules:Array<Pair<HttpContext->Surprise<Noise,Error>,Pos>>, ctx:HttpContext, ?flag:RequestCompletion ):Surprise<Noise,Error> {
+		var done:FutureTrigger<Outcome<Noise,Error>> = Future.trigger();
 		function runNext() {
 			var m = modules.shift();
 			if ( flag!=null && ctx.completion.has(flag) ) {
@@ -379,7 +379,7 @@ class HttpApplication
 		
 		Then mark the middleware and requestHandlers as complete, so the `execute` function can log, flush and finish the request.
 	**/
-	function handleError( err:HttpError, ctx:HttpContext, doneTrigger:FutureTrigger<Outcome<Noise,HttpError>> ):Void {
+	function handleError( err:Error, ctx:HttpContext, doneTrigger:FutureTrigger<Outcome<Noise,Error>> ):Void {
 		if ( !ctx.completion.has(CErrorHandlersComplete) ) {
 
 			var errHandlerModules = prepareModules(errorHandlers,"handleError",[err]);
@@ -438,11 +438,11 @@ class HttpApplication
 		Given a bunch of modules (handlers,middleware) and the name of the method on that 
 		module, return a 
 
-		`Array<Pair<(HttpContext->Surprise<Noise,HttpError>),PosInfos>>` 
+		`Array<Pair<(HttpContext->Surprise<Noise,Error>),PosInfos>>` 
 
 		so we can execute them all in the same way.
 	**/
-	static macro function prepareModules( modules:ExprOf<Array<Dynamic>>, methodName:String, ?bindArgs:ExprOf<Array<Dynamic>> ):ExprOf<Array<Pair<HttpContext->Surprise<Noise,HttpError>,PosInfos>>> {
+	static macro function prepareModules( modules:ExprOf<Array<Dynamic>>, methodName:String, ?bindArgs:ExprOf<Array<Dynamic>> ):ExprOf<Array<Pair<HttpContext->Surprise<Noise,Error>,PosInfos>>> {
 		
 		var argsToBind:Array<Expr>;
 		var argsForPos:Array<Dynamic> = [];

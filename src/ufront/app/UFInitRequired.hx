@@ -2,7 +2,6 @@ package ufront.app;
 
 import tink.CoreApi;
 import ufront.app.HttpApplication;
-import ufront.web.HttpError;
 
 /**
 	This is to be used with Handlers or Middleware that require an init() function.
@@ -14,6 +13,6 @@ import ufront.web.HttpError;
 	Both `init()` and `dispose()` should return a Surprise - a Future letting you know when the outcome of the operation once it has completed - was it a success (continue with the request) or a failure (throw to the error handler).
 **/
 interface UFInitRequired {
-	public function init( app:HttpApplication ):Surprise<Noise,HttpError>;
-	public function dispose( app:HttpApplication ):Surprise<Noise,HttpError>;
+	public function init( app:HttpApplication ):Surprise<Noise,Error>;
+	public function dispose( app:HttpApplication ):Surprise<Noise,Error>;
 }
