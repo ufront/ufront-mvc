@@ -5,14 +5,14 @@
   "tags": ["ufront","web","framework","mvc","neko","php"],
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
-  "releasenote": "Various fixes, more unit tests, dependency bump",
-  "version": "1.0.0-beta.8",
+  "releasenote": "Minor API improvements. More tests. First release candidate.",
+  "version": "1.0.0-rc.1",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
     "random": "1.4.0",
     "compiletime": "2.5.0",
     "minject": "1.3.0",
-    "tink_core": "1.0.0-rc.2",
-    "tink_macro": "0.3.0-beta"
+    "tink_core": "1.0.0-rc.6",
+    "tink_macro": "0.5.0"
   }
 }
