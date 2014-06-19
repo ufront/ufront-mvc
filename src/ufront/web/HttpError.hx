@@ -75,7 +75,7 @@ class HttpError {
 			methodName: method,
 			lineNumber: -1,
 			fileName: "",
-			customParams: (args!=null) ? args : [],
+			customParams: args,
 			className: Type.getClassName(Type.getClass(obj))
 		};
 	}
