@@ -4,12 +4,8 @@ import utest.Assert;
 import ufront.core.Sync;
 import tink.CoreApi;
 
-class SyncTest 
-{
-	public function new() 
-	{
-		
-	}
+class SyncTest {
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

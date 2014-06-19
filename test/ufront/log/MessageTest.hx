@@ -3,12 +3,8 @@ package ufront.log;
 import utest.Assert;
 import ufront.log.Message;
 
-class MessageTest 
-{
-	public function new() 
-	{
-		
-	}
+class MessageTest {
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

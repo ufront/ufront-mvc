@@ -3,14 +3,10 @@ package ufront.web.context;
 import utest.Assert;
 import ufront.web.context.ActionContext;
 
-class ActionContextTest 
-{
+class ActionContextTest {
 	var instance:ActionContext; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

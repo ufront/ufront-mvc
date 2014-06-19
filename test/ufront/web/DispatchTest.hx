@@ -8,14 +8,10 @@ import haxe.web.Dispatch.Redirect;
 import haxe.web.Dispatch.DispatchRule;
 import haxe.web.Dispatch.MatchRule;
 
-class DispatchTest 
-{
+class DispatchTest {
 	var instance:Dispatch; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

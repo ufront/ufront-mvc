@@ -3,14 +3,10 @@ package ufront.app;
 import utest.Assert;
 import ufront.app.HttpApplication;
 
-class HttpApplicationTest 
-{
+class HttpApplicationTest {
 	var instance:HttpApplication; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

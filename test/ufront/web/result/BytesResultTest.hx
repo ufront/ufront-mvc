@@ -3,14 +3,10 @@ package ufront.web.result;
 import utest.Assert;
 import ufront.web.result.BytesResult;
 
-class BytesResultTest 
-{
+class BytesResultTest {
 	var instance:BytesResult; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

@@ -3,14 +3,10 @@ package ufront.web;
 import utest.Assert;
 import ufront.web.UfrontConfiguration.DefaultUfrontConfiguration;
 
-class DefaultUfrontConfigurationTest 
-{
+class DefaultUfrontConfigurationTest {
 	var instance:DefaultUfrontConfiguration; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

@@ -3,14 +3,10 @@ package ufront.web.url;
 import utest.Assert;
 import ufront.web.url.PartialUrl;
 
-class PartialUrlTest 
-{
+class PartialUrlTest {
 	var instance:PartialUrl; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

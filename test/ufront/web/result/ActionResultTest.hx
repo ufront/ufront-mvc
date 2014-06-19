@@ -3,14 +3,10 @@ package ufront.web.result;
 import utest.Assert;
 import ufront.web.result.ActionResult;
 
-class ActionResultTest 
-{
+class ActionResultTest {
 	var instance:ActionResult; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

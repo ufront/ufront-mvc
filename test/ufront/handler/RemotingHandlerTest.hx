@@ -3,14 +3,10 @@ package ufront.handler;
 import utest.Assert;
 import ufront.handler.RemotingHandler;
 
-class RemotingHandlerTest 
-{
+class RemotingHandlerTest {
 	var instance:RemotingHandler; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

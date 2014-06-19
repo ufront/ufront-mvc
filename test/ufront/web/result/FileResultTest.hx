@@ -3,14 +3,10 @@ package ufront.web.result;
 import utest.Assert;
 import ufront.web.result.FileResult;
 
-class FileResultTest 
-{
+class FileResultTest {
 	var instance:FileResult; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

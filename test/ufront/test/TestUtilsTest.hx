@@ -12,12 +12,8 @@ import tink.CoreApi;
 using ufront.test.TestUtils;
 using mockatoo.Mockatoo;
 
-class TestUtilsTest 
-{
-	public function new() 
-	{
-		
-	}
+class TestUtilsTest {
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

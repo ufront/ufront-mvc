@@ -4,14 +4,10 @@ import utest.Assert;
 import ufront.view.TemplateData;
 import haxe.ds.StringMap;
 
-class TemplateDataTest 
-{
+class TemplateDataTest {
 	var instance:TemplateData; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

@@ -5,12 +5,8 @@ import ufront.web.context.HttpRequest;
 import ufront.core.MultiValueMap;
 using mockatoo.Mockatoo;
 
-class HttpRequestTest 
-{
-	public function new() 
-	{
-		
-	}
+class HttpRequestTest {
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

@@ -11,10 +11,7 @@ class FuturoidTest
     public var trigger:FutureTrigger<Int>;
     public var future:Future<Int>;
     
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

@@ -3,14 +3,10 @@ package ufront.api;
 import utest.Assert;
 import ufront.api.ApiMacros;
 
-class ApiMacrosTest 
-{
+class ApiMacrosTest {
 	var instance:ApiMacros; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

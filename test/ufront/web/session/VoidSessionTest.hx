@@ -3,14 +3,10 @@ package ufront.web.session;
 import utest.Assert;
 import ufront.web.session.VoidSession;
 
-class VoidSessionTest 
-{
+class VoidSessionTest {
 	var instance:VoidSession; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

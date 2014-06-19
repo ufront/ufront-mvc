@@ -3,14 +3,10 @@ package ufront.view;
 import utest.Assert;
 import ufront.view.TemplatingEngines;
 
-class TemplatingEnginesTest 
-{
+class TemplatingEnginesTest {
 	var instance:TemplatingEngines;
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

@@ -3,14 +3,10 @@ package ufront.view;
 import utest.Assert;
 import ufront.view.UFViewEngine;
 
-class UFViewEngineTest 
-{
+class UFViewEngineTest {
 	var instance:UFViewEngine; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

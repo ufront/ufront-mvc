@@ -3,14 +3,10 @@ package ufront.web.session;
 import utest.Assert;
 import ufront.web.session.FileSession;
 
-class FileSessionTest 
-{
+class FileSessionTest {
 	var instance:FileSession; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

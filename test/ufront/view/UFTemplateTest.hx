@@ -3,14 +3,10 @@ package ufront.view;
 import utest.Assert;
 import ufront.view.UFTemplate;
 
-class UFTemplateTest 
-{
+class UFTemplateTest {
 	var instance:UFTemplate; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

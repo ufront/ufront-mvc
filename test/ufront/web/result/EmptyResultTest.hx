@@ -3,14 +3,10 @@ package ufront.web.result;
 import utest.Assert;
 import ufront.web.result.EmptyResult;
 
-class EmptyResultTest 
-{
+class EmptyResultTest {
 	var instance:EmptyResult; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

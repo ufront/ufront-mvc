@@ -3,14 +3,10 @@ package ufront.view;
 import utest.Assert;
 import ufront.view.FileViewEngine;
 
-class FileViewEngineTest 
-{
+class FileViewEngineTest {
 	var instance:FileViewEngine; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

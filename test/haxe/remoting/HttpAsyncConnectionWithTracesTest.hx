@@ -3,14 +3,10 @@ package haxe.remoting;
 import utest.Assert;
 import haxe.remoting.HttpAsyncConnectionWithTraces;
 
-class HttpAsyncConnectionWithTracesTest 
-{
+class HttpAsyncConnectionWithTracesTest {
 	var instance:HttpAsyncConnectionWithTraces; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

@@ -3,14 +3,10 @@ package ufront.middleware;
 import utest.Assert;
 import ufront.middleware.InlineSessionMiddleware;
 
-class InlineSessionMiddlewareTest 
-{
+class InlineSessionMiddlewareTest {
 	var instance:InlineSessionMiddleware; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

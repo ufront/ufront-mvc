@@ -3,14 +3,10 @@ package ufront.log;
 import utest.Assert;
 import ufront.log.RemotingLogger;
 
-class RemotingLoggerTest 
-{
+class RemotingLoggerTest {
 	var instance:RemotingLogger; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

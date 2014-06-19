@@ -3,14 +3,10 @@ package ufront.api;
 import utest.Assert;
 import ufront.api.UFApi;
 
-class UFApiTest 
-{
+class UFApiTest {
 	var instance:UFApi; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

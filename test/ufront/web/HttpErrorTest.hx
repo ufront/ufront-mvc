@@ -3,12 +3,8 @@ package ufront.web;
 import utest.Assert;
 import ufront.web.HttpError;
 
-class HttpErrorTest 
-{
-	public function new() 
-	{
-		
-	}
+class HttpErrorTest {
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

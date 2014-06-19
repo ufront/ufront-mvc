@@ -3,14 +3,10 @@ package ufront.web;
 import utest.Assert;
 import ufront.web.DispatchController;
 
-class DispatchControllerTest 
-{
+class DispatchControllerTest {
 	var instance:DispatchController; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

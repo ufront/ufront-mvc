@@ -3,14 +3,10 @@ package ufront.web.result;
 import utest.Assert;
 import ufront.web.result.RedirectResult;
 
-class RedirectResultTest 
-{
+class RedirectResultTest {
 	var instance:RedirectResult; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

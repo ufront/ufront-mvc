@@ -9,10 +9,7 @@ class MultiValueMapTest
 	var emptyMap:MultiValueMap<Int>;
 	var stringMap:MultiValueMap<String>;
     
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

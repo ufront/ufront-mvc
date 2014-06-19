@@ -3,14 +3,10 @@ package ufront.sys;
 import utest.Assert;
 import ufront.sys.SysUtil;
 
-class SysUtilTest 
-{
+class SysUtilTest {
 	var instance:SysUtil; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

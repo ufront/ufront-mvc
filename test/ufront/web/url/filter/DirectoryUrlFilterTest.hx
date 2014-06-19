@@ -3,14 +3,10 @@ package ufront.web.url.filter;
 import utest.Assert;
 import ufront.web.url.filter.DirectoryUrlFilter;
 
-class DirectoryUrlFilterTest 
-{
+class DirectoryUrlFilterTest {
 	var instance:DirectoryUrlFilter; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

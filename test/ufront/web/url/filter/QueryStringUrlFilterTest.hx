@@ -3,14 +3,10 @@ package ufront.web.url.filter;
 import utest.Assert;
 import ufront.web.url.filter.QueryStringUrlFilter;
 
-class QueryStringUrlFilterTest 
-{
+class QueryStringUrlFilterTest {
 	var instance:QueryStringUrlFilter; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

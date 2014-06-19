@@ -3,12 +3,8 @@ package ufront.core;
 import utest.Assert;
 import ufront.core.AcceptEither;
 
-class AcceptEitherTest 
-{
-	public function new() 
-	{
-		
-	}
+class AcceptEitherTest {
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

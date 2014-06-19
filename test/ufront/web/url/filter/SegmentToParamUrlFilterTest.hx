@@ -3,14 +3,10 @@ package ufront.web.url.filter;
 import utest.Assert;
 import ufront.web.url.filter.SegmentToParamUrlFilter;
 
-class SegmentToParamUrlFilterTest 
-{
+class SegmentToParamUrlFilterTest {
 	var instance:SegmentToParamUrlFilter; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

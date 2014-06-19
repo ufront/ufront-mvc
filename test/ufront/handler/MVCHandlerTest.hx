@@ -3,14 +3,10 @@ package ufront.handler;
 import utest.Assert;
 import ufront.handler.MVCHandler;
 
-class MVCHandlerTest 
-{
+class MVCHandlerTest {
 	var instance:MVCHandler; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

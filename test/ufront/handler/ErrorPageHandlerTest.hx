@@ -3,14 +3,10 @@ package ufront.handler;
 import utest.Assert;
 import ufront.handler.ErrorPageHandler;
 
-class ErrorPageHandlerTest 
-{
+class ErrorPageHandlerTest {
 	var instance:ErrorPageHandler; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

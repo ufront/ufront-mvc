@@ -3,14 +3,10 @@ package ufront.web.url.filter;
 import utest.Assert;
 import ufront.web.url.filter.PathInfoUrlFilter;
 
-class PathInfoUrlFilterTest 
-{
+class PathInfoUrlFilterTest {
 	var instance:PathInfoUrlFilter; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

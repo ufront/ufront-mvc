@@ -7,10 +7,7 @@ class ControllerMacrosTest
 {
 //	var instance:ControllerMacros; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

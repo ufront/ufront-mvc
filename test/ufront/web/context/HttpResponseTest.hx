@@ -6,14 +6,10 @@ import haxe.ds.StringMap;
 import thx.collection.HashList;
 import haxe.io.Bytes;
 
-class HttpResponseTest 
-{
+class HttpResponseTest {
 	var instance:HttpResponse; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

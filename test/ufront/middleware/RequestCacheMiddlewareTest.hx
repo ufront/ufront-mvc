@@ -3,14 +3,10 @@ package ufront.middleware;
 import utest.Assert;
 import ufront.middleware.RequestCacheMiddleware;
 
-class RequestCacheMiddlewareTest 
-{
+class RequestCacheMiddlewareTest {
 	var instance:RequestCacheMiddleware; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

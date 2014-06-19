@@ -3,14 +3,10 @@ package ufront.log;
 import utest.Assert;
 import ufront.log.FileLogger;
 
-class FileLoggerTest 
-{
+class FileLoggerTest {
 	var instance:FileLogger; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

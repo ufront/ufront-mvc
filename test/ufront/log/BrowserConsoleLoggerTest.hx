@@ -3,14 +3,8 @@ package ufront.log;
 import utest.Assert;
 import ufront.log.BrowserConsoleLogger;
 
-class BrowserConsoleLoggerTest 
-{
-	var instance:BrowserConsoleLogger; 
-	
-	public function new() 
-	{
-		
-	}
+class BrowserConsoleLoggerTest {
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

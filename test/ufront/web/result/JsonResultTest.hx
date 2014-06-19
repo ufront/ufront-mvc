@@ -3,12 +3,8 @@ package ufront.web.result;
 import utest.Assert;
 import ufront.web.result.JsonResult;
 
-class JsonResultTest 
-{
-	public function new() 
-	{
-		
-	}
+class JsonResultTest {
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

@@ -3,14 +3,10 @@ package haxe.remoting;
 import utest.Assert;
 import haxe.remoting.RemotingUtil;
 
-class RemotingUtilTest 
-{
+class RemotingUtilTest {
 	var instance:RemotingUtil; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

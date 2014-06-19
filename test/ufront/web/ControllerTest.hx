@@ -3,14 +3,10 @@ package ufront.web;
 import utest.Assert;
 import ufront.web.Controller;
 
-class ControllerTest 
-{
+class ControllerTest {
 	var instance:Controller; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

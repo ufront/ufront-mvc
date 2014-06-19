@@ -3,14 +3,10 @@ package ufront.web;
 import utest.Assert;
 import ufront.web.HttpCookie;
 
-class HttpCookieTest 
-{
+class HttpCookieTest {
 	var instance:HttpCookie; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

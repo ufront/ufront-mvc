@@ -3,14 +3,10 @@ package ufront.web.upload;
 import utest.Assert;
 import ufront.web.upload.TmpFileUploadMiddleware;
 
-class TmpFileUploadMiddlewareTest 
-{
+class TmpFileUploadMiddlewareTest {
 	var instance:TmpFileUploadMiddleware; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

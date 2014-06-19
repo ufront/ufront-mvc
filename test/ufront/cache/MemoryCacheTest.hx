@@ -3,12 +3,8 @@ package ufront.cache;
 import utest.Assert;
 import ufront.cache.MemoryCache;
 
-class MemoryCacheTest 
-{
-	public function new() 
-	{
-		
-	}
+class MemoryCacheTest {
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

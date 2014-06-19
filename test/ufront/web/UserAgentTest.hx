@@ -3,14 +3,10 @@ package ufront.web;
 import utest.Assert;
 import ufront.web.UserAgent;
 
-class UserAgentTest 
-{
+class UserAgentTest {
 	var instance:UserAgent; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	

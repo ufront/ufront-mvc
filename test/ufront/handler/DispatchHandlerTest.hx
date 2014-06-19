@@ -3,14 +3,10 @@ package ufront.handler;
 import utest.Assert;
 import ufront.handler.DispatchHandler;
 
-class DispatchHandlerTest 
-{
+class DispatchHandlerTest {
 	var instance:DispatchHandler; 
 	
-	public function new() 
-	{
-		
-	}
+	public function new() {}
 	
 	public function beforeClass():Void {}
 	
