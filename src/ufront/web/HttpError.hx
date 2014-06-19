@@ -1,24 +1,14 @@
 package ufront.web;
 
-import tink.core.Error.Pos;
+import tink.core.Error;
 using tink.CoreApi;
 
 /**
 	A base class for various Http error messages.
+
+	@todo Now that `code` is included in tink.core.Error, explore if this is needed. Probably not.
 **/
 class HttpError extends Error {
-	/** The HTTP response code to use **/
-	public var code:Int;
-
-	/** 
-		Construct a new HTTP error.  
-
-		Usually it is easier to use one of the subclass constructors. 
-	**/
-	public function new( code:Int, message:String, ?pos ) {
-		super( message, pos );
-		this.code = code;
-	}
 
 	@:keep override public function toString() {
 		return '$code Error: $message';
