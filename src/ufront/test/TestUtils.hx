@@ -73,6 +73,7 @@ class TestUtils
 
 		// Build the HttpContext with our mock objects
 		var ctx = new HttpContext( injector, request, response, session, auth, [] );
+		ctx.actionContext = new ActionContext( ctx );
 		return ctx;
 	}
 	/**
