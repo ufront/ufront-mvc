@@ -107,6 +107,19 @@ class MultiValueMapTest
 		stringMap.remove( "project" );
 		Assert.equals( 0, stringMap.getAll("project").length );
 	}
+
+	public function testClone():Void {
+		var clonedMap = stringMap.clone();
+		Assert.equals( 2, clonedMap.getAll("project").length );
+		Assert.equals( 1, clonedMap.getAll("type").length );
+		Assert.equals( "Ufront", clonedMap.get("project") );
+		Assert.equals( "Haxe", clonedMap.getAll("project")[0] );
+
+		// Check they are different objects
+		clonedMap.add( "project", "Autoform" );
+		Assert.equals( 2, stringMap.getAll("project").length );
+		Assert.equals( 3, clonedMap.getAll("project").length );
+	}
 	
 	public function testToStringMap():Void {
 		var s1 = stringMap.toStringMap();

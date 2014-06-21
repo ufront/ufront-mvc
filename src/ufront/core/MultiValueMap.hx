@@ -120,6 +120,23 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> from M
 	public inline function remove( key:String ) return this.remove( key );
 
 	/**
+		Create a clone of the current MultiValueMap.
+
+		The clone is a shallow copy - the values point to the same objects in memory as the original map values.
+
+		However the array for storing multiple values is a new array, meaning adding a new value on the cloned array will not cause the new value to appear on the original array.
+	**/
+	public function clone():MultiValueMap<T> {
+		var newMap = new MultiValueMap();
+		for ( k in this.keys() ) {
+			for (v in this.get(k)) {
+				newMap.add( k, v );
+			}
+		}
+		return newMap;
+	}
+
+	/**
 		Create a string representation of the current map.
 	**/
 	public function toString():String {
