@@ -4,7 +4,7 @@ import utest.Assert;
 import ufront.core.InjectionRef;
 import minject.Injector;
 
-class SyncTest {
+class InjectionRefTest {
 	public function new() {}
 	
 	public function beforeClass():Void {}
