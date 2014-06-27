@@ -5,8 +5,8 @@
   "tags": ["ufront","web","framework","mvc","neko","php"],
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
-  "releasenote": "Minor API improvements. More tests. First release candidate.",
-  "version": "1.0.0-rc.1",
+  "releasenote": "Bump tink_core version, and use updated tink.core.Error instead of ufront.web.HttpError. Add InjectionRef, and other minor changes. Second release candidate.",
+  "version": "1.0.0-rc.2",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
     "random": "1.4.0",
