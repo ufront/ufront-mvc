@@ -269,32 +269,30 @@ class HttpApplication
 
 		Ṫhis involves:
 	
-		- Creating the HttpContext if not supplied, and set the URL filters
+		- Setting the URL filters on the HttpContext.
 		- Firing all `UFRequestMiddleware`, in order
 		- Using the various `UFRequestHandler`s, until one of them is able to handle and process our request.
 		- Firing all `UFResponseMiddleware`, in order
 		- Logging any messages (traces, logs, warnings, errors) that occured during the request
 		- Flushing the response to the browser and concluding the request
 
-		If errors occur (an unhandled exception or `ufront.core.Outcome.Failure`), we will run through each of the `UFErrorHandler`s.  These may print a nice error message, provide diagnostic / logging tools etc. 
+		If errors occur (an unhandled exception or `ufront.core.Outcome.Failure` is returned by one of the modules), we will run through each of the `UFErrorHandler`s.  
+		These may print a nice error message, provide recover, diagnostics, logging etc.
 
-		If at any point errors occur, the chain stops, and `onApplicationError` is triggered, followed by running `_conclude()`
-		If at any point this HttpApplication is marked as complete, the chain stops and `_conclude()` is run.
+		Each module can modify `HttpContext.completion` to cause certain parts of the request life-cycle to be skipped.
 	**/
 	@:access(ufront.web.context.HttpContext)
-	public function execute( ?httpContext:HttpContext ):Surprise<Noise,Error> {
+	public function execute( httpContext:HttpContext ):Surprise<Noise,Error> {
 		
-		if (httpContext == null) httpContext = HttpContext.create( injector, urlFilters );
-		else httpContext.setUrlFilters( urlFilters );
+		httpContext.setUrlFilters( urlFilters );
 
 		var reqMidModules = HttpApplicationMacros.prepareModules(requestMiddleware,"requestIn");
 		var reqHandModules = HttpApplicationMacros.prepareModules(requestHandlers,"handleRequest");
 		var resMidModules = HttpApplicationMacros.prepareModules(responseMiddleware,"responseOut");
 		var logHandModules = HttpApplicationMacros.prepareModules(logHandlers,"log",[_,messages]);
 		
-		// Here `>>` does a Future flatMap, so each call to `executeModules()` returns a Future,
-		// once that Future is done, it does the next `executeModules()`.  The final future returned
-		// is for once the `flush()` call has completed, which will happen once all the modules are done
+		// Here `>>` does a Future flatMap, so each call to `executeModules()` returns a Future, once that Future is done, it does the next `executeModules()`.
+		// The final future returned is for once the `flush()` call has completed, which will happen once all the modules have finished.
 		
 		var allDone = 
 			init() >>
@@ -304,7 +302,8 @@ class HttpApplication
 			function (n:Noise) return executeModules( logHandModules, httpContext, CLogHandlersComplete ) >>
 			function (n:Noise) return flush( httpContext );
 
-		// Why does nothing happen unless there is a handle applied?  Need to ask Juraj...
+		// We need an empty handler to make sure all the `executeModules` calls above fire correctly. 
+		// This may be tink_core trying to be clever with Lazy evaluation, and never performing the `flatMap` if it is never handled.
 		allDone.handle( function() {} );
 
 		#if (debug && (neko || php))
@@ -312,10 +311,9 @@ class HttpApplication
 			// For now we are only testing sync targets, in future we may provide a "timeout" on async targets to perform a similar test.
 			if ( httpContext.completion.has(CFlushComplete)==false ) {
 				// We need to prevent macro-time seeing this code as "Pos" for them is "haxe.macro.Pos" not "haxe.PosInfos"
-				var msg = 'Async callbacks never completed for URI ${httpContext.getRequestUri()}:  ';
-				#if !macro
-					msg += 'The last active module was ${currentModule.className}.${currentModule.methodName}(${currentModule.customParams.join(", ")})';
-				#end
+				var msg = 
+				    'Async callbacks never completed for URI ${httpContext.getRequestUri()}:  ' +
+				    'The last active module was ${currentModule.className}.${currentModule.methodName}(${currentModule.customParams.join(", ")})';
 				throw msg;
 			}
 		#end

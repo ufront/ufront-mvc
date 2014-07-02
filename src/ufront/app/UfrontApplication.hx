@@ -1,5 +1,6 @@
 package ufront.app;
 
+import thx.error.NullArgument;
 import ufront.app.HttpApplication;
 import haxe.ds.StringMap;
 import minject.Injector;
@@ -154,13 +155,10 @@ class UfrontApplication extends HttpApplication
 	/**
 		Execute the current request.
 
-		If `httpContext` is not defined, `HttpContext.create()` will be used, with your session data being sent through.
-
 		The first time this runs, `initOnFirstExecute()` will be called, which runs some more initialization that requires the HttpContext to be ready before running.
 	**/
-	override public function execute( ?httpContext:HttpContext ):Surprise<Noise,Error> {
-		// Set up HttpContext for the request
-		if ( httpContext==null ) httpContext = HttpContext.create( injector, urlFilters, configuration.contentDirectory );
+	override public function execute( httpContext:HttpContext ):Surprise<Noise,Error> {
+		NullArgument.throwIfNull( httpContext );
 
 		if ( firstRun ) initOnFirstExecute( httpContext );
 
