@@ -1,9 +1,5 @@
 package ufront.app;
 
-#if macro
-	import haxe.macro.Expr;
-	using tink.MacroApi;
-#end
 import ufront.web.url.filter.UFUrlFilter;
 import ufront.core.Sync;
 import minject.Injector;
@@ -291,10 +287,10 @@ class HttpApplication
 		if (httpContext == null) httpContext = HttpContext.create( injector, urlFilters );
 		else httpContext.setUrlFilters( urlFilters );
 
-		var reqMidModules = prepareModules(requestMiddleware,"requestIn");
-		var reqHandModules = prepareModules(requestHandlers,"handleRequest");
-		var resMidModules = prepareModules(responseMiddleware,"responseOut");
-		var logHandModules = prepareModules(logHandlers,"log",[_,messages]);
+		var reqMidModules = HttpApplicationMacros.prepareModules(requestMiddleware,"requestIn");
+		var reqHandModules = HttpApplicationMacros.prepareModules(requestHandlers,"handleRequest");
+		var resMidModules = HttpApplicationMacros.prepareModules(responseMiddleware,"responseOut");
+		var logHandModules = HttpApplicationMacros.prepareModules(logHandlers,"log",[_,messages]);
 		
 		// Here `>>` does a Future flatMap, so each call to `executeModules()` returns a Future,
 		// once that Future is done, it does the next `executeModules()`.  The final future returned
@@ -382,9 +378,9 @@ class HttpApplication
 	function handleError( err:Error, ctx:HttpContext, doneTrigger:FutureTrigger<Outcome<Noise,Error>> ):Void {
 		if ( !ctx.completion.has(CErrorHandlersComplete) ) {
 
-			var errHandlerModules = prepareModules(errorHandlers,"handleError",[err]);
-			var resMidModules = prepareModules(responseMiddleware,"responseOut");
-			var logHandModules = prepareModules(logHandlers,"log",[_,messages]);
+			var errHandlerModules = HttpApplicationMacros.prepareModules(errorHandlers,"handleError",[err]);
+			var resMidModules = HttpApplicationMacros.prepareModules(responseMiddleware,"responseOut");
+			var logHandModules = HttpApplicationMacros.prepareModules(logHandlers,"log",[_,messages]);
 
 			var allDone = 
 				executeModules( errHandlerModules, ctx, CErrorHandlersComplete ) >>
@@ -432,38 +428,5 @@ class HttpApplication
 	**/
 	public function clearUrlFilters():Void {
 		urlFilters = [];
-	}
-
-	/**
-		Given a bunch of modules (handlers,middleware) and the name of the method on that 
-		module, return a 
-
-		`Array<Pair<(HttpContext->Surprise<Noise,Error>),PosInfos>>` 
-
-		so we can execute them all in the same way.
-	**/
-	static macro function prepareModules( modules:ExprOf<Array<Dynamic>>, methodName:String, ?bindArgs:ExprOf<Array<Dynamic>> ):ExprOf<Array<Pair<HttpContext->Surprise<Noise,Error>,PosInfos>>> {
-		
-		var argsToBind:Array<Expr>;
-		var argsForPos:Array<Dynamic> = [];
-
-		switch bindArgs.expr {
-			case EArrayDecl( args ):
-				argsToBind = args;
-				for ( a in args ) {
-					if ( !a.isWildcard() ) 
-						argsForPos.push( a );
-					else
-						argsForPos.push( "{HttpContext}" );
-				}
-			default:
-				argsToBind = [];
-				argsForPos = [];
-		}
-
-		var fakePos:Expr = macro HttpError.fakePosition( m, $v{methodName}, $v{argsForPos} );
-		var boundMethod:Expr = macro m.$methodName.bind( $a{argsToBind} );
-
-		return macro $modules.map( function(m) return new Pair($boundMethod,$fakePos) );
 	}
 }
