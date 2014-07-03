@@ -9,45 +9,50 @@ import js.Node;
 import thx.error.Error; 
 using StringTools;
 
-class HttpResponse extends ufront.web.HttpResponse
-{    
-	var _r : Response;
+class HttpResponse extends ufront.web.context.HttpResponse {
 
-	public function new(response : Response)
-	{
+	var res:js.node.http.ServerResponse;
+	
+	public function new( res:js.node.http.ServerResponse ) {
 		super();
-		_r = response;
+		this.res = res;
 	}
 	
-	override function flush()
-	{
-		if (_flushed) return;
+	override function flush() {
+		if ( _flushed )
+			return;
+		
 		_flushed = true;
-		//status 
 		
-		var headers = {}, k, v;
-		for (key in _headers.keys())
-		{
-			k = key;
-			v = _headers.get(key);
-			if (k == "Content-type" && null != charset && v.startsWith('text/'))
-				v += "; charset=" + charset;
-			Reflect.setField(headers, key, v);
-		}                                   
-   		
-		_r.writeHead(status, null, headers);
-		_r.write(_buff.toString());
-		_r.end();
-/*
+		// Set HTTP status code
+		res.statusCode = status;
 		
-		try 
-		{
-			for (cookie in _cookies)
-				_set_cookie(untyped cookie.name.__s, untyped cookie.description().__s);
-		} catch (e : Dynamic)
-		{
-			throw new Error("you can't set the cookie, output already sent");
+		// Set Cookies
+		try {
+			var cookieHeader = [
+				for ( cookie in _cookies ) '${cookie.name}=${cookie.description()}'
+			];
+			res.setHeader( "Set-Cookie", cookieHeader );
 		}
-*/
+		catch ( e:Dynamic ) {
+			throw new Error( "Cannot flush cookies on response, output already sent" );
+		}
+		
+		// Write headers
+		for ( key in _headers.keys() ) {
+			var val = _headers.get(key);
+			if ( key=="Content-type" && null!=charset && val.startsWith('text/') ) {
+				val += "; charset=" + charset;
+			}
+			try {
+				res.setHeader(key, val);
+			}
+			catch ( e:Dynamic ) {
+				throw new Error( "Invalid header: '{0}: {1}', or output already sent", [key,val] );
+			}
+		}
+
+		// Write response content
+		res.write( _buff.toString() );
 	}
 }

@@ -1,194 +1,160 @@
-/**
- * ...
- * @author Franco Ponticelli
- */
-
 package nodejs.ufront.web.context;
-import thx.error.NotImplemented;
 
 import haxe.io.Bytes;
-import thx.error.Error;      
-import ufront.web.IHttpHandler;
-import ufront.web.UFHttpUploadHandler;
-import ufront.web.EmptyUploadHandler;   
-import js.Node;
+import thx.sys.Lib;
+import ufront.web.upload.*;
+import ufront.web.context.HttpRequest.OnPartCallback;
+import ufront.web.context.HttpRequest.OnDataCallback;
+import ufront.web.context.HttpRequest.OnEndPartCallback;
+import ufront.web.UserAgent;
+import ufront.core.MultiValueMap;
 import haxe.ds.StringMap;
+import ufront.core.Sync;
+using tink.CoreApi;
+using Strings;
 using StringTools;
 
-class HttpRequest extends ufront.web.HttpRequest
+/**
+	An implementation of HttpRequest for NodeJS, based on `js.npm.express.Request`.
+
+	Platform peculiarities:
+
+	- `clientHeaders` will have all keys in lower case.
+	- `query`, `post` and `cookies` only support one value per name.
+	- When you have a parameter  named `user.email`, Express JS tries to convert it into a "user" object with a field "email". We undo that, and expose it as "user.email".
+	- 
+	
+	@author Franco Ponticelli, Jason O'Neil
+**/
+class HttpRequest extends ufront.web.context.HttpRequest
 {
-	public static function encodeName(s : String)
-	{
-		return s.urlEncode().replace('.', '%2E');
+	#if !macro
+	
+	var req:js.npm.express.Request;
+
+	public function new( req:js.npm.express.Request ) {
+		this.req = req;
 	}
 	
-	var _r : Request;
-	var _u : UrlObj;
-	public function new(request : Request)
-	{
-     	_r = request;
-		_u = Node.url.parse(_r.url);
+	override function get_queryString() {
+		if ( queryString==null )
+			queryString = req.originalUrl.substr( req.originalUrl.indexOf("?")+1 );
+		return queryString;
 	}
 	
-	override function getQueryString() : String
-	{
-		return _u.search;
-	}
-	
-	override function getPostString() : String
-	{
-		return throw new NotImplemented();
-	}
-/*	
-	var _uploadHandler : UFHttpUploadHandler;
-	var _parsed : Bool;
-	function _parseMultipart()
-	{
-		if (_parsed)
-			return;
-		_parsed = true;
-		var post = getPost();
-		var handler = _uploadHandler;
-		var isFile = false, partName = null, firstData = false, lastWasFile = false;
-		var onPart = function(pn : String, pf : String)
-		{
-			if (lastWasFile)
-			{
-				// close previous upload
-				handler.uploadEnd(partName);
-			}
-			isFile = null != pf && "" != pf;
-			partName = pn.urlDecode();
-			if (isFile)
-			{
-				post.set(partName, pf);
-				handler.uploadStart(partName, pf);
-				firstData = true;
-				lastWasFile = true;
-			} else {
-				lastWasFile = false;
-			}
-		};
-		var onData = function(bytes : Bytes, pos : Int, len : Int)
-		{
-			if (firstData)
-			{
-				firstData = false;
-				if (isFile)
-				{
-					if (len > 0)
-					{
-						handler.uploadProgress(partName, bytes, pos, len);
-					}
-				} else {
-					post.set(partName, bytes.getString(pos, len));
-				}
-			} else {
-				if (isFile)
-				{
-					if(len > 0)
-						handler.uploadProgress(partName, bytes, pos, len);
-				} else {
-					post.set(partName, post.get(partName) + bytes.getString(pos, len));
-				}
-			}
-		};
-		_parse_multipart(
-			function(p,f) { onPart(new String(p),if( f == null ) null else new String(f)); },
-			function(buf,pos,len) { onData(untyped new haxe.io.Bytes(__dollar__ssize(buf),buf),pos,len); }
-		);
-		if (isFile)
-		{
-			// close last upload
-			handler.uploadEnd(partName);
+	override function get_postString() {
+		if ( postString==null ) {
+			if ( httpMethod=="GET" )
+				postString = "";
+			else
+				throw "Not implemented... how to get this in NodeJS?";
 		}
-	}
- */
-	override public function setUploadHandler(handler : UFHttpUploadHandler)
-	{     
-		throw new NotImplemented();
-/*		
-		if (_parsed)
-			throw new Error("multipart has been already parsed");
-		_uploadHandler = handler;
-		_parseMultipart();  
-*/
+		return postString;
 	}
 	
-	override function getQuery() : StringMap<String>
-	{
-		if(null == query) 
-			query = getHashFromString(queryString);
+	var _parsed:Bool = false;
+	override public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error> {
+		if ( !isMultipart() )
+			return Sync.success();
+
+		if (_parsed) 
+			return throw new Error('parseMultipart() can only been called once');
+		
+		_parsed = true;
+
+		var post = get_post();
+		throw "parseMultipart not implemented for NodeJS yet.";
+	}
+	
+	override function get_query() {
+		if ( query==null )
+			query = getMapFromObject( req.query );
 		return query;
 	}
 	
-	override function getPost() : StringMap<String>
-	{   
-		if (httpMethod == "GET")
-			return new StringMap();
-		if (null == post)
-		{
-			post = getHashFromString(postString);
-//			if (!post.iterator().hasNext())
-//				_parseMultipart();
-		}        
+	override function get_post() {
+		if ( post==null )
+			post = getMapFromObject( untyped req.body );
 		return post;
 	}
 	
-	override function getCookies() : StringMap<String>
-	{
-		return throw new NotImplemented();
+	override function get_cookies() {
+		if ( cookies==null )
+			cookies = getMapFromObject( untyped req.cookies );
+		return cookies;
 	}
 	
-	override function getHostName() : String
-	{
-		return _u.hostname;
+	override function get_hostName() {
+		if ( hostName==null )
+			hostName = req.host;
+		return hostName;
 	}
 	
-	override function getClientIP() : String
-	{
-		return throw new NotImplemented();
+	override function get_clientIP() {
+		if ( clientIP==null )
+			clientIP = req.ip;
+		return clientIP;
 	}
 	
-	override function getUri() : String
-	{
-		return _u.pathname;
+	override function get_uri() {
+		if ( uri==null )
+			uri = req.path;
+		return uri;
 	}
 	
-	override function getClientHeaders() : StringMap<String>
-	{                                                 
-		return throw new NotImplemented();
+	override function get_clientHeaders() {
+		if ( clientHeaders==null )
+			clientHeaders = getMapFromObject( untyped req.headers );
+		return clientHeaders;
 	}
 	
-	override function getHttpMethod() : String
-	{
-		return _r.method;
+	override function get_httpMethod() {
+		if ( httpMethod==null ) 
+			httpMethod = untyped req.method;
+		return httpMethod;
 	}
 	
-	override function getScriptDirectory() : String
-	{         
-		return Node.process.cwd() + "/";      
+	override function get_scriptDirectory() {
+		if ( scriptDirectory==null )
+			scriptDirectory = js.Node.__dirname + "/";
+		return scriptDirectory;
 	}
 	
-	override function getAuthorization() : { user : String, pass : String }
-	{
-		return throw new NotImplemented();
-	}
-	
-	static var paramPattern = ~/^([^=]+)=(.*?)$/;
-	static function getHashFromString(s : String)
-	{
-		var hash = new StringMap();   
-		if(null == s)
-			return hash;
-		for (part in s.split("&"))
-		{
-			if (!paramPattern.match(part))
-				continue;
-			hash.set(
-				StringTools.urlDecode(paramPattern.matched(1)),
-				StringTools.urlDecode(paramPattern.matched(2)));
+	override function get_authorization() {
+		if ( authorization==null ) {
+			authorization = { user:null, pass:null };
+			var reg = ~/^Basic ([^=]+)=*$/;
+			var h = clientHeaders.get( "Authorization" );
+			if( h!=null && reg.match(h) ){
+				var val = reg.matched( 1 );
+				val = new js.node.Buffer(val, 'base64').toString( "utf-8" );
+				var a = val.split(":");
+				if( a.length != 2 ){
+					throw "Unable to decode authorization.";
+				}
+				authorization = {user: a[0],pass: a[1]};
+			}
 		}
-		return hash;
+		return authorization;
 	}
+
+	static function getMapFromObject( obj:Dynamic, ?prefix:String="", ?m:MultiValueMap<String> ):MultiValueMap<String> {
+		if ( m==null )
+			m = new MultiValueMap();
+		
+		if ( obj!=null ) for ( fieldName in Reflect.fields(obj) ) {
+			var val = Reflect.field(obj,fieldName);
+			var fieldName = (prefix!="") ? '$prefix.$fieldName' : fieldName;
+			switch Type.typeof( val ) {
+				// TODO: if we have q[]=1&q[]=2, how do we get both values?
+				// Perhaps using obj.forEach(), not sure how to do that from Haxe.
+				case TObject: getMapFromObject( val, fieldName+".", m );
+				default: m.add( fieldName, ''+val );
+			}
+		}
+
+		return m;
+	}
+	
+	#end
 }

@@ -41,6 +41,16 @@ class HttpContext
 		return new HttpContext( injector, request, response, session, auth, urlFilters, relativeContentDir );
 	}
 
+	#if (nodejs && !macro)
+		public static function createNodeJSContext( ?req:js.npm.express.Request, ?res:js.node.http.ServerResponse, ?injector:Injector, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
+			if( null==injector )
+				injector = new Injector();
+			var request:HttpRequest = new nodejs.ufront.web.context.HttpRequest( req );
+			var response:HttpResponse = new nodejs.ufront.web.context.HttpResponse( res );
+			return new HttpContext( injector, request, response, session, auth, urlFilters, relativeContentDir );
+		}
+	#end
+
 	/**
 		Create a HttpContext by explicitly supplying the request, response and session.
 

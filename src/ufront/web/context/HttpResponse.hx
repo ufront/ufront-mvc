@@ -24,6 +24,8 @@ class HttpResponse
 				new php.ufront.web.context.HttpResponse();
 			#elseif neko
 				new neko.ufront.web.context.HttpResponse();
+			#elseif nodejs
+				throw "Please use `new nodejs.ufront.web.HttpResponse(res)` instead";
 			#else
 				// use the default implementation.  `flush()` won't work...
 				new HttpResponse();
