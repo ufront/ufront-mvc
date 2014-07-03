@@ -427,11 +427,11 @@ class HttpApplication
 			var app = new js.npm.Express();
 			app.use( new js.npm.connect.Static('.') );
 			app.use( new js.npm.connect.BodyParser() );
-			app.use( function(req:js.npm.express.Request,res:js.npm.express.Response,next:String->Void) {
+			app.use( function(req:js.npm.express.Request,res:js.npm.express.Response,next:?String->Void) {
 				var context:HttpContext = HttpContext.createNodeJSContext( req, res );
 				this.execute( context ).handle( function(result) switch result {
 					case Failure( err ): next( err.toString() );
-					default: next( null );
+					default: next();
 				});
 			});
 			app.listen( port );
