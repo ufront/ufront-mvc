@@ -137,7 +137,11 @@ class HttpRequest
 		Information about the user agent that made the request.
 	**/
 	public var userAgent(get, null):UserAgent;
-	function get_userAgent():UserAgent return throw new AbstractMethod();
+	function get_userAgent():UserAgent {
+		if ( userAgent==null )
+			userAgent = UserAgent.fromString( clientHeaders.get("User-Agent") );
+		return userAgent;
+	}
 
 	/**
 		The HTTP method used for the request.

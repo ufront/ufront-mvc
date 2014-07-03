@@ -1,8 +1,3 @@
-/**
- * ...
- * @author Franco Ponticelli
- */
-
 package php.ufront.web.context;
 
 import haxe.io.Bytes;
@@ -19,6 +14,11 @@ using tink.CoreApi;
 using Strings;
 using StringTools;
 
+/**
+	An implementation of HttpRequest for PHP.
+
+	@author Franco Ponticelli, Jason O'Neil
+**/
 class HttpRequest extends ufront.web.context.HttpRequest
 {
 	public static function encodeName(s:String)
@@ -226,13 +226,6 @@ class HttpRequest extends ufront.web.context.HttpRequest
 			}
 		}
 		return cookies;
-	}
-	
-	override function get_userAgent()
-	{
-		if (null == userAgent)
-			userAgent = UserAgent.fromString(clientHeaders.get("User-Agent"));
-		return userAgent;
 	}
 	
 	override function get_hostName()

@@ -1,10 +1,5 @@
 package neko.ufront.web.context;
 
-/**
- * ...
- * @author Franco Ponticelli
- */
-
 import haxe.io.Bytes;
 import thx.error.Error;
 import thx.sys.Lib;
@@ -20,6 +15,11 @@ using tink.CoreApi;
 using Strings;
 using StringTools;
 
+/**
+	An implementation of HttpRequest for mod_neko and mod_tora.
+	
+	@author Franco Ponticelli, Jason O'Neil
+**/
 class HttpRequest extends ufront.web.context.HttpRequest
 {
 	public static function encodeName(s:String)
@@ -184,13 +184,6 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		return query;
 	}
 	
-	override function get_userAgent()
-	{
-		if (null == userAgent)
-			userAgent = UserAgent.fromString(clientHeaders.get("User-Agent"));
-		return userAgent;
-	}
-	
 	override function get_post()
 	{
 		if (httpMethod == "GET")
@@ -289,16 +282,14 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		return scriptDirectory;
 	}
 	
-	override function get_authorization()
-	{
-		if (null == authorization)
-		{
+	override function get_authorization() {
+		if ( authorization==null ) {
 			authorization = { user:null, pass:null };
 			var reg = ~/^Basic ([^=]+)=*$/;
-			var h = clientHeaders.get("Authorization");
-			if( h != null && reg.match(h) ){
-				var val = reg.matched(1);
-				untyped val = new String(_base_decode(val.__s,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".__s));
+			var h = clientHeaders.get( "Authorization" );
+			if( h!=null && reg.match(h) ){
+				var val = reg.matched( 1 );
+				val = untyped new String( _base_decode(val.__s,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".__s) );
 				var a = val.split(":");
 				if( a.length != 2 ){
 					throw "Unable to decode authorization.";

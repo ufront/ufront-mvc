@@ -10,66 +10,62 @@ import thx.error.Error;
 
 using StringTools;
 
-class HttpResponse extends ufront.web.context.HttpResponse
-{
-	public function new()
-	{
+class HttpResponse extends ufront.web.context.HttpResponse {
+	public function new() {
 		super();
 		_init();
 	}
 	
-	override function flush()
-	{
-		if (_flushed) return;
+	override function flush() {
+		if ( _flushed )
+			return;
+		
 		_flushed = true;
-		var k = null, v = null;
 		
-		// set status
-		_set_return_code(status);
+		// Set HTTP status code
+		_set_return_code( status );
 		
-		try 
-		{
-			for (cookie in _cookies)
-				_set_cookie(untyped cookie.name.__s, untyped cookie.description().__s);
-		} catch (e : Dynamic)
-		{
-			throw new Error("you can't set the cookie, output already sent");
-		}
-		
+		// Set Cookies
 		try {
-			// write headers
-			for (key in _headers.keys())
-			{
-				k = key;
-				v = _headers.get(key);
-				if (k == "Content-type" && null != charset && v.startsWith('text/'))
-				{
-					v += "; charset=" + charset;
-				}
-				_set_header(untyped key.__s, untyped v.__s);
-			}
-		} catch (e : Dynamic)
-		{
-			throw new Error("invalid header: '{0}: {1}' or output already sent", [k, v]);
+			for ( cookie in _cookies )
+				_set_cookie( untyped cookie.name.__s, untyped cookie.description().__s );
 		}
-		// write content
-		Lib.print(_buff.toString());
+		catch ( e:Dynamic ) {
+			throw new Error( "Cannot flush cookies on response, output already sent" );
+		}
+		
+		// Write headers
+		for ( key in _headers.keys() ) {
+			var val = _headers.get(key);
+			if ( key=="Content-type" && null!=charset && val.startsWith('text/') ) {
+				val += "; charset=" + charset;
+			}
+			try {
+				_set_header( untyped key.__s, untyped val.__s );
+			}
+			catch ( e:Dynamic ) {
+				throw new Error( "Invalid header: '{0}: {1}', or output already sent", [key,val] );
+			}
+		}
+
+		// Write response content
+		Lib.print( _buff.toString() );
 	}
 	
 	static var _set_header : Dynamic;
 	static var _set_cookie : Dynamic;
 	static var _set_return_code : Dynamic; 
 	static var _inited = false;
-	static function _init()
-	{   
+
+	static function _init() {
 		if(_inited)
 			return;
 		_inited = true;
-		var get_env = Lib.load("std", "get_env", 1);
-		var ver = untyped get_env("MOD_NEKO".__s);
-		var lib = "mod_neko" + if ( ver == untyped "1".__s ) "" else ver;
-		_set_header = Lib.load(lib, "set_header", 2);
-		_set_cookie = Lib.load(lib, "set_cookie", 2);
-		_set_return_code = Lib.load(lib,"set_return_code",1);
+		var get_env = Lib.load( "std", "get_env", 1 );
+		var ver = untyped get_env( "MOD_NEKO".__s );
+		var lib = "mod_neko" + if ( ver==untyped "1".__s ) "" else ver;
+		_set_header = Lib.load( lib, "set_header", 2 );
+		_set_cookie = Lib.load( lib, "set_cookie", 2 );
+		_set_return_code = Lib.load( lib, "set_return_code", 1 );
 	}
 }
