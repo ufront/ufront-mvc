@@ -413,6 +413,31 @@ class HttpApplication
 		return Noise;
 	}
 
+	#if nodejs
+		/**
+			Start a HTTP server using `js.npm.Express`, listening on the specified port.
+			Includes the `js.npm.connect.Static` and `js.npm.connect.BodyParser` middleware.
+			Will create a HttpContext and execute each request.
+
+			@param port The port to listen on (default 2987).
+
+			NodeJS only.
+		**/
+		public function listen( ?port:Int=2987 ):Void {
+			var app = new js.npm.Express();
+			app.use( new js.npm.connect.Static('.') );
+			app.use( new js.npm.connect.BodyParser() );
+			app.use( function(req:js.npm.express.Request,res:js.npm.express.Response,next:String->Void) {
+				var context:HttpContext = HttpContext.createNodeJSContext( req, res );
+				this.execute( context ).handle( function(result) switch result {
+					case Failure( err ): next( err.toString() );
+					default: next( null );
+				});
+			});
+			app.listen( port );
+		}
+	#end
+
 	/**
 		Add a URL filter to be used in the HttpContext for `getRequestUri` and `generateUri`
 	**/
