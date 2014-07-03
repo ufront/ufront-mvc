@@ -37,8 +37,13 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	}
 	
 	override function get_queryString() {
-		if ( queryString==null )
+		if ( queryString==null ) {
 			queryString = req.originalUrl.substr( req.originalUrl.indexOf("?")+1 );
+			var hashIndex = queryString.indexOf("#");
+			if ( hashIndex>-1 )
+				queryString = queryString.substr( 0,hashIndex+1 );
+
+		}
 		return queryString;
 	}
 	
