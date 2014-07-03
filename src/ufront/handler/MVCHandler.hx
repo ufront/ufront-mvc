@@ -43,10 +43,9 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 
 		This controller may sub-dispatch to other controllers.
 
-		It is important that the index controller match the `IndexController` typedef, which specifies that it must have a constructor accepting a single `ActionContext` argument.
-		This is required so that a new instance of the controller can be created for each request.
+		The controller will be instantiated using the dependency injector for that request.
 	**/
-	public var indexController:Class<IndexController>;
+	public var indexController:Class<Controller>;
 
 	public function new() {
 		injector = new Injector();
@@ -103,7 +102,7 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 		actionContext.handler = this;
 
 		// Create the controller, inject into it, execute it...
-		var controller:IndexController = Type.createInstance( indexController, [context] );
+		var controller:Controller = context.injector.instantiate( indexController );
 		var resultFuture = 
 			controller.execute() >>
 			function(result:ActionResult):Noise {

@@ -28,12 +28,12 @@ typedef UfrontConfiguration = {
 
 		This controller will handle all requests given to `ufront.handler.MVCHandler`.
 		It may use sub-controllers to handle some requests.
-
-		This is typed as `IndexController` so that we know it can be constructed using a single argument: the `ufront.web.context.ActionContext`.
+		
+		It will be instantiated using the dependency injector for that request.
 
 		Default = `ufront.web.DefaultController`
 	**/
-	?indexController:Class<IndexController>,
+	?indexController:Class<Controller>,
 
 	/**
 		The `UFApiContext` API to expose with ufront-remoting.
