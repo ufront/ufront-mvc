@@ -4,13 +4,16 @@ package ufront.log;
 	import sys.FileSystem;
 	import sys.io.File;
 	import sys.io.FileOutput;
+#elseif nodejs
+	import js.node.Fs;
+	using ufront.core.SurpriseTools;
 #end
 import ufront.app.*;
 import haxe.PosInfos;
 import ufront.sys.SysUtil;
 import ufront.web.context.HttpContext;
 import ufront.core.Sync;
-using Types;
+using tink.CoreApi;
 using haxe.io.Path;
 
 /**
@@ -45,11 +48,6 @@ class FileLogger implements UFLogHandler implements UFInitRequired
 	/** the relative path to the log file **/
 	var path:String;
 
-	#if sys
-		/** the currently open file **/
-		var file:FileOutput;
-	#end
-
 	/**
 		Initiate the new module.  Specify the path to the file that you will be logging to.
 	**/
@@ -65,43 +63,32 @@ class FileLogger implements UFLogHandler implements UFInitRequired
 	/** Close the log file, dispose of the module **/
 	public function dispose( app:HttpApplication ) {
 		path = null;
-		#if sys
-			if ( file!=null ) {
-				file.close();
-				file = null;
-			}
-		#end
 		return Sync.success();
 	}
 
 	/** Write any messages from the context or application. **/
-	public function log( context:HttpContext, appMessages:Array<Message> ) {
+	public function log( context:HttpContext, appMessages:Array<Message> ):Surprise<Noise,Error> {
+		var logFile = context.contentDirectory+path;
+		var req = context.request;
+		var res = context.response;
+		var userDetails = req.clientIP;
+		if ( context.sessionID!=null ) userDetails += ' ${context.sessionID}';
+		if ( context.currentUserID!=null ) userDetails += ' ${context.currentUserID}';
+		
+		var content = '${Date.now()} [${req.httpMethod}] [${req.uri}] from [$userDetails], response: [${res.status} ${res.contentType}]\n';
+		for( msg in context.messages )
+			content += '\t${format(msg)}\n';
+		if ( appMessages!=null) for( msg in appMessages )
+			content += '\t${format(msg)}\n';
+
 		#if sys
-			if ( file==null ) {
-				var logFile = context.contentDirectory+path;
-
-				SysUtil.mkdir( logFile.directory() );
-
-				file = File.append( context.contentDirectory + path );
-			}
-
-			var req = context.request;
-			var res = context.response;
-			var userDetails = req.clientIP;
-			if ( context.sessionID!=null ) userDetails += ' ${context.sessionID}';
-			if ( context.currentUserID!=null ) userDetails += ' ${context.currentUserID}';
-			file.writeString( '${Date.now()} [${req.httpMethod}] [${req.uri}] from [$userDetails], response: [${res.status} ${res.contentType}]\n' );
-
-			for( msg in context.messages )
-				file.writeString( '\t${format(msg)}\n' );
-			if ( appMessages!=null) {
-				for( msg in appMessages )
-					file.writeString( '\t${format(msg)}\n' );
-			}
-
-			file.flush();
-
+			SysUtil.mkdir( logFile.directory() );
+			var file = File.append( context.contentDirectory + path );
+			file.writeString( content );
+			file.close();
 			return Sync.success();
+		#elseif nodejs
+			return Fs.appendFile.bind( logFile, content ).asVoidSurprise();
 		#else
 			return throw "Not implemented";
 		#end
