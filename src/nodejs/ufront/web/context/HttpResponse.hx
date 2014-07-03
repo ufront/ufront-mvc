@@ -53,6 +53,6 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 		}
 
 		// Write response content
-		res.write( _buff.toString() );
+		res.end( _buff.toString() );
 	}
 }
