@@ -30,7 +30,7 @@ class InlineSessionMiddleware implements UFMiddleware
 	**/
 	public function requestIn( ctx:HttpContext ):Surprise<Noise,Error> {
 		return 
-			if ( alwaysStart || ctx.session.isActive() ) 
+			if ( alwaysStart || ctx.isSessionActive() ) 
 				ctx.session.init() >>
 				function (outcome) switch (outcome) {
 					case Success(s): return Success(s);
@@ -44,7 +44,7 @@ class InlineSessionMiddleware implements UFMiddleware
 	**/
 	public function responseOut( ctx:HttpContext ):Surprise<Noise,Error> {
 		return 
-			if ( ctx.session.isActive() ) 
+			if ( ctx.isSessionActive() ) 
 				ctx.session.commit() >>
 				function (outcome) switch (outcome) {
 					case Success(s): return Success(s);
