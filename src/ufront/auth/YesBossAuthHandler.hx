@@ -1,12 +1,12 @@
 package ufront.auth;
 
-import ufront.web.context.HttpContext;
-
 
 /**
 	An AuthHandler which always gives you permission to do anything.
 
 	Useful for command line tools that don't require authentication checks.
+
+	*You're the boss*, everyone is afraid to say "no" to you. ;)
 	
 	@author Jason O'Neil
 **/
@@ -32,16 +32,10 @@ class YesBossAuthHandler implements UFAuthHandler<UFAuthUser>
 	
 	public function getUserByID( id:String ):Null<UFAuthUser> return new BossUser();
 
-	public var currentUser(get,set):Null<UFAuthUser>;
+	public function setCurrentUser( u:Null<UFAuthUser> ) {}
 
+	public var currentUser(get,never):Null<UFAuthUser>;
 	function get_currentUser() return new BossUser();
-	function set_currentUser( u:Null<UFAuthUser> ) return u;
-
-	static var _factory:YesBossFactory;
-	public static function getFactory() {
-		if (_factory==null) _factory = new YesBossFactory();
-		return _factory;
-	}
 }
 
 class BossUser implements ufront.auth.UFAuthUser {
