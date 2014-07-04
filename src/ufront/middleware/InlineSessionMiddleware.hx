@@ -21,7 +21,7 @@ class InlineSessionMiddleware implements UFMiddleware
 		(For example, when they log in).  
 		From there onwards it will initialize with each request.
 	**/
-	public static var alwaysStart:Bool;
+	public static var alwaysStart:Bool = false;
 
 	public function new() {}
 
@@ -29,14 +29,13 @@ class InlineSessionMiddleware implements UFMiddleware
 		Start the session if a SessionID exists in the request, or if `alwaysStart` is true.
 	**/
 	public function requestIn( ctx:HttpContext ):Surprise<Noise,Error> {
-		return 
-			if ( alwaysStart || ctx.isSessionActive() ) 
-				ctx.session.init() >>
-				function (outcome) switch (outcome) {
-					case Success(s): return Success(s);
-					case Failure(f): return Failure( HttpError.internalServerError(f) );
-				}
-			else Sync.success();
+		if ( ctx.isSessionActive() || (alwaysStart&&ctx.session!=null) ) {
+			return ctx.session.init().map(function (outcome) return switch (outcome) {
+				case Success(s): Success(s);
+				case Failure(f): Failure( HttpError.internalServerError(f) );
+			});
+		}
+		return Sync.success();
 	}
 
 	/**

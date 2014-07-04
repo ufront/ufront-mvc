@@ -332,7 +332,7 @@ class HttpApplication
 
 		`requestHandlersDone:Future<Noise> = executeModules( requestHandlers.map(function (r) return new Pair(Type.getClassName(Type.getClass(r)), r.handleRequest)), httpContext, CRequestHandler );`
 
-		Returns a future that will prove
+		Returns a future that will be a Success if the chain completed successfully, or a Failure containing the error otherwise.
 	**/
 	function executeModules( modules:Array<Pair<HttpContext->Surprise<Noise,Error>,Pos>>, ctx:HttpContext, ?flag:RequestCompletion ):Surprise<Noise,Error> {
 		var done:FutureTrigger<Outcome<Noise,Error>> = Future.trigger();
@@ -352,10 +352,9 @@ class HttpApplication
 				var moduleResult = 
 					try moduleCb( ctx ) 
 					catch ( e:Dynamic ) {
-						#if (debug && !macro) ctx.ufLog( 'Caught error $e while executing module ${currentModule.className}.${currentModule.methodName} in HttpApplication.executeModules()' ); #end
+						ctx.ufLog( 'Caught error $e while executing module ${currentModule.className}.${currentModule.methodName} in HttpApplication.executeModules()' );
 						Future.sync( Failure( HttpError.wrap(e,null,currentModule) ) );
 					}
-
 				moduleResult.handle( function (result) {
 					switch result {
 						case Success(_): runNext();

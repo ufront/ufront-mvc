@@ -1,6 +1,7 @@
 package ufront.web.session;
 
 import haxe.io.Path;
+import ufront.core.InjectionRef;
 import ufront.web.context.HttpContext;
 import ufront.web.HttpCookie;
 import ufront.web.session.UFHttpSessionState;
@@ -36,44 +37,28 @@ class FileSession implements UFHttpSessionState
 	// Statics
 
 	/**
-		Get a factory for FileSessions so one can be created for each context.
-	
-		@param savePath - relative path to directory where sessions will be saved.
-		@param sessionName - the name of the variable to store the sessionID in.
-		@param expire - the number of seconds the session should last.  Default is 0.  If the value is 0 the session does not have an expiry time.
-	**/
-	public static function getFactory( ?savePath:String, ?sessionName:String, ?expire:Int=0 ) {
-		if ( _factory==null || _factory.savePath!=savePath || _factory.sessionName!=sessionName || _factory.expire!=expire ) 
-			_factory = new FileSessionFactory( savePath, sessionName, expire );
-		
-		return _factory;
-	}
-	static var _factory:FileSessionFactory;
-
-	/**
 		The default session name to use if none is provided.
-
-		The default value is "UfrontSessionID".  You can change this static value to set a new default.
+		The default value is "UfrontSessionID".  
+		You can change this static variable to set a new default.
 	**/
 	public static var defaultSessionName:String = "UfrontSessionID";
 
 	/**
 		The default savePath.
-
+		This should be relative to the `HttpContext.contentDirectory`, or absolute.
 		The default value is "sessions/".  You can change this static value to set a new default.
 	**/
 	public static var defaultSavePath:String = "sessions/";
 
 	/**
 		The default expiry value.
-
-		By default this is 0.  You can change this static value to set a new default.
+		The default value is 0 (expire when window is closed).
+		You can change the default by changing this static variable.
 	**/
 	public static var defaultExpiry:Int = 0;
 
 	// Private variables 
 
-	var context:HttpContext;
 	var started:Bool;
 	var commitFlag:Bool;
 	var closeFlag:Bool;
@@ -85,6 +70,8 @@ class FileSession implements UFHttpSessionState
 
 	// Public members
 
+	/** The current HttpContext, should be supplied by injection. **/
+	@inject public var context:HttpContext;
 	public var id(get,null):String;
 
 	/**
@@ -95,19 +82,10 @@ class FileSession implements UFHttpSessionState
 		Data is read during `init` and written during `commit`.
 
 		A new session object should be created for each request, and it will then associate itself with the correct session file for the given user.
-	**/
-	public function new( context:HttpContext, ?savePath:String, ?sessionName:String, ?expire:Null<Int> ) {
-		NullArgument.throwIfNull( context );
-		this.context = context;
-		this.sessionName = (sessionName!=null) ? sessionName : defaultSessionName;
-		this.expiry = (expiry!=null && expiry>0) ? expiry : defaultExpiry;
-		
-		// sanitise and set the savePath
-		if (savePath==null) savePath = defaultSavePath;
-		savePath = Path.addTrailingSlash( savePath );
-		if (!savePath.startsWith("/")) savePath = context.contentDirectory + savePath;
-		this.savePath = savePath;
 
+		In general you should create your object using `injector.instantiate( FileSession )`, so that the HttpContext is made available and various the `injectConfig` initializations take place.
+	**/
+	public function new( ?savePath:String, ?sessionName:String, ?expire:Null<Int> ) {
 		started = false;
 		commitFlag = false;
 		closeFlag = false;
@@ -119,18 +97,44 @@ class FileSession implements UFHttpSessionState
 	}
 
 	/**
+		Use the current injector to check for configuration for this session: sessionName, expiry and savePath.
+		If no values are available in the injector, the defaults will be used.
+		This will be called automatically after `context` has been injected.
+	**/
+	@post public function injectConfig() {
+		// Manually check for these injections, because if they're not provided we have defaults - we don't want minject to throw an error.
+		this.sessionName =
+			if ( context.injector.hasMapping(String,"sessionName") )
+				context.injector.getInstance( String, "sessionName" )
+			else defaultSessionName;
+		this.expiry =
+			if ( context.injector.hasMapping(InjectionRef,"sessionExpiry") )
+				context.injector.getInstance( InjectionRef, "sessionExpiry" ).get()
+			else defaultExpiry;
+		this.savePath =
+			if ( context.injector.hasMapping(String,"sessionSavePath") )
+				context.injector.getInstance( String, "sessionSavePath" )
+			else defaultSavePath;
+		
+		// Sanitize the savePath, make it absolute if it was specified relative to the content directory.
+		savePath = Path.addTrailingSlash( savePath );
+		if ( !savePath.startsWith("/") )
+			savePath = context.contentDirectory + savePath;
+	}
+
+	/**
 		The variable name to reference the session ID.
 
 		This will be the name set in the Cookie sent to the client, or the name to search for in the parameters or cookies.
 
-		This can only be set in the constructor.
+		This is set by injecting a String named "sessionName", otherwise the default `defaultSessionName` value is used.
 	**/
 	public var sessionName(default,null):String;
 
 	/**
 		The lifetime/expiry of the cookie, in seconds.  A value of 0 represents expiry when the browser window is closed.
 
-		This can only be set in the constructor.
+		This is set by injecting a `InjectionRef<Int> named "sessionExpiry", otherwise the default `defaultExpiry` value is used.
 	**/
 	public var expiry(default,null):Null<Int>;
 
@@ -141,6 +145,8 @@ class FileSession implements UFHttpSessionState
 
 		Relative paths should not have a leading slash.
 		If a trailing slash is not included, it will be added.
+
+		This is set by injecting a String named "sessionSavePath", otherwise the default `defaultSavePath` value is used.
 	**/
 	public var savePath(default,null):String;
 
@@ -400,22 +406,4 @@ class FileSession implements UFHttpSessionState
 			if(!validID.match(id)) 
 				throw "Invalid session ID.";
 	}
-}
-
-class FileSessionFactory implements UFSessionFactory {
-	
-	public var savePath(default,null):Null<String>;
-	public var sessionName(default,null):Null<String>;
-	public var expire(default,null):Int;
-
-	public function new( ?savePath:String, ?sessionName:String, ?expire:Int=0 ) {
-		this.savePath = savePath;
-		this.sessionName = sessionName;
-		this.expire = expire;
-	}
-
-	public function create( context:HttpContext ) {
-		return new FileSession( context, savePath, sessionName, expire );
-	}
-
 }

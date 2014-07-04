@@ -140,7 +140,7 @@ typedef UfrontConfiguration = {
 
 		This means using `ufront.web.session.FileSession`, saving to the "sessions" folder, with a default session variable name, and an expiry of 0 (when window closed)
 	**/
-	?sessionFactory:UFSessionFactory,
+	?sessionImplementation:Class<UFHttpSessionState>,
 
 	/**
 		A method which can be used to generate an AuthHandler for the current request, as required.
@@ -151,7 +151,7 @@ typedef UfrontConfiguration = {
 
 		If not using ufront-easyauth, the default value is `YesBoss.getFactory()`
 	**/
-	?authFactory:UFAuthFactory
+	?authImplementation:Class<UFAuthHandler<UFAuthUser>>
 }
 
 class DefaultUfrontConfiguration {
@@ -179,15 +179,19 @@ class DefaultUfrontConfiguration {
 			controllers: cast CompileTime.getAllClasses( Controller ),
 			apis: cast CompileTime.getAllClasses( UFApi ),
 			viewEngine: new FileViewEngine(),
-			sessionFactory: FileSession.getFactory("sessions", null, 0),
+			sessionImplementation: FileSession,
 			requestMiddleware: [uploadMiddleware,inlineSession],
 			responseMiddleware: [inlineSession,uploadMiddleware],
 			errorHandlers: [ new ErrorPageHandler() ],
-			authFactory: 
+			authImplementation: 
+				// TODO: find out if there's a way we can teach Haxe that these type parameters are okay.
+				// We only ever *read* a T:UFAuthUser, any time we ask for one to write or check against the interface accepts any UFAuthUser.
+				// Because we're read only, we're safe, but Haxe doesn't think so.
+				// For now we'll cast our way out of this problem.
 				#if ufront_easyauth 
-					EasyAuth.getFactory()
+					cast EasyAuth
 				#else 
-					YesBossAuthHandler.getFactory() 
+					cast YesBossAuthHandler // should we use NobodyAuthHandler instead?
 				#end
 		}
 	}

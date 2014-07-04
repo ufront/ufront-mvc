@@ -35,14 +35,6 @@ class YesBossAuthHandlerTest
 		Assert.equals( "The Boss", yb.currentUser.userID );
 	}
 	
-	public function testYesBossFactory():Void {
-		var ctx = "/".mockHttpContext();
-		var factory:UFAuthFactory = new YesBossFactory();
-		Assert.is( factory, YesBossFactory );
-		Assert.is( YesBossAuthHandler.getFactory(), YesBossFactory );
-		Assert.is( YesBossAuthHandler.getFactory().create(ctx), YesBossAuthHandler );
-	}
-	
 	public function testBossUser():Void {
 		var boss = new BossUser();
 		Assert.equals( "The Boss", boss.userID );

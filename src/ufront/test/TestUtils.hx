@@ -44,7 +44,8 @@ class TestUtils
 
 		* The uri is used for `request.uri` if the request is being mocked.  (If the request object is given, not mocked, the supplied Uri is ignored)
 		* `getRequestUri` calls the real method, so will process filters on `request.uri`
-		* The request, response, session and auth return either the supplied value, or are mocked
+		* The request, response, session and auth return either the supplied value, or are mocked.
+		* Session uses `ufront.web.session.VoidSession` as a default mock object, auth uses `ufront.auth.YesBossAuthHandler` by default.
 		* `setUrlFilters` and `generateUri` call the real methods.
 	**/
 	public static function mockHttpContext( uri:String, ?method:String, ?params:MultiValueMap<String>, ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser> )
@@ -67,9 +68,11 @@ class TestUtils
 			response.flush().stub();
 		}
 		if ( session==null ) {
-			session = UFHttpSessionState.mock();
+			session = new ufront.web.session.VoidSession();
         }
-		if (auth==null) auth = UFAuthHandler.mock([UFAuthUser]);
+		if (auth==null) {
+			auth = new ufront.auth.YesBossAuthHandler();
+		}
 
 		// Build the HttpContext with our mock objects
 		var ctx = new HttpContext( injector, request, response, session, auth, [] );
@@ -83,7 +86,7 @@ class TestUtils
 
 		If an error is encountered, the exception is returned as a Failure.
 	**/
-	public static function testRoute( context:HttpContext, controller:Class<IndexController> ):RouteTestOutcome {
+	public static function testRoute( context:HttpContext, controller:Class<Controller> ):RouteTestOutcome {
 		var ufrontConf:UfrontConfiguration = {
 			indexController: controller,
 			urlRewrite: true,

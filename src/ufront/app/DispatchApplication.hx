@@ -3,6 +3,7 @@ package ufront.app;
 #if macro
 	import haxe.macro.Expr;
 #else
+	import thx.error.NullArgument;
 	import ufront.app.HttpApplication;
 	import haxe.ds.StringMap;
 	import minject.Injector;
@@ -132,8 +133,8 @@ class DispatchApplication extends HttpApplication
 				super.addUrlFilter( new PathInfoUrlFilter() );
 
 			// Save the session / auth factories for later, when we're building requests
-			inject( UFSessionFactory, configuration.sessionFactory );
-			inject( UFAuthFactory, configuration.authFactory );
+			inject( UFHttpSessionState, configuration.sessionImplementation );
+			inject( UFAuthHandler, configuration.authImplementation );
 
 			// Set up the view engine
 			this.viewEngine = configuration.viewEngine;
@@ -142,13 +143,10 @@ class DispatchApplication extends HttpApplication
 		/**
 			Execute the current request.
 
-			If `httpContext` is not defined, `HttpContext.create()` will be used, with your session data being sent through.
-
 			The first time this runs, `initOnFirstExecute()` will be called, which runs some more initialization that requires the HttpContext to be ready before running.
 		**/
-		override public function execute( ?httpContext:HttpContext ) {
-			// Set up HttpContext for the request
-			if ( httpContext==null ) httpContext = HttpContext.create( injector, urlFilters, configuration.contentDirectory );
+		override public function execute( httpContext:HttpContext ) {
+			NullArgument.throwIfNull( httpContext );
 
 			if ( firstRun ) initOnFirstExecute( httpContext );
 

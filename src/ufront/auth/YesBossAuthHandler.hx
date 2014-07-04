@@ -44,11 +44,3 @@ class BossUser implements ufront.auth.UFAuthUser {
 	public function can( ?p:EnumValue, ?ps:Iterable<EnumValue> ):Bool return true;
 	function get_userID() return "The Boss";
 }
-
-class YesBossFactory implements UFAuthFactory {
-	public function new() {}
-
-	public function create( context:HttpContext ) {
-		return new YesBossAuthHandler();
-	}
-}

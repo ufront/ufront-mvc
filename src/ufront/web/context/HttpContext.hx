@@ -63,7 +63,6 @@ class HttpContext
 		`relativeContentDir` is used to help specify the path of `contentDirectory`, relative to `request.scriptDirectory`.  Default value is `uf-content`
 	**/
 	public function new( injector:Injector, request:HttpRequest, response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
-
 		NullArgument.throwIfNull( injector );
 		NullArgument.throwIfNull( response );
 		NullArgument.throwIfNull( request );
@@ -75,9 +74,6 @@ class HttpContext
 		this._auth = auth;
 		this.urlFilters = ( urlFilters!=null ) ? urlFilters : [];
 		this.relativeContentDir = relativeContentDir;
-
-		try this.sessionFactory = injector.getInstance( UFSessionFactory ) catch (e:Dynamic) {}
-		try this.authFactory = injector.getInstance( UFAuthFactory ) catch (e:Dynamic) {}
 		
 		messages = [];
 		completion = new EnumFlags<RequestCompletion>();
@@ -156,9 +152,6 @@ class HttpContext
 
 	/** The URL filters to be used for `getRequestUri()` and `generateUri()` **/
 	public var urlFilters(default,null):Iterable<UFUrlFilter>;
-
-	var sessionFactory:UFSessionFactory;
-	var authFactory:UFAuthFactory;
 
 	var _requestUri:String;
 
@@ -301,15 +294,17 @@ class HttpContext
 
 	var _session:UFHttpSessionState;
 	function get_session() {
-		if( null==_session && sessionFactory!=null )
-			_session = sessionFactory.create( this );
+		if( null==_session ) {
+			_session = try injector.getInstance( UFHttpSessionState ) catch ( e:Dynamic ) null;
+		}
 		return _session;
 	}
 
 	var _auth:UFAuthHandler<UFAuthUser>;
 	function get_auth() {
-		if( null==_auth && authFactory!=null && session!=null )
-			_auth = authFactory.create( this );
+		if( null==_auth && session!=null ) {
+			_auth = try injector.getInstance( UFAuthHandler ) catch ( e:Dynamic ) null;
+		}
 		return _auth;
 	}
 
