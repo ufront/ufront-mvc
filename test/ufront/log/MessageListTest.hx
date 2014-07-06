@@ -3,7 +3,7 @@ package ufront.log;
 import utest.Assert;
 import ufront.log.Message;
 
-class MessageTest {
+class MessageListTest {
 	public function new() {}
 	
 	public function beforeClass():Void {}

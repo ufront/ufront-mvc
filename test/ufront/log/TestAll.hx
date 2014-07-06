@@ -7,7 +7,7 @@ class TestAll
 {
 	public static function addTests( runner:Runner ) {
 		runner.addCase( new FileLoggerTest() );
-		runner.addCase( new MessageTest() );
+		runner.addCase( new MessageListTest() );
 		runner.addCase( new RemotingLoggerTest() );
 		runner.addCase( new BrowserConsoleLoggerTest() );
 	}

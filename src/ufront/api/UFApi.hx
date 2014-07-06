@@ -1,7 +1,7 @@
 package ufront.api;
 
 import haxe.PosInfos;
-import ufront.log.Message;
+import ufront.log.MessageList;
 import ufront.auth.*;
 
 /** 

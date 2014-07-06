@@ -6,6 +6,8 @@ import haxe.PosInfos;
 import minject.Injector;
 import ufront.auth.UFAuthUser;
 import ufront.log.Message;
+import ufront.log.MessageList;
+import ufront.web.session.VoidSession;
 import ufront.web.url.UrlDirection;
 import thx.error.NullArgument;
 import ufront.web.url.filter.UFUrlFilter;
