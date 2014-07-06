@@ -74,6 +74,9 @@ interface UFAuthHandler<T:UFAuthUser>
 	**/
 	function setCurrentUser( user:UFAuthUser ):Void;
 
+	/** A String representation, usually just the name of the AuthHandler class, and possibly the current user. **/
+	function toString():String;
+
 	/** 
 		The currently logged in user.  Will be null if no user is logged in.
 	**/
