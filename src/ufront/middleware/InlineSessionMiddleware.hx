@@ -29,7 +29,7 @@ class InlineSessionMiddleware implements UFMiddleware
 		Start the session if a SessionID exists in the request, or if `alwaysStart` is true.
 	**/
 	public function requestIn( ctx:HttpContext ):Surprise<Noise,Error> {
-		if ( alwaysStart ) {
+		if ( alwaysStart || ctx.session.id!=null ) {
 			return ctx.session.init().map(function (outcome) return switch (outcome) {
 				case Success(s): Success(s);
 				case Failure(f): Failure( HttpError.internalServerError(f) );
