@@ -135,9 +135,6 @@ class DispatchApplication extends HttpApplication
 			// Save the session / auth factories for later, when we're building requests
 			inject( UFHttpSession, configuration.sessionImplementation );
 			inject( UFAuthHandler, configuration.authImplementation );
-
-			// Set up the view engine
-			this.viewEngine = configuration.viewEngine;
 		}
 
 		/**
@@ -160,12 +157,14 @@ class DispatchApplication extends HttpApplication
 			
 			inject( String, httpContext.request.scriptDirectory, "scriptDirectory" );
 			inject( String, httpContext.contentDirectory, "contentDirectory" );
-			
+		
 			// Make the UFViewEngine available (and inject into it, in case it needs anything)
-			if ( viewEngine!=null ) {
-				injector.injectInto( viewEngine );
-				inject( UFViewEngine, viewEngine );
-			}
+			try
+				viewEngine = injector.getInstance( configuration.viewEngine ) 
+			catch (e:Dynamic)
+				httpContext.ufWarn( 'Failed to load view engine: $viewEngine' );
+			inject( UFViewEngine, viewEngine );
+			inject( String, configuration.viewPath, "viewPath" );
 		}
 
 		/**

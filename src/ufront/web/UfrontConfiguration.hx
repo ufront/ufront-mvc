@@ -129,9 +129,16 @@ typedef UfrontConfiguration = {
 
 		This engine will be used to load views created using `ufront.web.result.ViewResult`, or other views as you need them.
 
-		Default is `ufront.view.FileViewEngine`, configured to use the "view/" subfolder of your content directory.
+		Default is `ufront.view.FileViewEngine`, which loads the views from the `viewPath` directory.
 	**/
-	?viewEngine:Null<UFViewEngine>,
+	?viewEngine:Null<Class<UFViewEngine>>,
+	
+	/**
+		The folder (either absolute, or relative to the script directory) to load the views from.
+		This may be ignored if the `viewEngine` you are using does not use folders or a file system.
+		Default is "view", relative to your script directory.
+	**/
+	?viewPath:Null<String>,
 
 	/**
 		A method which can be used to generate a session for the current request, as required.
@@ -178,7 +185,8 @@ class DefaultUfrontConfiguration {
 			disableBrowserTrace: false,
 			controllers: cast CompileTime.getAllClasses( Controller ),
 			apis: cast CompileTime.getAllClasses( UFApi ),
-			viewEngine: new FileViewEngine(),
+			viewEngine: FileViewEngine,
+			viewPath: "view/",
 			sessionImplementation: FileSession,
 			requestMiddleware: [uploadMiddleware,inlineSession],
 			responseMiddleware: [inlineSession,uploadMiddleware],

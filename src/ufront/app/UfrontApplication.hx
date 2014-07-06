@@ -129,8 +129,11 @@ class UfrontApplication extends HttpApplication
 		if (configuration.sessionImplementation!=null) inject( UFHttpSession, configuration.sessionImplementation );
 		if (configuration.authImplementation!=null) inject( UFAuthHandler, configuration.authImplementation );
 
-		// Set up the view engine
-		this.viewEngine = configuration.viewEngine;
+		// Inject some settings for the view engine.
+		if ( configuration.viewEngine!=null ) {
+			inject( String, configuration.viewPath, "viewPath" );
+			inject( UFViewEngine, configuration.viewEngine, true );
+		}
 	}
 
 	/**
@@ -154,9 +157,16 @@ class UfrontApplication extends HttpApplication
 		inject( String, httpContext.contentDirectory, "contentDirectory" );
 		
 		// Make the UFViewEngine available (and inject into it, in case it needs anything)
-		if ( viewEngine!=null ) {
-			injector.injectInto( viewEngine );
-			inject( UFViewEngine, viewEngine );
+		if ( configuration.viewEngine!=null ) {
+			try {
+				viewEngine = injector.getInstance( UFViewEngine );
+				for ( te in appTemplatingEngines ) {
+					viewEngine.addTemplatingEngine( te );
+				}
+			}
+			catch (e:Dynamic) {
+				httpContext.ufWarn( 'Failed to load view engine ${Type.getClassName(configuration.viewEngine)}: $e' );
+			}
 		}
 	}
 
@@ -170,13 +180,16 @@ class UfrontApplication extends HttpApplication
 		return this;
 	}
 
+	var appTemplatingEngines = new List();
 	/**
 		Add support for a templating engine to your view engine.
 
 		Some ready-to-go templating engines are included `ufront.view.TemplatingEngines`.
 	**/
-	public inline function addTemplatingEngine( engine:TemplatingEngine ):UfrontApplication {
-		viewEngine.addTemplatingEngine( engine );
+	public function addTemplatingEngine( engine:TemplatingEngine ):UfrontApplication {
+		appTemplatingEngines.add( engine );
+		if ( viewEngine!=null )
+			viewEngine.addTemplatingEngine( engine );
 		return this;
 	}
 
