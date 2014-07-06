@@ -4,7 +4,7 @@ import haxe.PosInfos;
 import utest.Assertation;
 import utest.Assert;
 import ufront.web.context.*;
-import ufront.web.session.UFHttpSessionState;
+import ufront.web.session.UFHttpSession;
 import ufront.auth.UFAuthHandler;
 import ufront.core.Sync;
 import minject.Injector;
@@ -28,7 +28,7 @@ class TestUtilsTest {
 		Assert.notNull( mock1 );
 		Assert.is( mock1.request, HttpRequest );
 		Assert.is( mock1.response, HttpResponse );
-		Assert.is( mock1.session, UFHttpSessionState );
+		Assert.is( mock1.session, UFHttpSession );
 		Assert.is( mock1.auth, UFAuthHandler );
 		Assert.equals( "/test/", mock1.request.uri );
 		Assert.equals( "GET", mock1.request.httpMethod );

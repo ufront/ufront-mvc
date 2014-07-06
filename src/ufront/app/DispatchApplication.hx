@@ -19,7 +19,7 @@ package ufront.app;
 	import ufront.web.url.filter.*;
 	import ufront.web.Controller;
 	import ufront.web.UfrontConfiguration;
-	import ufront.web.session.UFHttpSessionState;
+	import ufront.web.session.UFHttpSession;
 	import ufront.auth.*;
 	import ufront.api.UFApi;
 	#if ufront_easyauth
@@ -133,7 +133,7 @@ class DispatchApplication extends HttpApplication
 				super.addUrlFilter( new PathInfoUrlFilter() );
 
 			// Save the session / auth factories for later, when we're building requests
-			inject( UFHttpSessionState, configuration.sessionImplementation );
+			inject( UFHttpSession, configuration.sessionImplementation );
 			inject( UFAuthHandler, configuration.authImplementation );
 
 			// Set up the view engine

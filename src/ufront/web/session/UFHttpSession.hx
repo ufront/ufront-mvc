@@ -12,7 +12,7 @@ import tink.CoreApi;
 	@author Franco Ponticelli
 	@author Jason O'Neil
 **/
-interface UFHttpSessionState
+interface UFHttpSession
 {
 	/** The ID of the current session **/
 	public var id(get,null):String;

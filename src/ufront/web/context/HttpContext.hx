@@ -17,7 +17,7 @@ import ufront.auth.*;
 import ufront.web.url.*;
 import ufront.web.url.filter.*;
 import tink.CoreApi;
-using Types;
+using ufront.core.InjectionTools;
 
 /**
 	A context describing the current Http request, response and session.
@@ -95,7 +95,7 @@ class HttpContext
 
 		If no session is provided, but `sessionFactory` is set, that will be used to create a session.
 	**/
-	public var session(get, null):UFHttpSessionState;
+	public var session(default,null):Null<UFHttpSession>;
 
 	/**
 		The current session ID.

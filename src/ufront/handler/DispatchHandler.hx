@@ -15,7 +15,7 @@ import haxe.web.Dispatch.DispatchError;
 	import ufront.app.HttpApplication;
 	import tink.CoreApi;
 	import ufront.web.context.*;
-	import ufront.web.session.UFHttpSessionState;
+	import ufront.web.session.UFHttpSession;
 	import ufront.auth.*;
 	import minject.Injector;
 	import ufront.web.result.*;

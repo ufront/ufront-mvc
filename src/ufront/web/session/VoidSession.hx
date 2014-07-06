@@ -1,6 +1,6 @@
 package ufront.web.session;
 
-import ufront.web.session.UFHttpSessionState;
+import ufront.web.session.UFHttpSession;
 import ufront.web.context.HttpContext;
 import tink.CoreApi;
 
@@ -11,7 +11,7 @@ import tink.CoreApi;
 	Use this when you do not want a session implementation, but also do not want to get null related errors in your code.  
 	For example, when testing.
 **/
-class VoidSession implements UFHttpSessionState
+class VoidSession implements UFHttpSession
 {
 	public var id(get,null):String;
 

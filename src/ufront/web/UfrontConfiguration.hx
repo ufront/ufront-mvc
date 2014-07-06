@@ -140,7 +140,7 @@ typedef UfrontConfiguration = {
 
 		This means using `ufront.web.session.FileSession`, saving to the "sessions" folder, with a default session variable name, and an expiry of 0 (when window closed)
 	**/
-	?sessionImplementation:Class<UFHttpSessionState>,
+	?sessionImplementation:Class<UFHttpSession>,
 
 	/**
 		A method which can be used to generate an AuthHandler for the current request, as required.

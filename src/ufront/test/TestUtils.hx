@@ -1,7 +1,7 @@
 package ufront.test;
 
 import ufront.web.context.*;
-import ufront.web.session.UFHttpSessionState;
+import ufront.web.session.UFHttpSession;
 import ufront.auth.*;
 import thx.error.*;
 import thx.collection.*;
@@ -48,7 +48,7 @@ class TestUtils
 		* Session uses `ufront.web.session.VoidSession` as a default mock object, auth uses `ufront.auth.YesBossAuthHandler` by default.
 		* `setUrlFilters` and `generateUri` call the real methods.
 	**/
-	public static function mockHttpContext( uri:String, ?method:String, ?params:MultiValueMap<String>, ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser> )
+	public static function mockHttpContext( uri:String, ?method:String, ?params:MultiValueMap<String>, ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser> )
 	{
 		// Check the supplied arguments
 		NullArgument.throwIfNull( uri );

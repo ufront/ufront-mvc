@@ -4,7 +4,7 @@ import haxe.io.Path;
 import ufront.core.InjectionRef;
 import ufront.web.context.HttpContext;
 import ufront.web.HttpCookie;
-import ufront.web.session.UFHttpSessionState;
+import ufront.web.session.UFHttpSession;
 import thx.error.NotImplemented;
 import haxe.ds.StringMap;
 import haxe.Serializer;
@@ -32,7 +32,7 @@ using haxe.io.Path;
 
 	When searching the parameters or cookies for the Session ID, the name to search for is defined by the `sessionName` property.
 **/
-class FileSession implements UFHttpSessionState
+class FileSession implements UFHttpSession
 {
 	// Statics
 

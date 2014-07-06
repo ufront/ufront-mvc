@@ -145,8 +145,8 @@ class UfrontApplication extends HttpApplication
 			super.addUrlFilter( new PathInfoUrlFilter() );
 
 		// Save the session / auth factories for later, when we're building requests
-		inject( UFHttpSessionState, configuration.sessionImplementation );
-		inject( UFAuthHandler, configuration.authImplementation );
+		if (configuration.sessionImplementation!=null) inject( UFHttpSession, configuration.sessionImplementation );
+		if (configuration.authImplementation!=null) inject( UFAuthHandler, configuration.authImplementation );
 
 		// Set up the view engine
 		this.viewEngine = configuration.viewEngine;
