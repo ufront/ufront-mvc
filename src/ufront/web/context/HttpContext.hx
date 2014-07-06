@@ -81,36 +81,16 @@ class HttpContext
 		injector.mapValue( ActionContext, actionContext );
 		injector.mapValue( MessageList, new MessageList(messages) );
 
-		if ( session!=null ) {
-			this.session = session;
-		}
-		else {
-			this.session =
-				try injector.getInstance(UFHttpSession)
-				catch (e:Dynamic) {
-					ufWarn( 'Failed to load a UFHttpSession for this context: $e. Using a VoidSession instead.' );
-					new VoidSession();
-				};
-			// Now that we have one, inject it (and related values) into this context-specific injector.
-			injector.inject( UFHttpSession, this.session );
-			injector.mapValue( String, this.sessionID, "sessionID" );
-		}
+		if ( session!=null ) this.session = session;
+		if ( this.session==null ) try this.session = injector.getInstance( UFHttpSession ) catch(e:Dynamic) { throw e; }
+		if ( this.session==null ) this.session = new VoidSession();
+		injector.inject( UFHttpSession, this.session );
+		injector.mapValue( String, this.sessionID, "sessionID" );
 
-		if ( auth==null ) {
-			this.auth = auth;
-		}
-		else {
-			this.auth =
-				try injector.getInstance(UFAuthHandler)
-				catch (e:Dynamic) {
-					ufWarn( 'Failed to load a UFAuthHandler for this context: $e. Using the NobodyAuthHandler instead.' );
-					new NobodyAuthHandler();
-				};
-			// Now that we have one, inject it (and related values) into this context-specific injector.
-			injector.inject( UFAuthHandler, this.auth );
-			injector.inject( UFAuthUser, this.currentUser );
-			injector.mapValue( String, this.currentUserID, "currentUserID" );
-		}
+		if ( auth!=null ) this.auth = auth;
+		if ( this.auth==null ) try this.auth = injector.getInstance( UFAuthHandler ) catch(e:Dynamic) { throw e; }
+		if ( this.auth==null ) this.auth = new NobodyAuthHandler();
+		injector.inject( UFAuthHandler, this.auth );
 	}
 
 	/**
@@ -123,8 +103,8 @@ class HttpContext
 		- `ufront.web.context.HttpResponse`
 		- `ufront.web.context.ActionContext`
 		- `ufront.log.MessageList`
-		- `ufront.web.session.UFHttpSession` (and the implementation class used for the session, as well as the "sessionID" string).
-		- `ufront.auth.UFAuthHandler` (and the implementation class used for the auth handler, as well as the "currentUserID" string).
+		- `ufront.web.session.UFHttpSession` (and the implementation class used for the session).
+		- `ufront.auth.UFAuthHandler` (and the implementation class used for the auth handler).
 
 		When used in a HttpApplication, each call to `execute` will set the application's injector as this context's parent injector.
 		This means all mappings at the application level will be available in the request injector.
