@@ -199,6 +199,13 @@ class UfrontApplication extends HttpApplication
 		return this;
 	}
 
+	/**
+		Shortcut to map a class or value into `injector`.  
+
+		See `ufront.core.InjectorTools.inject()` for details on how the injections are applied.
+
+		This method is chainable.
+	**/
 	override public function inject<T>( cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton:Bool=false, ?named:String ):UfrontApplication {
 		return cast super.inject( cl, val, cl2, singleton, named );
 	}

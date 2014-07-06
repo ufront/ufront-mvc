@@ -12,5 +12,6 @@ class TestAll
 		runner.addCase( new SyncTest() );
 		runner.addCase( new SurpriseToolsTest() );
 		runner.addCase( new InjectionRefTest() );
+		runner.addCase( new InjectionToolsTest() );
 	}
 }
