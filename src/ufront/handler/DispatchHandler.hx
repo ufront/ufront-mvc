@@ -118,31 +118,10 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 		}
 
 		function processRequest( context:HttpContext ):Outcome<Noise,Error> {
-			// Update the contexts
-			var actionContext = new ActionContext( context );
 			
-			// Set up the injector 
-			var requestInjector = injector.createChildInjector();
-			requestInjector.mapValue( HttpContext, context );
-			requestInjector.mapValue( HttpRequest, context.request );
-			requestInjector.mapValue( HttpResponse, context.response );
-			requestInjector.mapValue( UFHttpSessionState, context.session );
-			requestInjector.mapValue( UFAuthHandler, context.auth );
-			if (context.auth!=null) requestInjector.mapValue( UFAuthUser, context.auth.currentUser );
-			requestInjector.mapValue( ActionContext, actionContext );
-			requestInjector.mapValue( MessageList, new MessageList(context.messages) );
-			requestInjector.mapValue( String, context.contentDirectory, "contentDirectory" );
-			requestInjector.mapValue( String, context.request.scriptDirectory, "scriptDirectory" );
-
-			// Map the specific implementations for auth and session
-			requestInjector.mapValue( Type.getClass( context.session ), context.session );
-			requestInjector.mapValue( Type.getClass( context.auth ), context.auth );
-
-			// Expose this injector to the HttpContext
-			context.injector = requestInjector;
-
 			// Process the dispatch request
 			try {
+				var actionContext = context.actionContext;
 				var filteredUri = context.getRequestUri();
 				var params = context.request.params;
 				dispatch = new Dispatch( filteredUri, params, context.request.httpMethod );
@@ -166,7 +145,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 							}
 							else {
 								// Do normal injection
-								requestInjector.injectInto( dispatch.controller );
+								context.injector.injectInto( dispatch.controller );
 							}
 						default:
 					}
@@ -176,7 +155,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 				var newDispatchConfig = { obj:null, rules: dispatchConfig.rules };
 				switch Type.typeof( dispatchConfig.obj ) {
 					case TClass( cl ): 
-						newDispatchConfig.obj = requestInjector.instantiate( cl );
+						newDispatchConfig.obj = context.injector.instantiate( cl );
 					default:
 				}
 

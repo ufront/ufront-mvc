@@ -15,43 +15,31 @@ import ufront.web.session.*;
 import ufront.web.url.filter.*;
 import ufront.web.Controller;
 import ufront.web.UfrontConfiguration;
-import ufront.web.session.UFHttpSessionState;
+import ufront.web.session.UFHttpSession;
 import ufront.auth.*;
 import ufront.api.UFApi;
 using tink.CoreApi;
-#if ufront_easyauth
-	import ufront.auth.EasyAuth;
-#end
 using Objects;
+using ufront.core.InjectionTools;
 
 /**
 	A standard Ufront Application.  This extends HttpApplication and provides:
 
 	- Routing with `ufront.handler.MVCHandler`
-	- Easily add remoting API context and initiate the `ufront.handler.RemotingHandler`
+	- Easily add a Haxe remoting API context and initiate the `ufront.handler.RemotingHandler`
 	- Tracing, to console, logfile or remoting call, based on your `ufront.web.UfrontConfiguration`
-
-	And in future:
-
-	- easily cache requests
 	
-	Ufront uses `minject.Injector` for dependency injection, and `UfrontApplication` adds several things to each injector, depending on the context.
-	For each context, we map the following items:
+	Ufront uses `minject.Injector` for dependency injection, and `UfrontApplication` adds several things to the injector, depending on your configuration:
 
-	- `app.injector`
-		- A copy of the `Injector` itself
-		- The `UFSessionFactory` provided in the configuration
-		- The `UFAuthFactory` provided in the configuration
-		- A String name `scriptDirectory`, containing the path to the current module.
-		- A String name `contentDirectory`, containing a path to ufront's specified content directory.
-	- `app.mvcHandler.injector`
-		- All of the mappings from `app.injector`
-		- All of the controllers specified in your configuration (by default: all of them)
-		- All of the APIs specified in your configuration (by default: all of them)
-	- `app.remotingHandler.injector`
-		- All of the mappings from `app.injector`
-		- All of the APIs specified in your configuration (by default: all of them)
-	
+	- All of the controllers specified in your configuration (by default: all of them)
+	- All of the APIs specified in your configuration (by default: all of them)
+	- A singleton of the UFViewEngine specified in your UfronConfiguration.
+	- The implementation of `UFHttpSession` you chose in your UfrontConfiguration, to be instantiated on each request.
+	- The implementation of `UFAuthHandler` you chose in your UfrontConfiguration, to be instantiated on each request.
+	- A String named `viewPath` for the path to your view folder, specified in your configuration. 
+	- A String name `scriptDirectory`, containing the path to the directory the current app is located in.
+	- A String name `contentDirectory`, containing the path to the content directory specified in your configuration.
+
 	Futher injections may take place in various middleware / handlers also.
 
 	@author Jason O'Neil
@@ -104,20 +92,13 @@ class UfrontApplication extends HttpApplication
 		mvcHandler = new MVCHandler();
 		remotingHandler = new RemotingHandler();
 
-		mvcHandler.indexController = configuration.indexController;
-
-		if ( null!=configuration.remotingApi ) 
-			loadApi( configuration.remotingApi );
-		
 		// Map some default injector rules
 		
 		for ( controller in configuration.controllers ) {
-			mvcHandler.injector.mapClass( controller, controller );
+			injector.inject( controller );
 		}
-		
 		for ( api in configuration.apis ) {
-			remotingHandler.injector.mapClass( api, api );
-			mvcHandler.injector.mapClass( api, api );
+			injector.inject( api );
 		}
 
 		// Set up handlers and middleware
@@ -166,7 +147,7 @@ class UfrontApplication extends HttpApplication
 		return super.execute( httpContext );
 	}
 
-	static var firstRun = true;
+	var firstRun = true;
 	function initOnFirstExecute( httpContext:HttpContext ):Void {
 		firstRun = false;
 		inject( String, httpContext.request.scriptDirectory, "scriptDirectory" );

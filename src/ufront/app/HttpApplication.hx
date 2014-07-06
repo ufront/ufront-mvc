@@ -395,7 +395,17 @@ class HttpApplication
 		return Noise;
 	}
 
-	#if nodejs
+	#if (php || neko)
+		/**
+			Create a HTTPContext for the current request and execute it.
+			
+			This will ensure that the current injector and it's mappings are included in the HttpContext.
+			Available on PHP and Neko.
+		**/
+		public function executeRequest() {
+			this.execute( HttpContext.createSysContext(this.injector) );
+		}
+	#elseif nodejs
 		/**
 			Start a HTTP server using `js.npm.Express`, listening on the specified port.
 			Includes the `js.npm.connect.Static` and `js.npm.connect.BodyParser` middleware.

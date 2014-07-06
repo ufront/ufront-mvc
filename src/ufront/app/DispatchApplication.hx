@@ -104,7 +104,7 @@ class DispatchApplication extends HttpApplication
 				dispatchHandler.injector.mapClass( controller, controller );
 			
 			for ( api in configuration.apis ) {
-				remotingHandler.injector.mapClass( api, api );
+				injector.mapClass( api, api );
 				dispatchHandler.injector.mapClass( api, api );
 			}
 

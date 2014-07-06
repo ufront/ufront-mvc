@@ -22,53 +22,36 @@ import tink.CoreApi;
 	If it is a remoting call, it will process it accordingly and return a remoting result (basically serialized Haxe values).
 	Traces are also serialized and sent to the client.
 
+	If used with a UfrontApplication, and the `UfrontConfiguration.remotingApi` option was set, that API will be loaded automatically.
+	Further APIs can be loaded through `ufrontApp.remotingHandler.loadApi()`.
+
 	@author Jason O'Neil
 **/
 class RemotingHandler implements UFRequestHandler implements UFInitRequired
-{
-	/**
-		An injector for things that should be available to the API classes in your remoting context.
-
-		This extends `HttpApplication.injector`, so all mappings to the application injector will be available here.
-
-		You can also add mappings that will only be available in the remoting APIs.  
-
-		`UfrontApplication` will add mappings for each API class by default.
-
-		We will create a child injector for each remoting request that also maps: 
-
-		- a `ufront.auth.UFAuthHandler` instance for checking auth in your API, 
-		- a `ufront.log.MessageList` array so our APIs can log messages in a generic way whether or not they are running in a web context.
-		- a `ufront.auth.UFAuthUser` the current user so we can check permissions.
-		- a `contentDirectory:String` so we can access user/app generated files.
-		- a `sessionID:String` so we can use the session ID for logging / analytics purposes.  This does not give you read/write access to the session.
-		- a `currentUserID:String` so we can use the user ID for logging / analytics purposes.
-	**/
-	public var injector(default,null):Injector;
-	
+{	
 	var apis:List<Class<UFApiContext>>;
 
 	/** Construct a new RemotingModule, optionally adding an API to the remoting Context. **/
 	public function new() {
 		apis = new List();
-		injector = new Injector();
-		injector.mapValue( Injector, injector );
 	}
 
 	/** Expose a UFApiContext to the request **/
-	public inline function loadApi( UFApiContext:Class<UFApiContext> ) {
-		apis.push( UFApiContext );
+	public inline function loadApi( apiContext:Class<UFApiContext> ) {
+		apis.push( apiContext );
 	}
 
 	/** Initializes a module and prepares it to handle remoting requests. */
-	public function init( app ):Surprise<Noise,Error> {
-		injector.parentInjector = app.injector;
+	public function init( app:HttpApplication ):Surprise<Noise,Error> {
+		var ufApp = Std.instance( app, UfrontApplication );
+		if ( ufApp!=null ) {
+			loadApi( ufApp.configuration.remotingApi );
+		}
 		return Sync.success();
 	}
 
 	/** Disposes of the resources (other than memory) that are used by the module. */
-	public function dispose( app ):Surprise<Noise,Error> {
-		injector = null;
+	public function dispose( app:HttpApplication ):Surprise<Noise,Error> {
 		apis = null;
 		return Sync.success();
 	}
@@ -76,27 +59,11 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 	public function handleRequest( httpContext:HttpContext ):Surprise<Noise,Error> {
 		var doneTrigger = Future.trigger();
 		if ( httpContext.request.clientHeaders.exists("X-Haxe-Remoting") ) {
-			var actionContext = new ActionContext( httpContext );
-
-			// Set up the injector
-			var requestInjector = injector.createChildInjector();
-			requestInjector.mapValue( UFAuthHandler, httpContext.auth );
-			requestInjector.mapValue( MessageList, new MessageList(httpContext.messages) );
-			requestInjector.mapValue( UFAuthUser, httpContext.currentUser );
-			requestInjector.mapValue( String, httpContext.contentDirectory, "contentDirectory" );
-			requestInjector.mapValue( String, httpContext.sessionID, "sessionID" );
-			requestInjector.mapValue( String, httpContext.currentUserID, "currentUserID" );
-
-			// Map the specific implementations for auth and session
-			requestInjector.mapValue( Type.getClass( httpContext.auth ), httpContext.auth );
-
-			// Expose this injector to the HttpContext
-			httpContext.injector = injector;
 
 			// Set up the context
 			var context = new Context();
 			for (api in apis) {
-				var apiContext = requestInjector.instantiate( api );
+				var apiContext = httpContext.injector.instantiate( api );
 				for (fieldName in Reflect.fields(apiContext)) {
 					var o = Reflect.field(apiContext, fieldName);
 					if (Reflect.isObject(o))
@@ -114,7 +81,7 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 					throw 'Remoting call did not have parameter `__x` which describes which API call to make.  Aborting';
 				
 				// Execute the response ... TODO... can we make this support async?
-				remotingResponse = processRequest( params["__x"], context, actionContext );
+				remotingResponse = processRequest( params["__x"], context, httpContext.actionContext );
 				r.setOk();
 			}
 			catch ( e:Dynamic ) {
@@ -138,7 +105,7 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 	}
 
 	@:access(haxe.remoting.Context)
-	function processRequest( requestData:String, ctx:Context, actionContext:ActionContext ):String {
+	function processRequest( requestData:String, remotingContext:Context, actionContext:ActionContext ):String {
 		var u = new Unserializer( requestData );
 		var path:Array<String> = u.unserialize();
 		var args:Array<Dynamic> = u.unserialize();
@@ -146,10 +113,10 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 		var className = path.copy();
 		actionContext.handler = this;
 		actionContext.action = path[path.length-1];
-		actionContext.controller = ctx.objects.get( actionContext.action );
+		actionContext.controller = remotingContext.objects.get( actionContext.action );
 		actionContext.args = args;
 
-		var data = ctx.call( path, args );
+		var data = remotingContext.call( path, args );
 
 		var s = new Serializer();
 		s.serialize( data );

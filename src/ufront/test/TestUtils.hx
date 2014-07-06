@@ -75,9 +75,7 @@ class TestUtils
 		}
 
 		// Build the HttpContext with our mock objects
-		var ctx = new HttpContext( injector, request, response, session, auth, [] );
-		ctx.actionContext = new ActionContext( ctx );
-		return ctx;
+		return new HttpContext( request, response, injector, session, auth, [] );
 	}
 	/**
 		Test a route by setting up a UfrontApplication and executing the request.

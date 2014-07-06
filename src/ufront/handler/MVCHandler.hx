@@ -7,6 +7,7 @@ import ufront.app.UFInitRequired;
 import ufront.app.UFRequestHandler;
 import ufront.web.HttpError;
 import ufront.app.HttpApplication;
+import ufront.app.UfrontApplication;
 import tink.CoreApi;
 import ufront.web.context.*;
 import ufront.web.result.ActionResult;
@@ -25,41 +26,29 @@ import ufront.core.*;
 class MVCHandler implements UFRequestHandler implements UFInitRequired
 {
 	/**
-		An injector for things that should be available to DispatchHandler, your controllers, actions and results.
-	
-		This extends `HttpApplication.injector`, so all mappings available in the application injector will be available here.
-
-		UfrontApplication also adds the following mappings by default:
-
-		- A mapClass rule for every class that extends `ufront.web.Controller`
-		- A mapSingleton rule for every class that extends `ufront.api.UFApi`
-		
-		We will create a child injector for each dispatch request that also maps a `ufront.web.context.HttpContext` instance and related auth, session, request and response values.
-	**/
-	public var injector(default,null):Injector;
-
-	/**
 		The index controller which is used to match requests to controllers / actions.
 
 		This controller may sub-dispatch to other controllers.
 
 		The controller will be instantiated using the dependency injector for that request.
+
+		If using `UfrontApplication`, then during `init` we will set `indexController` to `ufrontApp.configuration.indexController`.
 	**/
 	public var indexController:Class<Controller>;
 
-	public function new() {
-		injector = new Injector();
-		injector.mapValue( Injector, injector );
-	}
+	public function new() {}
 
 	public function init( application:HttpApplication ):Surprise<Noise,Error> {
-		injector.parentInjector = application.injector;
+		var ufApp = Std.instance( application, UfrontApplication );
+		if ( ufApp!=null ) {
+			indexController = ufApp.configuration.indexController;
+		}
 		return Sync.success();
 	}
 
 	/** Disposes of the resources (other than memory) that are used by the module. */
 	public function dispose( app:HttpApplication ):Surprise<Noise,Error> {
-		injector = null;
+		indexController = null;
 		return Sync.success();
 	}
 
@@ -70,38 +59,8 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 			function (r:Noise) return executeResult( ctx );
 	}
 
-	function setupRequestInjector( context:HttpContext ) {
-		// Set up the injector 
-		var requestInjector = injector.createChildInjector();
-		requestInjector.mapValue( HttpContext, context );
-		requestInjector.mapValue( HttpRequest, context.request );
-		requestInjector.mapValue( HttpResponse, context.response );
-		requestInjector.mapValue( UFHttpSessionState, context.session );
-		requestInjector.mapValue( UFAuthHandler, context.auth );
-		requestInjector.mapValue( UFAuthUser, context.currentUser );
-		requestInjector.mapValue( ActionContext, context.actionContext );
-		requestInjector.mapValue( MessageList, new MessageList(context.messages) );
-		requestInjector.mapValue( String, context.contentDirectory, "contentDirectory" );
-		requestInjector.mapValue( String, context.request.scriptDirectory, "scriptDirectory" );
-		requestInjector.mapValue( String, context.sessionID, "sessionID" );
-		requestInjector.mapValue( String, context.currentUserID, "currentUserID" );
-
-		// Map the specific implementations for auth and session
-		if ( context.session!=null ) 
-			requestInjector.mapValue( Type.getClass( context.session ), context.session );
-		if ( context.auth!=null ) 
-			requestInjector.mapValue( Type.getClass( context.auth ), context.auth );
-
-		// Expose this injector to the HttpContext
-		context.injector = requestInjector;
-		
-		return requestInjector;
-	}
-
 	function processRequest( context:HttpContext ):Surprise<Noise,Error> {
-		var actionContext = new ActionContext( context );
-		setupRequestInjector( context );
-		actionContext.handler = this;
+		context.actionContext.handler = this;
 
 		// Create the controller, inject into it, execute it...
 		var controller:Controller = context.injector.instantiate( indexController );

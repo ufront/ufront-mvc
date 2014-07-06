@@ -49,7 +49,7 @@ class TestUtilsTest {
 		var auth = new ufront.auth.YesBossAuthHandler();
 		var mock3 = TestUtils.mockHttpContext( "/test/3/", injector, request, response, session, auth );
 		Assert.equals( "/test/3/", mock3.request.uri );
-		Assert.equals( injector, mock3.injector );
+		Assert.equals( injector, mock3.injector.parentInjector );
 		Assert.equals( request, mock3.request );
 		Assert.equals( response, mock3.response );
 		Assert.equals( session, mock3.session );

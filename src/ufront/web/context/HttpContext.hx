@@ -4,6 +4,7 @@ import haxe.EnumFlags;
 import haxe.io.Path;
 import haxe.PosInfos;
 import minject.Injector;
+import ufront.auth.NobodyAuthHandler;
 import ufront.auth.UFAuthUser;
 import ufront.log.Message;
 import ufront.log.MessageList;
@@ -24,109 +25,153 @@ using ufront.core.InjectionTools;
 **/
 class HttpContext 
 {
-	/**
-		Create a HttpContext using the usual Http environment.
-
-		`request` and `response`, if not supplied, will both be set up by their classes' "create" methods, which have platform specific implementations.
-	   
-		`session` and `auth` will be null if not supplied.
-
-		`urlFilters` will be an empty array if not supplied.
-	**/
-	public static function create( ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
-		if( null==injector )
-			injector = new Injector();
-		if( null==request )
-			request = HttpRequest.create();
-		if( null==response )
-			response = HttpResponse.create();
-		return new HttpContext( injector, request, response, session, auth, urlFilters, relativeContentDir );
-	}
-
-	#if (nodejs && !macro)
-		public static function createNodeJSContext( ?req:js.npm.express.Request, ?res:js.node.http.ServerResponse, ?injector:Injector, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
-			if( null==injector )
-				injector = new Injector();
+	#if (php || neko)
+		/**
+			Create a HttpContext for Neko or PHP environments.
+			If request and response are not supplied, they will created.
+			The rest of the parameters are passed directly to the `HttpContext` constructor.
+		**/
+		public static function createSysContext( ?request:HttpRequest, ?response:HttpResponse, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
+			if( null==request ) request = HttpRequest.create();
+			if( null==response ) response = HttpResponse.create();
+			return new HttpContext( request, response, appInjector, session, auth, urlFilters, relativeContentDir );
+		}
+	#elseif (nodejs && !macro)
+		/**
+			Create a HttpContext for the NodeJS environment, using the `js-kit` haxelib.
+			The native express-js request and response objects must be supplied.
+			The rest of the parameters are passed directly to the `HttpContext` constructor.
+		**/
+		public static function createNodeJSContext( req:js.npm.express.Request, res:js.node.http.ServerResponse, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
 			var request:HttpRequest = new nodejs.ufront.web.context.HttpRequest( req );
 			var response:HttpResponse = new nodejs.ufront.web.context.HttpResponse( res );
-			return new HttpContext( injector, request, response, session, auth, urlFilters, relativeContentDir );
+			return new HttpContext( request, response, appInjector, session, auth, urlFilters, relativeContentDir );
 		}
 	#end
 
 	/**
-		Create a HttpContext by explicitly supplying the request, response and session.
+		Create a HttpContext object using the explicitly supplied objects.
 
-		This is useful for mocking a context.  For real usage, it may be easier to use `create`.
-
-		`request` and `response` are required.  `session` and `auth` are optional, and will default to null.
-
-		`urlFilters` will be used for `getRequestUri()` and `generateUri()`.  By default it is an empty array.
-
-		`relativeContentDir` is used to help specify the path of `contentDirectory`, relative to `request.scriptDirectory`.  Default value is `uf-content`
+		For creating a context for each platform see `createSysContext` and `createNodeJSContext`.
+		
+		@param request (required) The current `HttpRequest`.
+		@param response (required) The current `HttpResponse`.
+		@param appInjector (optional) The HttpApplication injector, which will be the parent injector for this request - all appInjector mappings will be shared with this context's injector. If null no parent injector will be used.
+		@param session (optional) The current session. If null, we will attempt to get a `UFHttpSession` from the injector. If that fails, we will use a `VoidSession`.
+		@param auth (optional) The current authentication handler. If null, we will attempt to get a `UFAuthHandler` from the injector. If that fails, we will use a `NobodyAuthHandler`, which is appropriate for a visitor who has no permissions.
+		@param urlFilters (optional) The URL Filters to use on the current request. If null, an empty array (no filters) will be used.
+		@param relativeContentDir (optional) The path to the content directory, relative to the script directory. Default is "uf-content".
 	**/
-	public function new( injector:Injector, request:HttpRequest, response:HttpResponse, ?session:UFHttpSessionState, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
-		NullArgument.throwIfNull( injector );
+	public function new( request:HttpRequest, response:HttpResponse, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
 		NullArgument.throwIfNull( response );
 		NullArgument.throwIfNull( request );
 		
-		this.injector = injector;
 		this.request = request;
 		this.response = response;
-		this._session = session;
-		this._auth = auth;
 		this.urlFilters = ( urlFilters!=null ) ? urlFilters : [];
 		this.relativeContentDir = relativeContentDir;
-		
-		messages = [];
-		completion = new EnumFlags<RequestCompletion>();
+		this.actionContext = new ActionContext( this );
+		this.messages = [];
+		this.completion = new EnumFlags<RequestCompletion>();
+
+		this.injector = (appInjector!=null) ? appInjector.createChildInjector() : new Injector();
+		injector.mapValue( HttpContext, this );
+		injector.mapValue( HttpRequest, request );
+		injector.mapValue( HttpResponse, response );
+		injector.mapValue( ActionContext, actionContext );
+		injector.mapValue( MessageList, new MessageList(messages) );
+
+		if ( session!=null ) {
+			this.session = session;
+		}
+		else {
+			this.session =
+				try injector.getInstance(UFHttpSession)
+				catch (e:Dynamic) {
+					ufWarn( 'Failed to load a UFHttpSession for this context: $e. Using a VoidSession instead.' );
+					new VoidSession();
+				};
+			// Now that we have one, inject it (and related values) into this context-specific injector.
+			injector.inject( UFHttpSession, this.session );
+			injector.mapValue( String, this.sessionID, "sessionID" );
+		}
+
+		if ( auth==null ) {
+			this.auth = auth;
+		}
+		else {
+			this.auth =
+				try injector.getInstance(UFAuthHandler)
+				catch (e:Dynamic) {
+					ufWarn( 'Failed to load a UFAuthHandler for this context: $e. Using the NobodyAuthHandler instead.' );
+					new NobodyAuthHandler();
+				};
+			// Now that we have one, inject it (and related values) into this context-specific injector.
+			injector.inject( UFAuthHandler, this.auth );
+			injector.inject( UFAuthUser, this.currentUser );
+			injector.mapValue( String, this.currentUserID, "currentUserID" );
+		}
 	}
 
-	/** An injector that is available to the current request **/
-	public var injector:Injector;
+	/**
+		An dependency injector for the current request.
+
+		By default, mappings are provided for the following classes:
+
+		- `ufront.web.context.HttpContext`
+		- `ufront.web.context.HttpRequest`
+		- `ufront.web.context.HttpResponse`
+		- `ufront.web.context.ActionContext`
+		- `ufront.log.MessageList`
+		- `ufront.web.session.UFHttpSession` (and the implementation class used for the session, as well as the "sessionID" string).
+		- `ufront.auth.UFAuthHandler` (and the implementation class used for the auth handler, as well as the "currentUserID" string).
+
+		When used in a HttpApplication, each call to `execute` will set the application's injector as this context's parent injector.
+		This means all mappings at the application level will be available in the request injector.
+	**/
+	public var injector(default,null):Injector;
 
 	/** The current HttpRequest **/
-	public var request(default, null):HttpRequest;
+	public var request(default,null):HttpRequest;
 
 	/** The current HttpResponse **/
-	public var response(default, null):HttpResponse;
+	public var response(default,null):HttpResponse;
 
 	/** 
 		The current session.
-
-		If no session is provided, but `sessionFactory` is set, that will be used to create a session.
+		Either set during the constructor or created via dependency injection.
 	**/
-	public var session(default,null):Null<UFHttpSession>;
+	public var session(default,null):UFHttpSession;
 
 	/**
 		The current session ID.
 
 		This is a shortcut for `session.id`, but will return null if `session` is null.
 	**/
-	public var sessionID(get, null):String;
+	public var sessionID(get,null):Null<String>;
 
 	/**
 		The current auth handler.
-
-		If no auth handler is provided, but authFactory is set, that will be used to create a session.
+		Either set during the constructor or created via dependency injection.
 	**/
-	public var auth(get, null):UFAuthHandler<UFAuthUser>;
+	public var auth(default,null):UFAuthHandler<UFAuthUser>;
 
 	/**
 		The current user.
 
 		This is a shortcut for `auth.currentUser`, but will return null if `auth` is null.
 	**/
-	public var currentUser(get, null):UFAuthUser;
+	public var currentUser(get,null):Null<UFAuthUser>;
 
 	/**
 		The current user.
 
 		This is a shortcut for `auth.currentUser.id`, but will return null if `auth` or `auth.currentUser` is null.
 	**/
-	public var currentUserID(get, null):String;
+	public var currentUserID(get,null):Null<String>;
 
 	/** The `ActionContext` used in processing the request. Will be null until the application has found a handler for the request. **/
-	public var actionContext:ActionContext;
+	public var actionContext(default,null):ActionContext;
 
 	/**
 		The completion progress of the current request. Setting these values will affect the flow of the request.
@@ -233,17 +278,8 @@ class HttpContext
 	**/
 	public function commitSession():Surprise<Noise,String> {
 		return
-			if ( _session!=null ) _session.commit();
+			if ( session!=null ) session.commit();
 			else Future.sync( Success(Noise) );
-	}
-
-	/**
-		Returns true if the session for this context has been set.
-
-		Testing `session!=null` does not have the same effect because the session getter will initiate itself before the null check takes place.
-	**/
-	public inline function isSessionActive():Bool {
-		return _session!=null;
 	}
 
 	/**
@@ -294,24 +330,8 @@ class HttpContext
 	**/
 	public var messages:Array<Message>;
 
-	var _session:UFHttpSessionState;
-	function get_session() {
-		if( null==_session ) {
-			_session = try injector.getInstance( UFHttpSessionState ) catch ( e:Dynamic ) null;
-		}
-		return _session;
-	}
-
-	var _auth:UFAuthHandler<UFAuthUser>;
-	function get_auth() {
-		if( null==_auth && session!=null ) {
-			_auth = try injector.getInstance( UFAuthHandler ) catch ( e:Dynamic ) null;
-		}
-		return _auth;
-	}
-
 	inline function get_sessionID() {
-		return (null!=_session) ? _session.id : null;
+		return (null!=session) ? session.id : null;
 	}
 
 	inline function get_currentUser() {
@@ -319,7 +339,7 @@ class HttpContext
 	}
 
 	inline function get_currentUserID() {
-		return (null!=auth && null!=auth.currentUser) ? auth.currentUser.userID : null;
+		return (auth!=null && auth.currentUser!=null) ? auth.currentUser.userID : null;
 	}
 }
 
