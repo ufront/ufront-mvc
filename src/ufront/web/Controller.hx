@@ -79,26 +79,20 @@ class Controller
 	/** 
 		The current HttpContext.  
 
-		This is set via the constructor.
+		This is set via dependency injection.
 	**/
 	@inject public var context(default,null):HttpContext;
 
 	/**
 		Create a new `Controller` instance.
 
-		The HttpContext should be included here so that `ufTrace`, `ufLog`, `ufWarn` and `ufError` work immediately.
-
 		Most of the time a controller will be created using dependency injection:
 
-		    `context.injector.instantiate( MyController )`
+		    `injector.instantiate( MyController )`
 		
-		Which will inject the HttpContext, and APIs etc.
-
-		@param context Set the `context` property.
+		If not creating a controller with `new MyController()` by sure to inject the dependencies (such as `context`) manually.
 	**/
-	@inject public function new( context:HttpContext ) {
-		this.context = context;
-	}
+	public function new() {}
 
 	/**
 		Execute the this controller with the current context.
@@ -128,7 +122,8 @@ class Controller
 	**/
 	@:noCompletion
 	inline function ufTrace( msg:Dynamic, ?pos:PosInfos ) {
-		context.ufTrace( msg, pos );
+		if (context!=null) context.ufTrace( msg, pos );
+		else haxe.Log.trace( '$msg', pos ); // If called during the constructor, `context` will not be set yet.
 	}
 
 	/**
@@ -136,7 +131,8 @@ class Controller
 	**/
 	@:noCompletion
 	inline function ufLog( msg:Dynamic, ?pos:PosInfos ) {
-		context.ufLog( msg, pos );
+		if (context!=null) context.ufLog( msg, pos );
+		else haxe.Log.trace( 'Log: $msg', pos ); // If called during the constructor, `context` will not be set yet.
 	}
 
 	/**
@@ -144,7 +140,8 @@ class Controller
 	**/
 	@:noCompletion
 	inline function ufWarn( msg:Dynamic, ?pos:PosInfos ) {
-		context.ufWarn( msg, pos );
+		if (context!=null) context.ufWarn( msg, pos );
+		else haxe.Log.trace( 'Warning: $msg', pos ); // If called during the constructor, `context` will not be set yet.
 	}
 
 	/**
@@ -152,7 +149,8 @@ class Controller
 	**/
 	@:noCompletion
 	inline function ufError( msg:Dynamic, ?pos:PosInfos ) {
-		context.ufError( msg, pos );
+		if (context!=null) context.ufError( msg, pos );
+		else haxe.Log.trace( 'Error: $msg', pos ); // If called during the constructor, `context` will not be set yet.
 	}
 
 	// The following are helpers which are called by the macro-generated code in each controller's execute() method.
