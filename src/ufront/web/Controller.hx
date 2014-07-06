@@ -79,20 +79,26 @@ class Controller
 	/** 
 		The current HttpContext.  
 
-		This is set via dependency injection.
+		This is set via the constructor.
 	**/
 	@inject public var context(default,null):HttpContext;
 
 	/**
 		Create a new `Controller` instance.
 
-		The injector from the current request context will be used to inject dependencies into this controller:
+		The HttpContext should be included here so that `ufTrace`, `ufLog`, `ufWarn` and `ufError` work immediately.
 
-		    `context.injector.injectInto( this )`
+		Most of the time a controller will be created using dependency injection:
 
-		@param context Set the `context` property, and use the current request context's injector to perform dependency injection on this controller.
+		    `context.injector.instantiate( MyController )`
+		
+		Which will inject the HttpContext, and APIs etc.
+
+		@param context Set the `context` property.
 	**/
-	public function new() {}
+	@inject public function new( context:HttpContext ) {
+		this.context = context;
+	}
 
 	/**
 		Execute the this controller with the current context.

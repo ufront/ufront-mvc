@@ -72,7 +72,7 @@ class FileSession implements UFHttpSession
 
 	/** The current HttpContext, should be supplied by injection. **/
 	@inject public var context:HttpContext;
-	public var id(get,null):String;
+	public var id(get,null):Null<String>;
 
 	/**
 		Construct a new session object.
