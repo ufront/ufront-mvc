@@ -1,10 +1,7 @@
 package ufront.web.context;
 
-import ufront.web.session.UFHttpSessionState;
 import ufront.web.result.ActionResult;
 import thx.error.NullArgument;
-import ufront.auth.*;
-using StringTools;
 
 /**
 	A context describing the result returned by an action.
@@ -49,11 +46,7 @@ class ActionContext
 	/** Create a new ActionContext.  HttpContext is required. **/
 	public function new( httpContext:HttpContext ) {
 		NullArgument.throwIfNull( httpContext );
-
 		this.httpContext = httpContext;
-
-		// set the back-reference from HttpContext
-		httpContext.actionContext = this;
 	}
 
 	function get_uriParts() {
