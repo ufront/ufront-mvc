@@ -59,22 +59,23 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 	public function handleRequest( httpContext:HttpContext ):Surprise<Noise,Error> {
 		var doneTrigger = Future.trigger();
 		if ( httpContext.request.clientHeaders.exists("X-Haxe-Remoting") ) {
-
-			// Set up the context
-			var context = new Context();
-			for (api in apis) {
-				var apiContext = httpContext.injector.instantiate( api );
-				for (fieldName in Reflect.fields(apiContext)) {
-					var o = Reflect.field(apiContext, fieldName);
-					if (Reflect.isObject(o))
-						context.addObject(fieldName, o);
-				}
-			}
 			
 			// Execute the request
 			var r = httpContext.response;
 			var remotingResponse:String;
 			try {
+
+				// Set up the context
+				var context = new Context();
+				for (api in apis) {
+					var apiContext = httpContext.injector.instantiate( api );
+					for (fieldName in Reflect.fields(apiContext)) {
+						var o = Reflect.field(apiContext, fieldName);
+						if (Reflect.isObject(o))
+							context.addObject(fieldName, o);
+					}
+				}
+				
 				// Check the '__x' parameter is present
 				var params = httpContext.request.params;
 				if ( !params.exists("__x") ) 
