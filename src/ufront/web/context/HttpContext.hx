@@ -82,13 +82,16 @@ class HttpContext
 		injector.mapValue( MessageList, new MessageList(messages) );
 
 		if ( session!=null ) this.session = session;
-		if ( this.session==null ) try this.session = injector.getInstance( UFHttpSession ) catch(e:Dynamic) { throw e; }
+		if ( this.session==null ) 
+			try this.session = injector.getInstance( UFHttpSession )
+			catch(e:Dynamic) ufLog('Failed to load UFHttpSession: $e. Using VoidSession instead.');
 		if ( this.session==null ) this.session = new VoidSession();
 		injector.inject( UFHttpSession, this.session );
-		injector.mapValue( String, this.sessionID, "sessionID" );
 
 		if ( auth!=null ) this.auth = auth;
-		if ( this.auth==null ) try this.auth = injector.getInstance( UFAuthHandler ) catch(e:Dynamic) { throw e; }
+		if ( this.auth==null ) 
+			try this.auth = injector.getInstance( UFAuthHandler )
+			catch(e:Dynamic) ufLog('Failed to load UFAuthHandler: $e. Using NobodyAuthHandler instead.');
 		if ( this.auth==null ) this.auth = new NobodyAuthHandler();
 		injector.inject( UFAuthHandler, this.auth );
 	}
