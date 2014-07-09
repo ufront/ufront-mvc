@@ -175,8 +175,6 @@ class FileSession implements UFHttpSession
 			if ( !started ) {
 				SysUtil.mkdir( savePath.removeTrailingSlashes() );
 
-				var id = get_id();
-
 				var file : String;
 				var fileData : String;
 
@@ -355,16 +353,17 @@ class FileSession implements UFHttpSession
 	/**
 		Whether or not the current session is active.
 
-		This is determined by if a sessionID exists, which will happen if init() has been called or if a SessionID was provided in the request context (via Cookie or GET/POST parameter etc)
+		This is determined by if a sessionID exists, which will happen if init() has been called or if a SessionID was provided in the request context (via Cookie or GET/POST parameter etc).
+		
 	**/
 	public inline function isActive():Bool {
-		return get_id()!=null;
+		return started && get_id()!=null;
 	}
 	
 	/**
 		Return the current ID
 	**/
-	inline function get_id():String {
+	function get_id():String {
 		if ( sessionID==null ) sessionID = context.request.cookies[sessionName];
 		if ( sessionID==null ) sessionID = context.request.params[sessionName];
 		return sessionID;

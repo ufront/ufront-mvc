@@ -41,7 +41,7 @@ interface UFHttpSession
 	/** Remove an item from the session **/
 	public function remove( name:String ):Void;
 
-	/** Return whether or not there is already an active session. **/
+	/** Return whether or not there is already an active session, and whether it is ready to use (that is, `init()` has been completed). **/
 	public function isActive():Bool;
 
 	/** Flag the current session for removal.  The session data and session ID should be set to null and when `commit()` is called and the session should be removed from the server. **/
