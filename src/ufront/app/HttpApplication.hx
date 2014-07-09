@@ -281,8 +281,9 @@ class HttpApplication
 			init() >>
 			function (n:Noise) return executeModules( reqMidModules, httpContext, CRequestMiddlewareComplete ) >>
 			function (n:Noise) return executeModules( reqHandModules, httpContext, CRequestHandlersComplete ) >>
-			function (n:Noise) return executeModules( resMidModules, httpContext, CResponseMiddlewareComplete) >> 
+			function (n:Noise) return executeModules( resMidModules, httpContext, CResponseMiddlewareComplete) >>
 			function (n:Noise) return executeModules( logHandModules, httpContext, CLogHandlersComplete ) >>
+			function (n:Noise) return clearMessages() >>
 			function (n:Noise) return flush( httpContext );
 
 		// We need an empty handler to make sure all the `executeModules` calls above fire correctly. 
@@ -369,8 +370,9 @@ class HttpApplication
 					ctx.completion.set( CRequestHandlersComplete );
 					return Sync.success();
 				} >>
-				function (n:Noise) return executeModules( resMidModules, ctx, CResponseMiddlewareComplete) >> 
+				function (n:Noise) return executeModules( resMidModules, ctx, CResponseMiddlewareComplete) >>
 				function (n:Noise) return executeModules( logHandModules, ctx, CLogHandlersComplete ) >>
+				function (n:Noise) return clearMessages() >>
 				function (n:Noise) return flush( ctx );
 
 			allDone.handle( doneTrigger.trigger.bind(Failure(err)) );
@@ -385,6 +387,13 @@ class HttpApplication
 			var msg = 'You had an error after your error handler had already run.  Last active module: $currentModule.';
 			throw '$msg  $err. Error data: ${err.data}';
 		}
+	}
+
+	function clearMessages():Surprise<Noise,Error> {
+		for ( i in 0...messages.length ) {
+			messages.pop();
+		}
+		return Sync.success();
 	}
 
 	function flush( ctx:HttpContext ):Noise {
