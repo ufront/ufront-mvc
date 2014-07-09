@@ -21,6 +21,9 @@ class InjectionTools {
 		> 	- And `cl2` is supplied, `injector.mapClass( cl, cl2, ?named )` is used.
 		> 	- And `cl2` is not supplied, `injector.mapClass( cl, cl, ?named )` is used.
 
+		If a mapping for this class & name already exists, it will be replaced.
+		If a mapping for this class & name already exists on a parent injector, it will be left in place, but the rule on the current (child) injector will take precedence.
+
 		@param injector (required) The injector to inject into.
 		@param cl (required) The `whenAskedFor` class or interface. If `cl2` is not supplied this is also used as the implementation.
 		@param val (optional) The value to supply.
@@ -31,12 +34,21 @@ class InjectionTools {
 	**/
 	public static function inject<T>( injector:Injector, cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton:Bool=false, ?named:String ):Injector {
 		if ( cl!=null ) {
-			if ( injector.hasMapping(cl) ) injector.unmap( cl );
+			// Unmap any existing rules.
+			// Please note we cannot use `injector.unmap` because that may modify a parent injector, which we want to leave untouched.
+			var existingMapping = injector.getMapping( cl, named );
+			if ( existingMapping!=null ) {
+				existingMapping.setResult(null);
+			}
 			if ( val!=null ) {
 				injector.mapValue( cl, val, named );
 				// Inject the concrete implementation too, in case somebody wants access to it.
 				var implementationClass = Type.getClass( val );
 				if ( implementationClass!=cl ) {
+					var existingMapping = injector.getMapping( implementationClass, named );
+					if ( existingMapping!=null ) {
+						existingMapping.setResult(null);
+					}
 					injector.mapValue( implementationClass, val, named );
 				}
 			}
