@@ -61,4 +61,23 @@ class InjectionTools {
 		}
 		return injector;
 	}
+
+	/**
+		Get a list of strings describing all the current mappings on this injector and it's parents.
+
+		This is useful for debugging / logging purposes.
+
+		@param injector The current injector
+		@param arr Optional, used for recursively checking parent injectors, should not be set manually.
+		@param prefix Optional, used for recursively checking parent injectors, should not be set manually.
+		@return An array containing a list of strings describing the current injecctor.
+	**/
+	public static function listMappings( injector:Injector, ?arr:Array<String>, ?prefix="" ):Array<String> {
+		if ( arr==null ) arr = [];
+		if ( injector.parentInjector!=null )
+			listMappings( injector.parentInjector, arr, "(parent)"+prefix );
+		for ( c in @:privateAccess injector.injectionConfigs )
+			arr.push( prefix+c.toString() );
+		return arr;
+	}
 }
