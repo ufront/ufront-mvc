@@ -72,7 +72,7 @@ class FileSession implements UFHttpSession
 
 	/** The current HttpContext, should be supplied by injection. **/
 	@inject public var context:HttpContext;
-	public var id(get,null):Null<String>;
+	public var id(get,never):Null<String>;
 
 	/**
 		Construct a new session object.
@@ -179,11 +179,12 @@ class FileSession implements UFHttpSession
 				var fileData : String;
 
 				// Try to restore an existing session
-				if ( id!=null ) {
+				get_id();
+				if ( sessionID!=null ) {
 					testValidId( id );
 					file = getSessionFilePath( id );
 					if ( !FileSystem.exists(file) ) {
-						id = null;
+						sessionID = null;
 					}
 					else {
 						fileData = try File.getContent( file ) catch ( e:Dynamic ) null;
@@ -195,21 +196,24 @@ class FileSession implements UFHttpSession
 						}
 						if ( fileData==null ) {
 							// delete file and start new session
-							id = null;
+							sessionID = null;
 							try FileSystem.deleteFile( file ) catch( e:Dynamic ) {}; 
 						}
 					}
 				}
 
 				// No session existed, or it was invalid - start a new one
-				if( id==null ) {
+				if( sessionID==null ) {
 					sessionData = new StringMap<Dynamic>();
 					started = true;
 
+					var tryID = null;
 					do {
-						id = generateSessionID();
-						file = savePath + id + ".sess";
+						tryID = generateSessionID();
+						file = savePath + tryID + ".sess";
 					} while( FileSystem.exists(file) );
+					
+					sessionID = tryID;
 
 					// Create the file so no one else takes it
 					File.saveContent( file, "" );
@@ -219,13 +223,12 @@ class FileSession implements UFHttpSession
 					var domain = null; 
 					var secure = false;
 
-					var sessionCookie = new HttpCookie( sessionName, id, expire, domain, path, secure );
+					var sessionCookie = new HttpCookie( sessionName, tryID, expire, domain, path, secure );
 					context.response.setCookie( sessionCookie );
 
 					commit();
 				}
 
-				sessionID = id;
 				started = true;
 				t.trigger( Success(Noise) );
 			}
