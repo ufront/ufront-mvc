@@ -80,6 +80,8 @@ class Controller
 		The current HttpContext.  
 
 		This is set via dependency injection.
+
+		If you want to run some code after this has been injected, you can use for example: `@post public function doAuthCheck() { context.auth.requirePermission(AccessAdminArea); }`.
 	**/
 	@inject public var context(default,null):HttpContext;
 
