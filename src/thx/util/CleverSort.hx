@@ -86,6 +86,7 @@ array.sort( function(i1,i2) {
 
 As you can see, the syntax is much more readable.  Winning!
 */
+@:deprecated
 class CleverSort
 {
 	macro public static function cleverSort(arr:ExprOf<Array<Dynamic>>, filters:Array<Expr>)
