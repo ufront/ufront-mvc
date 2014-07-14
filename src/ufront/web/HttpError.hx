@@ -1,11 +1,13 @@
 package ufront.web;
 
-import tink.core.Error;
+import haxe.PosInfos;
+import tink.core.Error.ErrorCode;
 using tink.CoreApi;
 
 /**
 	Some helpers for error functions.
 **/
+#if !macro
 class HttpError {
 
 	/**
@@ -14,9 +16,9 @@ class HttpError {
 		- If it was an Error already, return it as is
 		- If it was a normal exception, use code 500, with "Internal Server Error" as the message, the exception as the data, and the pos that call site for `wrap()` as the pos.
 	**/
-	static public function wrap( e:Dynamic, ?msg="Internal Server Error", ?pos:Pos ):Error {
+	static public function wrap( e:Dynamic, ?msg="Internal Server Error", ?pos:PosInfos ):Error {
 		if ( Std.is(e, Error) ) return cast e;
-		else return Error.withData( InternalError, msg, e, pos );
+		else return Error.withData( ErrorCode.InternalError, msg, e, pos );
 	}
 
 	/**
@@ -80,3 +82,4 @@ class HttpError {
 		};
 	}
 }
+#end
