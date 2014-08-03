@@ -21,28 +21,20 @@ using StringTools;
 **/
 class HttpRequest extends ufront.web.context.HttpRequest
 {
-	public static function encodeName(s:String)
-	{
-		return s.urlEncode().replace('.', '%2E');
-	}
-	
-	public function new()
-	{
+	public function new() {
 		_parsed = false;
 	}
-	
-	override function get_queryString()
-	{
-		if (null == queryString)
-			queryString = untyped __var__('_SERVER', 'QUERY_STRING');
+
+	override function get_queryString() {
+		if ( queryString==null )
+			queryString = getServerParam( 'QUERY_STRING' );
 		return queryString;
 	}
-	
-	override function get_postString()
-	{
-		if (httpMethod == "GET")
+
+	override function get_postString() {
+		if ( httpMethod=="GET" )
 			return "";
-		if (null == postString)
+		if ( postString==null )
 		{
 			if (untyped __call__("isset", __var__('GLOBALS', 'HTTP_RAW_POST_DATA')))
 			{
@@ -55,17 +47,16 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		return postString;
 	}
-	
+
 	var _parsed:Bool;
 
-	override public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error>
-	{
+	override public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error> {
 		if ( !isMultipart() )
 			return Sync.success();
 
-		if (_parsed) 
+		if (_parsed)
 			return throw new Error('parseMultipart() can only been called once');
-		
+
 		_parsed = true;
 
 		var post = get_post();
@@ -86,15 +77,15 @@ class HttpRequest extends ufront.web.context.HttpRequest
 				var tmp:String = untyped info['tmp_name'];
 				var name = StringTools.urlDecode(part);
 				if (tmp == '') continue;
-				
+
 				// Handle any errors
 				var err:Int = untyped info['error'];
 				if(err > 0) {
 					switch(err) {
-						case 1: 
+						case 1:
 							var maxSize = untyped __call__('ini_get', 'upload_max_filesize');
 							errors.push('The uploaded file exceeds the max size of $maxSize');
-						case 2: 
+						case 2:
 							var maxSize = untyped __call__('ini_get', 'post_max_size');
 							errors.push('The uploaded file exceeds the max file size directive specified in the HTML form (max is $maxSize)');
 						case 3: errors.push('The uploaded file was only partially uploaded');
@@ -117,9 +108,9 @@ class HttpRequest extends ufront.web.context.HttpRequest
 				function processResult( surprise:Surprise<Noise,Error>, andThen:Void->Void ) {
 					surprise.handle( function(outcome) {
 						switch outcome {
-							case Success(err): 
+							case Success(err):
 								andThen();
-							case Failure(err): 
+							case Failure(err):
 								errors.push( err.toString() );
 								try untyped __call__("fclose", fileResource) catch (e:Dynamic) errors.push( 'Failed to close upload tmp file: $e' );
 								try untyped __call__("unlink", tmp) catch (e:Dynamic) errors.push( 'Failed to delete upload tmp file: $e' );
@@ -158,67 +149,61 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		else return Sync.of( Success(Noise) );
 	}
-	
-	override function get_query()
-	{
-		if (null == query)
-		{
+
+	override function get_query() {
+		if ( query==null ) {
 			query = getHashFromString(queryString);
 		}
 		return query;
 	}
-	
-	override function get_post()
-	{
-		if (httpMethod == "GET")
-			return new MultiValueMap();
-		if (null == post)
-		{
-			if ( isMultipart() ) {
-				post = new MultiValueMap();
-				if (untyped __call__("isset", __php__("$_POST")))
-				{
-					var postNames:Array<String> = untyped __call__( "new _hx_array",__call__("array_keys", __php__("$_POST" )));
 
-					for ( name in postNames ) {
-						var val:Dynamic = untyped __php__("$_POST[$name]");
-						if ( untyped __call__("is_array", val) ) {
-							// For each value in the array, add it to our post object.
-							var h = php.Lib.hashOfAssociativeArray( val );
-							for ( k in h.keys() ) {
-								if ( untyped __call__("is_string", val) )
-									post.add( k, h.get(k) );
-								// else: Note that we could try recurse here if there's another array, but for now I'm 
-								// giving ufront a rule: only single level `fruit[]` type input arrays are supported,
-								// any recursion goes beyond this, so let's not bother.
+	override function get_post() {
+		if ( post==null ) {
+			post = new MultiValueMap();
+			if ( httpMethod=="GET" ) {
+				if ( isMultipart() ) {
+					post = new MultiValueMap();
+					if (untyped __call__("isset", __php__("$_POST"))) {
+						var postNames:Array<String> = untyped __call__( "new _hx_array",__call__("array_keys", __php__("$_POST" )));
+
+						for ( name in postNames ) {
+							var val:Dynamic = untyped __php__("$_POST[$name]");
+							if ( untyped __call__("is_array", val) ) {
+								// For each value in the array, add it to our post object.
+								var h = php.Lib.hashOfAssociativeArray( val );
+								for ( k in h.keys() ) {
+									if ( untyped __call__("is_string", val) )
+										post.add( k, h.get(k) );
+									// else: Note that we could try recurse here if there's another array, but for now I'm
+									// giving ufront a rule: only single level `fruit[]` type input arrays are supported,
+									// any recursion goes beyond this, so let's not bother.
+								}
 							}
-						}
-						else if ( untyped __call__("is_string", val) ) {
-							post.add( name, cast val );
+							else if ( untyped __call__("is_string", val) ) {
+								post.add( name, cast val );
+							}
 						}
 					}
 				}
-			}
-			else {
-				post = getHashFromString(postString);
-			}
+				else {
+					post = getHashFromString(postString);
+				}
 
-			if (untyped __call__("isset", __php__("$_FILES")))
-			{
-				var parts:Array<String> = untyped __call__("new _hx_array",__call__("array_keys", __php__("$_FILES")));
-				for (part in parts) {
-					var file:String = untyped __php__("$_FILES[$part]['name']");
-					var name = StringTools.urlDecode(part);
-					post.add(name, file);
+				if (untyped __call__("isset", __php__("$_FILES"))) {
+					var parts:Array<String> = untyped __call__("new _hx_array",__call__("array_keys", __php__("$_FILES")));
+					for (part in parts) {
+						var file:String = untyped __php__("$_FILES[$part]['name']");
+						var name = StringTools.urlDecode(part);
+						post.add(name, file);
+					}
 				}
 			}
 		}
 		return post;
 	}
-	
-	override function get_cookies()
-	{
-		if (null == cookies) {
+
+	override function get_cookies() {
+		if ( cookies==null ) {
 			cookies = new MultiValueMap();
 			var h = Lib.hashOfAssociativeArray(untyped __php__("$_COOKIE"));
 			for ( k in h.keys() ) {
@@ -227,35 +212,29 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		return cookies;
 	}
-	
-	override function get_hostName()
-	{
-		if (null == hostName)
-			hostName = untyped __php__("$_SERVER['SERVER_NAME']");
+
+	override function get_hostName() {
+		if ( hostName==null )
+			hostName = getServerParam( "SERVER_NAME" );
 		return hostName;
 	}
-	
-	override function get_clientIP()
-	{
-		if (null == clientIP)
-			clientIP = untyped __php__("$_SERVER['REMOTE_ADDR']");
+
+	override function get_clientIP() {
+		if ( clientIP==null )
+			clientIP = getServerParam( "REMOTE_ADDR" );
 		return clientIP;
 	}
-	
-	override function get_uri()
-	{
-		if (null == uri)
-		{
-			var s:String = untyped __php__("$_SERVER['REQUEST_URI']");
+
+	override function get_uri() {
+		if ( uri==null ) {
+			var s = getServerParam( "REQUEST_URI" );
 			uri = s.split("?")[0];
 		}
 		return uri;
 	}
-	
-	override function get_clientHeaders()
-	{
-		if (null == clientHeaders)
-		{
+
+	override function get_clientHeaders() {
+		if ( clientHeaders==null ) {
 			clientHeaders = new MultiValueMap();
 			var h = Lib.hashOfAssociativeArray(untyped __php__("$_SERVER"));
 			for(k in h.keys()) {
@@ -272,44 +251,44 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		return clientHeaders;
 	}
-	
-	override function get_httpMethod()
-	{
-		if (null == httpMethod)
-		{
-			untyped if(__php__("isset($_SERVER['REQUEST_METHOD'])"))
-				httpMethod =  __php__("$_SERVER['REQUEST_METHOD']");
-			if (null == httpMethod) httpMethod = "";
-		}
+
+	override function get_httpMethod() {
+		if ( httpMethod==null )
+			httpMethod = getServerParam( "REQUEST_METHOD" );
 		return httpMethod;
 	}
-	
-	override function get_scriptDirectory()
-	{
-		if (null == scriptDirectory)
-		{
-			scriptDirectory =  untyped __php__("dirname($_SERVER['SCRIPT_FILENAME'])") + "/";
+
+	override function get_scriptDirectory() {
+		if (null == scriptDirectory) {
+			var dir = getServerParam( "SCRIPT_FILENAME" );
+			scriptDirectory = (untyped __call__("dirname",dir):String) + "/";
 		}
 		return scriptDirectory;
 	}
-	
-	override function get_authorization()
-	{
-		if (null == authorization)
-		{
-			authorization = { user:null, pass:null };
-			untyped if(__php__("isset($_SERVER['PHP_AUTH_USER'])"))
-			{
-				authorization.user = __php__("$_SERVER['PHP_AUTH_USER']");
-				authorization.pass = __php__("$_SERVER['PHP_AUTH_PW']");
-			}
+
+	override function get_authorization() {
+		if ( authorization==null ) {
+			authorization = {
+				user: getServerParam( "PHP_AUTH_USER" ),
+				pass: getServerParam( "PHP_AUTH_PW" )
+			};
 		}
-		return authorization;
+		return (authorization.user!=""||authorization.pass!="") ? authorization : null;
 	}
-	
+
+	static inline function getServerParam( name:String ) {
+		if (untyped __call__("array_key_exists", name, __php__("$_SERVER"))) {
+			return untyped __var__('_SERVER', name);
+		}
+		else return "";
+	}
+
+	static function encodeName(s:String) {
+		return s.urlEncode().replace('.', '%2E');
+	}
+
 	static var paramPattern = ~/^([^=]+)=(.*?)$/;
-	static function getHashFromString(s:String):MultiValueMap<String>
-	{
+	static function getHashFromString(s:String):MultiValueMap<String> {
 		var qm = new MultiValueMap();
 		for (part in s.split("&"))
 		{
@@ -321,9 +300,8 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		return qm;
 	}
-	
-	static function getHashFrom(a:php.NativeArray)
-	{
+
+	static function getHashFrom(a:php.NativeArray) {
 		if(untyped __call__("get_magic_quotes_gpc"))
 			untyped __php__("reset($a); while(list($k, $v) = each($a)) $a[$k] = stripslashes((string)$v)");
 		return Lib.hashOfAssociativeArray(a);
