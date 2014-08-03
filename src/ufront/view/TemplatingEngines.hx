@@ -6,7 +6,7 @@ using tink.CoreApi;
 /**
 	This class provides some shortcut definitions to TemplatingEngines.
 
-	These shortcuts are added for your convenience.  
+	These shortcuts are added for your convenience.
 	They don't include the actual template libraries, rather, they return a typedef that let's our UFViewEngine know how to use the templating library so you can add it easily.
 
 	The static variables for each library are surrounded in conditionals, so they will only be included if you have that library included in your current build.
@@ -30,9 +30,9 @@ class TemplatingEngines {
 	**/
 	public static var haxe(get,null):TemplatingEngine;
 	static function get_haxe() return {
-		factory: function ( tplString ):UFTemplate { 
+		factory: function ( tplString ):UFTemplate {
 			var t = new haxe.Template( tplString );
-			return function (data:TemplateData) return t.execute( data.toObject() ); 
+			return function (data:TemplateData) return t.execute( data.toObject() );
 		},
 		type: "haxe.Template",
 		extensions: ["html", "tpl"]
@@ -46,9 +46,9 @@ class TemplatingEngines {
 		**/
 		public static var hxdtl(get,null):TemplatingEngine;
 		static function get_hxdtl() return {
-			factory: function ( tplString ):UFTemplate { 
+			factory: function ( tplString ):UFTemplate {
 				var t = new hxdtl.Template( tplString );
-				return function (data:TemplateData) return t.render( data.toObject() ); 
+				return function (data:TemplateData) return t.render( data.toObject() );
 			},
 			type: "hxdtl.Template",
 			extensions: ["dtl"]
@@ -63,9 +63,9 @@ class TemplatingEngines {
 		**/
 		public static var hxtemplo(get,null):TemplatingEngine;
 		static function get_hxtemplo() return {
-			factory: function ( tplString ):UFTemplate { 
+			factory: function ( tplString ):UFTemplate {
 				var t = templo.Template.fromString( tplString );
-				return function (data:TemplateData) return t.execute( data ); 
+				return function (data:TemplateData) return t.execute( data );
 			},
 			type: "templo.Template",
 			extensions: ["mtt"]
@@ -79,7 +79,7 @@ class TemplatingEngines {
 		public static var mustache(get,null):TemplatingEngine;
 		static function get_mustache() return {
 			factory: function ( tplString ):UFTemplate {
-				return function (data:TemplateData) return Mustache.render( tplString, data.toObject() ); 
+				return function (data:TemplateData) return Mustache.render( tplString, data.toObject() );
 			},
 			type: "Mustache",
 			extensions: ["mustache"]
@@ -96,10 +96,10 @@ class TemplatingEngines {
 		static function get_erazor() return {
 			factory: function ( tplString ):UFTemplate {
 				var t = new erazor.Template( tplString );
-				return function (data:TemplateData) return t.execute( data.toObject() ); 
+				return function (data:TemplateData) return t.execute( data.toObject() );
 			},
 			type: "erazor.Template",
-			extensions: ["erazor"]
+			extensions: ["erazor","html"]
 		}
 	#end
 
@@ -110,10 +110,10 @@ class TemplatingEngines {
 **/
 typedef TemplatingEngine = {
 	/** A factory function for producing a working template given a string input **/
-	factory:String->UFTemplate, 
+	factory:String->UFTemplate,
 
 	/** The class that is produced by the factory.  This is used so that a `ufront.web.result.ViewResult` can request a particular TemplatingEngine. **/
-	type: String, 
+	type: String,
 
 	/** A list of file extensions that this templating engine supports.  For example `["html", "tpl", "erazor"]` **/
 	extensions: Array<String>
