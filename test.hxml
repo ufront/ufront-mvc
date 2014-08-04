@@ -21,6 +21,7 @@
 
 ## Neko
 
+-D server
 -neko build/neko_test.n
 -xml doc/neko.xml
 
@@ -28,6 +29,7 @@
 ## PHP
 
 -php build
+-D server
 --php-lib php
 --php-front php_test.php
 -xml doc/php.xml
@@ -47,6 +49,7 @@
 --next
 ## Javascript (Browser)
 
+-D client
 -js build/js_client_test.js
 -xml doc/js_browser.xml
 
