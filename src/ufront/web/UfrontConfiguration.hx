@@ -28,7 +28,7 @@ typedef UfrontConfiguration = {
 
 		This controller will handle all requests given to `ufront.handler.MVCHandler`.
 		It may use sub-controllers to handle some requests.
-		
+
 		It will be instantiated using the dependency injector for that request.
 
 		Default = `ufront.web.DefaultController`
@@ -44,23 +44,23 @@ typedef UfrontConfiguration = {
 	**/
 	?remotingApi:Class<UFApiContext>,
 
-	/** 
-		Is mod_rewrite or similar being used?  
+	/**
+		Is mod_rewrite or similar being used?
 		If not, query strings will be filtered out of the URLs.
 		Default = true;
 	**/
 	?urlRewrite:Bool,
-	
-	/** 
-		A base path for this app relative to the root of the server.  
+
+	/**
+		A base path for this app relative to the root of the server.
 		If supplied, this will be filtered from URLs.
 		Default = "/" (app is at root of webserver)
 	**/
 	?basePath:String,
 
 	/**
-		The directory 
-		
+		The directory
+
 		This should be specified relative to the script directory (fetched using `HttpRequest.scriptDirectory`).  You can either have it as a subdirectory, (eg "uf-content") or in a parent directory (eg "../uf-content")
 
 		There should not be a leading slash, and a trailing slash is optional.
@@ -68,16 +68,16 @@ typedef UfrontConfiguration = {
 		Default = "uf-content"
 	**/
 	?contentDirectory:String,
-	
+
 	/**
 		If specified, then traces are logged to the file specified by this path.
 
-		This should be set relative to `contentDirectory`. 
+		This should be set relative to `contentDirectory`.
 
 		Default = null; (don't log)
 	**/
 	?logFile:Null<String>,
-	
+
 	/**
 		Disable traces going to the browser console?
 		Could be useful if you have sensitive information in your traces.
@@ -91,14 +91,14 @@ typedef UfrontConfiguration = {
 		Default is `[ new InlineSessionMiddleware() ]`
 	**/
 	?requestMiddleware:Array<UFRequestMiddleware>,
-	
+
 	/**
 		The response middleware to use with this application
 
 		Default is `[ new InlineSessionMiddleware() ]`
 	**/
 	?responseMiddleware:Array<UFResponseMiddleware>,
-	
+
 	/**
 		The error handlers to use with this application.
 
@@ -114,7 +114,7 @@ typedef UfrontConfiguration = {
 		Default is a list of all `ufront.web.Controller` classes, fetched using `CompileTime.getAllClasses()`
 	**/
 	?controllers:Null<Iterable<Class<Controller>>>,
-	
+
 	/**
 		APIs to add to the Dependency Injector.
 
@@ -123,7 +123,7 @@ typedef UfrontConfiguration = {
 		Default is a list of all `ufront.api.UFApi` classes, fetched using `CompileTime.getAllClasses()`
 	**/
 	?apis:Null<Iterable<Class<UFApi>>>,
-	
+
 	/**
 		ViewEngine to add to the Dependency Injector.
 
@@ -132,13 +132,19 @@ typedef UfrontConfiguration = {
 		Default is `ufront.view.FileViewEngine`, which loads the views from the `viewPath` directory.
 	**/
 	?viewEngine:Null<Class<UFViewEngine>>,
-	
+
 	/**
 		The folder (either absolute, or relative to the script directory) to load the views from.
 		This may be ignored if the `viewEngine` you are using does not use folders or a file system.
 		Default is "view", relative to your script directory.
 	**/
 	?viewPath:Null<String>,
+
+	/**
+		The name of the default layout view, relative to your viewPath.
+		Default is null, meaning that views will not be wrapped in a layout.
+	**/
+	?defaultLayout:Null<String>,
 
 	/**
 		A method which can be used to generate a session for the current request, as required.
@@ -187,18 +193,19 @@ class DefaultUfrontConfiguration {
 			apis: cast CompileTime.getAllClasses( UFApi ),
 			viewEngine: FileViewEngine,
 			viewPath: "view/",
+			defaultLayout: null,
 			sessionImplementation: FileSession,
 			requestMiddleware: [uploadMiddleware,inlineSession],
 			responseMiddleware: [inlineSession,uploadMiddleware],
 			errorHandlers: [ new ErrorPageHandler() ],
-			authImplementation: 
+			authImplementation:
 				// TODO: find out if there's a way we can teach Haxe that these type parameters are okay.
 				// We only ever *read* a T:UFAuthUser, any time we ask for one to write or check against the interface accepts any UFAuthUser.
 				// Because we're read only, we're safe, but Haxe doesn't think so.
 				// For now we'll cast our way out of this problem.
-				#if ufront_easyauth 
+				#if ufront_easyauth
 					cast EasyAuth
-				#else 
+				#else
 					cast YesBossAuthHandler // should we use NobodyAuthHandler instead?
 				#end
 		}
@@ -227,6 +234,6 @@ class TestController extends ufront.web.Controller {
 	@:route( '/contact/', POST ) public function emailContact( args:{ subject:String, ?amount:Int } ) return 'Send email about ${args.subject}';
 	@:route( '/pages/*' ) public function pageCatchAll( rest:Array<String> ) return new ufront.web.result.ContentResult( rest.join("/"), "text/html" );
 	@:route( '/void/' ) public function voidReturn() { #if sys Sys.println('void return'); #else trace('void return'); #end };
-	
+
 	@:route( '/default/*' ) public var d:DefaultController;
 }

@@ -1,8 +1,8 @@
 package ufront.app;
 
 #if macro
-	import haxe.macro.Expr;
 	using tink.MacroApi;
+	import haxe.macro.Expr;
 #end
 import ufront.web.context.HttpContext;
 import ufront.web.HttpError;
@@ -21,7 +21,6 @@ class HttpApplicationMacros {
 	@:allow( ufront.app.HttpApplication )
 	static macro function prepareModules( modules:ExprOf<Array<Dynamic>>, methodName:String, ?bindArgs:ExprOf<Array<Dynamic>> ):ExprOf<Array<Pair<HttpContext->Surprise<Noise,Error>,PosInfos>>> {
 		#if macro
-			
 			var argsToBind:Array<Expr>;
 			var argsForPos:Array<Dynamic> = [];
 

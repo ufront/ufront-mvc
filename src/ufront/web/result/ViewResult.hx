@@ -1,6 +1,6 @@
 package ufront.web.result;
 
-#if macro 
+#if macro
 	import haxe.macro.Expr;
 #end
 import haxe.PosInfos;
@@ -17,15 +17,15 @@ using Strings;
 
 /**
 	A ViewResult loads a view from a templating engine, optionally wraps it in a layout, and writes the result to the HttpResponse with a `text/html` content type.
-	
+
 	### Choosing a view
 
 	When a ViewResult is created you can optionally set a viewPath.
-	
-	If you don't set a viewPath, it will be inferred from the context. 
-	
+
+	If you don't set a viewPath, it will be inferred from the context.
+
 	For example, if you are in the controller "HomeController" and the action "doIndex()", it will look for a view called "home/index.*" in your view directory.
-	
+
 	There is some small magic here - the word "Controller" is dropped from the end of the controller name.
 	The "do" prefix is dropped from the start of the action name.
 	The first letter is made lower case if it isn't already.
@@ -55,11 +55,11 @@ using Strings;
 	Helpers (dynamic functions) can be included in your ViewResult also.
 
 	### Wrapping your view with a layout
-	
+
 	Usually you will want to wrap your view for a specific page or action with a layout that has the branding of your site.
 
-	A layout is another `ufront.view.UFTemplate` which takes the parameter "viewContent".  
-	The result of the current view will be inserted into the "viewContent" field of the layout.  
+	A layout is another `ufront.view.UFTemplate` which takes the parameter "viewContent".
+	The result of the current view will be inserted into the "viewContent" field of the layout.
 	All of the same data mappings and helpers will be available to the layout when it renders.
 
 	You can set a default layout to be used with all ViewResults using the static method `setDefaultLayout()`.
@@ -73,7 +73,7 @@ using Strings;
 	Ufront supports different view engines. (See `ufront.view.UFViewEngine`).
 	For example, you could have a view engine that loads templates from a database, rather than from the FileSystem.
 
-	ViewResult will use dependency injection to get the correct UFViewEngine it should be using.  
+	ViewResult will use dependency injection to get the correct UFViewEngine it should be using.
 	You can set this by setting `viewEngine` on your `ufront.web.UfrontConfiguration` when you start your ufront app.
 	By default, it is configured to use the `ufront.view.FileViewEngine`, loading views from the "view/" directory relative to your script directory (www/).
 
@@ -94,25 +94,12 @@ class ViewResult extends ActionResult {
 	**/
 	public static var globalValues:TemplateData = {};
 
-	/**
-		Set the default layout to use for each view result if no layout is specified.
-
-		If this is None, and no layout was specified on the ViewResult, then the view will not be wrapped in a layout.
-		
-		@param layoutPath If specified, a default layout at this path will be used. If not specified, there will be no default layout.
-		@param templatingEngine The templating engine to use the given layout with. If not specified, the first templating engine matching the extension will be used. (If layoutPath is not specified, this parameter has no effect).
-	**/
-	public static function setDefaultLayout( ?layoutPath:String, ?templatingEngine:TemplatingEngine ) {
-		defaultLayout = layoutPath!=null ? Some( new Pair(layoutPath, templatingEngine) ) : None;
-	}
-	static var defaultLayout:Option<Pair<String,TemplatingEngine>> = None;
-
 	//
 	// Macros
 	//
 
 	/**
-		A shortcut to `new ViewResult()`.  
+		A shortcut to `new ViewResult()`.
 
 		At some point in the future this may be replaced with a macro used to verify that the template exists and is parsable.
 
@@ -129,7 +116,7 @@ class ViewResult extends ActionResult {
 	/**
 		The path to the view.
 
-		If not specified when `executeResult` is called, it will be inferred from the Http Context.  
+		If not specified when `executeResult` is called, it will be inferred from the Http Context.
 		If an extension is not specified, any extensions that match the given templating engines will be used.
 		See `executeResult` for details on this selection process.
 	**/
@@ -137,7 +124,7 @@ class ViewResult extends ActionResult {
 
 	/**
 		A specific templating engine to use for this request.
-		This is helpful if you have views with file extensions shared by more than one view engine (eg: *.html).  
+		This is helpful if you have views with file extensions shared by more than one view engine (eg: *.html).
 		Specifying an engine explicitly when a viewPath has been set will force that view to be rendered with a specific engine.
 		Specifying an engine when no view path is set, or a view path without an extension, will search for views with an extension matching thos supported by this templating engine.
 	**/
@@ -153,12 +140,13 @@ class ViewResult extends ActionResult {
 	/**
 		The layout to wrap around this view.
 
-		A layout is another `ufront.view.UFTemplate` which takes the parameter "viewContent".  
+		A layout is another `ufront.view.UFTemplate` which takes the parameter "viewContent".
 		The result of the current view will be inserted into the "viewContent" field of the layout.
 
 		All of the same data mappings and helpers will be available to the layout when it renders.
 
-		If no layout is specified, then a default layout will be used if one has been set through `setDefaultLayout()`.
+		If no layout is specified, then we will see if there is a default one for the application.
+		(You can set a default layout for a `UfrontApplication` using the `UfrontConfiguration.defaultLayout` configuration property).
 
 		If you call `viewResult.withoutLayout()` then no layout will wrap the current view, even if a default layout is specified.
 	**/
@@ -168,17 +156,17 @@ class ViewResult extends ActionResult {
 		Any helpers (dynamic functions) to pass to the template when it is executed.
 	**/
 	public var helpers:TemplateData;
-	
+
 	//
 	// Member Functions
 	//
 
 	/**
-		Create a new ViewResult, with the specified data. 
+		Create a new ViewResult, with the specified data.
 
 		You can optionally specify a custom `viewPath` or a specific `templatingEngine`.
 
-		If `viewPath` is not specified, the `actionContext` will be used to choose a view during `executeResult`.  
+		If `viewPath` is not specified, the `actionContext` will be used to choose a view during `executeResult`.
 		See the documentation on `executeResult` for details.
 	**/
 	public function new( ?data:TemplateData, ?viewPath:String, ?templatingEngine:TemplatingEngine ) {
@@ -220,7 +208,7 @@ class ViewResult extends ActionResult {
 		if (map!=null) this.data.setMap( map );
 		return this;
 	}
-	
+
 	/**
 		Execute the given view (and layout, if applicable), writing to the response.
 
@@ -235,17 +223,17 @@ class ViewResult extends ActionResult {
 		- If `viewPath` was not specified or is null, the `actionContext` will be used to determine a view based on the controller / action used for the request.
 		- For example if you are in a controller called `PostsController` and you are in an action called `viewPost`, the inferred `viewPath` will be `posts/viewPost`.
 		- This will match a template with that path, using whichever extension your templating engines support, and using the first template to match, for example `post/viewPost.html`.
-		
-		Some small transformations that occur while inferring the view path: 
+
+		Some small transformations that occur while inferring the view path:
 
 		__On the controller:__
 
 		- The package is discarded, only the section after the final "." is kept
-		- The first letter of your controller name will be made lowercase. 
+		- The first letter of your controller name will be made lowercase.
 		- If your controller name ends with "Controller", it will not be included in the view.
-		
+
 		__On the action:__:
- 		
+
  		- If the action name begins with "do", it will be removed
 		- The first letter of your action name will be made lowercase.
 
@@ -254,7 +242,7 @@ class ViewResult extends ActionResult {
 		The result of executing the template will be written to the response, with a content type of "text/html".
 	**/
 	override function executeResult( actionContext:ActionContext ) {
-		
+
 		// Get the viewEngine
 		var viewEngine = try actionContext.httpContext.injector.getInstance( UFViewEngine ) catch (e:Dynamic) null;
 		if (viewEngine==null) return Sync.httpError( "Failed to find a UFViewEngine in ViewResult.executeResult(), please make sure that one is made available in your application's injector" );
@@ -265,7 +253,7 @@ class ViewResult extends ActionResult {
 		// Figure out the viewPath if it was not supplied.
 		if ( viewPath==null ) {
 			var controller = Type.getClassName( Type.getClass(actionContext.controller) ).split( "." ).pop().lcfirst();
-			if ( controller.endsWith("Controller") ) 
+			if ( controller.endsWith("Controller") )
 				controller = controller.substr( 0, controller.length-10 );
 			var action = actionContext.action;
 			if ( action.startsWith("do") )
@@ -276,8 +264,14 @@ class ViewResult extends ActionResult {
 
 		// Get the layout future
 		var layoutReady:Surprise<Null<UFTemplate>,Error>;
-		if ( layout==null && defaultLayout!=null ) {
-			layout = defaultLayout;
+		if ( layout==null ) {
+			// See if there is a default layout.
+			layout =
+				try {
+					var defaultLayoutPath = actionContext.httpContext.injector.getInstance( String, "defaultLayout" );
+					Some( new Pair(defaultLayoutPath,null) );
+				}
+				catch (e:Dynamic) None;
 		}
 		layoutReady = switch layout {
 			case Some( layoutData ): viewEngine.getTemplate( layoutData.a, layoutData.b );
@@ -290,13 +284,13 @@ class ViewResult extends ActionResult {
 		// Once both futures have loaded, combine them, and then map them, executing the future templates
 		// and writing them to the output, and then completing the Future once done, or returning a Failure
 		// if there was an error.
-		var done = 
+		var done =
 			(templateReady && layoutReady) >>
 			function ( pair:Pair<Outcome<UFTemplate,Error>, Outcome<Null<UFTemplate>,Error>> ) {
-				
+
 				var template:UFTemplate = null;
 				var layout:Null<UFTemplate> = null;
-				
+
 				// Extract template
 				switch pair.a {
 					case Success( tpl ): template = tpl;
@@ -310,10 +304,10 @@ class ViewResult extends ActionResult {
 				}
 
 				// Try execute the template
-				var viewOut:String = null; 
-				try 
-					viewOut = template.execute( combinedData ) 
-				catch ( e:Dynamic ) 
+				var viewOut:String = null;
+				try
+					viewOut = template.execute( combinedData )
+				catch ( e:Dynamic )
 					return error( "Unable to execute view template", e );
 
 				// Try execute the layout around the view, if there is a layout.  Otherwise just use the view.
@@ -323,9 +317,9 @@ class ViewResult extends ActionResult {
 				}
 				else {
 					combinedData.set( "viewContent", viewOut );
-					try 
-						finalOut = layout.execute( combinedData ) 
-					catch 
+					try
+						finalOut = layout.execute( combinedData )
+					catch
 						( e:Dynamic ) return error( "Unable to execute layout template", e );
 				}
 
@@ -335,7 +329,7 @@ class ViewResult extends ActionResult {
 
 				return Success( Noise );
 			}
-		
+
 		return done;
 	}
 

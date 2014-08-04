@@ -34,7 +34,6 @@ class FilePathResult extends FileResult
 			if ( null!=fileName ) {
 				if ( !FileSystem.exists(fileName) )
 					throw HttpError.pageNotFound();
-
 				try {
 					var bytes = File.getBytes( fileName );
 					actionContext.httpContext.response.writeBytes( bytes, 0, bytes.length );

@@ -28,7 +28,7 @@ using ufront.core.InjectionTools;
 	- Routing with `ufront.handler.MVCHandler`
 	- Easily add a Haxe remoting API context and initiate the `ufront.handler.RemotingHandler`
 	- Tracing, to console, logfile or remoting call, based on your `ufront.web.UfrontConfiguration`
-	
+
 	Ufront uses `minject.Injector` for dependency injection, and `UfrontApplication` adds several things to the injector, depending on your configuration:
 
 	- All of the controllers specified in your configuration (by default: all of them)
@@ -36,7 +36,7 @@ using ufront.core.InjectionTools;
 	- A singleton of the UFViewEngine specified in your UfronConfiguration.
 	- The implementation of `UFHttpSession` you chose in your UfrontConfiguration, to be instantiated on each request.
 	- The implementation of `UFAuthHandler` you chose in your UfrontConfiguration, to be instantiated on each request.
-	- A String named `viewPath` for the path to your view folder, specified in your configuration. 
+	- A String named `viewPath` for the path to your view folder, specified in your configuration.
 	- A String name `scriptDirectory`, containing the path to the directory the current app is located in.
 	- A String name `contentDirectory`, containing the path to the content directory specified in your configuration.
 
@@ -48,30 +48,30 @@ using ufront.core.InjectionTools;
 **/
 class UfrontApplication extends HttpApplication
 {
-	/** 
+	/**
 		The configuration that was used when setting up the application.
-		
+
 		This is set during the constructor.  Changing values of this object is not guaranteed to have any effect.
 	**/
 	public var configuration(default,null):UfrontConfiguration;
-	
-	/** 
+
+	/**
 		The dispatch handler used for this application.
-		
+
 		This is mostly made accessible for unit testing and logging purposes.  You are unlikely to need to access it for anything else.
 	**/
 	public var mvcHandler(default,null):MVCHandler;
-	
-	/** 
+
+	/**
 		The remoting handler used for this application.
-		
+
 		It is automatically set up if a `UFApiContext` class is supplied
 	**/
 	public var remotingHandler(default,null):RemotingHandler;
-	
-	/** 
+
+	/**
 		The view engine being used with this application
-		
+
 		It is configured using the `viewEngine` property on your `UfrontConfiguration`.
 	**/
 	public var viewEngine(default,null):UFViewEngine;
@@ -93,7 +93,7 @@ class UfrontApplication extends HttpApplication
 		remotingHandler = new RemotingHandler();
 
 		// Map some default injector rules
-		
+
 		for ( controller in configuration.controllers ) {
 			injector.inject( controller );
 		}
@@ -106,7 +106,7 @@ class UfrontApplication extends HttpApplication
 		addRequestHandler( [remotingHandler,mvcHandler] );
 		addResponseMiddleware( configuration.responseMiddleware );
 		addErrorHandler( configuration.errorHandlers );
-		
+
 		// Add log handlers according to configuration
 		if ( !configuration.disableBrowserTrace ) {
 			addLogHandler( new BrowserConsoleLogger() );
@@ -134,6 +134,9 @@ class UfrontApplication extends HttpApplication
 			inject( String, configuration.viewPath, "viewPath" );
 			inject( UFViewEngine, configuration.viewEngine, true );
 		}
+
+		if ( configuration.defaultLayout!=null )
+			inject( String, configuration.defaultLayout, "defaultLayout" );
 	}
 
 	/**
@@ -155,7 +158,7 @@ class UfrontApplication extends HttpApplication
 		firstRun = false;
 		inject( String, httpContext.request.scriptDirectory, "scriptDirectory" );
 		inject( String, httpContext.contentDirectory, "contentDirectory" );
-		
+
 		// Make the UFViewEngine available (and inject into it, in case it needs anything)
 		if ( configuration.viewEngine!=null ) {
 			try {
@@ -194,7 +197,7 @@ class UfrontApplication extends HttpApplication
 	}
 
 	/**
-		Shortcut to map a class or value into `injector`.  
+		Shortcut to map a class or value into `injector`.
 
 		See `ufront.core.InjectorTools.inject()` for details on how the injections are applied.
 
