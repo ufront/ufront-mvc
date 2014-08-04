@@ -75,7 +75,7 @@ package ufront.web.result;
 			@param (optional) docType An initial value for `docType`.
 			@param (optional) docType An initial value for `contentType`.
 		**/
-		public function new( layoutToUse:AcceptEither<W,Class<W>>, ?data:TemplateData, ?contentType:String, ?docType:String ) {
+		public function new( layoutToUse:AcceptEither<W,Class<W>>, ?contentType:String, ?docType:String, ?data:TemplateData ) {
 			switch layoutToUse.type {
 				case Left(l):
 					this.layout = l;
