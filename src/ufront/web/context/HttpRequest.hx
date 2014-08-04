@@ -22,10 +22,10 @@ class HttpRequest
 	**/
 	public static function create():HttpRequest
 	{
-		return 
-			#if php 
+		return
+			#if php
 				new php.ufront.web.context.HttpRequest();
-			#elseif neko 
+			#elseif neko
 				new neko.ufront.web.context.HttpRequest();
 			#elseif nodejs
 				throw "Please use `new nodejs.ufront.web.HttpRequest(req)` instead";
@@ -43,7 +43,7 @@ class HttpRequest
 		- query-string parameters
 		- post values
 
-		with the latter taking precedence over the former.  
+		with the latter taking precedence over the former.
 		For example, if both a cookie and a post variable define a parameter `name`, calling `request.params["name"]` will show the POST value.
 		In that example, if you would like to access all the various values of `name`, you can use `request.params.getAll("name")` or separately access `request.cookies` or `request.post`.
 	**/
@@ -56,7 +56,7 @@ class HttpRequest
 	}
 
 	/**
-		The GET query parameters.  
+		The GET query parameters.
 
 		Will return an empty String if there are no GET parameters.
 	**/
@@ -81,7 +81,7 @@ class HttpRequest
 		The POST parameters for this request.
 
 		Please note that if the request is a multipart request, and `parseMultipart` has not been called, it will be called to fetch all the post data from the various parts.
-		Because `parseMultipart` can only be called once, this will prevent you from being able to process any file uploads.  
+		Because `parseMultipart` can only be called once, this will prevent you from being able to process any file uploads.
 		If you need access to file uploads, please ensure `parseMultipart` is called before `post` is accessed.
 		This can be achieved using upload middleware.
 
@@ -130,7 +130,7 @@ class HttpRequest
 	function get_uri():String return throw new AbstractMethod();
 
 	/**
-		The client headers supplied in the request.  
+		The client headers supplied in the request.
 	**/
 	public var clientHeaders(get, null):MultiValueMap<String>;
 	function get_clientHeaders():MultiValueMap<String> return throw new AbstractMethod();
@@ -148,7 +148,7 @@ class HttpRequest
 	/**
 		The HTTP method used for the request.
 
-		Usually "get" or "post", but can be other things. 
+		Usually "get" or "post", but can be other things.
 
 		Case sensitivity depends on the environement.
 	**/
@@ -204,7 +204,7 @@ class HttpRequest
 		You should only call `parseMultipart()` a maximum of once per request, and an exception will be thrown if you attempt to call it more than once.
 
 		If this method is called on a request which was not multipart encoded, the result is unspecified.
-		
+
 		@param onPart (optional) - called once at the start of each new file: `onPart( paramName:String, origFileName:String )`
 		@param onData (optional) - called multiple times (in order) for each file: `onData( bytes:haxe.io.Bytes, pos:Int, length:Int )`
 		@param onEndPart (optional) - called after all data for a part has been received.
