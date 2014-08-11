@@ -1,7 +1,7 @@
 package ufront.web.url.filter;
 import ufront.web.context.HttpRequest;
 import thx.error.NullArgument;
-import thx.error.Error;     
+import thx.error.Error;
 
 using StringTools;
 
@@ -14,7 +14,7 @@ class DirectoryUrlFilter implements UFUrlFilter
 {
 	/** The directory that is being filtered **/
 	public var directory(default, null) : String;
-	
+
 	var segments : Array<String>;
 
 	/**
@@ -25,8 +25,8 @@ class DirectoryUrlFilter implements UFUrlFilter
 			directory = directory.substr(0, directory.length-1);
 		this.directory = directory;
 		this.segments = directory.split("/");
-	} 
-	
+	}
+
 	/**
 		Remove the subdirectory from a PartialUrl
 	**/
@@ -35,7 +35,7 @@ class DirectoryUrlFilter implements UFUrlFilter
 		while (url.segments.length > 0 && url.segments[0] == segments[pos++])
 			url.segments.shift();
 	}
-	
+
 	/**
 		Add the subdirectory to a partial URL
 	**/

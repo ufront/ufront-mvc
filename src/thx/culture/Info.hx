@@ -13,7 +13,7 @@ class Info
 	public var iso2(default, null) : String;
 	public var iso3(default, null) : String;
 	public var pluralRule(default, null) : Int;
-	
+
 	public function toString()
 	{
 		return native + " (" + english + ")";

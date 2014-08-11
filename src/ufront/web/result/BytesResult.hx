@@ -13,7 +13,7 @@ class BytesResult extends FileResult
 		super(contentType, fileDownloadName);
 		this.bytes = bytes;
 	}
-	
+
 	override function executeResult( actionContext:ActionContext ) {
 		super.executeResult(actionContext);
 		actionContext.httpContext.response.writeBytes(bytes, 0, bytes.length);

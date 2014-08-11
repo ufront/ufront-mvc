@@ -16,13 +16,13 @@ class TestResult2Attribute extends FilterAttribute implements IResultFilter
 	{
 		super();
 	}
-	
+
 	public function onResultExecuting(filterContext : ResultExecutingContext) : Void
 	{
 		var c = cast(filterContext.controllerContext.controller, BaseTestController);
 		c.sequence.push('result2 executing');
 	}
-	
+
 	public function onResultExecuted(filterContext : ResultExecutedContext) : Void
 	{
 		var c = cast(filterContext.controllerContext.controller, BaseTestController);

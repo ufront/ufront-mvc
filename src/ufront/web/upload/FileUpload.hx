@@ -7,7 +7,7 @@ using tink.CoreApi;
 /**
 	An interface describing an uploaded file.
 
-	Each platform can respond to file uploads differently.  
+	Each platform can respond to file uploads differently.
 	For example, PHP stores temp files for each request, mod_neko has a callback for processing multitype data, and NodeJS will have it's own async methods.
 
 	This interface aims to provide a safe abstraction for working with uploaded files, no matter which platform.

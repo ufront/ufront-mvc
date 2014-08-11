@@ -12,7 +12,7 @@ class GraphNodes<TNodeData, TEdgeData> extends GraphCollection<TNodeData, TEdgeD
 		super(graph, nodeidf);
 	}
 
-	function copyTo(graph : Graph<TNodeData, TEdgeData>) : GraphNodes<TNodeData, TEdgeData> 
+	function copyTo(graph : Graph<TNodeData, TEdgeData>) : GraphNodes<TNodeData, TEdgeData>
 	{
 		var nodes = new GraphNodes(graph);
 		for(node in this)

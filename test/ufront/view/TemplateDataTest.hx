@@ -5,18 +5,18 @@ import ufront.view.TemplateData;
 import haxe.ds.StringMap;
 
 class TemplateDataTest {
-	var instance:TemplateData; 
-	
+	var instance:TemplateData;
+
 	public function new() {}
-	
+
 	public function beforeClass():Void {}
-	
+
 	public function afterClass():Void {}
-	
+
 	public function setup():Void {}
-	
+
 	public function teardown():Void {}
-	
+
 	public function toObject():Void {
 		var data:TemplateData = { name: "jason", age: 26 };
 

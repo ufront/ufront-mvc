@@ -14,7 +14,7 @@ import ufront.log.Message;
 	- Saving them to a database
 	- Sending them to a debugging tool
 
-	etc.  
+	etc.
 
 	The `log()` method takes two arguments - the `HttpContext`, which will include the messages for the current request, and `appMessages`, which may contain app specific messages which may or may not be relevant to that request.  It is up to the LogHandler to decide whether to log these or not.
 

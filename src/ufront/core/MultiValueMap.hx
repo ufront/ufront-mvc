@@ -4,13 +4,13 @@ import haxe.ds.StringMap;
 using StringTools;
 
 /**
-	A custom map structure that represents Http GET/POST parameters. 
+	A custom map structure that represents Http GET/POST parameters.
 
 	It behaves similarly to `Map<String,T>`, except it can contain multiple values for a given parameter name, which is suitable for HTML inputs that return multiple values.
 
 	Notes:
 
-	- For PHP, multiple values are only supported if the parameter name ends with `[]`.  
+	- For PHP, multiple values are only supported if the parameter name ends with `[]`.
 	- Because of the PHP limitation, other platforms (neko etc) ignore a `[]` at the end of a parameter name.
 	- Complex lists, such as the following, are not supported: `<input name="person[1][firstName]" />`, only simple "[]" is supported: `<input name="person[]">`
 **/
@@ -33,7 +33,7 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> from M
 	public inline function exists( name:String ) return this.exists( name );
 
 	/**
-		Return an iterator containing the values of each parameter in this MultiValueMap.  
+		Return an iterator containing the values of each parameter in this MultiValueMap.
 		If multiple parameters have the same name, all values will be included.
 	**/
 	public function iterator() {
@@ -46,7 +46,7 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> from M
 		If this name has more than one parameter, the final value (in the order they were set) will be used.
 		If there is no parameter with this name, it returns null.
 		If `name` is null, the result is unspecified.
-		
+
 		Array access is provided on this method: `trace ( myMultiValueMap['emailAddress'] )`
 	**/
 	@:arrayAccess public function get( name:String ):Null<T> {
@@ -65,7 +65,7 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> from M
 		If there is no parameter with this name, the array will have a length of `0`.
 		If `name` is null, the result is unspecified.
 
-		If the field name in your HTML input ended with "[]", you do not need to include that here.  
+		If the field name in your HTML input ended with "[]", you do not need to include that here.
 		For example, the values of `<input name='phone[]' /><input name='phone[]' />` could be accessed with `MultiValueMap.get('phone')`.
 	**/
 	public function getAll( name:String ):Array<T> {

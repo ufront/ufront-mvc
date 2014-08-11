@@ -1,31 +1,31 @@
 package thx.xml;
 
 class NodeFormat
-{   
+{
 	public var valueFormat : ValueFormat;
-	public var attributeFormat : AttributeFormat;    
+	public var attributeFormat : AttributeFormat;
 	public function new(){}
-	
+
 	public function formatEmptyElement(node : Xml)
 	{
 		return
-			  "<" 
+			  "<"
 			+ node.nodeName
 			+ attributeFormat.formatAttributes(node)
 			+ "/>";
 	}
-	
+
 	public function formatOpenElement(node : Xml)
-	{   
-		return 
+	{
+		return
 			  "<"
 			+ node.nodeName
 			+ attributeFormat.formatAttributes(node)
 			+ ">";
 	}
-	
+
 	public function formatCloseElement(node : Xml)
-	{   
+	{
 		return "</" + node.nodeName + ">";
 	}
 
@@ -35,7 +35,7 @@ class NodeFormat
 	}
 
 	public function formatDocType(node : Xml)
-	{   
+	{
 		return "<!DOCTYPE " + valueFormat.format(node.nodeValue) + ">";
 	}
 

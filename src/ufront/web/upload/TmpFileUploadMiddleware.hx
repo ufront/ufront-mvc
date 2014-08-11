@@ -24,7 +24,7 @@ using Dates;
 	It is probably wise to run this as your very first middleware.
 
 	The response middleware will delete the temporary file at the end of the request.
-	
+
 	@author Jason O'Neil
 **/
 class TmpFileUploadMiddleware implements UFMiddleware
@@ -96,7 +96,7 @@ class TmpFileUploadMiddleware implements UFMiddleware
 					}
 					return Sync.success();
 				}
-				return 
+				return
 					ctx.request.parseMultipart( onPart, onData, onEndPart )
 					.map( function(result) {
 						switch result {
@@ -123,7 +123,7 @@ class TmpFileUploadMiddleware implements UFMiddleware
 					default:
 				}
 			}
-			if ( errors.length>0 ) 
+			if ( errors.length>0 )
 				return Sync.httpError( "Failed to delete one or more temporary upload files", errors );
 		}
 		return Sync.success();

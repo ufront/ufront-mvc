@@ -14,7 +14,7 @@ using haxe.io.Path;
 	This currently only has a synchronous implementation on "sys" platforms.
 **/
 class FileViewEngine extends UFViewEngine {
-	
+
 	/** The script directory for your app. This value should be injected. **/
 	@inject("scriptDirectory") public var scriptDir:String;
 

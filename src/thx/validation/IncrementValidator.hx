@@ -17,7 +17,7 @@ class IncrementValidator extends Validator<Float>
 			throw new Error("increment must be different from zero (0)");
 		this.increment = increment;
 	}
-	
+
 	override public function validate(value : Float)
 	{
 		var test = value / increment;

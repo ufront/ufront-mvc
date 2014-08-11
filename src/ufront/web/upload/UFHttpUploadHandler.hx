@@ -9,17 +9,17 @@ using tink.CoreApi;
 
 	A `UFHttpUploadHandler` allows you to read a file that was uploaded during the HTTPRequest, usually through a `<form method="POST" enctype="multipart/form-data">`.
 
-	It is utilized by using the `setUploadHandler()` method of the current `ufront.web.context.HttpRequest`.  
+	It is utilized by using the `setUploadHandler()` method of the current `ufront.web.context.HttpRequest`.
 	When you do this, the `HttpRequest` object will parse the "multipart/form-data" data and any file uploads it encounters will be sent to this upload handler.
 
 	Only one upload is processed at a time, so it is safe to assume that `uploadStart` will be called first, followed by one or more runs of `uploadProgress`, and finishing with `uploadEnd`.
 	The `HttoRequest` will ensure only one method (`uploadStart`, `uploadProgress` or `uploadEnd`) is ever running at a time.
 
-	If you never call `setUploadHandler()` on the request, the uploaded files are ignored.  
+	If you never call `setUploadHandler()` on the request, the uploaded files are ignored.
 	Multipart data will still be parsed and any "POST" parameters set accordingly, but files will not be processed.
 
 	See `ufront.web.upload.SaveToDirectoryUploadHandler` for an example implementation.
-	
+
 	@author Franco Ponticelli
 **/
 interface UFHttpUploadHandler
@@ -36,7 +36,7 @@ interface UFHttpUploadHandler
 		@return Surprise<Noise,Error> - has this step finished, did it succeeed?
 	**/
 	public function uploadStart(context:HttpContext, name:String, filename:String):Surprise<Noise,Error>;
-	
+
 	/**
 		`uploadProgress` is called by the `HttpRequest` as many times as required until all the upload data has been processed.
 

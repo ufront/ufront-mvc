@@ -28,7 +28,7 @@ import tink.CoreApi;
 	@author Jason O'Neil
 **/
 class RemotingHandler implements UFRequestHandler implements UFInitRequired
-{	
+{
 	var apis:List<Class<UFApiContext>>;
 
 	/** Construct a new RemotingModule, optionally adding an API to the remoting Context. **/
@@ -59,7 +59,7 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 	public function handleRequest( httpContext:HttpContext ):Surprise<Noise,Error> {
 		var doneTrigger = Future.trigger();
 		if ( httpContext.request.clientHeaders.exists("X-Haxe-Remoting") ) {
-			
+
 			// Execute the request
 			var r = httpContext.response;
 			var remotingResponse:String;
@@ -75,12 +75,12 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 							context.addObject(fieldName, o);
 					}
 				}
-				
+
 				// Check the '__x' parameter is present
 				var params = httpContext.request.params;
-				if ( !params.exists("__x") ) 
+				if ( !params.exists("__x") )
 					throw 'Remoting call did not have parameter `__x` which describes which API call to make.  Aborting';
-				
+
 				// Execute the response ... TODO... can we make this support async?
 				remotingResponse = processRequest( params["__x"], context, httpContext.actionContext );
 				r.setOk();

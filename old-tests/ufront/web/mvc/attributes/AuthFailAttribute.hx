@@ -12,12 +12,12 @@ import ufront.web.mvc.TestControllerFiltersMetaData;
 class AuthFailAttribute extends FilterAttribute implements IAuthorizationFilter
 {
 	public function new() {	super(); }
-	
+
 	public function onAuthorization(filterContext : AuthorizationContext)
 	{
 		var c = cast(filterContext.controllerContext.controller, BaseTestController);
-		
-		c.sequence.push("onAuthorization");		
+
+		c.sequence.push("onAuthorization");
 		filterContext.result = new SequenceResult(c, "AuthFail");
-	}	
+	}
 }

@@ -11,9 +11,9 @@ using tink.CoreApi;
 /**
 	A base class for your controllers when using Ufront's MVC (Model View Controller) pattern.
 
-	A controller helps decide on the appropriate action to be taken given the route and parameters provided.  
+	A controller helps decide on the appropriate action to be taken given the route and parameters provided.
 	It then interacts with the site's API, and returns a `ufront.web,result.ActionResult`, which is used to write a response back to the client.
-	
+
 	#### The base controller provides:
 
 	- A constructor where you can set `context` upon initialization.
@@ -25,7 +25,7 @@ using tink.CoreApi;
 	- Dependency injection.  When `context` is set, the injector in the current HttpContext is used to provide dependency injection to this controller.
 	- Shortcuts to `ufTrace()`, `ufLog()`, `ufWarn()` and `ufError()` that can be used in your controller code.
 	- A `toString()` method that prints the current class name, helpful when logging debug information.
-	
+
 	#### How to set up routes:
 
 	An "action" is a method of the controller that can be called by visiting a certain route.
@@ -33,7 +33,7 @@ using tink.CoreApi;
 	You set up an action by defining function and giving it `@:route` metadata.
 
 	Here are some examples:
-	
+
 	- `@:route('/') function homepage() {}`
 	- `@:route('/staff/') function staff() {}`
 	- `@:route('/staff/$name/') function viewPerson( name:String ) {}`
@@ -42,7 +42,7 @@ using tink.CoreApi;
 	- `@:route('/article/$name/$page/') function article( name:String, page:Int ) {}`
 	- `@:route('/upload/*') function article( parts:Array<String> ) {}`
 	- `@:route('/ufadmin/') var adminController:UFAdminController;`
-	
+
 	#### How to write output to the browser:
 
 	- Each action must return a value
@@ -58,11 +58,11 @@ using tink.CoreApi;
 	Each different return type will be handled by `execute()`, and wrapped appropriately so that execute will always return a `Surprise<ActionResult,Error>`.
 
 	Please note that if an exception is thrown in one of your actions, it will be caught and turned into an appropriate `Error` object to be handled by your application's error handlers.
-	
+
 	#### Build macro
 
 	The `execute()` method on this class is abstract, and should be overridden on each child class via a build macro customized especially for that class given the `@:route()` metadata.
-	
+
 	If the build macro encounters `@:route()` metadata on a variable rather than a method, it will:
 
 	- Check the given variable's type represents a Controller
@@ -76,8 +76,8 @@ using tink.CoreApi;
 #end
 class Controller
 {
-	/** 
-		The current HttpContext.  
+	/**
+		The current HttpContext.
 
 		This is set via dependency injection.
 
@@ -91,7 +91,7 @@ class Controller
 		Most of the time a controller will be created using dependency injection:
 
 		    `injector.instantiate( MyController )`
-		
+
 		If not creating a controller with `new MyController()` by sure to inject the dependencies (such as `context`) manually.
 	**/
 	public function new() {}
@@ -103,7 +103,7 @@ class Controller
 
 		It will wrap the return result of your action in an `ActionResult` or `Error`.
 
-		Please note this is an abstract method.  
+		Please note this is an abstract method.
 		Each child class will have an override, provided by a build macro, that has the appropriate code for that class.
 	**/
 	public function execute():FutureActionOutcome {
@@ -111,7 +111,7 @@ class Controller
 	}
 
 	/**
-		A default toString() to aid in logging, tracing or debugging.  
+		A default toString() to aid in logging, tracing or debugging.
 		Prints the current class name.
 	**/
 	@:noCompletion

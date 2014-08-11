@@ -7,20 +7,20 @@ using ufront.test.TestUtils;
 
 class YesBossAuthHandlerTest
 {
-	
+
 	public function new()
 	{
-		
+
 	}
-	
+
 	public function beforeClass():Void {}
-	
+
 	public function afterClass():Void {}
-	
+
 	public function setup():Void {}
-	
+
 	public function teardown():Void {}
-	
+
 	public function testYesBoss():Void {
 		var yb:UFAuthHandler<UFAuthUser> = new YesBossAuthHandler();
 		Assert.isTrue( yb.isLoggedIn() );
@@ -34,7 +34,7 @@ class YesBossAuthHandlerTest
 		Assert.equals( "The Boss", yb.getUserByID("anything").userID );
 		Assert.equals( "The Boss", yb.currentUser.userID );
 	}
-	
+
 	public function testBossUser():Void {
 		var boss = new BossUser();
 		Assert.equals( "The Boss", boss.userID );

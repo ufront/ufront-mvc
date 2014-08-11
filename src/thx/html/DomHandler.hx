@@ -39,7 +39,7 @@ class DomHandler implements HtmlHandler {
 	public function doctype(text : String) {
 		current.addChild(Xml.createDocType(text));
 	}
-	
+
 	public function declaration(text : String) {
 		current.addChild(Xml.createProcessingInstruction(text));
 	}

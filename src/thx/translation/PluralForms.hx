@@ -24,9 +24,9 @@ class PluralForms
 		function(n) return n==1?0:n==0||n%100>0&&n%100<=10?1:n%100>10&&n%100<20?2:3,
 		function(n) return n%10==1?0:n%10==2?1:2
 	];
-	
+
 	public static var pluralForms = [ 1, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4, 5, 4, 4, 3];
-	
+
 	public static var pluralRulesDescriptions = [
 		"0",
 		"n!=1?1:0",

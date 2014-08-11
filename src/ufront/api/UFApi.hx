@@ -4,7 +4,7 @@ import haxe.PosInfos;
 import ufront.log.MessageList;
 import ufront.auth.*;
 
-/** 
+/**
 	This class provides a build macro that will take some extra precautions to make
 	sure your Api class compiles successfully on the client as well as the server.
 
@@ -15,7 +15,7 @@ import ufront.auth.*;
 	get tangled up in client side code.
 **/
 @:autoBuild(ufront.api.ApiMacros.buildApiClass())
-class UFApi 
+class UFApi
 {
 	/**
 		The current `ufront.auth.UFAuthHandler`.
@@ -25,7 +25,7 @@ class UFApi
 		This is inserted via dependency injection.
 	**/
 	@inject public var auth:UFAuthHandler<UFAuthUser>;
-	
+
 	/**
 		The messages list.
 
@@ -36,9 +36,9 @@ class UFApi
 	@:noCompletion @inject public var messages:MessageList;
 
 	/**
-		A default constructor.  
+		A default constructor.
 
-		This has no effect, it just exists so you don't need to create a constructor on every child class. 
+		This has no effect, it just exists so you don't need to create a constructor on every child class.
 	**/
 	public function new() {}
 

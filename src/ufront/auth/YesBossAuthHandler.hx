@@ -7,7 +7,7 @@ package ufront.auth;
 	Useful for command line tools that don't require authentication checks.
 
 	*You're the boss*, everyone is afraid to say "no" to you. ;)
-	
+
 	@author Jason O'Neil
 **/
 class YesBossAuthHandler implements UFAuthHandler<UFAuthUser>
@@ -17,7 +17,7 @@ class YesBossAuthHandler implements UFAuthHandler<UFAuthUser>
 	public function isLoggedIn() return true;
 
 	public function requireLogin() {}
-	
+
 	public function isLoggedInAs( user:UFAuthUser ) return true;
 
 	public function requireLoginAs( user:UFAuthUser ) {}
@@ -29,7 +29,7 @@ class YesBossAuthHandler implements UFAuthHandler<UFAuthUser>
 	public function requirePermission( permission:EnumValue ) {}
 
 	public function requirePermissions( permissions:Iterable<EnumValue> ) {}
-	
+
 	public function getUserByID( id:String ):Null<UFAuthUser> return new BossUser();
 
 	public function setCurrentUser( u:Null<UFAuthUser> ) {}

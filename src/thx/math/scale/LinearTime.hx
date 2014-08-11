@@ -84,14 +84,14 @@ class LinearTime extends Linear
 		_usetimeticks = v;
 		return this;
 	}
-	
+
 	public function getMaxNumberOfTicks() return _maxnumberofticks
 	public function maxNumberOfTicks(v : Int)
 	{
 		_maxnumberofticks = v;
 		return this;
 	}
-	
+
 	override public function ticks()
 	{
 		if (_usetimeticks)
@@ -104,7 +104,7 @@ class LinearTime extends Linear
 	{
 		return super.ticks();
 	}
-	
+
 	public function timeTicks()
 	{
 		var start = Arrays.min(_domain);
@@ -152,7 +152,7 @@ class LinearTime extends Linear
 			step *= 2;
 			rsteps = Math.ceil((stop - start) / step);
 		}
-				
+
 		start = Math.ceil(start / step) * step;
 		stop = Math.floor(stop / step) * step + step * .5;
 		return Floats.range(start, stop, step);

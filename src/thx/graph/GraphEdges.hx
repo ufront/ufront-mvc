@@ -17,7 +17,7 @@ class GraphEdges<TNodeData, TEdgeData> extends GraphCollection<TNodeData, TEdgeD
 		edgesn = new Map ();
 	}
 
-	function copyTo(graph : Graph<TNodeData, TEdgeData>) : GraphEdges<TNodeData, TEdgeData> 
+	function copyTo(graph : Graph<TNodeData, TEdgeData>) : GraphEdges<TNodeData, TEdgeData>
 	{
 		var edges = new GraphEdges(graph),
 			nodes = graph.nodes,

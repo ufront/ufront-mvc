@@ -17,7 +17,7 @@ using StringTools;
 
 /**
 	An implementation of HttpRequest for mod_neko and mod_tora.
-	
+
 	@author Franco Ponticelli, Jason O'Neil
 **/
 class HttpRequest extends ufront.web.context.HttpRequest
@@ -26,19 +26,19 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	{
 		return s.urlEncode().replace('.', '%2E');
 	}
-	
+
 	public function new()
 	{
 		_init();
 		_parsed = false;
 	}
-	
+
 	override function get_queryString()
 	{
 		if (null == queryString) {
 			var v = _get_params_string();
 			queryString = (v!=null) ? new String(v) : "";
-			
+
 			var indexOfHash = queryString.indexOf("#");
 			if (indexOfHash>-1) {
 				queryString = queryString.substring( 0, indexOfHash );
@@ -46,7 +46,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		return queryString;
 	}
-	
+
 	override function get_postString()
 	{
 		if (httpMethod == "GET")
@@ -57,7 +57,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		return postString;
 	}
-	
+
 	var _parsed:Bool;
 
 	/**
@@ -71,7 +71,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		- Because of this, `onPart` and `onData` will run synchronously - the moment the callback finishes, the next callback will continue.
 		- We suggest on neko you only use callbacks which can run synchronously.
 		- `onEndPart` will not be called until all `onPart` and `onData` functions have finished firing.
-		- 
+		-
 	**/
 	override public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error>
 	{
@@ -91,20 +91,20 @@ class HttpRequest extends ufront.web.context.HttpRequest
 
 		post = new MultiValueMap();
 		var noParts = true,
-		    isFile = false, 
+		    isFile = false,
 		    partName = null,
 		    fileName = null,
 		    currentContent = null,
 		    callbackFutures = [],
 		    errors = [];
-		
+
 		// callbacks for processing data
 		function processCallbackResult( surprise:Surprise<Noise,Error> ) {
 			callbackFutures.push( surprise );
 			surprise.handle( function(outcome) {
 				switch outcome {
 					case Failure(err): errors.push( err.toString() );
-					default: 
+					default:
 				}
 			});
 		}
@@ -149,14 +149,14 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		// Call mod_neko's "parse_multipart_data" using the callbacks above
 		try {
 			_parse_multipart(
-				function(p,f) { 
+				function(p,f) {
 					var partName = new String(p);
 					var fileName = if( f == null ) null else new String(f);
-					doPart( partName, fileName ); 
+					doPart( partName, fileName );
 				},
 				function(buf,pos,len) {
 					var data = untyped new haxe.io.Bytes(__dollar__ssize(buf),buf);
-					doData(data,pos,len); 
+					doData(data,pos,len);
 				}
 			);
 		}
@@ -176,14 +176,14 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		else return Sync.of( Success(Noise) );
 	}
-	
+
 	override function get_query()
 	{
 		if (null == query)
 			query = getHashFromString(queryString);
 		return query;
 	}
-	
+
 	override function get_post()
 	{
 		if (httpMethod == "GET")
@@ -198,7 +198,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		return post;
 	}
-	
+
 	override function get_cookies()
 	{
 		if (null == cookies)
@@ -214,28 +214,28 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		return cookies;
 	}
-	
+
 	override function get_hostName()
 	{
 		if (null == hostName)
 			hostName = new String(_get_host_name());
 		return hostName;
 	}
-	
+
 	override function get_clientIP()
 	{
 		if (null == clientIP)
 			clientIP = new String(_get_client_ip());
 		return clientIP;
 	}
-	
+
 	/**
 	 *  @todo the page processor removal is quite hackish
 	 */
 	override function get_uri()
 	{
 		if (null == uri) {
-			uri = new String(_get_uri()); 
+			uri = new String(_get_uri());
 			if(uri.endsWith(".n")) {
 				var p = uri.split("/");
 				p.pop();
@@ -244,7 +244,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		return uri;
 	}
-	
+
 	override function get_clientHeaders()
 	{
 		if (null == clientHeaders)
@@ -262,7 +262,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		return clientHeaders;
 	}
-	
+
 	override function get_httpMethod()
 	{
 		if (null == httpMethod)
@@ -272,7 +272,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		return httpMethod;
 	}
-	
+
 	override function get_scriptDirectory()
 	{
 		if (null == scriptDirectory)
@@ -281,7 +281,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		return scriptDirectory;
 	}
-	
+
 	override function get_authorization() {
 		if ( authorization==null ) {
 			authorization = { user:null, pass:null };
@@ -299,7 +299,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		return authorization;
 	}
-	
+
 	static var paramPattern = ~/^([^=]+)=(.*?)$/;
 	static function getHashFromString(s:String):MultiValueMap<String>
 	{
@@ -314,7 +314,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		return qm;
 	}
-	
+
 	static var _get_params_string:Dynamic;
 	static var _get_post_data:Dynamic;
 	static var _get_cookies:Dynamic;

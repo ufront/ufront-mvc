@@ -5,18 +5,18 @@ import ufront.web.result.RedirectResult;
 using ufront.test.TestUtils;
 
 class RedirectResultTest {
-	var instance:RedirectResult; 
-	
+	var instance:RedirectResult;
+
 	public function new() {}
-	
+
 	public function beforeClass():Void {}
-	
+
 	public function afterClass():Void {}
-	
+
 	public function setup():Void {}
-	
+
 	public function teardown():Void {}
-	
+
 	public function testRedirect():Void {
 
 		var ctx1 = "/".mockHttpContext();

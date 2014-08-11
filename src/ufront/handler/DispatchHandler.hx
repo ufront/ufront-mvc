@@ -9,7 +9,7 @@ import ufront.app.UFInitRequired;
 import ufront.app.UFRequestHandler;
 import haxe.web.Dispatch.DispatchConfig;
 import haxe.web.Dispatch.DispatchError;
-#if macro 
+#if macro
 	import haxe.macro.Expr;
 #else
 	import ufront.app.HttpApplication;
@@ -32,7 +32,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 {
 	/** The Object (API, Routes or Controller) that Dispatch will check requests against. */
 	public var dispatchConfig(default, null):DispatchConfig;
-	
+
 	/** The Dispatch object used **/
 	public var dispatch(default, null):Dispatch;
 
@@ -49,14 +49,14 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 	#else
 		/**
 			An injector for things that should be available to DispatchHandler, your controllers, actions and results.
-		
+
 			This extends `HttpApplication.injector`, so all mappings available in the application injector will be available here.
 
 			UfrontApplication also adds the following mappings by default:
 
 			- A mapClass rule for every class that extends `ufront.web.Controller`
 			- A mapSingleton rule for every class that extends `ufront.api.UFApi`
-			
+
 			We will create a child injector for each dispatch request that also maps a `ufront.web.context.HttpContext` instance and related auth, session, request and response values.
 		**/
 		public var injector(default,null):Injector;
@@ -71,9 +71,9 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 			this.dispatchConfig = dispatchConfig;
 			return this;
 		}
-	
-		/** 
-			Constructor 
+
+		/**
+			Constructor
 
 			Example usage:
 
@@ -108,17 +108,17 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 				dispatchConfig = Dispatch.make( new DefaultRoutes() );
 
 			switch processRequest( ctx ) {
-				case Success(_): 
+				case Success(_):
 					return
 						executeAction( ctx ) >>
 						function (r:Noise) return executeResult( ctx );
-				case Failure(e): 
+				case Failure(e):
 					return Future.sync( Failure(e) );
 			}
 		}
 
 		function processRequest( context:HttpContext ):Outcome<Noise,Error> {
-			
+
 			// Process the dispatch request
 			try {
 				var actionContext = context.actionContext;
@@ -133,10 +133,10 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 					actionContext.controller = dispatch.controller;
 					actionContext.action = dispatch.action;
 					actionContext.args = dispatch.arguments;
-					
+
 					// Inject into our controller (if it already has been injected, no matter...)
 					switch Type.typeof( dispatch.controller ) {
-						case TClass( cl ): 
+						case TClass( cl ):
 							if ( Std.is(dispatch.controller, DispatchController) ) {
 								// Set "context", which will do injection on the controller as well
 								var c:DispatchController = cast dispatch.controller;
@@ -151,17 +151,17 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 					}
 				});
 
-				// Duplicate routes for each request, in case the object is cached.  
+				// Duplicate routes for each request, in case the object is cached.
 				var newDispatchConfig = { obj:null, rules: dispatchConfig.rules };
 				switch Type.typeof( dispatchConfig.obj ) {
-					case TClass( cl ): 
+					case TClass( cl ):
 						newDispatchConfig.obj = context.injector.instantiate( cl );
 					default:
 				}
 
 				dispatch.processDispatchRequest( newDispatchConfig );
 				return Success( null );
-			} 
+			}
 			catch ( e:DispatchError ) return Failure( dispatchErrorToHttpError(e) );
 		}
 
@@ -172,7 +172,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 			dispatch.controller = context.actionContext.controller;
 			dispatch.action = context.actionContext.action;
 			dispatch.arguments = context.actionContext.args;
-			
+
 			// Execute the result
 			try {
 				// TODO - make this async...
@@ -189,7 +189,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 				// Fake the position the error came from...
 				var p = HttpError.fakePosition( context.actionContext.controller, context.actionContext.action, context.actionContext.args );
 				#if debug context.ufError( 'Caught unknown error in DispatchHandler.executeAction while executing ${p.className}.${p.methodName}(${p.customParams.join(",")})' ); #end
-				t.trigger( Failure(HttpError.wrap(e,p)) ); 
+				t.trigger( Failure(HttpError.wrap(e,p)) );
 			}
 
 			return t.asFuture();
@@ -197,7 +197,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 
 		function executeResult( context:HttpContext ):Surprise<Noise,Error> {
 			return
-				try 
+				try
 					context.actionContext.actionResult.executeResult( context.actionContext )
 				catch ( e:Dynamic ) {
 					var p = HttpError.fakePosition( context.actionContext, "executeResult", ["actionContext"] );

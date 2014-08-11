@@ -22,7 +22,7 @@ class HtmlDocumentFormat extends DocumentFormat
 		_level = 0;
 		_begin = true;
 	}
-	
+
 	function indentWrap(content : String)
 	{
 		if("" == content)
@@ -30,17 +30,17 @@ class HtmlDocumentFormat extends DocumentFormat
 		else
 			return newline + content.wrapColumns(wrapColumns, indent.repeat(_level), newline);
 	}
-	
+
 	override function format(node : Xml)
 	{
 		return super.format(node).ltrim(newline);
 	}
-	
+
 	override function isEmpty(node : Xml)
 	{
 		return Element.isEmpty(node.nodeName);
 	}
-	
+
 	public function formatInlineNode(node : Xml)
 	{
 		var t = node.nodeType;
@@ -57,7 +57,7 @@ class HtmlDocumentFormat extends DocumentFormat
 			return throw "invalid node type: " + Std.string(t);
 		}
 	}
-	
+
 	function formatInlineElement(node : Xml)
 	{
 		if(isEmpty(node))
@@ -70,7 +70,7 @@ class HtmlDocumentFormat extends DocumentFormat
 				+ formatInlineCloseElement(node);
 		}
 	}
-	
+
 	function contentIsEmpty(node : Xml)
 	{
 		for (c in node)
@@ -80,7 +80,7 @@ class HtmlDocumentFormat extends DocumentFormat
 		}
 		return true;
 	}
-	
+
 	function formatSpecialElement(node : Xml)
 	{
 		if (contentIsEmpty(node))
@@ -90,7 +90,7 @@ class HtmlDocumentFormat extends DocumentFormat
 			return formatOpenElement(node) + wrapSpecialElementContent(formatChildren(node)) + formatCloseElement(node);
 		}
 	}
-	
+
 	function wrapSpecialElementContent(content : String)
 	{
 		switch(specialElementContentFormat)
@@ -103,7 +103,7 @@ class HtmlDocumentFormat extends DocumentFormat
 				return "<!--" + newline + content + newline + "// -->";
 		}
 	}
-	
+
 	override function formatElement(node : Xml)
 	{
 		if (Element.isSpecial(node.nodeName)) {
@@ -127,7 +127,7 @@ class HtmlDocumentFormat extends DocumentFormat
 				var open    = formatInlineOpenElement(node);
 				var content = formatInlineChildren(node);
 				var close   = formatInlineCloseElement(node);
-				
+
 				if(indent.length * _level + open.length + content.length + close.length <= wrapColumns)
 					return indentWrap(open + content + close);
 				else
@@ -153,7 +153,7 @@ class HtmlDocumentFormat extends DocumentFormat
 			}
 		}
 	}
-	
+
 	function inlineContent(node : Xml)
 	{
 		for(child in node)
@@ -164,7 +164,7 @@ class HtmlDocumentFormat extends DocumentFormat
 		}
 		return true;
 	}
-	
+
 	override function formatChildren(node : Xml)
 	{
 		_level++;
@@ -172,7 +172,7 @@ class HtmlDocumentFormat extends DocumentFormat
 		_level--;
 		return content;
 	}
-	
+
 	function formatInlineChildren(node : Xml)
 	{
 		var buf = new StringBuf();
@@ -180,7 +180,7 @@ class HtmlDocumentFormat extends DocumentFormat
 			buf.add(formatInlineNode(child));
 		return buf.toString();
 	}
-	
+
 	override function formatDocType(node : Xml)
 	{
 		return indentWrap(super.formatDocType(node));
@@ -190,7 +190,7 @@ class HtmlDocumentFormat extends DocumentFormat
 	{
 		return indentWrap(super.formatProlog(node));
 	}
-	
+
 	override function formatComment(node : Xml)
 	{
 		if(stripComments)
@@ -198,7 +198,7 @@ class HtmlDocumentFormat extends DocumentFormat
 		else
 			return indentWrap(nodeFormat.formatComment(node));
 	}
-	
+
 	function formatInlineComment(node : Xml)
 	{
 		if(stripComments)
@@ -206,37 +206,37 @@ class HtmlDocumentFormat extends DocumentFormat
 		else
 			return nodeFormat.formatComment(node);
 	}
-	
+
 	override function formatEmptyElement(node : Xml)
 	{
 		return indentWrap(super.formatEmptyElement(node));
 	}
-	
+
 	override function formatOpenElement(node : Xml)
 	{
 		return indentWrap(super.formatOpenElement(node));
 	}
-	
+
 	override function formatCloseElement(node : Xml)
 	{
 		return indentWrap(super.formatCloseElement(node));
 	}
-	
+
 	function formatInlineEmptyElement(node : Xml)
 	{
 		return super.formatEmptyElement(node);
 	}
-	
+
 	function formatInlineOpenElement(node : Xml)
 	{
 		return super.formatOpenElement(node);
 	}
-	
+
 	function formatInlineCloseElement(node : Xml)
 	{
 		return super.formatCloseElement(node);
 	}
-	
+
 	override function formatDocument(node : Xml)
 	{
 		return super.formatChildren(node);
@@ -251,7 +251,7 @@ class HtmlDocumentFormat extends DocumentFormat
 	{
 		return indentWrap(super.formatCData(node));
 	}
-	
+
 	function formatInlinePCData(node : Xml)
 	{
 		return super.formatPCData(node);

@@ -14,7 +14,7 @@ class RangeValidator<T : Float> extends Validator<T>
 	public var max : Null<Float>;
 	public var minInclusive : Bool;
 	public var maxInclusive : Bool;
-	
+
 	public function new(?min : Float, ?max : Float, mininclusive = true, maxinclusive = true)
 	{
 		this.min = min;
@@ -22,7 +22,7 @@ class RangeValidator<T : Float> extends Validator<T>
 		this.minInclusive = mininclusive;
 		this.maxInclusive = maxinclusive;
 	}
-	
+
 	override public function validate(value : T)
 	{
 		if (null != min && ((minInclusive && value < min) || (!minInclusive && value <= min)))

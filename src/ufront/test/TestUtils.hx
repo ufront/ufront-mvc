@@ -20,7 +20,7 @@ using tink.CoreApi;
 
 	Every `mock` function uses `Mockatoo` for mocking, see the [Github Readme](https://github.com/misprintt/mockatoo/) and [Developer Guide](https://github.com/misprintt/mockatoo/wiki/Developer-Guide) for more information.
 
-	Designed for `using ufront.test.TestUtils`.  
+	Designed for `using ufront.test.TestUtils`.
 
 	It will also work best to add `using mockatoo.Mockatoo` to make the mocking functions easily accessible.
 **/
@@ -39,7 +39,7 @@ class TestUtils
 		```
 
 		The URI provided is the raw `REQUEST_URI` and so can include a query string etc.
-		
+
 		The mocking is as follows:
 
 		* The uri is used for `request.uri` if the request is being mocked.  (If the request object is given, not mocked, the supplied Uri is ignored)
@@ -160,7 +160,7 @@ class TestUtils
 				doneCallback();
 				return successResult;
 
-			case Failure( f ): 
+			case Failure( f ):
 				var exceptionStack = haxe.CallStack.toString(haxe.CallStack.exceptionStack());
 				Assert.fail( 'Expected routing to succeed, but it did not (failed with error $f, ${f.data} ${exceptionStack})', p );
 				doneCallback();
@@ -176,7 +176,7 @@ class TestUtils
 		If the result was not a failure, this will call `Assert.fail()`, giving an error at the position this method was called from.
 
 		If the result failed as expected:
-	
+
 		* if `code` is specified, it will be checked against the code of the `tink.core.Error`
 		* if the codes do not match, `Assert.fail()` will be called.
 		* the caught exception will be returned for inspection.
@@ -191,11 +191,11 @@ class TestUtils
 		var doneCallback = Assert.createAsync(function() {});
 		var future = result.map(function processOutcome(outcome) {
 			switch outcome {
-				case Success( _ ): 
+				case Success( _ ):
 					Assert.fail( 'Expected routing to fail, but it was a success', p );
 					doneCallback();
 					return null;
-				case Failure( failure ): 
+				case Failure( failure ):
 					if ( code!=null )
 						if ( code!=failure.code )
 							Assert.fail( 'Failure code [${failure.code}] was not equal to expected failure code [$code]', p );
@@ -209,8 +209,8 @@ class TestUtils
 	}
 }
 
-typedef RouteTestResult = { 
-	app: UfrontApplication, 
+typedef RouteTestResult = {
+	app: UfrontApplication,
 	context: HttpContext
 }
 typedef RouteTestOutcome = Surprise<RouteTestResult, Error>;

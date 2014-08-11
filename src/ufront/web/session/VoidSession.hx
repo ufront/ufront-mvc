@@ -7,8 +7,8 @@ import tink.CoreApi;
 /**
 	A session implementation that doesn't actually save session state.
 
-	In fact, it forgets everything the moment you ask it.  
-	Use this when you do not want a session implementation, but also do not want to get null related errors in your code.  
+	In fact, it forgets everything the moment you ask it.
+	Use this when you do not want a session implementation, but also do not want to get null related errors in your code.
 	For example, when testing.
 **/
 class VoidSession implements UFHttpSession

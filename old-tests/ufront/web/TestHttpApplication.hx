@@ -15,7 +15,7 @@ class TestHttpApplication extends HttpApplication
 	{
 		runner.addCase(new TestHttpApplication());
 	}
-	
+
 	public static function main()
 	{
 		var runner = new Runner();
@@ -23,22 +23,22 @@ class TestHttpApplication extends HttpApplication
 		Report.create(runner);
 		runner.run();
 	}
-	
+
 	public function new()
 	{
 		var context = new HttpContextMock();
 		super(context);
 	}
-	
+
 	public function testSequence()
 	{
 		var mock = new MockEventsModule();
 		modules.add(mock);
-		
+
 		Assert.same([], mock.triggeredEvents);
-		
+
 		execute();
-		
+
 		var eventChain = ["begin",
 						"resolvecache",
 						"afterresolvecache",
@@ -55,21 +55,21 @@ class TestHttpApplication extends HttpApplication
 						"log",
 						"afterlog",
 						"end"];
-		
+
 		Assert.same(eventChain, mock.triggeredEvents);
 //		Assert.isFalse(mock.disposed);
-		
+
 //		dispose();
 		Assert.isTrue(mock.disposed);
 	}
-	
+
 	public function testInterruptedChain()
 	{
 		var mock = new MockEventsModule(true);
 		modules.add(mock);
 		execute();
 		Assert.same(["begin", "resolvecache", "afterresolvecache", "handler", "end"], mock.triggeredEvents);
-	}	
+	}
 }
 
 private class MockEventsModule implements IHttpModule
@@ -83,14 +83,14 @@ private class MockEventsModule implements IHttpModule
 		triggeredEvents = [];
 		crashOnHandler = crashonhandler;
 	}
-	
+
 	public function init(application : HttpApplication)
 	{
 		var events = triggeredEvents;
 		var crashonhandler = crashOnHandler;
-		
+
 		application.onBeginRequest.add(function (_) events.push("begin"));
-		
+
 		application.onResolveRequestCache.add(function (_) events.push("resolvecache"));
 		application.onPostResolveRequestCache.add(function (_) events.push("afterresolvecache"));
 		application.onMapRequestHandler.add(function (_)
@@ -110,10 +110,10 @@ private class MockEventsModule implements IHttpModule
 		application.onPostUpdateRequestCache.add(function (_) events.push("afterupdatecache"));
 		application.onLogRequest.add(function (_) events.push("log"));
 		application.onPostLogRequest.add(function (_) events.push("afterlog"));
-		
+
 		application.onEndRequest.add(function (_) events.push("end"));
 	}
-	
+
 	public function dispose()
 	{
 		disposed = true;

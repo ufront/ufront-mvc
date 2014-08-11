@@ -9,7 +9,7 @@ using Dates;
 	This does not actually set a cookie.  Use `setCookie()` on a `HttpResponse` object to set the cookie.
 
 	TODO: document further.
-	
+
 	@author Franco Ponticelli
 **/
 class HttpCookie
@@ -20,7 +20,7 @@ class HttpCookie
 	public var path : String;
 	public var secure : Bool;
 	public var value(default, set) : String;
-	
+
 	public function new(name : String, value : String, ?expires : Date, ?domain : String, ?path : String, secure = false)
 	{
 		this.name = name;
@@ -30,24 +30,24 @@ class HttpCookie
 		this.path = path;
 		this.secure = secure;
 	}
-	
+
 	function setName(v : String)
 	{
 		NullArgument.throwIfNull( v );
 		return name = v;
 	}
-	
+
 	function set_value(v : String)
 	{
 		NullArgument.throwIfNull( v );
 		return value = v;
 	}
-	
+
 	public function toString()
 	{
 		return name + ": " + description;
 	}
-	
+
 	public function description()
 	{
 		var buf = new StringBuf();
@@ -60,7 +60,7 @@ class HttpCookie
 			addPair(buf, "secure", true);
 		return buf.toString();
 	}
-	
+
 	static function addPair( buf : StringBuf, name, ?value : String, allowNullValue = false) {
 		if (!allowNullValue && null == value)
 			return;

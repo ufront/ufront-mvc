@@ -12,7 +12,7 @@ class TestAll
 		Report.create(runner);
 		runner.run();
 	}
-	
+
 	public static function addTests( runner:Runner ) {
 		ufront.TestAll.addTests( runner );
 		haxe.TestAll.addTests( runner );

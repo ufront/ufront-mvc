@@ -30,7 +30,7 @@ class ControllerMacros {
 		Go over every field in a controller looking for @:route metadata, so we can create an appropriate `execute()` function for this class.
 	**/
 	static function processRoutes( classBuilder:ClassBuilder ):Void {
-		
+
 		var routeInfos:Array<RouteInfo> = [];
 
 		// For each instance field with @:route metadata
@@ -70,7 +70,7 @@ class ControllerMacros {
 
 	/**
 		Given a field, extract the route and httpMethod information.
-	
+
 		Returns a pair, containing a) the route parts (split by "/"), and b) the http method, if one was specified.
 		Returns a failure and prints a warning to the console if metadata is found but is invalid.
 		Returns a failure if metadata isn't found.
@@ -82,7 +82,7 @@ class ControllerMacros {
 			var routeParts = null,
 				method = null;
 			for ( expr in metaExprs ) switch expr.expr {
-				case EConst(CString(routeStr)): 
+				case EConst(CString(routeStr)):
 					if (routeParts==null) {
 						routeParts=routeStr.split( "/" );
 						if ( routeParts.length>0 && routeParts[0]=="" ) routeParts.shift();
@@ -90,16 +90,16 @@ class ControllerMacros {
 						validateRouteParts( routeParts, expr.pos );
 					}
 					else Context.warning( 'More than one @:route value for ${field.name} was specified', field.pos );
-				
+
 				case EConst(CIdent(methodName)):
 					if (methodName!="POST" && methodName!="GET" && methodName!="PUT" && methodName!="DELETE")
 						Context.warning( 'Invalid httpMethod for $methodName for @:route on ${field.name}.  Valid values are POST, GET, PUT and DELETE', field.pos );
-					else if ( method!=null ) 
+					else if ( method!=null )
 						Context.warning( 'More than one @:route httpMethod value for ${field.name}: ${methodName} and ${method}', field.pos );
-					else 
+					else
 						method = methodName;
-				
-				case _: 
+
+				case _:
 					Context.warning( 'Unknown metadata value in @:route on ${field.name}: ' + expr.toString(), field.pos );
 			}
 			if ( routeParts==null ) {
@@ -257,9 +257,9 @@ class ControllerMacros {
 		var requiredLength = routeParts.length;
 
 		// If the final part is a wildcard, then it means that part isn't required.
-		// We check here rather than where there is an argument, because sometimes you can have a wildcard but no "rest:Array<String>" arg, 
+		// We check here rather than where there is an argument, because sometimes you can have a wildcard but no "rest:Array<String>" arg,
 		// and in that case we still want to lower the required parts..
-		if ( routeParts[routeParts.length-1]=="*" ) 
+		if ( routeParts[routeParts.length-1]=="*" )
 			requiredLength--;
 
 		var argumentInfo = [];
@@ -283,8 +283,8 @@ class ControllerMacros {
 				else {
 
 					var routePartIndex = routeParts.indexOf( "$"+arg.name );
-					if ( routePartIndex==-1 ) 
-						Context.error( 'The argument `${arg.name}` was not supplied in route "${routeParts.join("/")}".', pos ); 
+					if ( routePartIndex==-1 )
+						Context.error( 'The argument `${arg.name}` was not supplied in route "${routeParts.join("/")}".', pos );
 
 					var isOptional = arg.opt || arg.value!=null;
 					if ( isOptional ) {
@@ -302,7 +302,7 @@ class ControllerMacros {
 
 					switch getRouteArgType( arg.type ) {
 						case Success(routeArgType):
-							var defaultVal = 
+							var defaultVal =
 								if ( isOptional && arg.value!=null ) arg.value
 								else if ( isOptional ) macro null
 								else null
@@ -329,7 +329,7 @@ class ControllerMacros {
 		Given a route part, eg `$id`, and a list of function args, find the correct arg, eg `id:Int`
 	**/
 	static function getFunctionArgFromRoutePart( fnArgs:Array<FunctionArg>, routePart:String ):FunctionArg {
-		if ( routePart.charAt(0)!="$" ) 
+		if ( routePart.charAt(0)!="$" )
 			return null;
 
 		var argName = routePart.substr(1);
@@ -343,7 +343,7 @@ class ControllerMacros {
 		Return the appropriate RouteArgType to make it easier to handle later.
 	**/
 	static function getRouteArgType( argType:ComplexType ) {
-		return 
+		return
 			if ( complexTypesUnify(argType, macro :String) ) Success(SATString);
 			else if ( complexTypesUnify(argType, macro :Int) ) Success(SATInt);
 			else if ( complexTypesUnify(argType, macro :Float) ) Success(SATFloat);
@@ -356,11 +356,11 @@ class ControllerMacros {
 	**/
 	static function isComplexTypeOptional( argType:ComplexType ) {
 		switch argType {
-			case TOptional(_): 
+			case TOptional(_):
 				return true;
 			case TPath(tpath):
 				return ( tpath.name==null && tpath.pack.length==0 );
-			case _: 
+			case _:
 				return false;
 		}
 	}
@@ -397,7 +397,7 @@ class ControllerMacros {
 					var msg = 'Failed to parse function argument `args`.  The args object must contain only the types String, Int, Float and Bool. \n$e';
 					Context.error( msg, pos );
 				}
-			case _: 
+			case _:
 		}
 		return null;
 	}
@@ -426,7 +426,7 @@ class ControllerMacros {
 			try {
 				// The bulk of the processing for each route
 				$ifElseRoutingBlock;
-				
+
 				// As a fallback, return a 404 failure
 				return throw ufront.web.HttpError.pageNotFound();
 			}
@@ -516,7 +516,7 @@ class ControllerMacros {
 			var argData = makeExprToReadArgFromRequest(arg);
 			var ident = argData.ident;
 			fnArgs.push( ident );
-			for ( l in argData.lines ) 
+			for ( l in argData.lines )
 				lines.push( l );
 		}
 
@@ -541,18 +541,18 @@ class ControllerMacros {
 	}
 
 	/**
-		Given an argument declaration, 
+		Given an argument declaration,
 
-		Returns an object, with 
+		Returns an object, with
 
-		a) containing the expression of the ident, 
+		a) containing the expression of the ident,
 		b) the lines to insert, including the `$ident = $readExpr` line.
 	**/
 	static function makeExprToReadArgFromRequest( arg:ArgumentKind ):{ ident:Expr, lines:Array<Expr> } {
 		switch arg {
 			case AKPart( name, partNum, type, optional, defaultValue ):
 				var ident = name.resolve();
-				var expr = 
+				var expr =
 					if ( optional ) macro (uriParts[$v{partNum}]!=null && uriParts[$v{partNum}]!="") ? uriParts[$v{partNum}] : $defaultValue
 					else macro uriParts[$v{partNum}]
 				;
@@ -585,7 +585,7 @@ class ControllerMacros {
 				var expr = { expr: EObjectDecl(fields), pos: Context.currentPos() };
 				lines.push( macro var args = $expr );
 				return { ident: ident, lines: lines };
-			case AKRest: 
+			case AKRest:
 				var ident = "rest".resolve();
 				var expr = macro var rest = context.actionContext.uriParts;
 				return { ident: ident, lines: [ expr ] };
@@ -593,7 +593,7 @@ class ControllerMacros {
 	}
 
 	/**
-		For a given ident, readExpr and type, create a set of lines that: 
+		For a given ident, readExpr and type, create a set of lines that:
 
 		- reads the string, (using $readExpr)
 		- converts the input to the appropriate type
@@ -603,21 +603,21 @@ class ControllerMacros {
 	static function createReadExprForType( identName:String, readExpr:ExprOf<String>, type:RouteArgType, optional:Bool ):Array<Expr> {
 		// Reification of `macro var $i{identName} = $readExpr` isn't working, so I'm using this helper
 		function createVarDecl( name:String, expr:Expr ) {
-			return { 
+			return {
 				expr: EVars([{
 					name: name,
 					expr: expr,
 					type: null
 				}]),
-				pos: Context.currentPos() 
+				pos: Context.currentPos()
 			};
 		}
 
 		return switch type {
-			case SATString: 
+			case SATString:
 				var declaration = createVarDecl( identName, readExpr );
 				[declaration];
-			case SATInt: 
+			case SATInt:
 				var declaration = createVarDecl( identName, macro Std.parseInt($readExpr) );
 				var check = macro if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest();
 				( optional ) ? [declaration] : [declaration,check];
@@ -625,7 +625,7 @@ class ControllerMacros {
 				var declaration = createVarDecl( identName, macro Std.parseFloat($readExpr) );
 				var check = macro if (Math.isNan($i{identName})) throw ufront.web.HttpError.badRequest();
 				( optional ) ? [declaration] : [declaration,check];
-			case SATBool: 
+			case SATBool:
 				var readStr = macro var v = $readExpr;
 				var transformToBool = createVarDecl( identName, macro (v!="false" && v!="0" && v!="null") );
 				[readStr,transformToBool];
@@ -636,12 +636,12 @@ class ControllerMacros {
 		Take the return expression of a particular action, and wrap it appropriately.
 
 		This involves using the `wrapResult` method of `ufront.web.Controller`.
-		
+
 		If your action returns `Void`, this will pass "null" to `wrapResult`, resulting in an appropriately wrapped `EmptyResult`.
-		
+
 		Otherwise, it uses `wrapResult` metadata added during an `onGenerate` macro to decide what wrapping is required, and passes that information to `wrapResult`.
 		For details see `addRouteWrappingMetadata` (a build macro on ufront.web.Controller).
-	
+
 		This returns a correctly typed expression to use with `result:Surprise<ActionResult,Error> = $expr`
 		This will also add extra expressions to a `lines` array, meaning they will be added before the `result=` line above.
 	**/
@@ -661,7 +661,7 @@ class ControllerMacros {
 
 	/**
 		An `onGenerate` function that adds `@wrappingRequired( enumFlags )` metadata for each controller action.
-	
+
 		See `getResultWrapFlagsForReturnType` for details on which flags are set.
 	**/
 	static function addResultWrappingMetadata( id:String, types:Array<Type> ) {
@@ -669,7 +669,7 @@ class ControllerMacros {
 		for ( type in types ) {
 			if ( type.getID()==id ) {
 				switch type {
-					case TInst( ref, _ ): 
+					case TInst( ref, _ ):
 						var classType = ref.get();
 						for ( f in classType.fields.get() ) {
 							if ( f.meta.has(":route") ) {
@@ -677,7 +677,7 @@ class ControllerMacros {
 									case TFun( _, returnType ):
 										var wrapResultInt = getResultWrapFlagsForReturnType( returnType ).toInt();
 										f.meta.add( "wrapResult", [macro $v{wrapResultInt}], f.pos );
-									case _: 
+									case _:
 										Context.error( '@:route metadata was used on ${f.name}, which is not a function.', f.pos );
 								}
 							}
@@ -757,7 +757,7 @@ class ControllerMacros {
 
 		`if (x==1) { doThis(); } else { if (x==2) { doThat(); } }`
 
-		"else if" is actually just "else" with the else block containing another if statement.  
+		"else if" is actually just "else" with the else block containing another if statement.
 		Hence no representation of "elseif" in the EIf definition.
 	**/
 	static function createIfElseBlock( conditionsAndBlocks:Array<Pair<ExprOf<Bool>,Expr>> ) {
@@ -773,7 +773,7 @@ class ControllerMacros {
 				expr = macro if ($condition) $block else $expr;
 			}
 		}
-		return 
+		return
 			if ( expr!=null ) expr
 			else macro null;
 	}

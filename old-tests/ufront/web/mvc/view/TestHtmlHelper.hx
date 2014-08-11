@@ -23,42 +23,42 @@ class TestHtmlHelper{
 
 	public function new(){
 		helper =new HtmlHelperInst(new UrlHelperInst(null));
-	}  
-	
+	}
+
 	private function assertAttributeEncodedAs(attribute,expected){
 		Assert.equals(expected,helper.attributeEncode(attribute));
 	}
 
 
 	public function test_attributeEncode_NullEncodedAsEmptyString()
-	{           
+	{
 	 	assertAttributeEncodedAs(null, "");
 	}
 
 	public function test_attributeEncode_WithoutSpecialCharsEncodedUnchanged()
-	{           
+	{
 	 	assertAttributeEncodedAs("ciao", "ciao");
 	}
 
 	public function test_attributeEncode_QuotesEncoded()
-	{           
+	{
 	 	assertAttributeEncodedAs('"ciao"', "&quote;ciao&quote;");
 	}
 	public function test_attributeEncode_AposEncoded()
-	{           
+	{
 	 	assertAttributeEncodedAs("'ciao'", "&apos;ciao&apos;");
 	}
 	public function test_attributeEncode_AposQuoteEncoded()
-	{           
+	{
 	 	assertAttributeEncodedAs("'ciao'\"", "&apos;ciao&apos;&quote;");
 	}
 	public function test_attributeEncode_AmpEncoded()
-	{           
+	{
 	 	assertAttributeEncodedAs("'ciao&apos", "&apos;ciao&amp;apos");
 	}
 
 	public function test_attributeEncode_LtEncoded()
-	{           
+	{
 	 	assertAttributeEncodedAs("<ciao", "&lt;ciao");
 	}
 

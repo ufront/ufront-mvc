@@ -13,7 +13,7 @@ class DateRangeValidator extends Validator<Date>
 	public var max : Null<Date>;
 	public var minInclusive : Bool;
 	public var maxInclusive : Bool;
-	
+
 	public function new(?min : Date, ?max : Date, mininclusive = true, maxinclusive = true)
 	{
 		this.min = min;
@@ -21,7 +21,7 @@ class DateRangeValidator extends Validator<Date>
 		this.minInclusive = mininclusive;
 		this.maxInclusive = maxinclusive;
 	}
-	
+
 	override public function validate(value : Date)
 	{
 		if (null != min && ((minInclusive && value.getTime() < min.getTime()) || (!minInclusive && value.getTime() <= min.getTime())))

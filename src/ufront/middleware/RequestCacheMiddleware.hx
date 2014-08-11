@@ -10,11 +10,11 @@ using tink.CoreApi;
 
 /**
 	A very simple request caching middleware.
-	
+
 	At the end of a request, if a the controller / action had the `@cacheRequest` metadata, the response will be cached.
-	
+
 	At the start of a request, if the URI matches an already matched request, the response from the cache will be used and no further processing is required.
-	
+
 	@author Jason O'Neil
 **/
 class RequestCacheMiddleware implements UFMiddleware
@@ -37,18 +37,18 @@ class RequestCacheMiddleware implements UFMiddleware
 	];
 	/**
 		The cache system to use.
-		
+
 		Will be injected by the `ufront.app.HttpApplication` when the middleware is added.
 	**/
 	@inject public var cacheConnection:UFCacheConnection<HttpResponse>;
-	
+
 	var cache:UFCache<HttpResponse>;
 
 	public function new() {
 	}
 
 	/**
-		See if a cache exists for this URI. 
+		See if a cache exists for this URI.
 		If it does, mirror the cached request and mark the request as complete.
 	**/
 	public function requestIn( ctx:HttpContext ):Surprise<Noise,Error> {
@@ -91,7 +91,7 @@ class RequestCacheMiddleware implements UFMiddleware
 	public function responseOut( ctx:HttpContext ):Surprise<Noise,Error> {
 		// If it's a get request and we have data about the controller/action used
 		if ( ctx.request.httpMethod.toLowerCase()=="get" && ctx.actionContext!=null && ctx.actionContext.controller!=null && ctx.actionContext.action!=null ) {
-			
+
 			// If it's one of our approved content types.
 			if ( contentTypesToCache.indexOf(ctx.response.contentType)>-1 ) {
 				var controller = ctx.actionContext.controller;
@@ -116,14 +116,14 @@ class RequestCacheMiddleware implements UFMiddleware
 		}
 		return Sync.success();
 	}
-	
+
 	/**
 		Clear all cached pages.
 	**/
 	public function invalidate():Surprise<Noise,CacheError> {
 		return cache.clear();
 	}
-	
+
 	static var metaName = "cacheRequest";
 	static function hasCacheMeta( meta:Dynamic<Array<Dynamic>> ) {
 		return Reflect.hasField(meta,metaName);

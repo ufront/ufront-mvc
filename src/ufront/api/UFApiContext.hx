@@ -8,14 +8,14 @@ It uses the `ApiMacros.buildApiContext` macro and `minject` together.
 
 Please only define public variables in the sub class, each one representing an API class
 you wish to share with your remoting context.  Eg:
-	
+
 	class MainApi extends ufront.api.RemotingApi {
 		var clientAPI:app.client.ClientAPI;
 		var purchaseAPI:app.purchase.PurchasingAPI;
 	}
 
 Please don't use properties.  And don't define any functions, including the constructor.
-All of your API objects (that is, all the variables you specify) will be instantiated 
+All of your API objects (that is, all the variables you specify) will be instantiated
 by some of our macro code.
 
 For the server side, this API object can be used in the remoting controller:
@@ -40,7 +40,7 @@ Your ApiClient can be initialised with two constructor arguments: the URL of the
 	new my.app.MainApiClient(url, errorHandler);
 	new my.app.MainApiClient("http://api.google.com/haxeremoting/", function (e:Dynamic) trace (e));
 
-Please note, you will need to explicitly import the API so that the build macro runs and the proxy is generated.  Otherwise you 
+Please note, you will need to explicitly import the API so that the build macro runs and the proxy is generated.  Otherwise you
 will get a "Class not found : my.app.MainApiClient" error.  So instead, do:
 
 	import my.app.MainApi;

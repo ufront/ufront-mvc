@@ -115,7 +115,7 @@ class TmpFileUploadSync implements FileUpload {
 			try {
 				if( partSize == null ) {
 					#if php partSize = 8192; // default value for PHP and max under certain circumstances
-					#else partSize = (1 << 14); // 16 KB 
+					#else partSize = (1 << 14); // 16 KB
 					#end
 				}
 				var doneTrigger = Future.trigger();
@@ -153,7 +153,7 @@ class TmpFileUploadSync implements FileUpload {
 	}
 
 	/**
-		Delete the temporary file.  
+		Delete the temporary file.
 
 		After doing this, other functions that rely on the temporary file will no longer work.
 	**/

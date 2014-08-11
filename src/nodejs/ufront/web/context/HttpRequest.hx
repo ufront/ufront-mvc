@@ -22,20 +22,20 @@ using StringTools;
 	- `clientHeaders` will have all keys in lower case.
 	- `query`, `post` and `cookies` only support one value per name.
 	- When you have a parameter  named `user.email`, Express JS tries to convert it into a "user" object with a field "email". We undo that, and expose it as "user.email".
-	- 
-	
+	-
+
 	@author Franco Ponticelli, Jason O'Neil
 **/
 class HttpRequest extends ufront.web.context.HttpRequest
 {
 	#if !macro
-	
+
 	var req:js.npm.express.Request;
 
 	public function new( req:js.npm.express.Request ) {
 		this.req = req;
 	}
-	
+
 	override function get_queryString() {
 		if ( queryString==null ) {
 			queryString = req.originalUrl.substr( req.originalUrl.indexOf("?")+1 );
@@ -46,7 +46,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		return queryString;
 	}
-	
+
 	override function get_postString() {
 		if ( postString==null ) {
 			if ( httpMethod=="GET" )
@@ -56,75 +56,75 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		}
 		return postString;
 	}
-	
+
 	var _parsed:Bool = false;
 	override public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error> {
 		if ( !isMultipart() )
 			return Sync.success();
 
-		if (_parsed) 
+		if (_parsed)
 			return throw new Error('parseMultipart() can only been called once');
-		
+
 		_parsed = true;
 
 		var post = get_post();
 		throw "parseMultipart not implemented for NodeJS yet.";
 	}
-	
+
 	override function get_query() {
 		if ( query==null )
 			query = getMapFromObject( req.query );
 		return query;
 	}
-	
+
 	override function get_post() {
 		if ( post==null )
 			post = getMapFromObject( untyped req.body );
 		return post;
 	}
-	
+
 	override function get_cookies() {
 		if ( cookies==null )
 			cookies = getMapFromObject( untyped req.cookies );
 		return cookies;
 	}
-	
+
 	override function get_hostName() {
 		if ( hostName==null )
 			hostName = req.host;
 		return hostName;
 	}
-	
+
 	override function get_clientIP() {
 		if ( clientIP==null )
 			clientIP = req.ip;
 		return clientIP;
 	}
-	
+
 	override function get_uri() {
 		if ( uri==null )
 			uri = req.path;
 		return uri;
 	}
-	
+
 	override function get_clientHeaders() {
 		if ( clientHeaders==null )
 			clientHeaders = getMapFromObject( untyped req.headers );
 		return clientHeaders;
 	}
-	
+
 	override function get_httpMethod() {
-		if ( httpMethod==null ) 
+		if ( httpMethod==null )
 			httpMethod = untyped req.method;
 		return httpMethod;
 	}
-	
+
 	override function get_scriptDirectory() {
 		if ( scriptDirectory==null )
 			scriptDirectory = js.Node.__dirname + "/";
 		return scriptDirectory;
 	}
-	
+
 	override function get_authorization() {
 		if ( authorization==null ) {
 			authorization = { user:null, pass:null };
@@ -146,7 +146,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	static function getMapFromObject( obj:Dynamic, ?prefix:String="", ?m:MultiValueMap<String> ):MultiValueMap<String> {
 		if ( m==null )
 			m = new MultiValueMap();
-		
+
 		if ( obj!=null ) for ( fieldName in Reflect.fields(obj) ) {
 			var val = Reflect.field(obj,fieldName);
 			var fieldName = (prefix!="") ? '$prefix.$fieldName' : fieldName;
@@ -160,6 +160,6 @@ class HttpRequest extends ufront.web.context.HttpRequest
 
 		return m;
 	}
-	
+
 	#end
 }

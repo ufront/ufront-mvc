@@ -52,12 +52,12 @@ class HttpApplication
 	**/
 	public var injector:Injector;
 
-	/** 
+	/**
 		Middleware to be used in the application, before the request is processed.
 	**/
 	public var requestMiddleware(default,null):Array<UFRequestMiddleware>;
 
-	/** 
+	/**
 		Handlers that can process this request and write a response.
 
 		Examples:
@@ -69,19 +69,19 @@ class HttpApplication
 	**/
 	public var requestHandlers(default,null):Array<UFRequestHandler>;
 
-	/** 
+	/**
 		Middleware to be used in the application, after the request is processed.
 	**/
 	public var responseMiddleware(default,null):Array<UFResponseMiddleware>;
 
-	/** 
+	/**
 		Log handlers to use for traces, logs, warnings and errors.
 
 		These may write to log files, trace to the browser console etc.
 	**/
 	public var logHandlers(default,null):Array<UFLogHandler>;
 
-	/** 
+	/**
 		Error handlers to use if unhandled exceptions or Failures occur.
 
 		These may write to log files, help with debugging, present error pages to the browser etc.
@@ -89,9 +89,9 @@ class HttpApplication
 	public var errorHandlers(default,null):Array<UFErrorHandler>;
 
 	/**
-		UrlFilters for the current application.  
-		These will be used in the HttpContext for `getRequestUri` and `generateUri`.  
-		See `addUrlFilter()` and `clearUrlFilters()` below.  
+		UrlFilters for the current application.
+		These will be used in the HttpContext for `getRequestUri` and `generateUri`.
+		See `addUrlFilter()` and `clearUrlFilters()` below.
 		Modifying this list will take effect at the beginning of the next `execute()` request.
 	**/
 	public var urlFilters(default,null):Array<UFUrlFilter>;
@@ -144,7 +144,7 @@ class HttpApplication
 	}
 
 	/**
-		Shortcut to map a class or value into `injector`.  
+		Shortcut to map a class or value into `injector`.
 
 		See `ufront.core.InjectorTools.inject()` for details on how the injections are applied.
 
@@ -163,10 +163,10 @@ class HttpApplication
 			var futures = [];
 			for ( module in getModulesThatRequireInit() )
 				futures.push( module.init(this) );
-			modulesReady = Future.ofMany( futures ).map( function(outcomes:Array<Outcome<Noise,Error>>) { 
+			modulesReady = Future.ofMany( futures ).map( function(outcomes:Array<Outcome<Noise,Error>>) {
 				for (o in outcomes) {
 					switch o {
-						case Failure(err): return Failure(err); // pass the failure on... 
+						case Failure(err): return Failure(err); // pass the failure on...
 						case Success(_):
 					}
 				}
@@ -175,7 +175,7 @@ class HttpApplication
 		}
 		return modulesReady;
 	}
-	
+
 	/**
 		Perform `dispose()` on any handlers or middleware that require it
 	**/
@@ -183,11 +183,11 @@ class HttpApplication
 		var futures = [];
 		for ( module in getModulesThatRequireInit() )
 			futures.push( module.dispose(this) );
-		return Future.ofMany( futures ).map(function(outcomes) { 
+		return Future.ofMany( futures ).map(function(outcomes) {
 			modulesReady = null;
 			for (o in outcomes) {
 				switch o {
-					case Failure(_): return o; // pass the failure on... 
+					case Failure(_): return o; // pass the failure on...
 					case Success(_):
 				}
 			}
@@ -198,9 +198,9 @@ class HttpApplication
 	function getModulesThatRequireInit():Array<UFInitRequired> {
 		var moduleSets:Array<Array<Dynamic>> = [ requestMiddleware, requestHandlers, responseMiddleware, logHandlers, errorHandlers ];
 		var modules:Array<UFInitRequired> = [];
-		for ( set in moduleSets ) 
-			for ( module in set ) 
-				if ( Std.is(module,UFInitRequired) ) 
+		for ( set in moduleSets )
+			for ( module in set )
+				if ( Std.is(module,UFInitRequired) )
 					modules.push( cast module );
 		return modules;
 	}
@@ -236,22 +236,22 @@ class HttpApplication
 		return addModule( logHandlers, logger, loggers );
 
 	function addModule<T>( modulesArr:Array<T>, ?newModule:T, ?newModules:Iterable<T> ):HttpApplication {
-		if (newModule!=null) { 
-			injector.injectInto( newModule ); 
-			modulesArr.push( newModule ); 
+		if (newModule!=null) {
+			injector.injectInto( newModule );
+			modulesArr.push( newModule );
 		};
-		if (newModules!=null) for (newModule in newModules) { 
-			injector.injectInto( newModule ); 
-			modulesArr.push( newModule ); 
+		if (newModules!=null) for (newModule in newModules) {
+			injector.injectInto( newModule );
+			modulesArr.push( newModule );
 		};
 		return this;
 	}
 
-	/** 
+	/**
 		Execute the request
 
 		Ṫhis involves:
-	
+
 		- Setting the URL filters on the HttpContext.
 		- Firing all `UFRequestMiddleware`, in order
 		- Using the various `UFRequestHandler`s, until one of them is able to handle and process our request.
@@ -259,25 +259,25 @@ class HttpApplication
 		- Logging any messages (traces, logs, warnings, errors) that occured during the request
 		- Flushing the response to the browser and concluding the request
 
-		If errors occur (an unhandled exception or `ufront.core.Outcome.Failure` is returned by one of the modules), we will run through each of the `UFErrorHandler`s.  
+		If errors occur (an unhandled exception or `ufront.core.Outcome.Failure` is returned by one of the modules), we will run through each of the `UFErrorHandler`s.
 		These may print a nice error message, provide recover, diagnostics, logging etc.
 
 		Each module can modify `HttpContext.completion` to cause certain parts of the request life-cycle to be skipped.
 	**/
 	@:access(ufront.web.context.HttpContext)
 	public function execute( httpContext:HttpContext ):Surprise<Noise,Error> {
-		
+
 		httpContext.setUrlFilters( urlFilters );
 
 		var reqMidModules = HttpApplicationMacros.prepareModules(requestMiddleware,"requestIn");
 		var reqHandModules = HttpApplicationMacros.prepareModules(requestHandlers,"handleRequest");
 		var resMidModules = HttpApplicationMacros.prepareModules(responseMiddleware,"responseOut");
 		var logHandModules = HttpApplicationMacros.prepareModules(logHandlers,"log",[_,messages]);
-		
+
 		// Here `>>` does a Future flatMap, so each call to `executeModules()` returns a Future, once that Future is done, it does the next `executeModules()`.
 		// The final future returned is for once the `flush()` call has completed, which will happen once all the modules have finished.
-		
-		var allDone = 
+
+		var allDone =
 			init() >>
 			function (n:Noise) return executeModules( reqMidModules, httpContext, CRequestMiddlewareComplete ) >>
 			function (n:Noise) return executeModules( reqHandModules, httpContext, CRequestHandlersComplete ) >>
@@ -286,7 +286,7 @@ class HttpApplication
 			function (n:Noise) return clearMessages() >>
 			function (n:Noise) return flush( httpContext );
 
-		// We need an empty handler to make sure all the `executeModules` calls above fire correctly. 
+		// We need an empty handler to make sure all the `executeModules` calls above fire correctly.
 		// This may be tink_core trying to be clever with Lazy evaluation, and never performing the `flatMap` if it is never handled.
 		allDone.handle( function() {} );
 
@@ -295,7 +295,7 @@ class HttpApplication
 			// For now we are only testing sync targets, in future we may provide a "timeout" on async targets to perform a similar test.
 			if ( httpContext.completion.has(CFlushComplete)==false ) {
 				// We need to prevent macro-time seeing this code as "Pos" for them is "haxe.macro.Pos" not "haxe.PosInfos"
-				var msg = 
+				var msg =
 				    'Async callbacks never completed for URI ${httpContext.getRequestUri()}:  ' +
 				    'The last active module was ${currentModule.className}.${currentModule.methodName}(${currentModule.customParams.join(", ")})';
 				throw msg;
@@ -326,15 +326,15 @@ class HttpApplication
 				done.trigger( Success(Noise) );
 			}
 			else if ( m==null ) {
-				if (flag!=null) 
+				if (flag!=null)
 					ctx.completion.set( flag );
 				done.trigger( Success(Noise) );
 			}
 			else {
 				var moduleCb = m.a;
 				currentModule = m.b;
-				var moduleResult = 
-					try moduleCb( ctx ) 
+				var moduleResult =
+					try moduleCb( ctx )
 					catch ( e:Dynamic ) {
 						ctx.ufLog( 'Caught error $e while executing module ${currentModule.className}.${currentModule.methodName} in HttpApplication.executeModules()' );
 						Future.sync( Failure( HttpError.wrap(e,null,currentModule) ) );
@@ -353,7 +353,7 @@ class HttpApplication
 
 	/**
 		Run through each of the error handlers, then the log handlers (if they haven't run already)
-		
+
 		Then mark the middleware and requestHandlers as complete, so the `execute` function can log, flush and finish the request.
 	**/
 	function handleError( err:Error, ctx:HttpContext, doneTrigger:FutureTrigger<Outcome<Noise,Error>> ):Void {
@@ -363,7 +363,7 @@ class HttpApplication
 			var resMidModules = HttpApplicationMacros.prepareModules(responseMiddleware,"responseOut");
 			var logHandModules = HttpApplicationMacros.prepareModules(logHandlers,"log",[_,messages]);
 
-			var allDone = 
+			var allDone =
 				executeModules( errHandlerModules, ctx, CErrorHandlersComplete ) >>
 				function (n:Noise) {
 					// Mark the handler as complete.  (It will continue on with the Middleware, Logging and Flushing stages)
@@ -407,7 +407,7 @@ class HttpApplication
 	#if (php || neko)
 		/**
 			Create a HTTPContext for the current request and execute it.
-			
+
 			This will ensure that the current injector and it's mappings are included in the HttpContext.
 			Available on PHP and Neko.
 		**/

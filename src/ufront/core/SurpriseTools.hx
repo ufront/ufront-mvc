@@ -10,9 +10,9 @@ class SurpriseTools {
 		Transform a NodeJS style async call with no returned values into a surprise.
 
 		This expects an async call which has a callback with a single `error` argument.
-		
+
 		If the error argument is not null, it will return a Failure, with a `tink.core.Error` with the error message and the position of the call that failed.
-		
+
 		If the error argument is null, then the call is a `Success( Noise )`.
 	**/
 	static public function asVoidSurprise<T>( cb:(Null<String>->Void)->Void, ?pos:PosInfos ):Surprise<Noise,Error> {
@@ -33,9 +33,9 @@ class SurpriseTools {
 		Transform a NodeJS style async call with one returned value into a surprise.
 
 		This expects an async call which has a callback with a first `error` argument (a string) and a second `data` argument of any type.
-		
+
 		If the error argument is not null, it will return a Failure, with a `tink.core.Error` with the error message and the position of the call that failed.
-		
+
 		If the error argument is null, then the call is assumed to be a success, and the value of the data is returned.
 
 		Please note if both the `error` and `data` arguments are null, then a `Success(null)` will be returned.
@@ -51,16 +51,16 @@ class SurpriseTools {
 				t.trigger( Success(val) );
 			}
 		});
-		return t.asFuture();	
+		return t.asFuture();
 	}
 
 	/**
 		Transform a NodeJS style async call with 2 returned values into a surprise.
 
 		This expects an async call which has a callback with a first `error` argument (a string) and second and third `data` arguments of any type.
-		
+
 		If the error argument is not null, it will return a Failure, with a `tink.core.Error` with the error message and the position of the call that failed.
-		
+
 		If the error argument is null, then the call is assumed to be a success, and a pair containing the data values is returned.
 
 		Please note if both the `error` and `data` arguments are null, then a `Success(Pair(null,null))` will be returned.
@@ -76,6 +76,6 @@ class SurpriseTools {
 				t.trigger( Success(new Pair(val1,val2)) );
 			}
 		});
-		return t.asFuture();	
+		return t.asFuture();
 	}
 }

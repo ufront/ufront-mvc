@@ -8,7 +8,7 @@ import tink.CoreApi;
 	The methods are similar to `Map`, with `get()`, `set()`, `exists()`, `remove()` and `clear()`.
 
 	There are also some methods to do with the actual session, not the data inside it: `init()`, `isActive()`, `getID()`, `close()`, `commit()`, `regenerateID()` and `setExpiry()`.
-	
+
 	@author Franco Ponticelli
 	@author Jason O'Neil
 **/
@@ -18,9 +18,9 @@ interface UFHttpSession
 	public var id(get,null):String;
 
 	/**
-		Initiate the session (either read existing or start new session) and prepare so other operations can happen synchronously 
+		Initiate the session (either read existing or start new session) and prepare so other operations can happen synchronously
 
-		Returns a Surprise to let you know when the session is ready, after which operations can happen synchronously until you `commit()`.  
+		Returns a Surprise to let you know when the session is ready, after which operations can happen synchronously until you `commit()`.
 
 		If the session fails to initiate, the Surprise will be a Failure, containing the error message.
 	**/
@@ -56,8 +56,8 @@ interface UFHttpSession
 	/** Flag this session for a commit.  This will happen automatically if you call `set`, `remove`, `clear`, or `regenerateID`, but this can be useful if a value has updated without "set" being called. **/
 	public function triggerCommit():Void;
 
-	/** 
-		Regenerate the session ID, making the changes on the server and informing the client.  
+	/**
+		Regenerate the session ID, making the changes on the server and informing the client.
 
 		The new ID should be reserved now, though the actual content should not be saved until commit() is called.
 

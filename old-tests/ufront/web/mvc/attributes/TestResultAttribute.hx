@@ -13,19 +13,19 @@ import ufront.web.mvc.TestControllerFiltersMetaData;
 class TestResultAttribute extends FilterAttribute implements IResultFilter
 {
 	public var id : String;
-	
+
 	public function new()
 	{
 		this.id = "";
 		super();
 	}
-	
+
 	public function onResultExecuting(filterContext : ResultExecutingContext) : Void
 	{
 		var c = cast(filterContext.controllerContext.controller, BaseTestController);
 		c.sequence.push('result executing' + id);
 	}
-	
+
 	public function onResultExecuted(filterContext : ResultExecutedContext) : Void
 	{
 		var c = cast(filterContext.controllerContext.controller, BaseTestController);

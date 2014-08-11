@@ -17,7 +17,7 @@ class StringLengthValidator extends Validator<String>
 		minLength = minlength;
 		maxLength = maxlength;
 	}
-	
+
 	override public function validate(value : String)
 	{
 		if (value.length < minLength)

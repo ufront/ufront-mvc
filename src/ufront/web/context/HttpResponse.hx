@@ -31,37 +31,37 @@ class HttpResponse
 				new HttpResponse();
 			#end
 	}
-	
+
 	/** "Content-type" **/
 	static inline var CONTENT_TYPE = "Content-type";
-	
+
 	/** "Location" **/
 	static inline var LOCATION = "Location";
-	
+
 	/** "text/html" **/
 	static inline var DEFAULT_CONTENT_TYPE = "text/html";
-	
+
 	/** "utf-8" **/
 	static inline var DEFAULT_CHARSET = "utf-8";
-	
+
 	/** 200 **/
 	static inline var DEFAULT_STATUS = 200;
-	
+
 	/** 301 **/
 	static inline var MOVED_PERMANENTLY = 301;
-	
+
 	/** 302 **/
 	static inline var FOUND = 302;
-	
+
 	/** 401 **/
 	static inline var UNAUTHORIZED = 401;
-	
+
 	/** 404 **/
 	static inline var NOT_FOUND = 404;
-	
+
 	/** 500 **/
 	static inline var INTERNAL_SERVER_ERROR = 500;
-	
+
 	/** Get or set the Http "Content-type" header. **/
 	public var contentType(get, set):String;
 
@@ -97,7 +97,7 @@ class HttpResponse
 	}
 
 	/**
-		Write the output to the response.  
+		Write the output to the response.
 
 		This includes writing the cookies, the HttpHeaders and then the content.
 

@@ -4,12 +4,12 @@ package ufront.core;
 	Sadly the `minject` library only supports injecting dependencies that are a class instance.
 	Sometimes we would like to inject integers, booleans, functions, abstracts or more.
 	This class provides a simple wrapper object that can be used.
-	
+
 	Please note that because minject doesn't pay attention to type parameters, any `InjectionRef` mapping will match any `InjectionRef` injection point.
 	Therefore it is recommended you use named injection points whenever using `InjectionRef`.
-	
+
 	For example:
-	
+
 	```haxe
 	var someInt:Int;
 	@inject("someInt") public function new( ref:InjectionRef<Int> ) {

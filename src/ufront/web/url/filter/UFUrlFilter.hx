@@ -5,7 +5,7 @@ import ufront.web.url.UrlDirection;
 /**
 	Interface for defining new Url filters
 **/
-interface UFUrlFilter 
+interface UFUrlFilter
 {
 	public function filterIn(url : PartialUrl, request : HttpRequest) : Void;
 	public function filterOut(url : VirtualUrl, request : HttpRequest) : Void;

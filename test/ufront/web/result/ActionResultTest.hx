@@ -6,17 +6,17 @@ import ufront.web.result.*;
 using ufront.test.TestUtils;
 
 class ActionResultTest {
-	
+
 	public function new() {}
-	
+
 	public function beforeClass():Void {}
-	
+
 	public function afterClass():Void {}
-	
+
 	public function setup():Void {}
-	
+
 	public function teardown():Void {}
-	
+
 	@:access( ufront.web.context.HttpResponse )
 	public function testWrap():Void {
 

@@ -10,7 +10,7 @@ class TestPatternConstraint extends BaseTest
 	{
 		runner.addCase(new TestPatternConstraint());
 	}
-	
+
 	public static function main()
 	{
 		var runner = new Runner();
@@ -19,10 +19,10 @@ class TestPatternConstraint extends BaseTest
 		runner.run();
 	}
 
-	public function testPattern() 
-	{                                        
+	public function testPattern()
+	{
 		var route = createRoute("/{p}", new PatternConstraint("p", "^\\wb\\d\\d$"));
- 	
+
 		Assert.isNull(route.getRouteData(createContext("/")));
 		Assert.isNull(route.getRouteData(createContext("/a")));
 		Assert.isNull(route.getRouteData(createContext("/ab")));

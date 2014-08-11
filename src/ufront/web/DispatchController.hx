@@ -15,10 +15,10 @@ using tink.CoreApi;
 @:keep
 class DispatchController
 {
-	/** 
-		The Action Context.  
+	/**
+		The Action Context.
 
-		This is set in the constructor, or can be set manually.  
+		This is set in the constructor, or can be set manually.
 
 		When context is set to a non-null value, the injector for the current request will be used to inject dependencies into this controller:
 
@@ -29,7 +29,7 @@ class DispatchController
 	/**
 		Create a new `Controller` instance.
 
-		@param context Set the `context` property.  
+		@param context Set the `context` property.
 		               Currently this is optional for backwards compatibility, but may become required in a future version.
 		               If you do not set context `context` via the constructor, you must set it before calling `execute`.
 	**/
@@ -43,7 +43,7 @@ class DispatchController
 	}
 
 	/**
-		A default toString() to aid in logging, tracing or debugging.  
+		A default toString() to aid in logging, tracing or debugging.
 		Prints the current class name.
 	**/
 	@:noCompletion

@@ -17,11 +17,11 @@ class HttpResponse extends ufront.web.context.HttpResponse
 		if (_flushed) return;
 		_flushed = true;
 		var k = null, v = null;
-		
+
 		// set status
 		untyped __call__('header', 'X-Powered-By: ufront', true);
 		untyped __call__('header', "HTTP/1.1 " + statusDescription(status), true, status);
-		
+
 		try {
 			for (cookie in _cookies)
 			{
@@ -32,7 +32,7 @@ class HttpResponse extends ufront.web.context.HttpResponse
 		{
 			throw new Error("you can't set the cookie, output already sent");
 		}
-		
+
 		try {
 			// write headers
 			for (key in _headers.keys())
@@ -52,7 +52,7 @@ class HttpResponse extends ufront.web.context.HttpResponse
 		// write content
 		Lib.print(_buff.toString());
 	}
-	
+
 	public static function statusDescription( r : Int )
 	{
 		switch(r) {

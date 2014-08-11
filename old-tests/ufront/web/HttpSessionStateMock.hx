@@ -39,7 +39,7 @@ class HttpSessionStateMock implements UFHttpSessionState
 	{
 		_h.remove(name);
 	}
-	
+
 	public function id() : String
 	{
 		return "mock";
@@ -47,7 +47,7 @@ class HttpSessionStateMock implements UFHttpSessionState
 
 	public function setLifeTime(lifetime:Int)
 	{
-	
-	 	
+
+
 	}
 }

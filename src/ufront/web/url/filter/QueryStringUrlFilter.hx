@@ -1,6 +1,6 @@
 package ufront.web.url.filter;
 import ufront.web.context.HttpRequest;
-import thx.error.Error;     
+import thx.error.Error;
 
 using StringTools;
 
@@ -14,7 +14,7 @@ using StringTools;
 class QueryStringUrlFilter implements UFUrlFilter
 {
 	public var frontScript(default, null) : String;
-	public var paramName(default, null) : String; 
+	public var paramName(default, null) : String;
 	public var useCleanRoot(default, null) : Bool;
 
 	/**
@@ -28,24 +28,24 @@ class QueryStringUrlFilter implements UFUrlFilter
 	{
 		if(null == frontScript)
 			frontScript =
-				#if php 
+				#if php
 					"index.php"
 				#elseif neko
 					"index.n"
-				#else 
-					throw new Error("target not implemented, always pass a value for frontScript") 
+				#else
+					throw new Error("target not implemented, always pass a value for frontScript")
 				#end
 			;
-		
-		this.frontScript = frontScript; 
+
+		this.frontScript = frontScript;
 		this.paramName = paramName;
 		this.useCleanRoot = useCleanRoot;
-	} 
-	
+	}
+
 	/** Remove frontScript and query param from URL **/
 	public function filterIn(url : PartialUrl, request : HttpRequest) {
 		if(url.segments[0] == frontScript) {
-			var params = request.query;     
+			var params = request.query;
 			var u = params.get(paramName);
 			if(null == u)
 				url.segments = [];
@@ -55,7 +55,7 @@ class QueryStringUrlFilter implements UFUrlFilter
 			}
 		}
 	}
-	
+
 	/** Add frontScript and query param to URL **/
 	public function filterOut(url : VirtualUrl, request : HttpRequest) {
 		if(url.isPhysical || (url.segments.length == 0 && useCleanRoot)) {
@@ -64,7 +64,7 @@ class QueryStringUrlFilter implements UFUrlFilter
 		else {
 			var path = "/" + url.segments.join("/");
 			url.segments = [frontScript];
-			url.query.set(paramName, { value : path, encoded : true }); 
+			url.query.set(paramName, { value : path, encoded : true });
 		}
 	}
 }

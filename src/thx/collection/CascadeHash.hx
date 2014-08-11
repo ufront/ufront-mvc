@@ -9,7 +9,7 @@ import thx.error.NullArgument;
 import Map;
 
 class CascadeHash<T> implements IMap<String,T>
-{	
+{
 	var _h : List<Map<String, T>>;
 	public function new(hashes : Array<Map<String, T>>)
 	{
@@ -18,12 +18,12 @@ class CascadeHash<T> implements IMap<String,T>
 		for(h in hashes)
 			_h.add(h);
 	}
-	
+
 	public function set(key : String, value : T)
 	{
 		_h.first().set(key, value);
 	}
-	
+
 	public function remove(key : String)
 	{
 		for(h in _h)
@@ -31,23 +31,23 @@ class CascadeHash<T> implements IMap<String,T>
 				return true;
 		return false;
 	}
-	
+
 	public function get(key : String)
-	{   
+	{
 		for(h in _h)
 			if(h.exists(key))
 				return h.get(key);
 		return null;
 	}
-	
+
 	public function exists(key : String)
-	{ 
+	{
 		for(h in _h)
 			if(h.exists(key))
 				return true;
 		return false;
 	}
-	
+
 	public function iterator():Iterator<T>
 	{
 		var list = new List();
@@ -55,7 +55,7 @@ class CascadeHash<T> implements IMap<String,T>
 			list.push(get(k));
 		return list.iterator();
 	}
-	
+
 	public function keys():Iterator<String>
 	{
 		var s = new Set();
@@ -64,7 +64,7 @@ class CascadeHash<T> implements IMap<String,T>
 				s.add(k);
 		return s.iterator();
 	}
-	
+
 	public function toString()
 	{
 		var arr = [];

@@ -28,7 +28,7 @@ class ActionContext
 
 	/** The array of arguments used for the current action / method in this request.  Will be null until the request is handled. **/
 	public var args:Null<Array<Dynamic>>;
-	
+
 	/** The `ActionResult` that came from processing the request. Will be null until the action has been executed. **/
 	public var actionResult:ActionResult;
 

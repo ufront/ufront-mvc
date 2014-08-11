@@ -14,15 +14,15 @@ using mockatoo.Mockatoo;
 
 class TestUtilsTest {
 	public function new() {}
-	
+
 	public function beforeClass():Void {}
-	
+
 	public function afterClass():Void {}
-	
+
 	public function setup():Void {}
-	
+
 	public function teardown():Void {}
-	
+
 	public function testMockHttpContext():Void {
 		var mock1 = TestUtils.mockHttpContext( "/test/" );
 		Assert.notNull( mock1 );
@@ -33,14 +33,14 @@ class TestUtilsTest {
 		Assert.equals( "/test/", mock1.request.uri );
 		Assert.equals( "GET", mock1.request.httpMethod );
 		Assert.equals( 0, [ for (k in mock1.request.params.keys()) k ].length );
-		
+
 		var mock2 = "/test/2/".mockHttpContext( "post", ["id"=>"3","page"=>"20"] );
 		Assert.equals( "/test/2/", mock2.request.uri );
 		Assert.equals( "POST", mock2.request.httpMethod );
 		Assert.equals( 2, [ for (k in mock2.request.params.keys()) k ].length );
 		Assert.equals( "3", mock2.request.params["id"] );
 		Assert.equals( "20", mock2.request.params["page"] );
-		
+
 		var injector = new Injector();
 		var request = HttpRequest.mock();
 		request.uri.returns( "/test/3/" );
@@ -55,14 +55,14 @@ class TestUtilsTest {
 		Assert.equals( session, mock3.session );
 		Assert.equals( auth, mock3.auth );
 	}
-	
+
 	public function testTestRoute():Void {
 		var outcome1 = "/".mockHttpContext().testRoute( TestController ).handle( verifyTestRoute.bind(_,true) );
 		var outcome2 = "/error".mockHttpContext().testRoute( TestController ).handle( verifyTestRoute.bind(_,false) );
 		var outcome3 = "/404".mockHttpContext().testRoute( TestController ).handle( verifyTestRoute.bind(_,false) );
-		
+
 	}
-	
+
 	function verifyTestRoute( outcome:Outcome<RouteTestResult,Error>, shouldBeSuccess:Bool, ?p:PosInfos ) {
 		switch outcome {
 			case Success(obj):
@@ -74,11 +74,11 @@ class TestUtilsTest {
 				Assert.isFalse( shouldBeSuccess, p );
 		}
 	}
-	
+
 	function expectFailure( whenDoing:Void->Void ) {
 		var resultsbypass = Assert.results;
 		Assert.results = new List();
-		
+
 		var results = Assert.results;
 		Assert.results = resultsbypass;
 		var successes = [],
@@ -95,14 +95,14 @@ class TestUtilsTest {
 				Assert.fail( 'A failure was expected at one of these positions, but a success occured.', p );
 		}
 	}
-	
+
 	public function testAssertSuccess():Void {
 		// First test some passing cases.
 		"/".mockHttpContext().testRoute( TestController ).assertSuccess();
 		"/".mockHttpContext().testRoute( TestController ).assertSuccess(TestController,"index",[]);
 		"/user/13/".mockHttpContext().testRoute( TestController ).assertSuccess(TestController,"getUser",[13]);
 		"/user/13/".mockHttpContext("POST", [ "name" => "Jason" ]).testRoute( TestController ).assertSuccess(TestController,"setUser",[13,{"name":"Jason"}]);
-		        
+
 		// And then test some failing cases.
 		expectFailure( function() {
 			"/".mockHttpContext().testRoute( TestController2 ).assertSuccess();
@@ -120,14 +120,14 @@ class TestUtilsTest {
 			"/user/not-an-int".mockHttpContext().testRoute( TestController ).assertSuccess(TestController,"index",[]);
 		});
 	}
-	
+
 	public function testAssertFailure():Void {
 		// First test some cases which fail as intended.
 		"/404".mockHttpContext().testRoute( TestController ).assertFailure( 404 );
 		"/error".mockHttpContext().testRoute( TestController ).assertFailure( 500 );
 		"/failure".mockHttpContext().testRoute( TestController ).assertFailure( 500 );
 		"/user/not-an-int".mockHttpContext().testRoute( TestController ).assertFailure( 400 );
-		
+
 		// Then test some cases which accidentally pass.
 		expectFailure( function() {
 			"/".mockHttpContext().testRoute( TestController ).assertFailure(404);

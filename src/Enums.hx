@@ -13,7 +13,7 @@ class Enums
 			params.push(Dynamics.string(param));
 		return cons + (params.length == 0 ? "" : "(" + params.join(", ") + ")");
 	}
-	
+
 	public static function compare(a : Dynamic, b : Dynamic)
 	{
 		var v;

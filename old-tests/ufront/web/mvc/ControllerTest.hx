@@ -12,17 +12,17 @@ import utest.ui.Report;
 
 // forces the inclusions of the test controllers
 import ufront.web.mvc.test.MockController;
-import ufront.web.mvc.MockController; 
+import ufront.web.mvc.MockController;
 import ufront.web.mvc.Controller;
 
 class ControllerTest extends Controller
-{           
+{
 	public var handler : Void -> Void;
 	public function new()
 	{
 		super();
 	}
-	
+
 	public function index(?id : Int)
 	{
     	if(null != handler)

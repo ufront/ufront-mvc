@@ -160,7 +160,7 @@ customs for missing features
 		}
 		return buf.toString();
 	}
-	
+
 	static function getMHours(date : Date)
 	{
 		var v = date.getHours();
@@ -250,7 +250,7 @@ customs for missing features
 			culture = Culture.defaultCulture;
 		return format(date, culture.date.patternTimeShort, culture, false);
 	}
-	
+
 	static public function hourShort(date : Date, ?culture : Culture) : String {
 		if (null == culture)
 			culture = Culture.defaultCulture;
@@ -302,17 +302,17 @@ customs for missing features
 		return culture.date.abbrDays[date.getDay()];
 	}
 
-	/** Given a week day number, retrieve the day name. 
-	* 
+	/** Given a week day number, retrieve the day name.
+	*
 	*	@param weekDayNum The day number in the week.  0 is the first day of the week, 6 is the final day.
-	*	@param firstDayOfWk The first day of the week to use.  Default: 0 (Sunday) 
+	*	@param firstDayOfWk The first day of the week to use.  Default: 0 (Sunday)
 	*	@param culture The culture to use to get the weekday name.  Default: null (will fetch Culture.defaultCulture)
 	*	@return The abbreviated weekday name for the given culture, eg "Monday".  Returns null if no match was found.
 	*/
 	static public function weekDayNameFromNum(weekDayNum:Int, ?firstDayOfWk = 0, ?culture : Culture) {
 		if (null == culture)
 			culture = Culture.defaultCulture;
-		
+
 		firstDayOfWk = Ints.wrap(firstDayOfWk, 0, 6);
 		var nameIndex = Ints.wrap(weekDayNum + firstDayOfWk, 0, 6);
 
@@ -320,17 +320,17 @@ customs for missing features
 	}
 
 
-	/** Given a week day number, retrieve the abbreviated day name. 
-	* 
+	/** Given a week day number, retrieve the abbreviated day name.
+	*
 	*	@param weekDayNum The day number in the week.  0 is the first day of the week, 6 is the final day.
-	*	@param firstDayOfWk The first day of the week to use.  Default: 0 (Sunday) 
+	*	@param firstDayOfWk The first day of the week to use.  Default: 0 (Sunday)
 	*	@param culture The culture to use to get the weekday name.  Default: null (will fetch Culture.defaultCulture)
 	*	@return The abbreviated weekday name for the given culture, eg "Mon".  Returns null if no match was found.
 	*/
 	static public function weekDayShortNameFromNum(weekDayNum:Int, ?firstDayOfWk = 0, ?culture : Culture) {
 		if (null == culture)
 			culture = Culture.defaultCulture;
-		
+
 		firstDayOfWk = Ints.wrap(firstDayOfWk, 0, 6);
 		var nameIndex = Ints.wrap(weekDayNum + firstDayOfWk, 0, 6);
 
@@ -339,17 +339,17 @@ customs for missing features
 
 	/** Given a week day name, figure out the weekday number.
 	*
-	*   The name can be provided as the long name (eg "Sunday") or the abbreviated form ("sunday") and 
+	*   The name can be provided as the long name (eg "Sunday") or the abbreviated form ("sunday") and
 	*   is matched against the values in your culture.dates.days[] or culture.dates.abbrDays[].  It is
-	*   case insensitive.  
+	*   case insensitive.
 	*
 	*   The number returned is adjusted for your start day of week.  For example (in English):
-	*      
+	*
 	*       when firstDayOfWk=0, a search for "Monday" will return 1.
 	*       when firstDayOfWk=1, a search for "Monday" will return 0.
-	* 
+	*
 	*	@param weekDayName The name of the weekday.  Can be abbreivated (Mon) or full (Monday).  Case insensitive. (monday)
-	*	@param firstDayOfWk The first day of the week to use.  Default: 0 (Sunday) 
+	*	@param firstDayOfWk The first day of the week to use.  Default: 0 (Sunday)
 	*	@param culture The culture to use to get the weekday name.  Default: null (will fetch Culture.defaultCulture)
 	*	@return The number day in the week this is.  Will return -1 if no match was found.
 	*/

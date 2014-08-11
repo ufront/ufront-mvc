@@ -11,7 +11,7 @@ class NormalizeWhitespaceValueFormat extends ValueFormat
 		super();
 		_wsReplace = ~/(\s|\n|\r)+/g;
 	}
-	
+
 	override public function format(value : String)
 	{
 		var v = _wsReplace.replace(value, " ");

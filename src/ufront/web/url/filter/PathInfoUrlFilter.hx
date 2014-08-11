@@ -1,6 +1,6 @@
 package ufront.web.url.filter;
 import ufront.web.context.HttpRequest;
-import thx.error.Error;     
+import thx.error.Error;
 
 using StringTools;
 
@@ -13,7 +13,7 @@ using StringTools;
 **/
 class PathInfoUrlFilter implements UFUrlFilter
 {
-	public var frontScript(default, null) : String;  
+	public var frontScript(default, null) : String;
 	public var useCleanRoot(default, null) : Bool;
 
 	/**
@@ -24,30 +24,30 @@ class PathInfoUrlFilter implements UFUrlFilter
 	**/
 	public function new(?frontScript : String, useCleanRoot = true) {
 		if(null == frontScript)
-			frontScript = 
-				#if php 
-					"index.php" 
-				#elseif neko 
-					"index.n" 
-				#else 
+			frontScript =
+				#if php
+					"index.php"
+				#elseif neko
+					"index.n"
+				#else
 					throw new Error("target not implemented, always pass a value for frontScript")
 				#end
 			;
 		this.frontScript = frontScript;
 		this.useCleanRoot = useCleanRoot;
-	} 
-	
+	}
+
 	/** Remove frontScript from front of URL segments **/
 	public function filterIn(url : PartialUrl, request : HttpRequest) {
-		if(url.segments[0] == frontScript) 
+		if(url.segments[0] == frontScript)
 			url.segments.shift();
-	} 
-	
+	}
+
 	/** Add frontScript to URL segments **/
 	public function filterOut(url : VirtualUrl, request : HttpRequest) {
-		if(url.isPhysical || (url.segments.length == 0 && useCleanRoot)) 
-			{} 
-		else 
+		if(url.isPhysical || (url.segments.length == 0 && useCleanRoot))
+			{}
+		else
 			url.segments.unshift(frontScript);
 	}
 }

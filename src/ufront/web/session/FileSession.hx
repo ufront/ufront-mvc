@@ -38,7 +38,7 @@ class FileSession implements UFHttpSession
 
 	/**
 		The default session name to use if none is provided.
-		The default value is "UfrontSessionID".  
+		The default value is "UfrontSessionID".
 		You can change this static variable to set a new default.
 	**/
 	public static var defaultSessionName:String = "UfrontSessionID";
@@ -57,7 +57,7 @@ class FileSession implements UFHttpSession
 	**/
 	public static var defaultExpiry:Int = 0;
 
-	// Private variables 
+	// Private variables
 
 	var started:Bool;
 	var commitFlag:Bool;
@@ -115,7 +115,7 @@ class FileSession implements UFHttpSession
 			if ( context.injector.hasMapping(String,"sessionSavePath") )
 				context.injector.getInstance( String, "sessionSavePath" )
 			else defaultSavePath;
-		
+
 		// Sanitize the savePath, make it absolute if it was specified relative to the content directory.
 		savePath = Path.addTrailingSlash( savePath );
 		if ( !savePath.startsWith("/") )
@@ -189,15 +189,15 @@ class FileSession implements UFHttpSession
 					else {
 						fileData = try File.getContent( file ) catch ( e:Dynamic ) null;
 						if ( fileData!=null ) {
-							try 
+							try
 								sessionData = cast( Unserializer.run(fileData), StringMap<Dynamic> )
-							catch ( e:Dynamic ) 
+							catch ( e:Dynamic )
 								fileData = null; // invalid data
 						}
 						if ( fileData==null ) {
 							// delete file and start new session
 							sessionID = null;
-							try FileSystem.deleteFile( file ) catch( e:Dynamic ) {}; 
+							try FileSystem.deleteFile( file ) catch( e:Dynamic ) {};
 						}
 					}
 				}
@@ -212,7 +212,7 @@ class FileSession implements UFHttpSession
 						tryID = generateSessionID();
 						file = savePath + tryID + ".sess";
 					} while( FileSystem.exists(file) );
-					
+
 					sessionID = tryID;
 
 					// Create the file so no one else takes it
@@ -220,7 +220,7 @@ class FileSession implements UFHttpSession
 
 					var expire = ( expiry==0 ) ? null : DateTools.delta( Date.now(), 1000.0*expiry );
 					var path = '/'; // TODO: Set cookie path to application path, right now it's global.
-					var domain = null; 
+					var domain = null;
 					var secure = false;
 
 					var sessionCookie = new HttpCookie( sessionName, tryID, expire, domain, path, secure );
@@ -352,17 +352,17 @@ class FileSession implements UFHttpSession
 		t.trigger( Success(sessionID) );
 		return t.asFuture();
 	}
-	
+
 	/**
 		Whether or not the current session is active.
 
 		This is determined by if a sessionID exists, which will happen if init() has been called or if a SessionID was provided in the request context (via Cookie or GET/POST parameter etc).
-		
+
 	**/
 	public inline function isActive():Bool {
 		return started && get_id()!=null;
 	}
-	
+
 	/**
 		Return the current ID
 	**/
@@ -387,25 +387,25 @@ class FileSession implements UFHttpSession
 		return sessionData!=null ? sessionData.toString() : "{}";
 	}
 
-	// Private methods 
-	
+	// Private methods
+
 	inline function getSessionFilePath( id:String ) {
 		return '$savePath$id.sess';
 	}
-	
+
 	inline function generateSessionID() {
 		return Random.string(40);
 	}
 
 	inline function checkStarted() {
-		if ( !started ) 
+		if ( !started )
 			throw "Trying to access session data before calling init()";
 	}
 
 	static var validID = ~/^[a-zA-Z0-9]+$/;
 	static inline function testValidId( id:String ):Void {
 		if( id!=null )
-			if(!validID.match(id)) 
+			if(!validID.match(id))
 				throw "Invalid session ID.";
 	}
 }

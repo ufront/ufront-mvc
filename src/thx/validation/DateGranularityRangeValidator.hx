@@ -18,7 +18,7 @@ class DateGranularityRangeValidator extends Validator<Date>
 	public var max : Null<Date>;
 	public var minInclusive : Bool;
 	public var maxInclusive : Bool;
-	
+
 	public function new(granularity : DateGranularity, ?min : Date, ?max : Date, mininclusive = true, maxinclusive = true)
 	{
 		this.granularity = granularity;
@@ -53,7 +53,7 @@ class DateGranularityRangeValidator extends Validator<Date>
 		}
 		return Ok;
 	}
-	
+
 	function comparable(date : Date, granularity) : Float
 	{
 		switch(granularity)

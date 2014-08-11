@@ -17,7 +17,7 @@ class PatternValidator extends Validator<String>
 		this.pattern = pattern;
 		this.failureMessage = failureMessage;
 	}
-	
+
 	override public function validate(value : String)
 	{
 		if (pattern.match(value))

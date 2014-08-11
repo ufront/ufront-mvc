@@ -22,7 +22,7 @@ import utest.ui.Report;
 
 // forces the inclusions of the test controllers
 import ufront.web.mvc.test.MockController;
-import ufront.web.mvc.MockController; 
+import ufront.web.mvc.MockController;
 import ufront.web.mvc.Controller;
 
 ///// Attributes ////////////////////////////////////////////////////
@@ -31,7 +31,7 @@ import ufront.web.mvc.Controller;
 // even though it's added.
 private class TestAttributeNoType extends FilterAttribute
 {
-	
+
 }
 
 ///// Controllers ///////////////////////////////////////////////////
@@ -39,23 +39,23 @@ private class TestAttributeNoType extends FilterAttribute
 class BaseTestController extends Controller
 {
 	public var sequence : Array<String>;
-	
+
 	public var handler : Void -> Void;
 	public var result : Void -> ActionResult;
-	
+
 	public function new()
 	{
 		sequence = [];
 		super();
 	}
-	
+
 	public function index(?id : Int) : Dynamic
 	{
     	if(null != handler)
 			handler();
-			
+
 		sequence.push("handler");
-		
+
 		if (result == null) return "content";
 		else return result();
 	}
@@ -64,7 +64,7 @@ class BaseTestController extends Controller
 private class TestControllerMetaData extends BaseTestController
 {
 	public function new() { super(); }
-	
+
 	@TestAction({id: "OnMethod"})
 	@TestAction2({order: 2 })
 	@TestResult({id: "OnMethod", order: 2 })
@@ -79,7 +79,7 @@ private class TestControllerMetaData extends BaseTestController
 private class TestControllerClassMetaData extends BaseTestController
 {
 	public function new() { super(); }
-	
+
 	override public function index(?id : Int)
 	{
 		return super.index(id);
@@ -89,7 +89,7 @@ private class TestControllerClassMetaData extends BaseTestController
 private class TestControllerSuperClassMetaData extends TestControllerClassMetaData
 {
 	public function new() { super(); }
-	
+
 	override public function index(?id : Int)
 	{
 		return super.index(id);
@@ -99,7 +99,7 @@ private class TestControllerSuperClassMetaData extends TestControllerClassMetaDa
 private class TestControllerSuperClassOverride extends TestControllerClassMetaData
 {
 	public function new() { super(); }
-	
+
 	@TestAction({id: "Override"})
 	override public function index(?id : Int)
 	{
@@ -118,7 +118,7 @@ private class TestControllerAuthFail extends BaseTestController
 private class TestControllerNoRealExceptionHandler extends BaseTestController
 {
 	public function new() { super(); }
-	
+
 	override public function index(?id : Int)
 	{
 		throw "ERROR";
@@ -129,7 +129,7 @@ private class TestControllerNoRealExceptionHandler extends BaseTestController
 private class TestControllerWithExceptionHandler extends TestControllerNoRealExceptionHandler
 {
 	public function new() { super(); }
-	
+
 	@HandleException({handleIt: true})
 	override public function index(?id : Int)
 	{
@@ -144,13 +144,13 @@ class SequenceResult extends ActionResult
 {
 	public var controller : BaseTestController;
 	public var id : String;
-	
+
 	public function new(controller : BaseTestController, ?id = "")
 	{
 		this.controller = controller;
 		this.id = id;
 	}
-	
+
 	override public function executeResult(controllerContext : ControllerContext)
 	{
 		this.controller.sequence.push("sequenceResult" + id);
@@ -160,21 +160,21 @@ class SequenceResult extends ActionResult
 ///// Tests /////////////////////////////////////////////////////////
 
 class TestControllerFiltersMetaData
-{   
+{
 	public function testAttributeAdded() // Default test is for method
 	{
 		var self = this;
-		
+
 		controller.result = function() {
 			return new SequenceResult(self.controller);
 		}
-		
+
 		execute();
-		Assert.same(['executingOnMethod', 'executing2', 
-					 'handler', 
+		Assert.same(['executingOnMethod', 'executing2',
+					 'handler',
 					 'executed2', 'executedOnMethod',
-					 'result2 executing', 'result executingOnMethod', 
-					 'sequenceResult', 
+					 'result2 executing', 'result executingOnMethod',
+					 'sequenceResult',
 					 'result executedOnMethod', 'result2 executed'], controller.sequence);
 	}
 
@@ -182,7 +182,7 @@ class TestControllerFiltersMetaData
 	{
 		// Change controller to one with a filter on the class.
 		setupController(new TestControllerClassMetaData());
-		
+
 		execute();
 		Assert.same(['executing', 'handler', 'executed'], controller.sequence);
 	}
@@ -190,15 +190,15 @@ class TestControllerFiltersMetaData
 	public function testAttributeAddedOnSuperClass()
 	{
 		setupController(new TestControllerSuperClassMetaData());
-		
+
 		execute();
 		Assert.same(['executing', 'handler', 'executed'], controller.sequence);
 	}
-	
+
 	public function testAttributeOverridingSuperClass()
 	{
 		setupController(new TestControllerSuperClassOverride());
-		
+
 		execute();
 		Assert.same(['executingOverride', 'handler', 'executedOverride'], controller.sequence);
 	}
@@ -206,34 +206,34 @@ class TestControllerFiltersMetaData
 	public function testClassWithAuthFailAttribute()
 	{
 		setupController(new TestControllerAuthFail());
-		
+
 		execute();
 		Assert.same(['onAuthorization', 'sequenceResultAuthFail'], controller.sequence);
 	}
-	
+
 	public function testClassWithExceptionHandlerThatFailsToHandleError()
 	{
 		setupController(new TestControllerNoRealExceptionHandler());
-		
-		Assert.raises(execute, String);		
+
+		Assert.raises(execute, String);
 		Assert.same(['onException'], controller.sequence);
 	}
-	
+
 	public function testClassWithExceptionHandlerThatHandlesTheError()
 	{
 		setupController(new TestControllerWithExceptionHandler());
-		
+
 		execute();
 		Assert.same(['onException', 'sequenceResultExceptionHandler for ERROR AGAIN'], controller.sequence);
 	}
-	
+
 	/////////////////////////////////////////////////////////////////
-	
+
 	public static function addTests(runner : Runner)
 	{
 		runner.addCase(new TestControllerFiltersMetaData());
 	}
-	
+
 	public static function main()
 	{
 		var runner = new Runner();
@@ -241,25 +241,25 @@ class TestControllerFiltersMetaData
 		Report.create(runner);
 		runner.run();
 	}
-	
+
 	public function new(){}
 
 	var controller : BaseTestController;
 	var context : RequestContext;
-	
+
 	public function setup()
 	{
 		setupController(new TestControllerMetaData());
 	}
-	
+
 	public function setupController(controller : BaseTestController)
 	{
 		var context = TestAll.setupController(controller);
-		
+
 		this.context = context.requestContext;
 		this.controller = cast(context.controller, BaseTestController);
 	}
-	
+
 	function execute()
 	{
 		controller.execute(context, new hxevents.Async(function(){}));

@@ -8,17 +8,17 @@ using ufront.test.TestUtils;
 using Objects;
 
 class RemotingLoggerTest {
-	
+
 	public function new() {}
-	
+
 	public function beforeClass():Void {}
-	
+
 	public function afterClass():Void {}
-	
+
 	public function setup():Void {}
-	
+
 	public function teardown():Void {}
-	
+
 	var fakePosInfos:Array<haxe.PosInfos> = [{
 		fileName: "Cls.hx",
 		lineNumber: 1,
@@ -36,7 +36,7 @@ class RemotingLoggerTest {
 	public function testFormatMessage():Void {
 		var msg1 = { msg:null, type:Trace, pos:fakePosInfos[0] };
 		var msg2 = { msg:"Hello", type:Log, pos:fakePosInfos[1] };
-		
+
 		var result1 = RemotingLogger.formatMessage( msg1 );
 		var result2 = RemotingLogger.formatMessage( msg2 );
 
@@ -55,11 +55,11 @@ class RemotingLoggerTest {
 		ctx.response.write( pageContent );
 		ctx.messages.push({ msg: "Hello", type:Trace, pos:fakePosInfos[0] });
 		ctx.messages.push({ msg: "World", type:Log, pos:fakePosInfos[0] });
-		
+
 		var appMessages = [];
 		appMessages.push({ msg: "Goodbye", type:Warning, pos:fakePosInfos[1] });
 		appMessages.push({ msg: "Space", type:Error, pos:fakePosInfos[1] });
-		
+
 		var remotingLogger:UFLogHandler = new RemotingLogger();
 		remotingLogger.log( ctx, appMessages );
 
@@ -71,14 +71,14 @@ class RemotingLoggerTest {
 		Assert.equals( expectedNumber, numberOfLogs );
 
 		// Now let's check that it doesn't do anything if we have a different content type.
-		
+
 		var pageContent = "<html>Hello!</html>";
 		ctx.response.clear();
 		ctx.response.contentType = "text/html";
 		ctx.response.write( pageContent );
 
 		remotingLogger.log( ctx, appMessages );
-		
+
 		Assert.equals( pageContent, ctx.response.getBuffer() );
 	}
 }

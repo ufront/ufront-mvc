@@ -14,7 +14,7 @@ class CustomValidator<T> extends Validator<T>
 	{
 		validators = [];
 	}
-	
+
 	override public function validate(value : T) : Result
 	{
 		for (validator in validators)
@@ -25,12 +25,12 @@ class CustomValidator<T> extends Validator<T>
 		}
 		return Ok;
 	}
-	
+
 	public function add(handler : T -> Message)
 	{
 		validators.push(handler);
 	}
-	
+
 	public function clear()
 	{
 		validators = [];

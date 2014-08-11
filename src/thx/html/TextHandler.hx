@@ -36,7 +36,7 @@ class TextHandler implements HtmlHandler {
 	public function doctype(text : String) {
 		results += '<!DOCTYPE ' + text + '>';
 	}
-	
+
 	public function declaration(text : String) {
 		results += '<?xml ' + text + '>';
 	}

@@ -7,7 +7,7 @@ import ufront.core.Sync;
 	Represents a result that takes no further action and writes nothing to the response.
 
 	This is useful if your controller action has written to the response directly, for example using `Sys.println`.
-	
+
 	@author Andreas Soderlund
 **/
 class EmptyResult extends ActionResult
@@ -20,7 +20,7 @@ class EmptyResult extends ActionResult
 	public function new( ?preventFlush=false ){
 		this.preventFlush = preventFlush;
 	}
-	
+
 	override public function executeResult( actionContext:ActionContext ) {
 		if ( preventFlush ) actionContext.httpContext.response.preventFlush();
 		return Sync.success();

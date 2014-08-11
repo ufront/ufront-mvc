@@ -8,11 +8,11 @@ using Types;
 
 /**
 	Trace module that adds javascript snippet to output trace to Javascript console.
-	
+
 	This will flush the messages (traces, logs, warnings and errors) from the current context to the browser.
 
 	If `-debug` is defined, any application level messages (not necessarily associated with this request, made using "trace()" rather than "ufTrace()") will also be sent to the browser.
-	
+
 	If the `HttpResponse` output type is not "text/html", the traces will not be displayed.
 
 	The trace output will be added as an inline javascript snippet at the very end of the response, after the closing `</html>` tag.
@@ -29,14 +29,14 @@ class BrowserConsoleLogger implements UFLogHandler
 			var results = [];
 			for( msg in ctx.messages )
 				results.push( formatMessage(msg) );
-			
+
 			#if debug
 				if ( appMessages!=null) {
 					for( msg in appMessages )
 						results.push( formatMessage(msg) );
 				}
 			#end
-			
+
 			if( results.length>0 ) {
 				ctx.response.write(
 					'\n<script type="text/javascript">\n${results.join("\n")}\n</script>'
@@ -54,7 +54,7 @@ class BrowserConsoleLogger implements UFLogHandler
 			case Warning: "warn";
 			case Error: "error";
 		}
-		var extras = 
+		var extras =
 			if ( m.pos!=null && m.pos.customParams!=null ) ", "+m.pos.customParams.join(", ")
 			else "";
 		var msg = '${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';

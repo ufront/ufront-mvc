@@ -17,7 +17,7 @@ class FilePathResult extends FileResult
 
 	/** Gets or sets the path of the file that is sent to the response. */
 	public var fileName:String;
-	
+
 	/**
 		@param fileName - absolute path to the file to be sent in response.  If null, no content is written to the response.
 		@param contentType - Internet Media Type to use.  If null, it will be inferred from the extension of 'fileName' (only image types supported at the moment).  If this fails, it will remain null, and no header will be added.  In this situation the client tries to correctly guess the type of the file.

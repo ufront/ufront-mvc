@@ -6,29 +6,29 @@ import tink.CoreApi;
 import mockatoo.Mockatoo.*;
 using mockatoo.Mockatoo;
 
-class FuturoidTest 
+class FuturoidTest
 {
     public var trigger:FutureTrigger<Int>;
     public var future:Future<Int>;
-    
+
 	public function new() {}
-	
+
 	public function beforeClass():Void {}
-	
+
 	public function afterClass():Void {}
-	
+
 	public function setup():Void {
 		trigger = Future.trigger();
 		future = trigger.asFuture();
 	}
-	
+
 	public function teardown():Void {}
-	
+
 	public function testFromFuture():Void {
 		var futuroid:Futuroid<Int> = future;
 		Assert.equals( future, futuroid );
 	}
-	
+
 	public function testFromSync():Void {
 		var futuroid:Futuroid<Int> = 10;
 		var value:Int;
@@ -37,7 +37,7 @@ class FuturoidTest
 		});
 		Assert.equals( 10, value );
 	}
-	
+
 	public function testForwarding():Void {
 		var handledValue:Int;
 		var mappedValue:String;

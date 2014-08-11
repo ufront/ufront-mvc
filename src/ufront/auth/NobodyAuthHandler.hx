@@ -8,7 +8,7 @@ import ufront.auth.AuthError;
 	This is used when another auth handler isn't available, and will return false (or throw errors) for all permission checks.
 
 	Who would trust you anyway? *You're a nobody.* ;)
-	
+
 	@author Jason O'Neil
 **/
 class NobodyAuthHandler implements UFAuthHandler<UFAuthUser>
@@ -18,7 +18,7 @@ class NobodyAuthHandler implements UFAuthHandler<UFAuthUser>
 	public function isLoggedIn() return false;
 
 	public function requireLogin() throw NotLoggedIn;
-	
+
 	public function isLoggedInAs( user:UFAuthUser ) return false;
 
 	public function requireLoginAs( user:UFAuthUser ) throw NotLoggedInAs( user );
@@ -30,7 +30,7 @@ class NobodyAuthHandler implements UFAuthHandler<UFAuthUser>
 	public function requirePermission( permission:EnumValue ) throw NoPermission( permission );
 
 	public function requirePermissions( permissions:Iterable<EnumValue> ) for (p in permissions) throw NoPermission( p );
-	
+
 	public function getUserByID( id:String ):Null<UFAuthUser> return null;
 
 	public function setCurrentUser( u:Null<UFAuthUser> ) throw 'Nobodies cannot become somebodies. It\'s against the rules!';

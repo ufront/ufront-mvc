@@ -24,7 +24,7 @@ class ErrorPageHandler implements UFErrorHandler
 	/**
 		A flag for catching and handling errors.
 
-		The only reason you would disable this is for debugging or unit testing.  
+		The only reason you would disable this is for debugging or unit testing.
 
 		`true` by default.
 	**/
@@ -34,19 +34,19 @@ class ErrorPageHandler implements UFErrorHandler
 
 	/**
 		Event handler for an error on HttpApplication.
-		
+
 		It will use a HttpError, or wrap a different kind of exception in an InternalServerError, and display an appropriate error message.
 
 		Http Response Codes will be set as per the HttpError, and any existing output will be cleared.
 
-		You can change the output by overriding the 
+		You can change the output by overriding the
 
 		TODO: give more options for processing different kinds of errors
 		TODO: figure out async support
 	**/
 	@:access( tink.core.Error )
 	public function handleError( httpError:Error, ctx:HttpContext ) {
-		
+
 		// Pass the error to our log...
 		var callStack = #if debug " "+CallStack.toString( CallStack.exceptionStack() ) #else "" #end;
 		var inner = (httpError!=null && httpError.data!=null) ? ' (${httpError.data})' : "";
@@ -57,7 +57,7 @@ class ErrorPageHandler implements UFErrorHandler
 
 			// Clear the output, set the response code, and output.
 			ctx.response.clear();
-			ctx.response.status = httpError.code; 
+			ctx.response.status = httpError.code;
 			ctx.response.contentType = "text/html";
 			ctx.response.write( renderError(httpError,showStack) );
 			ctx.completion.set( CRequestHandlersComplete );
@@ -80,7 +80,7 @@ class ErrorPageHandler implements UFErrorHandler
 		avoid using templating engines as any errors in displaying the error template will not
 		be displayed correctly.
 
-		It is also expected that this method should be synchronous.  If you require loading 
+		It is also expected that this method should be synchronous.  If you require loading
 		something asynchronously it will be easiest to create a new ErrorHandler.
 
 		The default template looks like:
@@ -99,19 +99,19 @@ class ErrorPageHandler implements UFErrorHandler
 	**/
 	@:access( tink.core.TypedError )
 	dynamic public function renderErrorContent( error:Error, ?showStack:Bool=false ):String {
-		
+
 		var inner = (null!=error.data) ? '<p class="error-data">${error.data}</p>':"";
 		var pos = showStack ? '<p class="error-pos">&gt; ${error.printPos()}</p>' : '';
-		
+
 		var exceptionStackItems = errorStackItems( CallStack.exceptionStack() );
 
-		var exceptionStack = 
-			if ( showStack && exceptionStackItems.length>0 ) 
+		var exceptionStack =
+			if ( showStack && exceptionStackItems.length>0 )
 				'<div class="error-exception-stack"><h3>Exception Stack:</h3>
 					<pre><code>' + exceptionStackItems.join("\n") + '</pre></code>
 				</div>'
 			else "";
-		
+
 		var content = '
 			<summary class="error-summary"><h1 class="error-message">$error</h1></summary>
 			<details class="error-details"> $inner $pos $exceptionStack</details>
@@ -123,7 +123,7 @@ class ErrorPageHandler implements UFErrorHandler
 	/**
 		Render the given error title and error content (from `renderErrorContent`) into a page to be sent to the browser.
 
-		This method takes two arguments: a window title, and content representing the error page.  
+		This method takes two arguments: a window title, and content representing the error page.
 		It then renders a full HTML page with these variables inserted.
 
 		This function is dynamic, so you can override it if you wish to supply a different template.
@@ -132,7 +132,7 @@ class ErrorPageHandler implements UFErrorHandler
 		avoid using templating engines as any errors in displaying the error template will not
 		be displayed correctly.
 
-		It is also expected that this method should be synchronous.  If you require loading 
+		It is also expected that this method should be synchronous.  If you require loading
 		something asynchronously it will be easiest to create a new ErrorHandler.
 
 		The default template uses a CDN-hosted Bootstrap stylesheet, a "jumbotron" component and a giant sad-face.  It took 1000 designers 1000 days to craft this work of art.
@@ -150,7 +150,7 @@ class ErrorPageHandler implements UFErrorHandler
 		var content = renderErrorContent( error, showStack );
 		return renderErrorPage( error.toString(), content );
 	}
-	
+
 	/**
 		Turns an `Array<StackItem>` into an `Array<String>`, ready to print.
 	**/

@@ -5,15 +5,15 @@ import ufront.log.Message;
 
 class MessageListTest {
 	public function new() {}
-	
+
 	public function beforeClass():Void {}
-	
+
 	public function afterClass():Void {}
-	
+
 	public function setup():Void {}
-	
+
 	public function teardown():Void {}
-	
+
 	public function testMessageList():Void {
 		var message1 = createMessage( "Hello Theo", Trace );
 		var message2 = createMessage( 400, Error );
@@ -26,7 +26,7 @@ class MessageListTest {
 		var messageArray2 = [];
 		function onMessageFn(m:Message) messageArray2.push(m);
 		var messageList = new MessageList( messageArray1, onMessageFn );
-		
+
 		Assert.equals( messageArray1, messageList.messages );
 		Assert.equals( onMessageFn, messageList.onMessage );
 		messageList.push( message1 );

@@ -16,13 +16,13 @@ class TestAction2Attribute extends FilterAttribute implements IActionFilter
 	{
 		super();
 	}
-	
+
 	public function onActionExecuting(filterContext : ActionExecutingContext) : Void
 	{
 		var c = cast(filterContext.controllerContext.controller, BaseTestController);
 		c.sequence.push('executing2');
 	}
-	
+
 	public function onActionExecuted(filterContext : ActionExecutedContext) : Void
 	{
 		var c = cast(filterContext.controllerContext.controller, BaseTestController);

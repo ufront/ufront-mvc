@@ -25,14 +25,14 @@ class OptionValidator<T> extends Validator<T>
 
 		this.showOptionsInFailureMessage = showOptionsInFailureMessage;
 	}
-	
+
 	public function valueExists(v : T)
 	{
 		return Lambda.exists(options, function(a) {
 			return a.value == v;
 		});
 	}
-	
+
 	public function labels()
 	{
 		var arr = [];
@@ -40,7 +40,7 @@ class OptionValidator<T> extends Validator<T>
 			arr.push(option.label);
 		return arr;
 	}
-	
+
 	public function descriptions()
 	{
 		var arr = [];
@@ -53,7 +53,7 @@ class OptionValidator<T> extends Validator<T>
 		}
 		return arr;
 	}
-	
+
 	override public function validate(value : T)
 	{
 		if (valueExists(value))

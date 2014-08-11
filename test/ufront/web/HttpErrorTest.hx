@@ -6,15 +6,15 @@ import tink.core.Error;
 
 class HttpErrorTest {
 	public function new() {}
-	
+
 	public function beforeClass():Void {}
-	
+
 	public function afterClass():Void {}
-	
+
 	public function setup():Void {}
-	
+
 	public function teardown():Void {}
-	
+
 	public function testWrap():Void {
 		var error = new Error( ServiceUnavailable, "Not enough sleep" );
 		var wrapped1 = HttpError.wrap( error );
@@ -30,7 +30,7 @@ class HttpErrorTest {
 		Assert.equals( "Internal Server Error", wrapped2.message );
 		Assert.equals( "I am a String!", wrapped2.data );
 	}
-	
+
 	public function testErrorSetup():Void {
 		var e = HttpError.badRequest();
 		Assert.equals( 400, e.code );
@@ -62,7 +62,7 @@ class HttpErrorTest {
 		Assert.equals( 422, e.code );
 		Assert.equals( "Unprocessable Entity", e.message );
 	}
-	
+
 	public function testFakePosition():Void {
 		var p = HttpError.fakePosition( this, "myMethod", [3.14] );
 		Assert.equals( "ufront.web.HttpErrorTest", p.className );

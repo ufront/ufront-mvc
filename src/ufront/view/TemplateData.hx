@@ -10,7 +10,7 @@ using StringTools;
 	- {}
 	- Map<String,Dynamic>
 	- Iterable<TemplateData>
-	
+
 	These methods are provided to access or modify the contents of the template data:
 
 	- `get()`
@@ -23,7 +23,7 @@ using StringTools;
 	No string conversion or escaping happens at this level, that is up to the templating engine.
 **/
 abstract TemplateData({}) to {} {
-	
+
 	/**
 		Create a template data object.
 
@@ -66,7 +66,7 @@ abstract TemplateData({}) to {} {
 		@return The value, or null if it was not available.
 	**/
 	@:arrayAccess public inline function get( key:String ):Null<Dynamic> return Reflect.field( this, key );
-	
+
 	/**
 		Set a value on the template data.
 

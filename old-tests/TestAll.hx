@@ -7,14 +7,14 @@ class TestAll
 	{
 		ufront.TestAll.addTests(runner);
 	}
-	
+
 	public static function main()
-	{     
+	{
 		try {
 			var runner = new Runner();
 			addTests(runner);
 			Report.create(runner);
-			runner.run();   
+			runner.run();
 		} catch(e : Dynamic) {
 			trace(e);
 		}

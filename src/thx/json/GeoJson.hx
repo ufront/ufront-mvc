@@ -6,7 +6,7 @@
 package thx.json;
 
 typedef Geometry = {
-	public var type : String; //  "Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon", "GeometryCollection", "Feature", or "FeatureCollection"	
+	public var type : String; //  "Point", "MultiPoint", "LineString", "MultiLineString", "Polygon", "MultiPolygon", "GeometryCollection", "Feature", or "FeatureCollection"
 	public var coordinates : Null<Dynamic>;
 	public var geometries : Null<Array<Geometry>>;
 	public var bbox : Null<Array<Float>>;

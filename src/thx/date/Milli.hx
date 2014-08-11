@@ -16,7 +16,7 @@ class Milli
 	}, {
 		name  : "minute",
 		short : "m",
-		time  : 1000 * 60 
+		time  : 1000 * 60
 	}, {
 		name  : "second",
 		short : "s",
@@ -38,7 +38,7 @@ class Milli
 	{
 		if(CHUNKER.match(s))
 		{
-			return 
+			return
 				(CHUNKER.matched(1) == '-' ? -1 : 1)   // sign
 				 * Std.parseFloat(CHUNKER.matched(2))  // numeric value
 				 * map.get(CHUNKER.matched(3))         // period

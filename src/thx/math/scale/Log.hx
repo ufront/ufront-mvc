@@ -15,22 +15,22 @@ class Log extends NumericScale<Log>
 	{
 		return Math.log(x) / Const.LN10;
 	}
-	
+
 	static function _logn(x : Float)
 	{
 		return -Math.log(-x) / Const.LN10;
 	}
-	
+
 	static function _pow(x : Float)
 	{
 		return Math.pow(10, x);
 	}
-	
+
 	static function _pown(x : Float)
 	{
 		return -Math.pow(10, -x);
 	}
-	
+
 	var log : Float -> Float;
 	var pow : Float -> Float;
 
@@ -40,22 +40,22 @@ class Log extends NumericScale<Log>
 		log = _log;
 		pow = _pow;
 	}
-	
+
 	override public function scale(x : Float)
 	{
 		return super.scale(log(x));
 	}
-	
+
 	override public function invert(x : Float)
 	{
 		return pow(super.invert(x));
 	}
-	
+
 	override public function getDomain() {
 		var me = this;
 		return super.getDomain().map(function(d) return me.pow(d));
 	}
-	
+
 	override public function domain(d : Array<Float>)
 	{
 		if (Arrays.min(d) < 0) {
@@ -67,7 +67,7 @@ class Log extends NumericScale<Log>
 		}
 		return super.domain([log(d[0]), log(d[1])]);
 	}
-	
+
 	override public function ticks()
 	{
 		var d = super.getDomain(),
@@ -105,7 +105,7 @@ class Log extends NumericScale<Log>
 		}
 		return ticks;
 	}
-	
+
 	override public function tickFormat(v : Float, ?i : Int) : String
 	{
 		return thx.culture.FormatNumber.decimal(v, 1);

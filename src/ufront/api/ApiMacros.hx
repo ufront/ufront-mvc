@@ -58,7 +58,7 @@ class ApiMacros
 		// Now that we have all our fields, define the client type and add our constructor to the server api
 		Context.defineType(clientClass);
 		fields.push(apiConstructor);
-		
+
 		return fields;
 	}
 
@@ -67,7 +67,7 @@ class ApiMacros
 		classPos = Context.currentPos();
 		localClass = Context.getLocalClass().get();
 		var fields = Context.getBuildFields();
-		
+
 		// To compile correctly on the client, keep only the public methods, and only their signiatures - remove the actual function body.
 		if (Context.defined("client"))
 		{
@@ -77,13 +77,13 @@ class ApiMacros
 				{
 					switch (f.kind) {
 						case FFun(fun):
-							// Trim the function body 
+							// Trim the function body
 							if (f.name == "new") fun.expr = macro {};
 							else if (fun.ret == null) {
 								fun.expr = macro return;
 							}
 							else fun.expr = macro return null;
-						default: 
+						default:
 							// Not a function, get rid of it
 							fields.remove(f);
 					}
@@ -96,7 +96,7 @@ class ApiMacros
 			}
 			return fields;
 		}
-		else 
+		else
 		{
 			// Not on the client, so leave everything as is...
 			return null;
@@ -119,7 +119,7 @@ class ApiMacros
 		return null;
 	}
 
-	#if macro 
+	#if macro
 
 	static var classPos;
 	static var localClass;
@@ -207,11 +207,11 @@ class ApiMacros
 				// See if it already exists
 				var alreadyExists = false;
 				var proxyName = t.toString() + "Proxy";
-				try 
+				try
 				{
 					var existing = Context.getType(proxyName);
 					alreadyExists = true;
-				} 
+				}
 				catch (e:Dynamic)
 				{
 					if (e == 'Type not found \'$proxyName\'')
@@ -225,10 +225,10 @@ class ApiMacros
 					// If not, define the new type
 					var complex = Context.toComplexType(type);
 					var superClass = TDClass({ // haxe.remoting.AsyncProxy<app.login.LoginAPI>
-						sub: null, 
-						params: [TPType(complex)], 
-						pack: ["haxe","remoting"], 
-						name: "AsyncProxy" 
+						sub: null,
+						params: [TPType(complex)],
+						pack: ["haxe","remoting"],
+						name: "AsyncProxy"
 					});
 					var proxyDefinition = {
 						pos: classPos,

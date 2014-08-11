@@ -30,7 +30,7 @@ package ufront.app;
 
 /**
 	Similar to `ufront.app.UfrontApplication`, but uses `DispatchHandler` instead of `RoutingHandler`.
-	
+
 	This is flagged for possible deprecation, please consider using `UfrontApplication` instead.
 
 	@author Jason O'Neil
@@ -40,32 +40,32 @@ package ufront.app;
 @:deprecated
 class DispatchApplication extends HttpApplication
 {
-	#if !macro 
+	#if !macro
 
-		/** 
+		/**
 			The configuration that was used when setting up the application.
-			
+
 			This is set during the constructor.  Changing values of this object is not guaranteed to have any effect.
 		**/
 		public var configuration(default,null):UfrontConfiguration;
-		
-		/** 
+
+		/**
 			The dispatch handler used for this application.
-			
+
 			This is mostly made accessible for unit testing and logging purposes.  You are unlikely to need to access it for anything else.
 		**/
 		public var dispatchHandler(default,null):DispatchHandler;
-		
-		/** 
+
+		/**
 			The remoting handler used for this application.
-			
+
 			It is automatically set up if a `UFApiContext` class is supplied
 		**/
 		public var remotingHandler(default,null):RemotingHandler;
-		
-		/** 
+
+		/**
 			The view engine being used with this application
-			
+
 			It is configured using the `viewEngine` property on your `UfrontConfiguration`.
 		**/
 		public var viewEngine(default,null):UFViewEngine;
@@ -74,13 +74,13 @@ class DispatchApplication extends HttpApplication
 			Initialize a new UfrontApplication with the given configurations.
 
 			@param	?optionsIn		Options for UfrontApplication.  See `DefaultUfrontConfiguration` for details.  Any missing values will imply defaults should be used.
-			
-			Example usage: 
+
+			Example usage:
 
 			```
 			var routes = new MyRoutes();
 			var dispatchConfig = ufront.web.Dispatch.make( routes );
-			var configuration = new UfrontConfiguration(false); 
+			var configuration = new UfrontConfiguration(false);
 			var ufrontApp = new UfrontApplication({
 				dispatchConfig: Dispatch.make( new MyRoutes() );
 			} , configuration, myapp.Api );
@@ -97,12 +97,12 @@ class DispatchApplication extends HttpApplication
 
 			dispatchHandler = new DispatchHandler();
 			remotingHandler = new RemotingHandler();
-			
+
 			// Map some default injector rules
-			
-			for ( controller in configuration.controllers ) 
+
+			for ( controller in configuration.controllers )
 				dispatchHandler.injector.mapClass( controller, controller );
-			
+
 			for ( api in configuration.apis ) {
 				injector.mapClass( api, api );
 				dispatchHandler.injector.mapClass( api, api );
@@ -113,7 +113,7 @@ class DispatchApplication extends HttpApplication
 			addRequestHandler( [remotingHandler,dispatchHandler] );
 			addResponseMiddleware( configuration.responseMiddleware );
 			addErrorHandler( configuration.errorHandlers );
-			
+
 			// Add log handlers according to configuration
 			if ( !configuration.disableBrowserTrace ) {
 				addLogHandler( new BrowserConsoleLogger() );
@@ -154,13 +154,13 @@ class DispatchApplication extends HttpApplication
 		static var firstRun = true;
 		function initOnFirstExecute( httpContext:HttpContext ) {
 			firstRun = false;
-			
+
 			inject( String, httpContext.request.scriptDirectory, "scriptDirectory" );
 			inject( String, httpContext.contentDirectory, "contentDirectory" );
-		
+
 			// Make the UFViewEngine available (and inject into it, in case it needs anything)
 			try
-				viewEngine = injector.getInstance( configuration.viewEngine ) 
+				viewEngine = injector.getInstance( configuration.viewEngine )
 			catch (e:Dynamic)
 				httpContext.ufWarn( 'Failed to load view engine: $viewEngine' );
 			inject( UFViewEngine, viewEngine );
@@ -201,7 +201,7 @@ class DispatchApplication extends HttpApplication
 			return cast super.inject( cl, val, cl2, singleton, named );
 		}
 
-	#else 
+	#else
 		/**
 			Shortcut for `dispatchHandler.loadRoutes()`
 

@@ -54,7 +54,7 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 
 	/** Initializes a module and prepares it to handle requests. */
 	public function handleRequest( ctx:HttpContext ):Surprise<Noise,Error> {
-		return 
+		return
 			processRequest( ctx ) >>
 			function (r:Noise) return executeResult( ctx );
 	}
@@ -64,7 +64,7 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 
 		// Create the controller, inject into it, execute it...
 		var controller:Controller = context.injector.instantiate( indexController );
-		var resultFuture = 
+		var resultFuture =
 			controller.execute() >>
 			function(result:ActionResult):Noise {
 				context.actionContext.actionResult = result;
@@ -76,7 +76,7 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 
 	function executeResult( context:HttpContext ):Surprise<Noise,Error> {
 		return
-			try 
+			try
 				context.actionContext.actionResult.executeResult( context.actionContext )
 			catch ( e:Dynamic ) {
 				var p = HttpError.fakePosition( context.actionContext, "executeResult", ["actionContext"] );

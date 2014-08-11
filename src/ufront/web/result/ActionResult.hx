@@ -5,7 +5,7 @@ import ufront.web.context.ActionContext;
 import ufront.core.Sync;
 using Types;
 
-/** 
+/**
 	ActionResult is the base class for all results of actions performed during a MVC request.
 
 	Each action (method) in your controller returns an action result.

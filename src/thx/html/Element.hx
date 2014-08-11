@@ -38,7 +38,7 @@ class Element
 	 */
 	public static inline function isBreakElement(el : String) return _break.exists(el);
 	static var _break = Set.ofArray("br,hr".split(","));
-	
+
 	/**
 	 * Elements that you can, intentionally, leave open
 	 * (and which close themselves)

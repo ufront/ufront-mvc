@@ -11,10 +11,10 @@ using tink.CoreApi;
 
 class HttpApplicationMacros {
 	/**
-		Given a bunch of modules (handlers,middleware) and the name of the method on that 
-		module, return a 
+		Given a bunch of modules (handlers,middleware) and the name of the method on that
+		module, return a
 
-		`Array<Pair<(HttpContext->Surprise<Noise,Error>),PosInfos>>` 
+		`Array<Pair<(HttpContext->Surprise<Noise,Error>),PosInfos>>`
 
 		so we can execute them all in the same way.
 	**/
@@ -28,7 +28,7 @@ class HttpApplicationMacros {
 				case EArrayDecl( args ):
 					argsToBind = args;
 					for ( a in args ) {
-						if ( !a.isWildcard() ) 
+						if ( !a.isWildcard() )
 							argsForPos.push( a );
 						else
 							argsForPos.push( "{HttpContext}" );

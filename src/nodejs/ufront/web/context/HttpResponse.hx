@@ -4,29 +4,29 @@
  */
 
 package nodejs.ufront.web.context;
-import thx.error.NotImplemented; 
+import thx.error.NotImplemented;
 import js.Node;
-import thx.error.Error; 
+import thx.error.Error;
 using StringTools;
 
 class HttpResponse extends ufront.web.context.HttpResponse {
 
 	var res:js.node.http.ServerResponse;
-	
+
 	public function new( res:js.node.http.ServerResponse ) {
 		super();
 		this.res = res;
 	}
-	
+
 	override function flush() {
 		if ( _flushed )
 			return;
-		
+
 		_flushed = true;
-		
+
 		// Set HTTP status code
 		res.statusCode = status;
-		
+
 		// Set Cookies
 		try {
 			var cookieHeader = [
@@ -37,7 +37,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 		catch ( e:Dynamic ) {
 			throw new Error( "Cannot flush cookies on response, output already sent" );
 		}
-		
+
 		// Write headers
 		for ( key in _headers.keys() ) {
 			var val = _headers.get(key);

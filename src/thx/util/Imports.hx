@@ -19,7 +19,7 @@ class Imports
 //				{
 //					case CString(s):
 						haxe.macro.Compiler.include(s, rec);
-		
+
 //					default:
 //						Context.error("thx.util.Import.pack only accepts one string argument", expr.pos);
 //				}
@@ -30,7 +30,7 @@ class Imports
 		return
 		{
 			expr : EConst(CString(s)),
-			pos : Context.currentPos() 
+			pos : Context.currentPos()
 		};
 	}
 }

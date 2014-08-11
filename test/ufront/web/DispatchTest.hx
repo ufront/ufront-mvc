@@ -9,18 +9,18 @@ import haxe.web.Dispatch.DispatchRule;
 import haxe.web.Dispatch.MatchRule;
 
 class DispatchTest {
-	var instance:Dispatch; 
-	
+	var instance:Dispatch;
+
 	public function new() {}
-	
+
 	public function beforeClass():Void {}
-	
+
 	public function afterClass():Void {}
-	
+
 	public function setup():Void {}
-	
+
 	public function teardown():Void {}
-	
+
 	public function testConstructor():Void {
 		var noParams = new Map<String,String>();
 		var params = [ "name"=>"Jason", "age"=>"25" ];

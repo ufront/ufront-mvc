@@ -3,7 +3,7 @@ package thx.xml;
 class AttributeFormat
 {
 	public function new(){}
-	
+
 	public function formatAttributes(node : Xml)
 	{
 		var buf = new StringBuf();
@@ -14,7 +14,7 @@ class AttributeFormat
 		}
 		return buf.toString();
 	}
-	
+
 	public function formatAttribute(name : String, value : String)
 	{
 		return name + '="' + value + '"';

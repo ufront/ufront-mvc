@@ -15,9 +15,9 @@ interface UFMiddleware extends UFRequestMiddleware extends UFResponseMiddleware 
 /**
 	Middleware that runs before the request has been processed.
 
-	It can be used for things such as: 
+	It can be used for things such as:
 
-	- perform redirects 
+	- perform redirects
 	- initiate a session
 	- check for a cached response
 	- begin a timer to measure the length of the request
@@ -35,9 +35,9 @@ interface UFRequestMiddleware {
 /**
 	Middleware that runs after the request has been processed.
 
-	It can be used for things such as: 
+	It can be used for things such as:
 
-	- modify or append the response, 
+	- modify or append the response,
 	- log traces from the request (either including `console.log` snippets in the response, or logging on the server)
 	- cache the response for fututre requests
 	- save data from the request for analytics

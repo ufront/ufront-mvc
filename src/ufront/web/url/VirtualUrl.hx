@@ -7,8 +7,8 @@ package ufront.web.url;
 **/
 class VirtualUrl extends PartialUrl
 {
-	public var isPhysical : Bool; 
-	
+	public var isPhysical : Bool;
+
 	public function new() {
 		super();
 		isPhysical = false;
@@ -19,9 +19,9 @@ class VirtualUrl extends PartialUrl
 		feed(u, url);
 		return u;
 	}
-	
+
 	public static function feed(u : VirtualUrl, url : String) {
-		PartialUrl.feed(u, url);   
+		PartialUrl.feed(u, url);
 		if(u.segments[0] == "~") {
 			u.segments.shift();
 			if(u.segments.length == 1 && u.segments[0] == "")

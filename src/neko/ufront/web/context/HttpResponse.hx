@@ -15,16 +15,16 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 		super();
 		_init();
 	}
-	
+
 	override function flush() {
 		if ( _flushed )
 			return;
-		
+
 		_flushed = true;
-		
+
 		// Set HTTP status code
 		_set_return_code( status );
-		
+
 		// Set Cookies
 		try {
 			for ( cookie in _cookies )
@@ -33,7 +33,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 		catch ( e:Dynamic ) {
 			throw new Error( "Cannot flush cookies on response, output already sent" );
 		}
-		
+
 		// Write headers
 		for ( key in _headers.keys() ) {
 			var val = _headers.get(key);
@@ -51,10 +51,10 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 		// Write response content
 		Lib.print( _buff.toString() );
 	}
-	
+
 	static var _set_header : Dynamic;
 	static var _set_cookie : Dynamic;
-	static var _set_return_code : Dynamic; 
+	static var _set_return_code : Dynamic;
 	static var _inited = false;
 
 	static function _init() {

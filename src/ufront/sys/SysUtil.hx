@@ -75,15 +75,15 @@ class SysUtil {
 			var stdout = p.stdout.readAll().toString();
 			var stderr = p.stderr.readAll().toString();
 			return switch code {
-				case 0: 
+				case 0:
 					return stdout;
-				default: 
+				default:
 					return throw 'Command `$cmd ${args.join(" ")}` failed. \nExit code: $code\nStdout: $stdout\nStderr: $stderr';
 			}
 		}
 
 		/**
-			Check if 2 files are different.  
+			Check if 2 files are different.
 
 			Assumes both files exist.
 

@@ -26,7 +26,7 @@ class RedirectResult extends ActionResult
 
 		if(permanentRedirect) actionContext.httpContext.response.permanentRedirect( url );
 		else actionContext.httpContext.response.redirect( url );
-		
+
 		return Sync.success();
 	}
 }

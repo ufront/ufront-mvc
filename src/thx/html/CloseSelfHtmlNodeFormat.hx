@@ -8,7 +8,7 @@ class CloseSelfHtmlNodeFormat extends HtmlNodeFormat
 	{
 		if(Element.isCloseSelf(node.nodeName))
 			return "";
-		else   
+		else
 			return "</" + node.nodeName + ">";
 	}
 }

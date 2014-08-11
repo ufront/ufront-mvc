@@ -6,15 +6,15 @@ using ufront.test.TestUtils;
 
 class ContentResultTest {
 	public function new() {}
-	
+
 	public function beforeClass():Void {}
-	
+
 	public function afterClass():Void {}
-	
+
 	public function setup():Void {}
-	
+
 	public function teardown():Void {}
-	
+
 	public function testContentResult():Void {
 		var ctx = "/".mockHttpContext();
 		var defaultContentType = ctx.response.contentType;

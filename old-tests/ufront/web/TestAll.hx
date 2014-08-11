@@ -15,7 +15,7 @@ class TestAll
 		ufront.web.mvc.TestAll.addTests(runner);
 		ufront.web.routing.TestAll.addTests(runner);
 	}
-	
+
 	public static function main()
 	{
 		var runner = new Runner();

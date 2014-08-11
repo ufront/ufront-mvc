@@ -8,20 +8,20 @@ package ufront.web;
 	You can access a pre-filled version for the current request using:
 
 	`myHttpContext.request.userAgent`
-	
+
 	TODO: update the usefulness
 	TODO: document further
 
 	@author Franco Ponticelli
 **/
-class UserAgent 
+class UserAgent
 {
 	// info from: http://www.quirksmode.org/js/detect.html
 	static var dataBrowser:Array<{
 			subString:String,
 			?versionSearch:String,
 			identity:String
-		}> = [ 
+		}> = [
 		{
 			subString: "Chrome",
 			identity: "Chrome"
@@ -103,8 +103,8 @@ class UserAgent
 	public var majorVersion(default, null) : Int;
 	public var minorVersion(default, null) : Int;
 	public var platform(default, null) : String;
-	
-	public function new(browser : String, version : String, majorVersion : Int, minorVersion : Int, platform : String) 
+
+	public function new(browser : String, version : String, majorVersion : Int, minorVersion : Int, platform : String)
 	{
 		this.browser = browser;
 		this.version = version;
@@ -112,16 +112,16 @@ class UserAgent
 		this.minorVersion = minorVersion;
 		this.platform = platform;
 	}
-	
+
 	public function toString()
 	{
 		return browser + " v." + majorVersion + "." + minorVersion + " (" + version + ") on " + platform;
 	}
-	
+
 	public static function fromString(s : String)
 	{
 		var ua = new UserAgent("unknown", "", 0, 0, "unknown");
-		
+
 		var info = searchString(dataBrowser, s);
 		if (null != info)
 		{
@@ -141,7 +141,7 @@ class UserAgent
 		}
 		return ua;
 	}
-	
+
 	static function extractVersion(searchString : String, s : String)
 	{
 		var index = s.indexOf(searchString);
@@ -156,7 +156,7 @@ class UserAgent
 			minorVersion : Std.parseInt(re.matched(2))
 		};
 	}
-	
+
 	static function searchString(data : Array<Dynamic>, s : String)
 	{
 		for (d in data)

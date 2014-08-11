@@ -10,5 +10,5 @@ class HtmlAttributeFormat extends AttributeFormat
 			return name;
 		else
 			return name + '="' + value + '"';
-	}	
+	}
 }

@@ -29,17 +29,17 @@ import haxe.CallStack;
 using StringTools;
 
 
-/** 
-	Extension of class that allows traces to be sent.  
+/**
+	Extension of class that allows traces to be sent.
 	On the server side, just make sure you write to `Lib.printLn();` before `handleRequest(context)` is called.
-	
+
 	This all relies on Haxe serialised data always being one line.
-	
+
 	A line beginning with hxr is the remoting call, a line beginning with hxt is a trace
-		
+
 	Any other line will throw an "Invalid response" error.
 **/
-class HttpAsyncConnectionWithTraces extends HttpAsyncConnection 
+class HttpAsyncConnectionWithTraces extends HttpAsyncConnection
 {
 	override public function resolve( name ):AsyncConnection {
 		var c = new HttpAsyncConnectionWithTraces(__data,__path.copy());
@@ -63,7 +63,7 @@ class HttpAsyncConnectionWithTraces extends HttpAsyncConnection
 
 		// Set up the remoting data/error callbacks
 		var remotingCallString = __path.join(".")+"("+params.join(",")+")";
-		
+
 		var responseCode:Int;
 		h.onStatus = function(status) {
 			responseCode = status;

@@ -45,16 +45,16 @@ import ufront.web.context.HttpContext;
 
 	The important static macros and methods are still available here and function similarly to those in `haxe.web.Dispatch`, except for the changes described above.
 **/
-class Dispatch extends haxe.web.Dispatch 
-{	
-	/** 
-		The method used in the request.  
+class Dispatch extends haxe.web.Dispatch
+{
+	/**
+		The method used in the request.
 
 		Is set via the constructor.  Whatever value this is set to will be transformed to lowercase.
 	**/
 	public var method(default,null):String;
-	
-	/** 
+
+	/**
 		The controller / API object that was used.
 
 		After a successful `processDispatchRequest`, it will contain the object (controller) to be used
@@ -69,8 +69,8 @@ class Dispatch extends haxe.web.Dispatch
 		This value can be changed, and will affect `executeDispatchRequest()`, do so at your peril.
 	**/
 	public var controller:Null<{}>;
-	
-	/** 
+
+	/**
 		The name of the selected action to be used in the dispatch.
 
 		After a successful `processDispatchRequest`, it will contain the name of the action that
@@ -84,8 +84,8 @@ class Dispatch extends haxe.web.Dispatch
 		This value can be changed, and will affect `executeDispatchRequest()`, do so at your peril.
 	**/
 	public var action:Null<String>;
-	
-	/** 
+
+	/**
 		The arguments created based on the request.
 
 		After a successful `processDispatchRequest`, it will contain an array of the arguments sent to
@@ -131,13 +131,13 @@ class Dispatch extends haxe.web.Dispatch
 	}
 
 	/**
-		Will return an array of possible names. 
+		Will return an array of possible names.
 
-		If method is not null, it will match '$method_$name'. 
+		If method is not null, it will match '$method_$name'.
 
 		For example:
 
-		'someAction' with no method will produce ['doSomeAction']  
+		'someAction' with no method will produce ['doSomeAction']
 		'someAction' with 'post' method will produce ['post_doSomeAction', 'doSomeAction']
 	**/
 	function resolveNames( name:String ) {
@@ -149,17 +149,17 @@ class Dispatch extends haxe.web.Dispatch
 
 	/**
 		Process the request and find the controller, action and arguments to be used.
-		
+
 		The logic in processing the request is slightly different to `haxe.web.Dispatch`
 
 		Full list of differences:
 
-		* We call resolveNames(), and match against multiple names, so that we can find 
+		* We call resolveNames(), and match against multiple names, so that we can find
 		  `post_doSubmit()` etc
 		* We also make the method name lower-case, making Dispatch case insensitive.
-		* When a successful match is found, we populate the "controller" and "action" and 
+		* When a successful match is found, we populate the "controller" and "action" and
 		  "argument" properties of the Dispatch object.
-		
+
 		This function does not execute the result, it merely populates `controller`, `action`
 		and `argument` properties.  Use `executeDispatchRequest` to then execute this request.
 	**/
@@ -193,9 +193,9 @@ class Dispatch extends haxe.web.Dispatch
 		subDispatch = false;
 		loop( args, r );
 		if( parts.length > 0 && !subDispatch ) {
-			if( parts.length==1 && parts[parts.length-1]=="" ) 
+			if( parts.length==1 && parts[parts.length-1]=="" )
 				parts.pop()
-			else 
+			else
 				throw DETooManyValues;
 		}
 		this.controller = cfg.obj;
@@ -210,13 +210,13 @@ class Dispatch extends haxe.web.Dispatch
 		The result of the action will be returned.
 
 		If `processDispatchRequest`has not been run, `DispatchError.DEMissing` will be thrown.
-	
+
 		This method will not catch or handle `Redirect` exceptions in the same way as `runtimeReturnDispatch`.  If you are calling this method manually you should account for this.
 	**/
 	public function executeDispatchRequest():Dynamic {
 		if ( controller==null || action==null || arguments==null )
 			throw DEMissing;
-		
+
 		var actionMethod = Reflect.field(controller, action);
 		return Reflect.callMethod(controller, actionMethod, arguments);
 	}
@@ -249,7 +249,7 @@ class Dispatch extends haxe.web.Dispatch
 	public function toString() return Type.getClassName( Type.getClass(this) );
 
 	/**
-		
+
 		A macro similar to `haxe.web.Dispatch.run()`, with the following differences:
 
 		* We create a new `ufront.web.Dispatch` instead of `haxe.web.Dispatch` instance.
@@ -276,7 +276,7 @@ class Dispatch extends haxe.web.Dispatch
 		return makeConfig(obj);
 	}
 
-	#if macro 
+	#if macro
 		static function makeConfig( obj:Expr ) {
 			var p = obj.pos;
 			if( Context.defined("display") )

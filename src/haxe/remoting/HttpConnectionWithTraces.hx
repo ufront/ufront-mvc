@@ -53,7 +53,7 @@ class HttpConnectionWithTraces extends haxe.remoting.HttpConnection {
 
 		function onResult(v:Dynamic) { result = v; }
 		function onError(v:Dynamic) { throw v; }
-		
+
 		h.onStatus = function(status) {
 			responseCode = status;
 		}

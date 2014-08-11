@@ -25,14 +25,14 @@ class RemotingLogger implements UFLogHandler
 			var results = [];
 			for( msg in httpContext.messages )
 				results.push( formatMessage(msg) );
-			
+
 			#if debug
 				if ( appMessages!=null) {
 					for( msg in appMessages )
 						results.push( formatMessage(msg) );
 				}
 			#end
-			
+
 			if( results.length>0 ) {
 				httpContext.response.write( '\n' + results.join("\n") );
 			}

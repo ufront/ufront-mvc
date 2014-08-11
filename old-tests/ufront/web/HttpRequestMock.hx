@@ -28,7 +28,7 @@ class HttpRequestMock extends HttpRequest
 		authorization = { user : null, pass : null };
 		_uploadHandler = new EmptyUploadHandler();
 	}
-	
+
 	override function get_query() return query;
 	override function get_post() return post;
 	override function get_cookies() return cookies;
@@ -49,6 +49,6 @@ class HttpRequestMock extends HttpRequest
 	public function set_uri(v : String) uri = v;
 	public function set_httpMethod(v : String) httpMethod = v;
 	public function set_scriptDirectory(v : String) scriptDirectory = v;
-	
+
 	override public function setUploadHandler(handler : UFHttpUploadHandler) _uploadHandler = handler;
 }

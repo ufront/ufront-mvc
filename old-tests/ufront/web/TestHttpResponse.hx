@@ -16,7 +16,7 @@ class TestHttpResponse
 	{
 		runner.addCase(new TestHttpResponse());
 	}
-	
+
 	public static function main()
 	{
 		var runner = new Runner();
@@ -24,17 +24,17 @@ class TestHttpResponse
 		Report.create(runner);
 		runner.run();
 	}
-	
+
 	public function new(){}
-	
+
 	public function testResponse()
 	{
 		var response = new HttpResponseMock();
-		
+
 		response.write("hello");
-		
+
 		Assert.equals("hello", response.getBuffer());
-		
+
 		response.clear();
 		Assert.equals("", response.getBuffer());
 	}

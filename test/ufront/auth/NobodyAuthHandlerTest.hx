@@ -10,56 +10,56 @@ using ufront.test.TestUtils;
 
 class NobodyAuthHandlerTest
 {
-	
+
 	public function new()
 	{
-		
+
 	}
-	
+
 	public function beforeClass():Void {}
-	
+
 	public function afterClass():Void {}
-	
+
 	public function setup():Void {}
-	
+
 	public function teardown():Void {}
-	
+
 	public function testNobody():Void {
 		var nobodyAuth:UFAuthHandler<UFAuthUser> = new NobodyAuthHandler();
 		Assert.isFalse( nobodyAuth.isLoggedIn() );
-		
-		try { 
+
+		try {
 			nobodyAuth.requireLogin();
-			Assert.fail( 'Expected error to be thrown' ); 
-		} 
+			Assert.fail( 'Expected error to be thrown' );
+		}
 		catch (e:AuthError) Assert.same( e, NotLoggedIn )
 		catch (e:Dynamic) Assert.fail( 'Wrong error type' );
 
 		Assert.isFalse( nobodyAuth.isLoggedInAs(new BossUser()) );
-		
+
 		var boss = new BossUser();
-		try { 
+		try {
 			nobodyAuth.requireLoginAs(boss);
-			Assert.fail( 'Expected error to be thrown' ); 
-		} 
+			Assert.fail( 'Expected error to be thrown' );
+		}
 		catch (e:AuthError) Assert.equals( ""+e, ""+NotLoggedInAs(boss) )
 		catch (e:Dynamic) Assert.fail( 'Wrong error type' );
 
 		Assert.isFalse( nobodyAuth.hasPermission(HaveCake) );
 		Assert.isFalse( nobodyAuth.hasPermissions([HaveCake,EatCake] ) );
-		
-		try { 
+
+		try {
 			nobodyAuth.requirePermission(EatCake);
 			Assert.fail( 'Expected error to be thrown' );
-		} 
+		}
 		catch (e:AuthError) Assert.same( e, NoPermission(EatCake) )
 		catch (e:Dynamic) Assert.fail( 'Wrong error type' );
 
-		
-		try { 
+
+		try {
 			nobodyAuth.requirePermissions([HaveCake,EatCake]);
-			Assert.fail( 'Expected error to be thrown' ); 
-		} 
+			Assert.fail( 'Expected error to be thrown' );
+		}
 		catch (e:AuthError) Assert.same( e, NoPermission(HaveCake) )
 		catch (e:Dynamic) Assert.fail( 'Wrong error type' );
 

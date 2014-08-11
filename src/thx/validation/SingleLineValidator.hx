@@ -11,7 +11,7 @@ class SingleLineValidator extends Validator<String>
 {
 	static var _re = ~/(\n|\r)/m;
 	public function new(){}
-	
+
 	override public function validate(value : String)
 	{
 		if (_re.match(value))

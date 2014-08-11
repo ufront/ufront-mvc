@@ -21,17 +21,17 @@ class AutoDocumentFormat extends DocumentFormat
 		_level = 0;
 		_begin = true;
 	}
-	
+
 	function indentWrap(content : String)
 	{
 		return newline + content.wrapColumns(wrapColumns, indent.repeat(_level), newline);
 	}
-	
+
 	override function format(node : Xml)
 	{
 		return super.format(node).ltrim(newline);
 	}
-	
+
 	override function formatDocType(node : Xml)
 	{
 		return indentWrap(super.formatDocType(node));
@@ -41,7 +41,7 @@ class AutoDocumentFormat extends DocumentFormat
 	{
 		return indentWrap(super.formatProlog(node));
 	}
-	
+
 	override function formatComment(node : Xml)
 	{
 		if(stripComments)
@@ -49,22 +49,22 @@ class AutoDocumentFormat extends DocumentFormat
 		else
 			return indentWrap(nodeFormat.formatComment(node));
 	}
-	
+
 	override function formatEmptyElement(node : Xml)
 	{
 		return indentWrap(super.formatEmptyElement(node));
 	}
-	
+
 	override function formatOpenElement(node : Xml)
 	{
 		return indentWrap(super.formatOpenElement(node));
 	}
-	
+
 	override function formatCloseElement(node : Xml)
 	{
 		return indentWrap(super.formatCloseElement(node));
 	}
-	
+
 	override function formatChildren(node : Xml)
 	{
 		_level++;
@@ -72,7 +72,7 @@ class AutoDocumentFormat extends DocumentFormat
 		_level--;
 		return content;
 	}
-	
+
 	override function formatDocument(node : Xml)
 	{
 		return super.formatChildren(node);

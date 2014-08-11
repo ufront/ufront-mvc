@@ -15,19 +15,19 @@ class HandleExceptionAttribute extends FilterAttribute implements IExceptionFilt
 {
 	// If the exception should tell that it's handling the situation
 	public var handleIt : Bool;
-	
+
 	public function new()
-	{	
+	{
 		handleIt = false;
-		super(); 
+		super();
 	}
-	
+
 	public function onException(filterContext : ExceptionContext)
 	{
 		var c = cast(filterContext.controller, BaseTestController);
 		c.sequence.push("onException");
-		
+
 		filterContext.result = new SequenceResult(c, "ExceptionHandler for " + Std.string(filterContext.exception));
 		filterContext.exceptionHandled = handleIt;
-	}	
+	}
 }
