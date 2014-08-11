@@ -23,7 +23,7 @@ using ufront.core.InjectionTools;
 /**
 	A context describing the current Http request, response and session.
 **/
-class HttpContext 
+class HttpContext
 {
 	#if (php || neko)
 		/**
@@ -53,7 +53,7 @@ class HttpContext
 		Create a HttpContext object using the explicitly supplied objects.
 
 		For creating a context for each platform see `createSysContext` and `createNodeJSContext`.
-		
+
 		@param request (required) The current `HttpRequest`.
 		@param response (required) The current `HttpResponse`.
 		@param appInjector (optional) The HttpApplication injector, which will be the parent injector for this request - all appInjector mappings will be shared with this context's injector. If null no parent injector will be used.
@@ -65,7 +65,7 @@ class HttpContext
 	public function new( request:HttpRequest, response:HttpResponse, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
 		NullArgument.throwIfNull( response );
 		NullArgument.throwIfNull( request );
-		
+
 		this.request = request;
 		this.response = response;
 		this.urlFilters = ( urlFilters!=null ) ? urlFilters : [];
@@ -82,14 +82,14 @@ class HttpContext
 		injector.mapValue( MessageList, new MessageList(messages) );
 
 		if ( session!=null ) this.session = session;
-		if ( this.session==null ) 
+		if ( this.session==null )
 			try this.session = injector.getInstance( UFHttpSession )
 			catch(e:Dynamic) ufLog('Failed to load UFHttpSession: $e. Using VoidSession instead.');
 		if ( this.session==null ) this.session = new VoidSession();
 		injector.inject( UFHttpSession, this.session );
 
 		if ( auth!=null ) this.auth = auth;
-		if ( this.auth==null ) 
+		if ( this.auth==null )
 			try this.auth = injector.getInstance( UFAuthHandler )
 			catch(e:Dynamic) ufLog('Failed to load UFAuthHandler: $e. Using NobodyAuthHandler instead.');
 		if ( this.auth==null ) this.auth = new NobodyAuthHandler();
@@ -120,7 +120,7 @@ class HttpContext
 	/** The current HttpResponse **/
 	public var response(default,null):HttpResponse;
 
-	/** 
+	/**
 		The current session.
 		Either set during the constructor or created via dependency injection.
 	**/
@@ -158,7 +158,7 @@ class HttpContext
 
 	/**
 		The completion progress of the current request. Setting these values will affect the flow of the request.
-		
+
 		For example, if a middleware restores a response from a cached entry matching the current request, it may want to skip the `RequestHandler` and any `ResponseMiddleware`:
 
 		```
@@ -186,9 +186,9 @@ class HttpContext
 	var _requestUri:String;
 
 	/**
-		Gets the filtered request URI. 
+		Gets the filtered request URI.
 
-		It uses the request uri found in the supplied `HttpRequest`, but applies the Url Filters to it.  
+		It uses the request uri found in the supplied `HttpRequest`, but applies the Url Filters to it.
 		For example, if you use `PathInfoUrlFilter` to filter `index.n?path=/home/` into `/home/`, this will return the filtered result.
 	**/
 	public function getRequestUri():String {
@@ -204,7 +204,7 @@ class HttpContext
 	/**
 		Takes a URI and runs it through the given filters in reverse.
 
-		For example, if you use `PathInfoUrlFilter` this could turn `/home/` into `index.n?path=/home/`.  
+		For example, if you use `PathInfoUrlFilter` this could turn `/home/` into `index.n?path=/home/`.
 		This is useful so your code contains the simple URIs, but at runtime they are transformed into the correct form depending on the environment.
 	**/
 	public function generateUri( uri:String ):String {
@@ -230,7 +230,7 @@ class HttpContext
 		This is a directory that ufront has write-access to, and should preferably not be available for general Http access.
 
 		It can be used to store sessions, log files, cache, uploaded files etc.
-		
+
 		The value is essentially `${request.scriptDirectory}/$relativeContentDir/`, where `relativeContentDir` is the value that was supplied to the constructor.
 
 		If using `ufront.application.UfrontApplication`, this value can be set with the `contentDirectory` setting in your `ufront.web.Configuration` initialization settings.
@@ -243,7 +243,7 @@ class HttpContext
 	var _contentDir:String;
 	function get_contentDirectory() {
 		if ( _contentDir==null ) {
-			if (request.scriptDirectory!=null) 
+			if (request.scriptDirectory!=null)
 				_contentDir = Path.addTrailingSlash(request.scriptDirectory) + Path.addTrailingSlash( relativeContentDir );
 			else
 				_contentDir = Path.addTrailingSlash( relativeContentDir );
@@ -251,9 +251,9 @@ class HttpContext
 			_contentDir = Path.normalize( _contentDir );
 		}
 		return _contentDir;
-			
+
 	}
-	
+
 	/**
 		Commit the session data, if there is any.
 
@@ -269,7 +269,7 @@ class HttpContext
 		A trace statement that will be associated with this HttpContext
 
 		Because of the static nature of Haxe's `trace` (it always uses `haxe.Log.trace`, and that does not have access to information about our request), it can be hard to differentiate which traces belong to which requests.
-		
+
 		A workaround is to call HttpContext's ufTrace(), store our messages here, and output them at the end of the request.  You can call `httpContext.ufTrace(someValue)` just like you would any other trace, and the traces will be displayed as normal at the end of the request.
 
 		Inline shortcuts are provided from `ufront.web.Controller` and `ufront.api.UFApi` so that you can call ufTrace() and it points to this method.
@@ -301,7 +301,7 @@ class HttpContext
 
 		Similar to ufTrace, except that the message is noted to be a Error, which may be displayed differently by the tracing module.
 
-		Please note this does not throw or catch errors, it merely outputs a message to the log and marks that message as an error.  
+		Please note this does not throw or catch errors, it merely outputs a message to the log and marks that message as an error.
 		It may be sensible to use it in your error handling code, but not _as_ your error handling code.
 	**/
 	public inline function ufError( msg:Dynamic, ?pos:PosInfos ) {

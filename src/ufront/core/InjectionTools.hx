@@ -7,8 +7,8 @@ import minject.Injector;
 **/
 class InjectionTools {
 	/**
-		Shortcut to map a class into `injector`.  
-		
+		Shortcut to map a class into `injector`.
+
 		The rules are as follows:
 
 		> - If `cl` is null, this method has no effect.
