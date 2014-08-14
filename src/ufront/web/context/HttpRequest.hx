@@ -174,7 +174,7 @@ class HttpRequest
 
 		If "Authorization" header was specified, but it did not have exactly two parameters, it will throw an exception.
 
-		TODO: document how to trigger this authorization header.
+		To trigger the login box to open on the browser, use `context.response.requireAuthentication("Please login")`.
 	**/
 	public var authorization(get, null):{ user:String, pass:String };
 	function get_authorization():{ user:String, pass:String } return throw new AbstractMethod();
