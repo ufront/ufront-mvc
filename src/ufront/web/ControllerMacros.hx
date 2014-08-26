@@ -348,6 +348,7 @@ class ControllerMacros {
 			else if ( complexTypesUnify(argType, macro :Int) ) Success(SATInt);
 			else if ( complexTypesUnify(argType, macro :Float) ) Success(SATFloat);
 			else if ( complexTypesUnify(argType, macro :Bool) ) Success(SATBool);
+			else if ( complexTypesUnify(argType, macro :Date) ) Success(SATDate);
 			else Failure( Noise );
 	}
 
@@ -629,6 +630,10 @@ class ControllerMacros {
 				var readStr = macro var v = $readExpr;
 				var transformToBool = createVarDecl( identName, macro (v!="false" && v!="0" && v!="null") );
 				[readStr,transformToBool];
+			case SATDate:
+				var declaration = createVarDecl( identName, macro try Date.fromString($readExpr) catch(e:Dynamic) null );
+				var check = macro if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest();
+				( optional ) ? [declaration] : [declaration,check];
 		}
 	}
 
@@ -815,4 +820,5 @@ enum RouteArgType {
 	SATInt;
 	SATFloat;
 	SATBool;
+	SATDate;
 }
