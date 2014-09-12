@@ -7,6 +7,7 @@ import ufront.web.context.HttpContext;
 import ufront.web.result.ActionResult;
 import ufront.web.result.EmptyResult;
 using tink.CoreApi;
+using haxe.io.Path;
 
 /**
 	A base class for your controllers when using Ufront's MVC (Model View Controller) pattern.
@@ -84,6 +85,15 @@ class Controller
 		If you want to run some code after this has been injected, you can use for example: `@post public function doAuthCheck() { context.auth.requirePermission(AccessAdminArea); }`.
 	**/
 	@inject public var context(default,null):HttpContext;
+	
+	/**
+		The Base URI that was used to access this controller.
+
+		Includes a trailing slash.
+
+		For example if you had `/user/jason/profile/` trigger `UserController` (for Jason) and the `profile` action, then baseUrl would be `/user/jason/`. 
+	**/
+	public var baseUri(default,null):String;
 
 	/**
 		Create a new `Controller` instance.
@@ -108,6 +118,13 @@ class Controller
 	**/
 	public function execute():FutureActionOutcome {
 		return Future.sync( Failure(HttpError.internalServerError('Field execute() in ufront.web.Controller is an abstract method, please override it in ${this.toString()} ')) );
+	}
+	
+	/**
+		Instantiate and execute a sub controller.
+	**/
+	public function executeSubController( controller:Class<Controller> ):FutureActionOutcome {
+		return context.injector.instantiate( controller ).execute();
 	}
 
 	/**
@@ -153,6 +170,12 @@ class Controller
 	inline function ufError( msg:Dynamic, ?pos:PosInfos ) {
 		if (context!=null) context.ufError( msg, pos );
 		else haxe.Log.trace( 'Error: $msg', pos ); // If called during the constructor, `context` will not be set yet.
+	}
+	
+	function setBaseUri( uriPartsBeforeRouting:Array<String> ) {
+		var remainingUri = uriPartsBeforeRouting.join( "/" ).addTrailingSlash();
+		var fullUri = context.getRequestUri().addTrailingSlash();
+		baseUri = fullUri.substr( 0, fullUri.length-remainingUri.length );
 	}
 
 	// The following are helpers which are called by the macro-generated code in each controller's execute() method.
