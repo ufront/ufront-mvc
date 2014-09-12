@@ -10,6 +10,7 @@ import utest.Assert;
 import ufront.web.Controller;
 import ufront.app.UfrontApplication;
 import ufront.web.UfrontConfiguration;
+import ufront.web.result.ActionResult;
 import ufront.core.MultiValueMap;
 import minject.Injector;
 using mockatoo.Mockatoo;
@@ -206,6 +207,26 @@ class TestUtils
 		});
 		future.handle( function(_) {} );
 		return future;
+	}
+	
+	public static function responseShouldBe( resultFuture:Future<RouteTestResult>, expectedResponse:String, ?p:PosInfos ):Future<RouteTestResult> {
+		resultFuture.handle( function(result) {
+			Assert.equals( expectedResponse, result.context.response.getBuffer() );
+		});
+		return resultFuture;
+	}
+	
+	public static function checkResult<T:ActionResult>( resultFuture:Future<RouteTestResult>, expectedResultType:Class<T>, ?check:T->Void, ?p:PosInfos ):Future<RouteTestResult> {
+		resultFuture.handle( function(result) {
+			var res = result.context.actionContext.actionResult;
+			if ( Std.is(res,expectedResultType)==false ) {
+				Assert.fail( 'Expected result to be ${Type.getClassName(expectedResultType)}, but it was ${Type.getClassName(Type.getClass(res))}', p );
+			}
+			else if ( check!=null ) {
+				check( cast res );
+			}
+		});
+		return resultFuture;
 	}
 }
 
