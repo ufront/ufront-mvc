@@ -26,8 +26,11 @@ class CsvDecoder
 	var handler : IDataHandler;
 
 	public function new(handler : IDataHandler, check_type = true, delimiter = ",", emptytonull = false, newline = "\r\n|\n|\r",
-						quote = '"', doublequotations = true, trim_whitespace = true)
+						quote:String = null, doublequotations = true, trim_whitespace = true)
 	{
+		// Setting a default argument value to '"' breaks xml documentation output in Haxe 3.2 (git).
+		// Using null, and setting the default value in the code is a workaround.
+		if (quote==null) quote = '"';
 		this.handler = handler;
 		this.delimiter = delimiter;
 		this.emptytonull = emptytonull;
