@@ -21,7 +21,7 @@ Many small fixes, documentation additions and code cleanups.",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
     "random": "1.4.0",
-    "compiletime": "2.5.0",
+    "compiletime": "2.5.1",
     "minject": "1.3.0",
     "tink_core": "1.0.0-rc.6",
     "tink_macro": "0.5.0"
