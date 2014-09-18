@@ -156,6 +156,11 @@ class ViewResult extends ActionResult {
 		Any helpers (dynamic functions) to pass to the template when it is executed.
 	**/
 	public var helpers:TemplateData;
+	
+	/** An explicit string to use as the template, rather than loading the template through our UFViewEngine. **/
+	var templateFromString:UFTemplate;
+	/** An explicit string to use as the layout template, rather than loading the layout through our UFViewEngine. **/
+	var layoutFromString:UFTemplate;
 
 	//
 	// Member Functions
@@ -193,6 +198,31 @@ class ViewResult extends ActionResult {
 	**/
 	public function withoutLayout():ViewResult {
 		this.layout = None;
+		return this;
+	}
+	
+	/**
+		Use a static string as the templates, rather than loading from a UFViewEngine.
+
+		If `template` or `layout` is not supplied or null, the usual rules will apply for loading a view using the UFViewEngine.
+		
+		@param template The template string for the main view template.
+		@param layout The template string for the layout.
+		@param templatingEngine The templating engine to render the given templates with.
+		@return ViewResult (to allow method chaining).
+	**/
+	public function usingTemplateString( template:String, ?layout:String, ?templatingEngine:TemplatingEngine ):ViewResult {
+		if (templatingEngine==null)
+			templatingEngine = TemplatingEngines.haxe;
+		
+		this.templateFromString = 
+			if (template!=null) templatingEngine.factory( template );
+			else null;
+		
+		this.layoutFromString = 
+			if (layout!=null) templatingEngine.factory( layout );
+			else null;
+		
 		return this;
 	}
 
@@ -264,22 +294,29 @@ class ViewResult extends ActionResult {
 
 		// Get the layout future
 		var layoutReady:Surprise<Null<UFTemplate>,Error>;
-		if ( layout==null ) {
-			// See if there is a default layout.
-			layout =
-				try {
-					var defaultLayoutPath = actionContext.httpContext.injector.getInstance( String, "defaultLayout" );
-					Some( new Pair(defaultLayoutPath,null) );
-				}
-				catch (e:Dynamic) None;
+		if ( layoutFromString!=null ) {
+			layoutReady = Future.sync( Success(layoutFromString) );
 		}
-		layoutReady = switch layout {
-			case Some( layoutData ): viewEngine.getTemplate( layoutData.a, layoutData.b );
-			default: Future.sync( Success(null) );
+		else {
+			if ( layout==null ) {
+				// See if there is a default layout.
+				layout =
+					try {
+						var defaultLayoutPath = actionContext.httpContext.injector.getInstance( String, "defaultLayout" );
+						Some( new Pair(defaultLayoutPath,null) );
+					}
+					catch (e:Dynamic) None;
+			}
+			layoutReady = switch layout {
+				case Some( layoutData ): viewEngine.getTemplate( layoutData.a, layoutData.b );
+				default: Future.sync( Success(null) );
+			}
 		}
 
 		// Get the template future
-		var templateReady = viewEngine.getTemplate( viewPath, templatingEngine );
+		var templateReady = 
+			if ( templateFromString!=null ) Future.sync( Success(templateFromString) )
+			else viewEngine.getTemplate( viewPath, templatingEngine );
 
 		// Once both futures have loaded, combine them, and then map them, executing the future templates
 		// and writing them to the output, and then completing the Future once done, or returning a Failure
