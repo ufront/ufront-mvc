@@ -5,19 +5,16 @@
   "tags": ["ufront","web","framework","mvc","neko","php"],
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
-  "releasenote": "Add `HttpRequest` and `HttpResponse` implementations for NodeJS, moving closer to NodeJS support. Still not tested.
-Renamed `UFHttpSessionState` to `UFHttpSession`.
-Change `HttpApplication.execute()` to require `HttpContext`.
-Add `HttpApplication.executeRequest()` for Neko and PHP and `HttpApplication.listen()` for NodeJS.
-Changes to `UFAuthHandler` interface to avoid variance issues, add `NobodyAuthHandler`.
-`HttpContext.create()` is now `HttpContext.createSysContext()` and only available on Neko and PHP.
-`HttpContext` now requires a parent injector, which is used to get `UFAuthHandler`, and `UFHttpSession`.
-Use dependency injection for controllers, rather than having a typedef for controllers with no arguments to the constructor.
-Use dependency injection for `UFAuthHandler`s and `UFHttpSession`s, rather than using factories.
-Use dependency injection for `ViewEngine` configuration.
-Add `defaultLayout` option to `UfrontConfiguration`
-Many small fixes, documentation additions and code cleanups.",
-  "version": "1.0.0-rc.3",
+  "releasenote": "
+    Bump compiletime dependency
+    Add configuration option (and defaults) for loading ufadmin modules.
+    Add ability to use plain strings as templates (Instead of loading from a view engine)
+    Add `controller.baseUri` and `controller.executeSubController(SubController)`
+    Add new testing helpers
+    Workaround for xml documentation error
+    Add support for parsing dates in our routing
+  ",
+  "version": "1.0.0-rc.4",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
     "random": "1.4.0",
