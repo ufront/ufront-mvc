@@ -89,7 +89,7 @@ class Controller
 	/**
 		The Base URI that was used to access this controller.
 
-		Includes a trailing slash.
+		This will always include a trailing slash.
 
 		For example if you had `/user/jason/profile/` trigger `UserController` (for Jason) and the `profile` action, then baseUrl would be `/user/jason/`. 
 	**/
@@ -175,7 +175,7 @@ class Controller
 	function setBaseUri( uriPartsBeforeRouting:Array<String> ) {
 		var remainingUri = uriPartsBeforeRouting.join( "/" ).addTrailingSlash();
 		var fullUri = context.getRequestUri().addTrailingSlash();
-		baseUri = fullUri.substr( 0, fullUri.length-remainingUri.length );
+		baseUri = fullUri.substr( 0, fullUri.length-remainingUri.length ).addTrailingSlash();
 	}
 
 	// The following are helpers which are called by the macro-generated code in each controller's execute() method.
