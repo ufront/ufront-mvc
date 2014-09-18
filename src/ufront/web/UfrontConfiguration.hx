@@ -15,6 +15,9 @@ import ufront.app.UFErrorHandler;
 import ufront.handler.ErrorPageHandler;
 import ufront.middleware.InlineSessionMiddleware;
 import ufront.web.upload.TmpFileUploadMiddleware;
+#if ufront_ufadmin
+	import ufront.ufadmin.UFAdminModule;
+#end
 
 /**
 	Small configuration options that affect a ufront application.
@@ -164,7 +167,18 @@ typedef UfrontConfiguration = {
 
 		If not using ufront-easyauth, the default value is `YesBoss.getFactory()`
 	**/
-	?authImplementation:Class<UFAuthHandler<UFAuthUser>>
+	?authImplementation:Class<UFAuthHandler<UFAuthUser>>,
+	
+	#if ufront_ufadmin
+		/**
+			Modules to use in the UFAdmin control panel.
+
+			If using the ufront-ufadmin library, these modules will show up as menu items in the UFAdmin controller.
+
+			Default is a list of all `ufront.ufadmin.controller.UFAdminModule` classes, fetched using `CompileTime.getAllClasses()`
+		**/
+		?adminModules:Iterable<Class<UFAdminModule>>,
+	#end
 }
 
 class DefaultUfrontConfiguration {
@@ -189,8 +203,8 @@ class DefaultUfrontConfiguration {
 			contentDirectory:'uf-content',
 			logFile:null,
 			disableBrowserTrace: false,
-			controllers: cast CompileTime.getAllClasses( Controller ),
-			apis: cast CompileTime.getAllClasses( UFApi ),
+			controllers: CompileTime.getAllClasses( Controller ),
+			apis: CompileTime.getAllClasses( UFApi ),
 			viewEngine: FileViewEngine,
 			viewPath: "view/",
 			defaultLayout: null,
@@ -207,6 +221,13 @@ class DefaultUfrontConfiguration {
 					cast EasyAuth
 				#else
 					cast YesBossAuthHandler // should we use NobodyAuthHandler instead?
+				#end
+				,
+			adminModules: 
+				#if ufront_ufadmin
+					CompileTime.getAllClasses( UFAdminModule )
+				#else
+					null
 				#end
 		}
 	}

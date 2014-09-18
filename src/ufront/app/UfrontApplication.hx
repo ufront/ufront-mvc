@@ -137,6 +137,13 @@ class UfrontApplication extends HttpApplication
 
 		if ( configuration.defaultLayout!=null )
 			inject( String, configuration.defaultLayout, "defaultLayout" );
+		
+		#if ufront_ufadmin
+			CompileTime.importPackage( "ufront.ufadmin.modules" ); // Ensure all ufront admin controllers are loaded.
+			if ( configuration.adminModules!=null ) {
+				inject( List, Lambda.list(configuration.adminModules), "adminModules" );
+			}
+		#end
 	}
 
 	/**
