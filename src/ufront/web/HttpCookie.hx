@@ -12,17 +12,26 @@ using Dates;
 
 	@author Franco Ponticelli
 **/
-class HttpCookie
-{
-	public var domain : String;
-	public var expires : Date;
-	public var name : String;
-	public var path : String;
-	public var secure : Bool;
-	public var value(default, set) : String;
+class HttpCookie {
+	/** The domain this cookie applies to. **/
+	public var domain:String;
+	
+	/** The date this cookie will expire. If `null`, then the cookie will not include an expiry date. **/
+	public var expires:Null<Date>;
+	
+	/** The name of the cookie, used to access it in future requests: `request.cookies[name]`. **/
+	public var name:String;
+	
+	/** The path on the server this cookie applies to. **/
+	public var path:String;
+	
+	/** Whether or not this cookie is marked as `secure` **/
+	public var secure:Bool;
+	
+	/** The value to store in the cookie. **/
+	public var value(default, set):String;
 
-	public function new(name : String, value : String, ?expires : Date, ?domain : String, ?path : String, secure = false)
-	{
+	public function new( name:String, value:String, ?expires:Date, ?domain:String, ?path:String, ?secure:Bool=false ) {
 		this.name = name;
 		this.value = value;
 		this.expires = expires;
@@ -31,25 +40,22 @@ class HttpCookie
 		this.secure = secure;
 	}
 
-	function setName(v : String)
-	{
+	function setName( v:String ) {
 		NullArgument.throwIfNull( v );
 		return name = v;
 	}
 
-	function set_value(v : String)
-	{
+	function set_value( v:String ) {
 		NullArgument.throwIfNull( v );
 		return value = v;
 	}
 
-	public function toString()
-	{
+	public function toString() {
 		return name + ": " + description;
 	}
 
-	public function description()
-	{
+	/** Print the cookie string used to send to the client. **/
+	public function description() {
 		var buf = new StringBuf();
 		buf.add(value);
 		if ( expires != null )
@@ -61,7 +67,7 @@ class HttpCookie
 		return buf.toString();
 	}
 
-	static function addPair( buf : StringBuf, name, ?value : String, allowNullValue = false) {
+	static function addPair( buf:StringBuf, name:String, ?value:String, ?allowNullValue:Bool=false ) {
 		if (!allowNullValue && null == value)
 			return;
 		buf.add("; ");
