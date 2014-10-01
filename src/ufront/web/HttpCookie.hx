@@ -30,6 +30,9 @@ class HttpCookie {
 	
 	/** The value to store in the cookie. **/
 	public var value(default, set):String;
+	
+	/** The cookie string used to send to the client. **/
+	public var description(get, never):String;
 
 	public function new( name:String, value:String, ?expires:Date, ?domain:String, ?path:String, ?secure:Bool=false ) {
 		this.name = name;
@@ -38,6 +41,15 @@ class HttpCookie {
 		this.domain = domain;
 		this.path = path;
 		this.secure = secure;
+	}
+
+	/** Cause the cookie to expire with this request, by setting the date to a time in the past. **/
+	public function expireNow():Void {
+		this.expires = Date.fromTime( 0 );
+	}
+
+	public function toString() {
+		return '$name: $description';
 	}
 
 	function setName( v:String ) {
@@ -50,31 +62,26 @@ class HttpCookie {
 		return value = v;
 	}
 
-	public function toString() {
-		return name + ": " + description;
-	}
-
-	/** Print the cookie string used to send to the client. **/
-	public function description() {
+	function get_description() {
 		var buf = new StringBuf();
 		buf.add(value);
-		if ( expires != null )
-			addPair(buf, "expires", expires.format("%a, %d-%b-%Y %T %Z"));
-		addPair(buf, "domain", domain);
-		addPair(buf, "path", path);
-		if (secure)
-			addPair(buf, "secure", true);
+		if ( expires!=null )
+			addPair( buf, "expires", expires.format("%a, %d-%b-%Y %T") );
+		addPair( buf, "domain", domain );
+		addPair( buf, "path", path );
+		if ( secure )
+			addPair( buf, "secure", true );
 		return buf.toString();
 	}
 
 	static function addPair( buf:StringBuf, name:String, ?value:String, ?allowNullValue:Bool=false ) {
-		if (!allowNullValue && null == value)
+		if ( !allowNullValue && null==value )
 			return;
-		buf.add("; ");
-		buf.add(name);
-		if (null == value)
+		buf.add( "; " );
+		buf.add( name );
+		if ( null==value )
 			return;
-		buf.add("=");
-		buf.add(value);
+		buf.add( "=" );
+		buf.add( value );
 	}
 }

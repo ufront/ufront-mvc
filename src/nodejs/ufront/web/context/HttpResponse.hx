@@ -30,7 +30,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 		// Set Cookies
 		try {
 			var cookieHeader = [
-				for ( cookie in _cookies ) '${cookie.name}=${cookie.description()}'
+				for ( cookie in _cookies ) '${cookie.name}=${cookie.description}'
 			];
 			res.setHeader( "Set-Cookie", cookieHeader );
 		}

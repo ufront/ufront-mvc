@@ -21,17 +21,20 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 			return;
 
 		_flushed = true;
-
+		
 		// Set HTTP status code
 		_set_return_code( status );
 
 		// Set Cookies
 		try {
-			for ( cookie in _cookies )
-				_set_cookie( untyped cookie.name.__s, untyped cookie.description().__s );
+			for ( cookie in _cookies ) {
+				var description = cookie.description;
+				 var name = cookie.name;
+				_set_cookie( untyped name.__s, untyped description.__s );
+			}
 		}
 		catch ( e:Dynamic ) {
-			throw new Error( "Cannot flush cookies on response, output already sent" );
+			throw new Error( 'Cannot flush cookies on response, output already sent: $e' );
 		}
 
 		// Write headers

@@ -132,7 +132,11 @@ class FileSession implements UFHttpSession
 	public var sessionName(default,null):String;
 
 	/**
-		The lifetime/expiry of the cookie, in seconds.  A value of 0 represents expiry when the browser window is closed.
+		The lifetime/expiry of the cookie, in seconds.
+
+		A positive value sets the cookie to expire that many seconds from the current time.
+		A value of 0 represents expiry when the browser window is closed.
+		A negative value expires the cookie immediately.
 
 		This is set by injecting a `InjectionRef<Int> named "sessionExpiry", otherwise the default `defaultExpiry` value is used.
 	**/
@@ -217,15 +221,9 @@ class FileSession implements UFHttpSession
 
 					// Create the file so no one else takes it
 					File.saveContent( file, "" );
-
-					var expire = ( expiry==0 ) ? null : DateTools.delta( Date.now(), 1000.0*expiry );
-					var path = '/'; // TODO: Set cookie path to application path, right now it's global.
-					var domain = null;
-					var secure = false;
-
-					var sessionCookie = new HttpCookie( sessionName, tryID, expire, domain, path, secure );
-					context.response.setCookie( sessionCookie );
-
+					
+					setCookie( tryID, expiry );
+					
 					commit();
 				}
 
@@ -239,43 +237,58 @@ class FileSession implements UFHttpSession
 			return throw "Not implemented";
 		#end
 	}
+	
+	function setCookie( id:String, expiryLength:Int ) {
+		var expireAt = ( expiryLength<=0 ) ? null : DateTools.delta( Date.now(), 1000.0*expiryLength );
+		var path = '/'; // TODO: Set cookie path to application path, right now it's global.
+		var domain = null;
+		var secure = false;
+
+		var sessionCookie = new HttpCookie( sessionName, id, expireAt, domain, path, secure );
+		if ( expiryLength<0 )
+			sessionCookie.expireNow();
+		context.response.setCookie( sessionCookie );
+	}
 
 	/**
 		Commit if required.
 
-		Throws a String if the commit failed (usually because of no permission to write to disk)
+		Returns an Outcome, which is a Failure if the commit failed, usually because of not having permission to write to disk.
 	**/
 	public function commit():Surprise<Noise,String> {
 		#if sys
 			var t = Future.trigger();
 			var handled = false;
 
-			if ( regenerateFlag ) {
-				handled = true;
-				t.trigger( Failure("NotImplemented: use regenerated ID to rename file and update cookie") );
-			}
-			if ( commitFlag && sessionData!=null ) {
-				handled = true;
-				try {
+			try {
+				if ( regenerateFlag ) {
+					handled = true;
+					FileSystem.rename( getSessionFilePath(oldSessionID), getSessionFilePath(sessionID) );
+					setCookie( sessionID, expiry );
+					t.trigger( Success(Noise) );
+				}
+				if ( commitFlag && sessionData!=null ) {
+					handled = true;
 					var filePath = getSessionFilePath(sessionID);
 					var content = Serializer.run(sessionData);
 					File.saveContent(filePath, content);
 					t.trigger( Success(Noise) );
 				}
-				catch( e:Dynamic ) {
-					t.trigger( Failure('Unable to save session: $e') );
+				if ( closeFlag ) {
+					handled = true;
+					// Because Date.now() on the server is in local time, but the cookie header is in GMT, 
+					setCookie( "", -1 );
+					FileSystem.deleteFile( getSessionFilePath(sessionID) );
+					t.trigger( Success(Noise) );
 				}
+				if ( expiryFlag ) {
+					handled = true;
+					setCookie( sessionID, expiry );
+					t.trigger( Success(Noise) );
+				}
+				if ( !handled ) t.trigger( Success(Noise) );
 			}
-			if ( closeFlag ) {
-				handled = true;
-				t.trigger( Failure("NotImplemented: close the session, delete the file, expire the cookie") );
-			}
-			if ( expiryFlag ) {
-				handled = true;
-				t.trigger( Failure("NotImplemented: change expiry on cookie") );
-			}
-
-			if ( !handled ) t.trigger( Success(Noise) );
+			catch( e:Dynamic ) t.trigger( Failure('Unable to save session: $e') );
 
 			return t.asFuture();
 		#else
