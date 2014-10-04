@@ -25,8 +25,11 @@ class HttpCookie {
 	/** The path on the server this cookie applies to. **/
 	public var path:String;
 	
-	/** Whether or not this cookie is marked as `secure` **/
+	/** Whether or not this cookie is marked as `secure`. Default is false. **/
 	public var secure:Bool;
+	
+	/** Whether or not this cookie is for http only (not available on client JS etc). Default is false. **/
+	public var httpOnly:Bool;
 	
 	/** The value to store in the cookie. **/
 	public var value(default, set):String;
@@ -34,13 +37,14 @@ class HttpCookie {
 	/** The cookie string used to send to the client. **/
 	public var description(get, never):String;
 
-	public function new( name:String, value:String, ?expires:Date, ?domain:String, ?path:String, ?secure:Bool=false ) {
+	public function new( name:String, value:String, ?expires:Date, ?domain:String, ?path:String, ?secure:Bool=false, ?httpOnly:Bool=false ) {
 		this.name = name;
 		this.value = value;
 		this.expires = expires;
 		this.domain = domain;
 		this.path = path;
 		this.secure = secure;
+		this.httpOnly = httpOnly;
 	}
 
 	/** Cause the cookie to expire with this request, by setting the date to a time in the past. **/
