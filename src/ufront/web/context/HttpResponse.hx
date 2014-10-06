@@ -62,16 +62,16 @@ class HttpResponse
 	/** 500 **/
 	static inline var INTERNAL_SERVER_ERROR = 500;
 
-	/** Get or set the Http "Content-type" header. **/
+	/** Get or set the Http "Content-type" header. Default is `text/html`. **/
 	public var contentType(get, set):String;
 
 	/** Location to redirect to. Will add or remove a "Location" header from the HTTP headers **/
 	public var redirectLocation(get, set):String;
 
-	/** Get or set the `charset` used in the HTTP "Content-type" header when the type is "text/*" **/
+	/** Get or set the `charset` used in the HTTP "Content-type" header when the type is "text/*". Default is `utf-8`. **/
 	public var charset:String;
 
-	/** The HTTP Response code.  See the inline static vars for common values **/
+	/** The HTTP Response code.  See the inline static vars for common values. Default is 200. **/
 	public var status:Int;
 
 	var _buff:StringBuf;
