@@ -109,7 +109,8 @@ class HttpApplication
 	/** A position representing the current module.  Useful for diagnosing if something in our async chain never completed. **/
 	var currentModule:Pos;
 
-	///// End Events /////
+	/** The (relative) path to the content directory. **/
+	var pathToContentDir:String = null;
 
 	/**
 		Start a new HttpApplication
@@ -412,7 +413,10 @@ class HttpApplication
 			Available on PHP and Neko.
 		**/
 		public function executeRequest() {
-			this.execute( HttpContext.createSysContext(this.injector) );
+			var context =
+				if ( pathToContentDir!=null ) HttpContext.createSysContext( this.injector, urlFilters, pathToContentDir )
+				else HttpContext.createSysContext( this.injector, urlFilters );
+			this.execute( context );
 		}
 	#elseif nodejs
 		/**
@@ -429,7 +433,9 @@ class HttpApplication
 			app.use( new js.npm.connect.Static('.') );
 			app.use( new js.npm.connect.BodyParser() );
 			app.use( function(req:js.npm.express.Request,res:js.npm.express.Response,next:?String->Void) {
-				var context:HttpContext = HttpContext.createNodeJSContext( req, res );
+				var context:HttpContext = 
+					if ( pathToContentDir!=null ) HttpContext.createNodeJSContext( req, res, urlFilters, pathToContentDir )
+					else HttpContext.createNodeJSContext( req, res, urlFilters );
 				this.execute( context ).handle( function(result) switch result {
 					case Failure( err ): next( err.toString() );
 					default: next();
@@ -452,5 +458,12 @@ class HttpApplication
 	**/
 	public function clearUrlFilters():Void {
 		urlFilters = [];
+	}
+
+	/**
+		Set the relative path to the content directory.
+	**/
+	public function setContentDirectory( relativePath:String ):Void {
+		pathToContentDir = relativePath;
 	}
 }

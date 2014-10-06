@@ -243,12 +243,10 @@ class HttpContext
 	var _contentDir:String;
 	function get_contentDirectory() {
 		if ( _contentDir==null ) {
-			if (request.scriptDirectory!=null)
+			if ( request.scriptDirectory!=null )
 				_contentDir = Path.addTrailingSlash(request.scriptDirectory) + Path.addTrailingSlash( relativeContentDir );
 			else
 				_contentDir = Path.addTrailingSlash( relativeContentDir );
-
-			_contentDir = Path.normalize( _contentDir );
 		}
 		return _contentDir;
 

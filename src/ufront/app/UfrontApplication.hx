@@ -134,6 +134,9 @@ class UfrontApplication extends HttpApplication
 			inject( String, configuration.viewPath, "viewPath" );
 			inject( UFViewEngine, configuration.viewEngine, true );
 		}
+		
+		if ( configuration.contentDirectory!=null )
+			setContentDirectory( configuration.contentDirectory );
 
 		if ( configuration.defaultLayout!=null )
 			inject( String, configuration.defaultLayout, "defaultLayout" );
