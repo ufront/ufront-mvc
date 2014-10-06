@@ -6,15 +6,12 @@
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
   "releasenote": "
-    Bump compiletime dependency
-    Add configuration option (and defaults) for loading ufadmin modules.
-    Add ability to use plain strings as templates (Instead of loading from a view engine)
-    Add `controller.baseUri` and `controller.executeSubController(SubController)`
-    Add new testing helpers
-    Workaround for xml documentation error
-    Add support for parsing dates in our routing
+    Small changes to HttpCookie.
+    More docs, less untyped.
+    Fix to UfrontConfiguration when not using ufadmin
+    Fix for contentDirectory being set correctly when it is "../somedir/".
   ",
-  "version": "1.0.0-rc.4",
+  "version": "1.0.0-rc.5",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
     "random": "1.4.0",
