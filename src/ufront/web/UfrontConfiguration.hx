@@ -223,12 +223,9 @@ class DefaultUfrontConfiguration {
 					cast YesBossAuthHandler // should we use NobodyAuthHandler instead?
 				#end
 				,
-			adminModules: 
-				#if ufront_ufadmin
-					CompileTime.getAllClasses( UFAdminModule )
-				#else
-					null
-				#end
+			#if ufront_ufadmin
+				adminModules: CompileTime.getAllClasses( UFAdminModule ),
+			#end
 		}
 	}
 }
