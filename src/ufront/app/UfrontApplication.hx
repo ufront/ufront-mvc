@@ -147,6 +147,9 @@ class UfrontApplication extends HttpApplication
 				inject( List, Lambda.list(configuration.adminModules), "adminModules" );
 			}
 		#end
+		
+		for ( te in configuration.templatingEngines )
+			addTemplatingEngine( te );
 	}
 
 	/**
@@ -172,6 +175,7 @@ class UfrontApplication extends HttpApplication
 		// Make the UFViewEngine available (and inject into it, in case it needs anything)
 		if ( configuration.viewEngine!=null ) {
 			try {
+				inject( configuration.viewEngine );
 				viewEngine = injector.getInstance( UFViewEngine );
 				for ( te in appTemplatingEngines ) {
 					viewEngine.addTemplatingEngine( te );

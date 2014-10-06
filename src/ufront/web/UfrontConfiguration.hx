@@ -3,6 +3,7 @@ package ufront.web;
 import ufront.api.UFApiContext;
 import ufront.view.FileViewEngine;
 import ufront.view.UFViewEngine;
+import ufront.view.TemplatingEngines;
 import ufront.web.Controller;
 import ufront.api.*;
 import ufront.web.session.*;
@@ -135,6 +136,15 @@ typedef UfrontConfiguration = {
 		Default is `ufront.view.FileViewEngine`, which loads the views from the `viewPath` directory.
 	**/
 	?viewEngine:Null<Class<UFViewEngine>>,
+	
+	/**
+		The TemplatingEngines to use, in order of preference.
+
+		The order the templating engines are specified here is the order they are added to the ViewEngine, and the order that views will attempt to be loaded in.
+
+		Default order is `[erazor,hxtemplo,mustache,hxdtl,haxe]`, with the available templates from the haxelibs you have used.
+	**/
+	?templatingEngines:Array<TemplatingEngine>,
 
 	/**
 		The folder (either absolute, or relative to the script directory) to load the views from.
@@ -206,6 +216,13 @@ class DefaultUfrontConfiguration {
 			controllers: CompileTime.getAllClasses( Controller ),
 			apis: CompileTime.getAllClasses( UFApi ),
 			viewEngine: FileViewEngine,
+			templatingEngines: [
+				#if erazor TemplatingEngines.erazor, #end
+				#if hxtemplo TemplatingEngines.hxtemplo, #end
+				#if mustache TemplatingEngines.mustache, #end
+				#if hxdtl TemplatingEngines.hxdtl, #end
+				TemplatingEngines.haxe
+			],
 			viewPath: "view/",
 			defaultLayout: null,
 			sessionImplementation: FileSession,
