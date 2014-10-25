@@ -113,7 +113,7 @@ class ErrorPageHandler implements UFErrorHandler
 			else "";
 
 		var content = '
-			<summary class="error-summary"><h1 class="error-message">$error</h1></summary>
+			<summary class="error-summary"><h1 class="error-message">${error.message}</h1></summary>
 			<details class="error-details"> $inner $pos $exceptionStack</details>
 		';
 
