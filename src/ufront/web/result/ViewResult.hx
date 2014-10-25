@@ -10,78 +10,152 @@ import ufront.view.UFViewEngine;
 import ufront.view.UFTemplate;
 import haxe.ds.Option;
 import ufront.web.HttpError;
+import ufront.web.Controller;
 import ufront.web.context.ActionContext;
 import ufront.core.Sync;
+import haxe.rtti.Meta;
 using tink.CoreApi;
 using Strings;
+using haxe.io.Path;
 
 /**
-	A ViewResult loads a view from a templating engine, optionally wraps it in a layout, and writes the result to the HttpResponse with a `text/html` content type.
+A ViewResult loads a view from a templating engine, optionally wraps it in a layout, and writes the result to the HttpResponse with a `text/html` content type.
 
-	### Choosing a view
+### Choosing a view
 
-	When a ViewResult is created you can optionally set a viewPath.
+There's a fair bit of magic to how ufront chooses a template for the ViewResult.
 
-	If you don't set a viewPath, it will be inferred from the context.
+__Let's look at an example:__
 
-	For example, if you are in the controller "HomeController" and the action "doIndex()", it will look for a view called "home/index.*" in your view directory.
+```haxe
+class AdminController extends Controller {
+	@:route("/dashboard/")
+	function doDashboard() {
+		return new ViewResult();
+	}
 
-	There is some small magic here - the word "Controller" is dropped from the end of the controller name.
-	The "do" prefix is dropped from the start of the action name.
-	The first letter is made lower case if it isn't already.
-	It will also match a template with any extension supported by the templating engines.
+	@:route("/camera/")
+	function takePhoto() {
+		return new ViewResult();
+	}
+}
+```
 
-	If a viewPath is specified, a view will be loaded from that path.
-	If the viewPath does not include an extension, any view matching one of the extensions supported by our templating engines will be used.
-	You can optionally specify a TemplatingEngine to use also.
-	See `UFViewEngine.getTemplate()` for a detailed description of how a template is chosen.
+If you visit `/dashboard/`, it is going to use a template at "/view/admin/dashboard.html" by default.
+If you visit `/camera/`, it is going to use a template at "/view/admin/takePhoto.html" by default.
 
-	### Setting data
+__How does it know to look there?__
 
-	When you create the view, you can specify some data to execute the template with:
+1. "/view/" is your viewPath, set in `UfrontConfiguration.viewPath`
+2. "admin/" is guessed based on the name "AdminController".  We lower-case the first letter, and ignore the "Controller" part of the name.  Another example is "BlogPostController" or just "BlogPost" looking for views in "/blogPost/".
+3. "dashboard.html" and "takePhoto.html" are guessed based on the action name / method name.  If the name begins with "do", we ignore those two letters.  We also make sure the first letter is lower-case.
 
-	```haxe
-	ViewResult.create({ name: "jason", age: 26 });
-	```
+__How do we change it?__
 
-	You can add to this data using `setVar` and `setVars`.
+Well you can use metadata.
 
-	You can also specify some global data that will always be included for your app:
+To change the default folder that views in this controller are found in, use the `@viewFolder` metadata:
 
-	```
-	ViewResult.globalValues["copyright"] = "&copy; 2014 Haxe Foundation, all rights reserved.";
-	```
+```haxe
+@viewFolder("/admin-templates/")
+class AdminController extends Controller {
+	...
+}
+```
 
-	Helpers (dynamic functions) can be included in your ViewResult also.
+You can also set a default layout for every action on the controller:
 
-	### Wrapping your view with a layout
+```haxe
+@viewFolder("/admin-templates/")
+@layout("layout.html") // Will look in `view/admin-templates/layout.html`
+// By contrast, `@layout("/layout.html")` will look in "/view/layout.html" - notice the leading slash.
+class AdminController extends Controller {
+	...
+}
+```
 
-	Usually you will want to wrap your view for a specific page or action with a layout that has the branding of your site.
+If you want to change the template used for one of our actions, you can use the `@template` metadata:
 
-	A layout is another `ufront.view.UFTemplate` which takes the parameter "viewContent".
-	The result of the current view will be inserted into the "viewContent" field of the layout.
-	All of the same data mappings and helpers will be available to the layout when it renders.
+```haxe
+@:route("/camera/")
+@template("camera.html") // Will look in `view/admin-templates/camera.html`
+function takePhoto() {
+	return new ViewResult();
+}
+```
 
-	You can set a default layout to be used with all ViewResults using the static method `setDefaultLayout()`.
-	You can se a layout for an individual result using `withLayout()`.
-	Finally you can choose not to use a layout, even if a default is specified, by using `withoutLayout()`
+To specify a template to use manually in your code:
 
-	### Where does it get the views from?
+```
+return new ViewResult({}, "myView.html");
+return new ViewResult({}, "myView.html").withLayout("layout.html");
+return new ViewResult({}, "myView.html").withoutLayout();
+```
 
-	Short answer: by default, it gets them from the filesystem in the "view/" folder relative to the script directory.
+This gives you a fair amount of flexibility:
 
-	Ufront supports different view engines. (See `ufront.view.UFViewEngine`).
-	For example, you could have a view engine that loads templates from a database, rather than from the FileSystem.
+1. Do nothing, and let Ufront guess.
+2. Be more specific, and use metadata, which is still nice and clean.
+3. Be very specific and flexible, specifying it in your code.
 
-	ViewResult will use dependency injection to get the correct UFViewEngine it should be using.
-	You can set this by setting `viewEngine` on your `ufront.web.UfrontConfiguration` when you start your ufront app.
-	By default, it is configured to use the `ufront.view.FileViewEngine`, loading views from the "view/" directory relative to your script directory (www/).
+__What about file extensions__
 
-	### What if I want a different templating engine?
+I've used ".html" views in all these examples, but you could leave this out.
 
-	We use a `UFViewEngine` to load our templates, and these support multiple templating engines.
-	You can view some available engines in `ufront.view.TemplatingEngines`, and it will be fairly easy to create a new templating engine if needed.
-	You can use `ufront.app.UfrontApplication.addTemplatingEngine()` to add a new engine, which will then be available to your view results.
+If the viewPath does not include an extension, any view matching one of the extensions supported by our templating engines will be used.
+You can optionally specify a TemplatingEngine to use also.
+See `UFViewEngine.getTemplate()` for a detailed description of how a template is chosen.
+
+### Setting data
+
+When you create the view, you can specify some data to execute the template with:
+
+```haxe
+new ViewResult({ name: "jason", age: 26 });
+```
+
+You can add to this data using `ViewResult.setVar()` and `ViewResult.setVars()`.
+
+You can also specify some global data that will always be included for your app:
+
+```
+ViewResult.globalValues["copyright"] = "&copy; 2014 Haxe Foundation, all rights reserved.";
+```
+
+Helpers (dynamic functions) can be included in your ViewResult also.
+
+### Wrapping your view with a layout
+
+Most websites will have a layout that is used on almost all of your pages, and then individual views for each different kind of page.
+
+In Ufront, a layout is just another `ufront.view.UFTemplate` which has a variable called "viewContent".
+The result of the current view will be inserted into the "viewContent" field of the layout.
+All of the same data mappings and helpers will be available to the layout when it renders.
+
+You can set a default layout to be used with all ViewResults using the static method `ViewResult.setDefaultLayout()`, or by injecting a String named "defaultLayout" into the app's dependency injector.
+You can set a default layout for a controller using `@layout("layout.html")` style metadata.
+You can set a layout for an individual result using `ViewResult.withLayout()`.
+Finally if you have a default layout, but want to NOT use a layout, you can use `ViewResult.withoutLayout()`
+
+### Where does it get the views from?
+
+Short answer: by default, it gets them from the filesystem in the "view/" folder relative to the script directory.
+
+Long answer:
+
+Ufront supports different view engines. (See `UFViewEngine`).
+For example, you could have a view engine that loads templates from a database, rather than from the FileSystem.
+Or one that loads them over HTTP from a server somewhere.
+
+ViewResult will use dependency injection to get the correct UFViewEngine four our app.
+You can set this by setting `UfrontConfiguration.viewEngine` when you start your Ufront app.
+By default, it is configured to use the `FileViewEngine`, loading views from the "view/" directory relative to your script directory, so "www/view/".
+
+### What if I want a different templating engine?
+
+We use a `UFViewEngine` to load our templates, and these support multiple templating engines.
+You can view some available engines in `TemplatingEngines`, and it will be fairly easy to create a new templating engine if needed.
+You can use `UfrontApplication.addTemplatingEngine()` to add a new engine, which will then be available to your view results.
 **/
 class ViewResult extends ActionResult {
 
@@ -93,21 +167,6 @@ class ViewResult extends ActionResult {
 		Global values that should be made available to every view result.
 	**/
 	public static var globalValues:TemplateData = {};
-
-	//
-	// Macros
-	//
-
-	/**
-		A shortcut to `new ViewResult()`.
-
-		At some point in the future this may be replaced with a macro used to verify that the template exists and is parsable.
-
-		For now this has no effect different to the normal constructor.
-	**/
-	public static function create( ?data:TemplateData, ?viewPath:String, ?templatingEngine:TemplatingEngine ):ViewResult {
-		return new ViewResult( data, viewPath, templatingEngine );
-	}
 
 	//
 	// Member Variables
@@ -240,36 +299,15 @@ class ViewResult extends ActionResult {
 	}
 
 	/**
-		Execute the given view (and layout, if applicable), writing to the response.
+		Execute the given view, wrap it in a layout, and write it to the response.
 
-		- Load the selected view template, and if applicable, the view layout or default view layout.
-		- Once loaded, execute the view template with our given data
-		- If a layout is used, execute the layout with the same data, inserting our view into the `viewContent` variable of the layout
-		- Write the final output to the `ufront.web.context.HttpResponse`
+		In detail:
 
-		If `viewPath` was not specified or was null, we will infer the viewPath from the actionContext.
-		The following rules apply:
-
-		- If `viewPath` was not specified or is null, the `actionContext` will be used to determine a view based on the controller / action used for the request.
-		- For example if you are in a controller called `PostsController` and you are in an action called `viewPost`, the inferred `viewPath` will be `posts/viewPost`.
-		- This will match a template with that path, using whichever extension your templating engines support, and using the first template to match, for example `post/viewPost.html`.
-
-		Some small transformations that occur while inferring the view path:
-
-		__On the controller:__
-
-		- The package is discarded, only the section after the final "." is kept
-		- The first letter of your controller name will be made lowercase.
-		- If your controller name ends with "Controller", it will not be included in the view.
-
-		__On the action:__:
-
- 		- If the action name begins with "do", it will be removed
-		- The first letter of your action name will be made lowercase.
-
-		The data passed to the template will be the combination of `globalValues`, `helpers` and `data`, with the latter taking precedence over the former.
-
-		The result of executing the template will be written to the response, with a content type of "text/html".
+		- Figure out which template and which layout to use. (See the documentation at the top of this class for more details.)
+		- Load the template and layout.
+		- Once loaded, execute the view template with all of our data (a combination of `globalValues`, `helpers` and `data`).
+		- If a layout is used, execute the layout with the same data, inserting our view into the `viewContent` variable of the layout.
+		- Write the final output to the `ufront.web.context.HttpResponse` with a `text/html` content type.
 	**/
 	override function executeResult( actionContext:ActionContext ) {
 
@@ -277,20 +315,69 @@ class ViewResult extends ActionResult {
 		var viewEngine = try actionContext.httpContext.injector.getInstance( UFViewEngine ) catch (e:Dynamic) null;
 		if (viewEngine==null) return Sync.httpError( "Failed to find a UFViewEngine in ViewResult.executeResult(), please make sure that one is made available in your application's injector" );
 
+		
 		// Combine the data and the helpers
 		var combinedData = TemplateData.fromMany( [globalValues, helpers, data] );
+		var controller = Std.instance( actionContext.controller, Controller );
+		if ( controller!=null && combinedData.exists('baseUri')==false )
+			combinedData.set( 'baseUri', controller.baseUri );
+		
+		// Get the view folder, either from @viewFolder("...") meta or from the controller name.
+		var controllerCls = Type.getClass( actionContext.controller );
+		var viewFolderMeta = Meta.getType( controllerCls ).viewFolder;
+		var viewFolder:String;
+		if ( viewFolderMeta!=null && viewFolderMeta.length>0 ) {
+			viewFolder = ""+viewFolderMeta[0];
+			viewFolder = viewFolder.removeTrailingSlashes();
+		}
+		else {
+			var controllerName = Type.getClassName( Type.getClass(actionContext.controller) ).split( "." ).pop().lcfirst();
+			if ( controllerName.endsWith("Controller") )
+				controllerName = controllerName.substr( 0, controllerName.length-10 );
+			viewFolder = controllerName;
+		}
 
-		// Figure out the viewPath if it was not supplied.
+		// Get the view path
 		if ( viewPath==null ) {
-			var controller = Type.getClassName( Type.getClass(actionContext.controller) ).split( "." ).pop().lcfirst();
-			if ( controller.endsWith("Controller") )
-				controller = controller.substr( 0, controller.length-10 );
+			// Was the viewPath specified by @template("...") metadata on the action method?
+			var fieldsMeta = Meta.getFields( controllerCls );
+			var actionFieldMeta:Dynamic<Array<Dynamic>> = Reflect.field( fieldsMeta, actionContext.action );
+			if ( actionFieldMeta!=null && actionFieldMeta.template!=null && actionFieldMeta.template.length>0 ) {
+				viewPath = ""+actionFieldMeta.template[0];
+			}
+		}
+		if ( viewPath==null ) {
+			// Otherwise, if viewPath is still null, use the action name to guess a reasonable template.
 			var action = actionContext.action;
 			if ( action.startsWith("do") )
 				action = action.substr(2);
-			action = action.lcfirst();
-			viewPath = '$controller/$action';
+			viewPath = action.lcfirst();
 		}
+		
+		// Figure out which layout to use.
+		var layoutPath:String = null;
+		if ( layout==null ) {
+			// See if there is a controller-wide defaultLayout set in the controller's @layout("...") metadata.
+			var classMeta = Meta.getType( controllerCls );
+			if ( classMeta.layout!=null && classMeta.layout.length>0 ) {
+				layoutPath = ""+classMeta.layout[0];
+			}
+		}
+		if ( layout==null && layoutPath==null ) {
+			// See if there is a site-wide defaultLayout set in the dependency injector.
+			try {
+				layoutPath = actionContext.httpContext.injector.getInstance( String, "defaultLayout" );
+				if ( layoutPath.startsWith("/")==false ) {
+					layoutPath = '/$layoutPath';
+				}
+			} catch (e:Dynamic) {}
+		}
+		
+		// If a viewPath (or layoutPath) has a leading slash, it does not go inside our view folder.
+		// So if it is "absolute", drop the leading slash because it's only absolute relative to the view folder.
+		// And if not, append it to the viewFolder.
+		viewPath = viewPath.startsWith("/") ? viewPath.substr(1) : '$viewFolder/$viewPath';
+		layoutPath = (layoutPath!=null && layoutPath.startsWith("/")) ? layoutPath.substr(1) : '$viewFolder/$layoutPath';
 
 		// Get the layout future
 		var layoutReady:Surprise<Null<UFTemplate>,Error>;
@@ -298,18 +385,12 @@ class ViewResult extends ActionResult {
 			layoutReady = Future.sync( Success(layoutFromString) );
 		}
 		else {
-			if ( layout==null ) {
-				// See if there is a default layout.
-				layout =
-					try {
-						var defaultLayoutPath = actionContext.httpContext.injector.getInstance( String, "defaultLayout" );
-						Some( new Pair(defaultLayoutPath,null) );
-					}
-					catch (e:Dynamic) None;
-			}
+			if ( layout==null )
+				layout = (layoutPath!=null) ? Some(new Pair(layoutPath,null)) : None;
+			
 			layoutReady = switch layout {
 				case Some( layoutData ): viewEngine.getTemplate( layoutData.a, layoutData.b );
-				default: Future.sync( Success(null) );
+				case None: Future.sync( Success(null) );
 			}
 		}
 
