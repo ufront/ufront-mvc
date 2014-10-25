@@ -160,7 +160,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	override function get_post() {
 		if ( post==null ) {
 			post = new MultiValueMap();
-			if ( httpMethod=="GET" ) {
+			if ( httpMethod=="POST" ) {
 				if ( isMultipart() ) {
 					post = new MultiValueMap();
 					if (untyped __call__("isset", __php__("$_POST"))) {
