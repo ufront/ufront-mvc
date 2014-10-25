@@ -625,7 +625,7 @@ class ControllerMacros {
 				( optional ) ? [declaration] : [declaration,check];
 			case SATFloat:
 				var declaration = createVarDecl( identName, macro Std.parseFloat($readExpr) );
-				var check = macro if (Math.isNan($i{identName})) throw ufront.web.HttpError.badRequest();
+				var check = macro if (Math.isNaN($i{identName})) throw ufront.web.HttpError.badRequest();
 				( optional ) ? [declaration] : [declaration,check];
 			case SATBool:
 				var readStr = macro var v = $readExpr;
