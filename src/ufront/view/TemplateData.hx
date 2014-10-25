@@ -66,6 +66,13 @@ abstract TemplateData({}) to {} {
 		@return The value, or null if it was not available.
 	**/
 	@:arrayAccess public inline function get( key:String ):Null<Dynamic> return Reflect.field( this, key );
+	
+	/**
+		See if a specific field exists in the template data.
+	**/
+	public function exists( key:String ):Bool {
+		return Reflect.hasField( this, key );
+	}
 
 	/**
 		Set a value on the template data.
