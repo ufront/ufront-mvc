@@ -131,7 +131,10 @@ class HttpRequest extends ufront.web.context.HttpRequest
 					else {
 						// close the file, call onEndPart(), and delete the temp file
 						untyped __call__("fclose", fileResource);
-						processResult( onEndPart(), function() untyped __call__("unlink",tmp) );
+						processResult( onEndPart(), function() {
+							untyped __call__("unlink",tmp);
+							partFinishedTrigger.trigger( Success(Noise) );
+						});
 					}
 				}
 
