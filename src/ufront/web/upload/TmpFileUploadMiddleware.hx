@@ -70,13 +70,9 @@ class TmpFileUploadMiddleware implements UFMiddleware
 					size = 0;
 					while ( file==null ) {
 						tmpFilePath = dir+dateStr+"-"+Random.string(10)+".tmp";
-						#if sys
-							if ( !FileSystem.exists(tmpFilePath) ) {
-								file = File.write( tmpFilePath );
-							}
-						#else
-							throw "Not implemented";
-						#end
+						if ( !FileSystem.exists(tmpFilePath) ) {
+							file = File.write( tmpFilePath );
+						}
 					}
 					return Sync.success();
 				}
@@ -90,6 +86,7 @@ class TmpFileUploadMiddleware implements UFMiddleware
 					// Close the file, create our FileUpload object and add it to the request
 					if ( file!=null ) {
 						file.close();
+						file = null;
 						var tmpFile = new TmpFileUploadSync( tmpFilePath, postName, origFileName, size );
 						ctx.request.files.add( postName, tmpFile );
 						files.push( tmpFile );
@@ -97,12 +94,11 @@ class TmpFileUploadMiddleware implements UFMiddleware
 					return Sync.success();
 				}
 				return
-					ctx.request.parseMultipart( onPart, onData, onEndPart )
-					.map( function(result) {
+					ctx.request.parseMultipart( onPart, onData, onEndPart ).map(function(result) {
 						switch result {
-						case Success(s): return Success( s );
-						case Failure(f): return Failure( HttpError.wrap(f) );
-					}
+							case Success(s): return Success( s );
+							case Failure(f): return Failure( HttpError.wrap(f) );
+						}
 					});
 			#else
 				return throw "Not implemented";
