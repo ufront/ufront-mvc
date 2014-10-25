@@ -569,7 +569,7 @@ class ControllerMacros {
 					// If it is not optional, add check to make sure it is present
 					var isOptional = p.optional || allParamsOptional;
 					if ( false==isOptional ) {
-						var checkExists = macro if ( !params.exists($v{p.name}) ) throw ufront.web.HttpError.badRequest();
+						var checkExists = macro if ( !params.exists($v{p.name}) ) throw ufront.web.HttpError.badRequest( 'Missing parameter '+$v{p.name} );
 						lines.push( checkExists );
 					}
 
@@ -621,11 +621,11 @@ class ControllerMacros {
 				[declaration];
 			case SATInt:
 				var declaration = createVarDecl( identName, macro Std.parseInt($readExpr) );
-				var check = macro if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest();
+				var check = macro if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{identName}+":Int = "+$readExpr );
 				( optional ) ? [declaration] : [declaration,check];
 			case SATFloat:
 				var declaration = createVarDecl( identName, macro Std.parseFloat($readExpr) );
-				var check = macro if (Math.isNaN($i{identName})) throw ufront.web.HttpError.badRequest();
+				var check = macro if (Math.isNaN($i{identName})) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{identName}+":Float = "+$readExpr );
 				( optional ) ? [declaration] : [declaration,check];
 			case SATBool:
 				var readStr = macro var v = $readExpr;
@@ -633,7 +633,7 @@ class ControllerMacros {
 				[readStr,transformToBool];
 			case SATDate:
 				var declaration = createVarDecl( identName, macro try Date.fromString($readExpr) catch(e:Dynamic) null );
-				var check = macro if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest();
+				var check = macro if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{identName}+":Date = "+$readExpr );
 				( optional ) ? [declaration] : [declaration,check];
 		}
 	}

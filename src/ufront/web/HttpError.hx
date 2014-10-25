@@ -23,8 +23,11 @@ class HttpError {
 	/**
 		A Http 400 "Bad Request" error
 	**/
-	static public inline function badRequest( ?pos ):Error {
-		return new Error(400, "Bad Request", pos);
+	static public inline function badRequest( ?reason:String, ?pos ):Error {
+		var message = "Bad Request";
+		if ( reason!=null )
+			message += ': $reason';
+		return new Error(400, message, pos);
 	}
 
 	/**
