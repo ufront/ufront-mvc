@@ -20,13 +20,13 @@ class HttpAuthResult extends ActionResult {
 		@param password The expected password.
 		@param message (optional) The message to show in the popup box. Default is "Please login";
 		@param failureMessage (optional) The HTML to show in the browser if the login is cancelled. Default is to re-use `message`.s
-		@param fn The function to execute if authentication is correct. Must return a `FutureActionOutcome`, such as from using `executeSubController( AdminController )`.
+		@param successFn The function to execute if authentication is correct. Must return a `FutureActionOutcome`, such as from using `executeSubController( AdminController )`.
 		@return A FutureActionOutcome, either the result of `fn()` or a `HttpAuthResult` that displays a login box.
 	**/
-	public static function require( context:HttpContext, username:String, password:String, ?message:String, ?failureMessage:String, fn:Void->FutureActionOutcome ):FutureActionOutcome {
+	public static function requireAuth( context:HttpContext, username:String, password:String, ?message:String, ?failureMessage:String, successFn:Void->FutureActionOutcome ):FutureActionOutcome {
 		var auth = context.request.authorization;
 		if ( auth!=null && auth.user==username && auth.pass==password ) {
-			return fn();
+			return successFn();
 		}
 		else {
 			var result:ActionResult = new HttpAuthResult(message,failureMessage);
