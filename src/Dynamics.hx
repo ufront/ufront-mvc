@@ -268,7 +268,7 @@ class Dynamics
 					return untyped a.getTime() == b.getTime();
 
 				// Map, StringMap, IntMap
-				if (Std.is(a, Map) || Std.is(a, StringMap) || Std.is(a, IntMap))
+				if (Std.is(a, haxe.Constraints.IMap) || Std.is(a, StringMap) || Std.is(a, IntMap))
 				{
 					var ha : Map<String, Dynamic> = cast a,
 						hb : Map<String, Dynamic> = cast b;

@@ -156,7 +156,7 @@ class Dates
 	**/
 	public static function snap(time : Float, period : TimePeriod, ?mode : SnapMode) : Float
 	{
-		if ( mode==null ) mode = Round;
+		var mode = (mode!=null) ? mode : Round;
 		switch(mode) {
 			case Down:
 				switch(period)
@@ -243,7 +243,7 @@ class Dates
 	**/
 	public static function snapToWeekDay(time : Float, day : Weekday, ?snapMode : SnapMode, ?firstDayOfWk : Weekday)
 	{
-		if ( snapMode==null ) snapMode = Round;
+		var snapMode = (snapMode!=null) ? snapMode : Round;
 		if ( firstDayOfWk==null ) firstDayOfWk = Sunday;
 		var d = Date.fromTime(time).getDay();
 
