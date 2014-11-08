@@ -1,5 +1,5 @@
 package ufront.web.result;
-import thx.json.Json;
+import haxe.Json;
 import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
 import ufront.core.Sync;
@@ -19,8 +19,8 @@ class JsonResult<T> extends ActionResult
 		NullArgument.throwIfNull(actionContext);
 
 		actionContext.httpContext.response.contentType = "application/json";
-		var serialized = Json.encode(content);
-		actionContext.httpContext.response.write(serialized);
+		var serialized = Json.stringify( content );
+		actionContext.httpContext.response.write( serialized );
 		return Sync.success();
 	}
 }
