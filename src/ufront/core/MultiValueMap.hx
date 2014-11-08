@@ -161,12 +161,12 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> to Str
 
 	/** Implicit cast to `Map<String,Array<T>>` **/
 	@:to public inline function toMapOfArrays<T>():Map<String,Array<T>> {
-		return this;
+		return cast this;
 	}
 
 	/** Implicit cast from `Map<String,Array<T>>` **/
 	@:from public static inline function fromMapOfArrays<T>( map:Map<String,Array<T>> ):MultiValueMap<T> {
-		return map;
+		return cast map;
 	}
 
 	/**
