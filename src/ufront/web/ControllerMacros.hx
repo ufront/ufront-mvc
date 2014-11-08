@@ -670,7 +670,7 @@ class ControllerMacros {
 
 		See `getResultWrapFlagsForReturnType` for details on which flags are set.
 	**/
-	static function addResultWrappingMetadata( id:String, types:Array<Type> ) {
+	static function addResultWrappingMetadata( id:String, types:Array<Type> ):Void {
 		var baseController = Context.getType( "ufront.web.Controller" );
 		for ( type in types ) {
 			if ( type.getID()==id ) {
@@ -692,7 +692,6 @@ class ControllerMacros {
 				}
 			}
 		}
-		return null;
 	}
 
 	/**
