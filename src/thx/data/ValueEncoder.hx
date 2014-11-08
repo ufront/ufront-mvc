@@ -44,7 +44,9 @@ class ValueEncoder
 					encodeArray(o);
 				else if (Std.is(o, Date))
 					handler.valueDate(o);
-				else if (Std.is(o, Map ))
+				else if (Std.is(o, haxe.ds.StringMap ))
+					encodeHash(o);
+				else if (Std.is(o, haxe.ds.IntMap ))
 					encodeHash(o);
 				else if (Std.is(o, List))
 					encodeList(o);
