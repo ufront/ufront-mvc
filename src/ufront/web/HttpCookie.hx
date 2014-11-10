@@ -70,7 +70,7 @@ class HttpCookie {
 		var buf = new StringBuf();
 		buf.add(value);
 		if ( expires!=null )
-			addPair( buf, "expires", expires.format("%a, %d-%b-%Y %T") );
+			addPair( buf, "expires", Dates.format(expires,"%a, %d-%b-%Y %T %Z") );
 		addPair( buf, "domain", domain );
 		addPair( buf, "path", path );
 		if ( secure )
