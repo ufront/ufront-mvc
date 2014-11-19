@@ -17,14 +17,14 @@ class TemplateDataTest {
 
 	public function teardown():Void {}
 
-	public function toObject():Void {
+	public function testToObject():Void {
 		var data:TemplateData = { name: "jason", age: 26 };
 
 		var obj = data.toObject();
 		Assert.equals( "jason", obj.name );
 	}
 
-	public function toMap():Void {
+	public function testToMap():Void {
 		var data:TemplateData = { name: "jason", age: 26 };
 
 		var map = data.toMap();
@@ -34,17 +34,20 @@ class TemplateDataTest {
 		Assert.equals( 26, map2["age"] );
 	}
 
-	public function toStringMap():Void {
+	public function testToStringMap():Void {
 		var data:TemplateData = { name: "jason", age: 26 };
 
-		var map = data.toStringMap();
+		var map = data.toMap();
 		Assert.equals( "jason", map["name"] );
 
 		var map2:StringMap<Dynamic> = data;
 		Assert.equals( 26, map2.get("age") );
+
+		var map3:Map<String,Dynamic> = data;
+		Assert.equals( 26, map3["age"] );
 	}
 
-	public function get():Void {
+	public function testGet():Void {
 		var data:TemplateData = { name: "jason", age: 26 };
 		Assert.equals( "jason", data.get("name") );
 		Assert.equals( "jason", data["name"] );
@@ -52,7 +55,7 @@ class TemplateDataTest {
 		Assert.equals( null, data.get("language") );
 	}
 
-	public function set():Void {
+	public function testSet():Void {
 		var data:TemplateData = { name: "jason", age: 26 };
 		Assert.equals( 2, Reflect.fields(data).length );
 
@@ -65,7 +68,7 @@ class TemplateDataTest {
 		Assert.equals( "Franco", data.get("name") );
 	}
 
-	public function setMap():Void {
+	public function testSetMap():Void {
 		var data:TemplateData = { name: "jason", age: 26 };
 		data.setMap([ "name" => "Franco", "language" => "Haxe" ]);
 		Assert.equals( 3, Reflect.fields(data).length );
@@ -74,7 +77,7 @@ class TemplateDataTest {
 		Assert.equals( "Haxe", data["language"] );
 	}
 
-	public function setObject():Void {
+	public function testSetObject():Void {
 		var data:TemplateData = { name: "jason", age: 26 };
 		data.setObject({ name: "jason", language: "Haxe" });
 		Assert.equals( 3, Reflect.fields(data).length );
@@ -83,7 +86,7 @@ class TemplateDataTest {
 		Assert.equals( "Haxe", data["language"] );
 	}
 
-	public function fromObject():Void {
+	public function testFromObject():Void {
 		var emptyData:TemplateData = {};
 		Assert.equals( 0, Reflect.fields(emptyData).length );
 
@@ -110,7 +113,7 @@ class TemplateDataTest {
 		Assert.equals( "php", data4["targets"][1] );
 	}
 
-	public function fromMap():Void {
+	public function testFromMap():Void {
 		var map = [ "name" => "jason", "language" => "Haxe" ];
 		var data1 = TemplateData.fromMap(map);
 		Assert.equals( 2, Reflect.fields(data1).length );
@@ -123,7 +126,7 @@ class TemplateDataTest {
 		Assert.equals( "Haxe", data2["language"] );
 	}
 
-	public function fromStringMap():Void {
+	public function testFromStringMap():Void {
 		var stringMap:StringMap<String> = [ "name" => "jason", "language" => "Haxe" ];
 		var data:TemplateData = stringMap;
 		Assert.equals( 2, Reflect.fields(data).length );
@@ -131,7 +134,7 @@ class TemplateDataTest {
 		Assert.equals( "Haxe", data["language"] );
 	}
 
-	public function fromMany():Void {
+	public function testFromMany():Void {
 		var emptyData:TemplateData = [];
 		Assert.equals( 0, Reflect.fields(emptyData).length );
 
@@ -150,16 +153,12 @@ class TemplateDataTest {
 		Assert.equals( 26, combined1["age"] );
 		Assert.equals( "Haxe", combined1["language"] );
 
-		var combined2:TemplateData = [ dataObj, dataMap, { greatGuy: true } ];
+		var combined2 = TemplateData.fromMany([ dataObj, dataMap, { greatGuy: true } ]);
 		Assert.equals( 4, Reflect.fields(combined2).length );
 		Assert.equals( true, combined2["greatGuy"] );
 
-		var combined3:TemplateData = [ dataObj, dataMap, ["greatGuy"=>true] ];
+		var combined3 = TemplateData.fromMany([ dataObj, dataMap, ["greatGuy"=>true] ]);
 		Assert.equals( 4, Reflect.fields(combined3).length );
 		Assert.equals( true, combined3["greatGuy"] );
-
-		var combined4:TemplateData = [ dataObj, dataMap, ["greatGuy"=>true] ];
-		Assert.equals( 4, Reflect.fields(combined4).length );
-		Assert.equals( true, combined4["greatGuy"] );
 	}
 }

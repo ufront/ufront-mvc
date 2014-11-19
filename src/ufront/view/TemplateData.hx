@@ -54,7 +54,7 @@ abstract TemplateData({}) to {} {
 		Convert into a `StringMap<Dynamic>`.
 		This is also available as an implicit `@:to` cast.
 	**/
-	@:to public inline function toStringMap():Map<String,Dynamic> {
+	@:to public inline function toStringMap():StringMap<Dynamic> {
 		return toMap();
 	}
 
