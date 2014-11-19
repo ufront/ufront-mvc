@@ -42,7 +42,7 @@ Here are some examples:
 - `@:route('/staff/$name/contact/',POST) function contact( name:String, args:{ subject:String, text:String } ) {}`
 - `@:route('/article/$name/$page/') function article( name:String, page:Int ) {}`
 - `@:route('/file/*') function viewFile( parts:Array<String> ) {}`
-- `@:route('/ufadmin/') var adminController:UFAdminController; // Execute a sub controller at this route.`
+- `@:route('/ufadmin/*') var adminController:UFAdminHomeController; // Execute a sub controller at this route.`
 
 #### How to write output to the browser:
 
@@ -81,7 +81,7 @@ So if you have a wildcard route `@:route("/*")`  at the top of your class, and a
 If the build macro encounters `@:route()` metadata on a variable rather than a method, it will:
 
 - Check the given variable's type represents a Controller
-- Create a method: `function execute_$varName() return new $controller(context).execute()`
+- Create a method: `function execute_$varName() return executeSubController(context);`
 - Perform the routing on the generated function
 
 The build macro should not effect any existing fields other than `this.execute()`.
