@@ -3,6 +3,7 @@ package ufront.api;
 import ufront.api.UFApi;
 import utest.Assert;
 import haxe.rtti.Meta;
+import haxe.EnumFlags;
 using tink.CoreApi;
 
 class ApiMacrosTest {
@@ -35,31 +36,32 @@ class ApiMacrosTest {
 
 	public function testAddReturnTypeMetadata() {
 		var meta = Meta.getFields( ApiTest2 );
-		function hasMeta( fieldName:String, metaName:String ) {
+		function hasReturnType( fieldName:String, rt:ApiReturnType ) {
 			var field = Reflect.field( meta, fieldName );
 			if ( field==null ) 
 				return false;
-			return Reflect.hasField( field, metaName );
+			var flags:EnumFlags<ApiReturnType> = EnumFlags.ofInt( Reflect.field(field,"returnType") );
+			return flags.has( rt );
 		}
-		Assert.isTrue ( hasMeta("returnVoidFn","returnVoid") );
-		Assert.isFalse( hasMeta("returnVoidFn","returnOutcome") );
-		Assert.isFalse( hasMeta("returnVoidFn","returnFuture") );
+		Assert.isTrue ( hasReturnType("returnVoidFn",ARTVoid) );
+		Assert.isFalse( hasReturnType("returnVoidFn",ARTOutcome) );
+		Assert.isFalse( hasReturnType("returnVoidFn",ARTFuture) );
 		
-		Assert.isFalse( hasMeta("returnStringFn","returnVoid") );
-		Assert.isFalse( hasMeta("returnStringFn","returnOutcome") );
-		Assert.isFalse( hasMeta("returnStringFn","returnFuture") );
+		Assert.isFalse( hasReturnType("returnStringFn",ARTVoid) );
+		Assert.isFalse( hasReturnType("returnStringFn",ARTOutcome) );
+		Assert.isFalse( hasReturnType("returnStringFn",ARTFuture) );
 		
-		Assert.isFalse( hasMeta("returnOutcomeFn","returnVoid") );
-		Assert.isTrue ( hasMeta("returnOutcomeFn","returnOutcome") );
-		Assert.isFalse( hasMeta("returnOutcomeFn","returnFuture") );
+		Assert.isFalse( hasReturnType("returnOutcomeFn",ARTVoid) );
+		Assert.isTrue ( hasReturnType("returnOutcomeFn",ARTOutcome) );
+		Assert.isFalse( hasReturnType("returnOutcomeFn",ARTFuture) );
 		
-		Assert.isFalse( hasMeta("returnFutureFn","returnVoid") );
-		Assert.isFalse( hasMeta("returnFutureFn","returnOutcome") );
-		Assert.isTrue ( hasMeta("returnFutureFn","returnFuture") );
+		Assert.isFalse( hasReturnType("returnFutureFn",ARTVoid) );
+		Assert.isFalse( hasReturnType("returnFutureFn",ARTOutcome) );
+		Assert.isTrue ( hasReturnType("returnFutureFn",ARTFuture) );
 		
-		Assert.isFalse( hasMeta("returnSurpriseFn","returnVoid") );
-		Assert.isTrue ( hasMeta("returnSurpriseFn","returnOutcome") );
-		Assert.isTrue ( hasMeta("returnSurpriseFn","returnFuture") );
+		Assert.isFalse( hasReturnType("returnSurpriseFn",ARTVoid) );
+		Assert.isTrue ( hasReturnType("returnSurpriseFn",ARTOutcome) );
+		Assert.isTrue ( hasReturnType("returnSurpriseFn",ARTFuture) );
 	}
 }
 

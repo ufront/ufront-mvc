@@ -164,9 +164,8 @@ class ApiMacros
 					case Success(fn):
 						var returnType = fn.ret.toType();
 						var returnFlags = getResultWrapFlagsForReturnType( returnType );
-						if (returnFlags.has(ARTFuture)) member.addMeta( "returnFuture" );
-						if (returnFlags.has(ARTOutcome)) member.addMeta( "returnOutcome" );
-						if (returnFlags.has(ARTVoid)) member.addMeta( "returnVoid" );
+						var int = returnFlags.toInt();
+						member.addMeta( "returnType", [macro $v{int}] );
 					default:
 				}
 			}
@@ -351,10 +350,4 @@ class ApiMacros
 		return returnFlags;
 	}
 	#end
-}
-
-enum ApiReturnType {
-	ARTFuture;
-	ARTOutcome;
-	ARTVoid;
 }

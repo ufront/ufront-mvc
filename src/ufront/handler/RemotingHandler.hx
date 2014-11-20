@@ -14,6 +14,8 @@ import ufront.app.*;
 import ufront.auth.*;
 import ufront.core.Sync;
 import tink.CoreApi;
+import haxe.rtti.Meta;
+import haxe.EnumFlags;
 
 /**
 	Checks if a request is a remoting request and processes accordingly.
@@ -62,9 +64,12 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 
 			// Execute the request
 			var r = httpContext.response;
-			var remotingResponse:String;
+			var remotingResponse:Future<String>;
+			
+			// Set the status to OK for now, and only change it if an error is thrown.
+			r.setOk();
+			
 			try {
-
 				// Set up the context
 				var context = new Context();
 				for (api in apis) {
@@ -83,22 +88,23 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 
 				// Execute the response ... TODO... can we make this support async?
 				remotingResponse = processRequest( params["__x"], context, httpContext.actionContext );
-				r.setOk();
 			}
 			catch ( e:Dynamic ) {
 				// Don't use the `async.error` handler and the ErrorModule, rather, send the error over the remoting protocol.
-				remotingResponse = remotingError( e, httpContext );
 				r.setInternalError();
+				remotingResponse = Future.sync( remotingError(e,httpContext) );
 			}
 
-			// Set the response
-			r.contentType = "application/x-haxe-remoting";
-			r.clearContent();
-			r.write( remotingResponse );
+			remotingResponse.handle(function(response:String) {
+				// Set the response
+				r.contentType = "application/x-haxe-remoting";
+				r.clearContent();
+				r.write( response );
 
-			// Finished... mark request as handled and move on to middleware/logging etc
-			httpContext.completion.set(CRequestHandlersComplete);
-			doneTrigger.trigger( Success(Noise) );
+				// Finished... mark request as handled and move on to middleware/logging etc
+				httpContext.completion.set(CRequestHandlersComplete);
+				doneTrigger.trigger( Success(Noise) );
+			});
 		}
 		else doneTrigger.trigger( Success(Noise) ); // Not a remoting call
 
@@ -106,22 +112,39 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 	}
 
 	@:access(haxe.remoting.Context)
-	function processRequest( requestData:String, remotingContext:Context, actionContext:ActionContext ):String {
+	function processRequest( requestData:String, remotingContext:Context, actionContext:ActionContext ):Future<String> {
+		// Understand the request that is being made.
 		var u = new Unserializer( requestData );
 		var path:Array<String> = u.unserialize();
 		var args:Array<Dynamic> = u.unserialize();
 
-		var className = path.copy();
+		// Save the details of the request to the ActionContext.
 		actionContext.handler = this;
 		actionContext.action = path[path.length-1];
 		actionContext.controller = remotingContext.objects.get( actionContext.action );
 		actionContext.args = args;
+		// CHECK: are all of the above actionContext values correct?
+		
+		// Get the return type information for the current call.
+		var fieldsMeta = Meta.getFields( Type.getClass(actionContext.controller) );
+		var actionMeta = Reflect.field( fieldsMeta, actionContext.action );
+		var flags:EnumFlags<ApiReturnType> = EnumFlags.ofInt( actionMeta.returnType );
 
-		var data = remotingContext.call( path, args );
 
-		var s = new Serializer();
-		s.serialize( data );
-		return "hxr" + s.toString();
+		// Make the call, and wrap it as a Future, so we can handle sync/async calls the same.
+		// Note, the serialized result will always be the result of the future, and it's up to the client to re-wrap it in a future so that it matches the type signiature.
+		var result:Dynamic = remotingContext.call( path, args );
+		var apiCallFinished:Future<Dynamic> =
+			if (flags.has(ARTFuture)) result;
+			else if (flags.has(ARTVoid)) Future.sync( null );
+			else Future.sync( result );
+		
+		// Return a mapped future that will trigger when the result is ready and has been serialized.
+		return apiCallFinished.map(function(data:Dynamic) {
+			var s = new Serializer();
+			s.serialize( data );
+			return "hxr" + s.toString();
+		});
 	}
 
 	function remotingError( e:Dynamic, httpContext:HttpContext ):String {
@@ -139,7 +162,7 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 			var serializedStack = "hxs" + Serializer.run( exceptionStack );
 			return serializedStack + "\n" + serializedException;
 		#else
-			return '$serializedException';
+			return serializedException;
 		#end
 	}
 
