@@ -2,6 +2,10 @@ package ufront.api;
 
 import haxe.macro.Context;
 import haxe.macro.Expr;
+import haxe.EnumFlags;
+using tink.CoreApi;
+using tink.MacroApi;
+using haxe.macro.Tools;
 using StringTools;
 using Lambda;
 
@@ -64,43 +68,12 @@ class ApiMacros
 
 	macro public static function buildApiClass():Array<Field>
 	{
-		classPos = Context.currentPos();
-		localClass = Context.getLocalClass().get();
-		var fields = Context.getBuildFields();
-
-		// To compile correctly on the client, keep only the public methods, and only their signiatures - remove the actual function body.
-		if (Context.defined("client"))
-		{
-			for (f in fields.copy())
-			{
-				if (f.access.has(APublic) && f.access.has(AStatic)==false)
-				{
-					switch (f.kind) {
-						case FFun(fun):
-							// Trim the function body
-							if (f.name == "new") fun.expr = macro {};
-							else if (fun.ret == null) {
-								fun.expr = macro return;
-							}
-							else fun.expr = macro return null;
-						default:
-							// Not a function, get rid of it
-							fields.remove(f);
-					}
-				}
-				else
-				{
-					// Not a public member method, get rid of it
-					fields.remove(f);
-				}
-			}
-			return fields;
-		}
-		else
-		{
-			// Not on the client, so leave everything as is...
-			return null;
-		}
+		return ClassBuilder.run([
+			checkTypeHints,
+			addReturnTypeMetadata,
+			transformClient,
+//			createAsyncClass
+		]);
 	}
 
 	macro public static function buildSpecificApiProxy():Array<Field>
@@ -125,6 +98,81 @@ class ApiMacros
 	static var localClass;
 	static var fields;
 
+	/**
+		Check that the user has provided explicit type hints all round, because we need them for our macros.
+	**/
+	static function checkTypeHints( cb:ClassBuilder ) {
+		for ( member in cb ) {
+			if ( member.isPublic && !member.isStatic ) {
+				switch member.getFunction() {
+					case Success(fn):
+						if ( fn.ret==null )
+							Context.error( 'Field ${member.name} requires an explicit return type', member.pos );
+						for ( arg in fn.args ) {
+							if ( arg.type==null )
+								Context.error( 'Argument ${arg.name} on field ${member.name} requires an explicit type declaration', member.pos );
+						}
+					default:
+				}
+			}
+			else {
+				// Not a public member method, get rid of it
+				cb.removeMember( member );
+			}
+		}
+	}
+
+	/**
+		To compile correctly on the client, keep only the public methods, and only their signiatures - remove the actual function body.
+	**/
+	static function transformClient( cb:ClassBuilder ) {
+		// To compile correctly on the client, keep only the public methods, and only their signiatures - remove the actual function body.
+		if ( Context.defined("client") ) {
+			for ( member in cb ) {
+				if ( member.isPublic && !member.isStatic ) {
+					switch member.kind {
+						case FFun(fun):
+							// Trim the function body
+							fun.expr =
+ 								if ( fun.ret==null ) macro {};
+								else macro return null;
+						default:
+							// Not a function, get rid of it
+							cb.removeMember( member );
+					}
+				}
+				else {
+					// Not a public member method, get rid of it
+					cb.removeMember( member );
+				}
+			}
+			// Clear out the constructor as well
+			if ( cb.hasConstructor() ) {
+				@:privateAccess cb.constructor.oldStatements = [];
+				@:privateAccess cb.constructor.nuStatements = [];
+			}
+		}
+	}
+
+	/**
+		Add `@returnFuture`, `@returnOutcome` and `@returnVoid` metadata to a field so we know how to handle it at runtime.
+	**/
+	static function addReturnTypeMetadata( cb:ClassBuilder ) {
+		for ( member in cb ) {
+			if ( member.isPublic && !member.isStatic ) {
+				switch member.getFunction() {
+					case Success(fn):
+						var returnType = fn.ret.toType();
+						var returnFlags = getResultWrapFlagsForReturnType( returnType );
+						if (returnFlags.has(ARTFuture)) member.addMeta( "returnFuture" );
+						if (returnFlags.has(ARTOutcome)) member.addMeta( "returnOutcome" );
+						if (returnFlags.has(ARTVoid)) member.addMeta( "returnVoid" );
+					default:
+				}
+			}
+		}
+	}
+	
 	static function getClientClassDefinition()
 	{
 		return {
@@ -268,8 +316,45 @@ class ApiMacros
 		{
 			case EBlock(exprs):
 				exprs.push(line);
-			case _: trace ("fnBody was not an EBlock, so we're not adding anything");
+			case _:
+				fnBody.expr = EBlock([ fnBody, line ]);
 		}
 	}
+	
+	/**
+		Return a set of flags showing what sort of result the API call returns.
+
+		Basic rules:
+
+		- If it is `Surprise<Dynamic,Dynamic>`, it is a future AND an outcome
+		- If it is `Future<Dynamic>`, it is a future
+		- If it is `Outcome<Dynamic,Dynamic>`, it is an outcome
+		- If it is `Dynamic`, it is a normal value (neither future nor outcome)
+		- If it is void, mark it as such
+	**/
+	static function getResultWrapFlagsForReturnType( returnType:haxe.macro.Type ):EnumFlags<ApiReturnType> {
+		var returnFlags = new EnumFlags<ApiReturnType>();
+		
+		if ( returnType.unify((macro :StdTypes.Void).toType()) ) {
+			returnFlags.set( ARTVoid );
+		}
+		else if ( returnType.unify((macro :tink.core.Future.Surprise<StdTypes.Dynamic,StdTypes.Dynamic>).toType()) ) {
+			returnFlags.set( ARTFuture );
+			returnFlags.set( ARTOutcome );
+		}
+		else if ( returnType.unify((macro :tink.core.Future<StdTypes.Dynamic>).toType()) ) {
+			returnFlags.set( ARTFuture );
+		}
+		else if ( returnType.unify((macro :tink.core.Outcome<StdTypes.Dynamic,StdTypes.Dynamic>).toType()) ) {
+			returnFlags.set( ARTOutcome );
+		}
+		return returnFlags;
+	}
 	#end
+}
+
+enum ApiReturnType {
+	ARTFuture;
+	ARTOutcome;
+	ARTVoid;
 }
