@@ -40,7 +40,9 @@ class ApiMacrosTest {
 			var field = Reflect.field( meta, fieldName );
 			if ( field==null ) 
 				return false;
-			var flags:EnumFlags<ApiReturnType> = EnumFlags.ofInt( Reflect.field(field,"returnType") );
+			var rtMeta:Array<Int> = Reflect.field(field,"returnType");
+			var rtInt = rtMeta[0];
+			var flags:EnumFlags<ApiReturnType> = EnumFlags.ofInt( rtInt );
 			return flags.has( rt );
 		}
 		Assert.isTrue ( hasReturnType("returnVoidFn",ARTVoid) );

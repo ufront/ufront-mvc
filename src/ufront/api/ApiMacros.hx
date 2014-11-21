@@ -3,9 +3,9 @@ package ufront.api;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.EnumFlags;
+using haxe.macro.Tools;
 using tink.CoreApi;
 using tink.MacroApi;
-using haxe.macro.Tools;
 using StringTools;
 using Lambda;
 
@@ -115,10 +115,6 @@ class ApiMacros
 					default:
 				}
 			}
-			else {
-				// Not a public member method, get rid of it
-				cb.removeMember( member );
-			}
 		}
 	}
 
@@ -129,7 +125,7 @@ class ApiMacros
 		// To compile correctly on the client, keep only the public methods, and only their signiatures - remove the actual function body.
 		if ( Context.defined("client") ) {
 			for ( member in cb ) {
-				if ( member.isPublic && !member.isStatic ) {
+				if ( member.isPublic==true && !member.isStatic ) {
 					switch member.kind {
 						case FFun(fun):
 							// Trim the function body
@@ -162,8 +158,8 @@ class ApiMacros
 			if ( member.isPublic && !member.isStatic ) {
 				switch member.getFunction() {
 					case Success(fn):
-						var returnType = fn.ret.toType();
-						var returnFlags = getResultWrapFlagsForReturnType( returnType );
+						var returnType = fn.ret;
+						var returnFlags = getResultWrapFlagsForReturnType( returnType, member.pos );
 						var int = returnFlags.toInt();
 						member.addMeta( "returnType", [macro $v{int}] );
 					default:
@@ -331,23 +327,28 @@ class ApiMacros
 		- If it is `Dynamic`, it is a normal value (neither future nor outcome)
 		- If it is void, mark it as such
 	**/
-	static function getResultWrapFlagsForReturnType( returnType:haxe.macro.Type ):EnumFlags<ApiReturnType> {
+	static function getResultWrapFlagsForReturnType( returnType:ComplexType, pos:tink.core.Error.Pos ):EnumFlags<ApiReturnType> {
 		var returnFlags = new EnumFlags<ApiReturnType>();
-		
-		if ( returnType.unify((macro :StdTypes.Void).toType()) ) {
+		if ( unify(returnType,macro :StdTypes.Void,pos) ) {
 			returnFlags.set( ARTVoid );
 		}
-		else if ( returnType.unify((macro :tink.core.Future.Surprise<StdTypes.Dynamic,StdTypes.Dynamic>).toType()) ) {
+		else if ( unify(returnType,macro :tink.core.Future.Surprise<StdTypes.Dynamic,StdTypes.Dynamic>,pos) ) {
 			returnFlags.set( ARTFuture );
 			returnFlags.set( ARTOutcome );
 		}
-		else if ( returnType.unify((macro :tink.core.Future<StdTypes.Dynamic>).toType()) ) {
+		else if ( unify(returnType,macro :tink.core.Future<StdTypes.Dynamic>,pos) ) {
 			returnFlags.set( ARTFuture );
 		}
-		else if ( returnType.unify((macro :tink.core.Outcome<StdTypes.Dynamic,StdTypes.Dynamic>).toType()) ) {
+		else if ( unify(returnType,macro :tink.core.Outcome<StdTypes.Dynamic,StdTypes.Dynamic>,pos) ) {
 			returnFlags.set( ARTOutcome );
 		}
 		return returnFlags;
+	}
+	
+	static function unify( complexType1:ComplexType, complexType2:ComplexType, pos:tink.core.Error.Pos ):Bool {
+		var t1 = complexType1.toType( pos ).sure();
+		var t2 = complexType2.toType( pos ).sure();
+		return t1.unify( t2 );
 	}
 	#end
 }
