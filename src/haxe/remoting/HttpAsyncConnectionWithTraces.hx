@@ -31,7 +31,6 @@ using StringTools;
 
 /**
 	Extension of class that allows traces to be sent.
-	On the server side, just make sure you write to `Lib.printLn();` before `handleRequest(context)` is called.
 
 	This all relies on Haxe serialised data always being one line.
 
@@ -42,7 +41,8 @@ using StringTools;
 class HttpAsyncConnectionWithTraces extends HttpAsyncConnection
 {
 	override public function resolve( name ):AsyncConnection {
-		var c = new HttpAsyncConnectionWithTraces(__data,__path.copy());
+		var dataCopy = { url:__data.url, error:__data.error };
+		var c = new HttpAsyncConnectionWithTraces(dataCopy,__path.copy());
 		c.__path.push(name);
 		return c;
 	}
@@ -89,8 +89,9 @@ class HttpAsyncConnectionWithTraces extends HttpAsyncConnection
 		// Run the request
 		h.request(true);
 	}
-
-	public static function urlConnect( url:String, errorHandler:RemotingError->Void ) {
+	
+	public static function urlConnect( url:String, errorHandler:RemotingError<Dynamic>->Void ) {
+		// TODO: investigate, why are we wrapping the error handler here, rather than when the error happens?
 		var handler = RemotingUtil.wrapErrorHandler( errorHandler );
 		return new HttpAsyncConnectionWithTraces({ url:url, error:handler },[]);
 	}

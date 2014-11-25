@@ -195,8 +195,10 @@ class FileSession implements UFHttpSession
 						if ( fileData!=null ) {
 							try
 								sessionData = cast( Unserializer.run(fileData), StringMap<Dynamic> )
-							catch ( e:Dynamic )
+							catch ( e:Dynamic ) {
+								context.ufWarn('Failed to unserialize session data, resetting session: $e');
 								fileData = null; // invalid data
+							}
 						}
 						if ( fileData==null ) {
 							// delete file and start new session

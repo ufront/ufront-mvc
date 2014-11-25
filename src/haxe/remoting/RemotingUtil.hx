@@ -79,7 +79,8 @@ class RemotingUtil {
 		}
 	}
 
-	public static function wrapErrorHandler( errorHandler:RemotingError->Void ):Dynamic->Void {
+	/** Take an error handler function that expects a RemotingError, and return a function that can take any exception, and transform it into a RemotingError if required. **/
+	public static function wrapErrorHandler( errorHandler:RemotingError<Dynamic>->Void ):Dynamic->Void {
 		return function( e:Dynamic ) {
 			if ( Std.is(e,RemotingError) )
 				errorHandler(e);

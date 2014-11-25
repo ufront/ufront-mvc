@@ -188,12 +188,12 @@ class UfrontApplication extends HttpApplication
 	}
 
 	/**
-		Shortcut for `remotingHandler.loadApi()`
+		Shortcut for `remotingHandler.loadApiContext()`
 
 		Returns itself so chaining is enabled.
 	**/
-	public inline function loadApi( apiContext:Class<UFApiContext> ):UfrontApplication {
-		remotingHandler.loadApi( apiContext );
+	public inline function loadApiContext( apiContext:Class<UFApiContext> ):UfrontApplication {
+		remotingHandler.loadApiContext( apiContext );
 		return this;
 	}
 

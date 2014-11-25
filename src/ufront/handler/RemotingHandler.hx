@@ -25,36 +25,51 @@ import haxe.EnumFlags;
 	Traces are also serialized and sent to the client.
 
 	If used with a UfrontApplication, and the `UfrontConfiguration.remotingApi` option was set, that API will be loaded automatically.
-	Further APIs can be loaded through `ufrontApp.remotingHandler.loadApi()`.
+	Further APIs can be loaded through `ufrontApp.remotingHandler.loadApiContext()`.
 
 	@author Jason O'Neil
 **/
 class RemotingHandler implements UFRequestHandler implements UFInitRequired
 {
-	var apis:List<Class<UFApiContext>>;
+	var apiContexts:List<Class<UFApiContext>>;
+	var apis:List<Class<UFApi>>;
+	var context:Context;
 
 	/** Construct a new RemotingModule, optionally adding an API to the remoting Context. **/
 	public function new() {
+		apiContexts = new List();
 		apis = new List();
 	}
 
+	/** Expose a single UFApi to the request **/
+	public inline function loadApi( api:Class<UFApi> ) {
+		apis.push( api );
+	}
+
+	/** Expose a single UFApi to the request **/
+	public inline function loadApis( newAPIs:Iterable<Class<UFApi>> ) {
+		for ( api in newAPIs )
+			loadApi( api );
+	}
+
 	/** Expose a UFApiContext to the request **/
-	public inline function loadApi( apiContext:Class<UFApiContext> ) {
-		apis.push( apiContext );
+	public inline function loadApiContext( apiContext:Class<UFApiContext> ) {
+		apiContexts.push( apiContext );
 	}
 
 	/** Initializes a module and prepares it to handle remoting requests. */
 	public function init( app:HttpApplication ):Surprise<Noise,Error> {
 		var ufApp = Std.instance( app, UfrontApplication );
 		if ( ufApp!=null ) {
-			loadApi( ufApp.configuration.remotingApi );
+			loadApis( ufApp.configuration.apis );
+			loadApiContext( ufApp.configuration.remotingApi );
 		}
 		return Sync.success();
 	}
 
 	/** Disposes of the resources (other than memory) that are used by the module. */
 	public function dispose( app:HttpApplication ):Surprise<Noise,Error> {
-		apis = null;
+		apiContexts = null;
 		return Sync.success();
 	}
 
@@ -70,24 +85,23 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 			r.setOk();
 			
 			try {
-				// Set up the context
-				var context = new Context();
-				for (api in apis) {
-					var apiContext = httpContext.injector.instantiate( api );
-					for (fieldName in Reflect.fields(apiContext)) {
-						var o = Reflect.field(apiContext, fieldName);
-						if (Reflect.isObject(o))
-							context.addObject(fieldName, o);
-					}
-				}
+				initializeContext( httpContext.injector );
 
 				// Check the '__x' parameter is present
 				var params = httpContext.request.params;
 				if ( !params.exists("__x") )
 					throw 'Remoting call did not have parameter `__x` which describes which API call to make.  Aborting';
 
-				// Execute the response ... TODO... can we make this support async?
-				remotingResponse = processRequest( params["__x"], context, httpContext.actionContext );
+				// Understand the request that is being made and then execute it
+				var u = new Unserializer( params["__x"] );
+				var path:Array<String> = u.unserialize();
+				var args:Array<Dynamic> = u.unserialize();
+				var apiCallFinished = executeApiCall( path, args, context, httpContext.actionContext );
+				remotingResponse = apiCallFinished.map(function(data:Dynamic) {
+					var s = new Serializer();
+					s.serialize( data );
+					return "hxr" + s.toString();
+				});
 			}
 			catch ( e:Dynamic ) {
 				// Don't use the `async.error` handler and the ErrorModule, rather, send the error over the remoting protocol.
@@ -111,13 +125,26 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 		return doneTrigger.asFuture();
 	}
 
-	@:access(haxe.remoting.Context)
-	function processRequest( requestData:String, remotingContext:Context, actionContext:ActionContext ):Future<String> {
-		// Understand the request that is being made.
-		var u = new Unserializer( requestData );
-		var path:Array<String> = u.unserialize();
-		var args:Array<Dynamic> = u.unserialize();
+	public function initializeContext( injector:Injector ) {
+		context = new Context();
+		for ( apiContextClass in apiContexts ) {
+			var apiContext = injector.instantiate( apiContextClass );
+			for ( fieldName in Reflect.fields(apiContext) ) {
+				var api = Reflect.field( apiContext, fieldName );
+				if ( Reflect.isObject(api) )
+					context.addObject( fieldName, api );
+			}
+		}
+		for ( apiClass in apis ) {
+			var className = Type.getClassName( apiClass );
+			var api = injector.instantiate( apiClass );
+			context.addObject( className, api );
+		}
+	}
 
+	@:access(haxe.remoting.Context)
+	public function executeApiCall( path:Array<String>, args:Array<Dynamic>, remotingContext:Context, actionContext:ActionContext ):Future<Dynamic> {
+		
 		// Save the details of the request to the ActionContext.
 		actionContext.handler = this;
 		actionContext.action = path[path.length-1];
@@ -126,25 +153,29 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 		// CHECK: are all of the above actionContext values correct?
 		
 		// Get the return type information for the current call.
-		var fieldsMeta = Meta.getFields( Type.getClass(actionContext.controller) );
-		var actionMeta = Reflect.field( fieldsMeta, actionContext.action );
-		var flags:EnumFlags<ApiReturnType> = EnumFlags.ofInt( actionMeta.returnType );
-
+		var returnType:Int;
+		try {
+			var fieldsMeta = Meta.getFields( Type.getClass(actionContext.controller) );
+			var actionMeta = Reflect.field( fieldsMeta, actionContext.action );
+			returnType = actionMeta.returnType;
+		}
+		catch( e:Dynamic ) {
+			#if debug
+				actionContext.httpContext.ufError( 'Failed to get metadata for API: $e' );
+				actionContext.httpContext.ufError( 'Assuming API call to ${actionContext.action} returns a regular value' );
+			#end
+			returnType = 0;
+		}
+		var flags:EnumFlags<ApiReturnType> = EnumFlags.ofInt( returnType );
 
 		// Make the call, and wrap it as a Future, so we can handle sync/async calls the same.
 		// Note, the serialized result will always be the result of the future, and it's up to the client to re-wrap it in a future so that it matches the type signiature.
+		// So if you're API calls return Future's, you will need to use a Ufront Remoting Connection, not one of the Haxe ones in the standard library.
 		var result:Dynamic = remotingContext.call( path, args );
-		var apiCallFinished:Future<Dynamic> =
+		return
 			if (flags.has(ARTFuture)) result;
 			else if (flags.has(ARTVoid)) Future.sync( null );
 			else Future.sync( result );
-		
-		// Return a mapped future that will trigger when the result is ready and has been serialized.
-		return apiCallFinished.map(function(data:Dynamic) {
-			var s = new Serializer();
-			s.serialize( data );
-			return "hxr" + s.toString();
-		});
 	}
 
 	function remotingError( e:Dynamic, httpContext:HttpContext ):String {

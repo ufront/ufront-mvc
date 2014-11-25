@@ -1,10 +1,11 @@
 package haxe.remoting;
 
-enum RemotingError {
-	HttpError( callString:String, responseCode:Int, responseData:String );
-	ServerSideException( callString:String, e:Dynamic, stack:String );
-	ClientCallbackException( callString:String, e:Dynamic );
-	UnserializeFailed( callString:String, troubleLine:String, err:String );
-	NoRemotingResult( callString:String, responseData:String );
+enum RemotingError<FailureType> {
+	HttpError( remotingCallString:String, responseCode:Int, responseData:String );
+	ServerSideException( remotingCallString:String, e:Dynamic, stack:String );
+	ClientCallbackException( remotingCallString:String, e:Dynamic );
+	UnserializeFailed( remotingCallString:String, troubleLine:String, err:String );
+	NoRemotingResult( remotingCallString:String, responseData:String );
+	ApiFailure( remotingCallString:String, data:FailureType );
 	UnknownException( e:Dynamic );
 }

@@ -1,3 +1,6 @@
+Please note these notes apply to the older, slightly more Haxe-standard way of doing remoting.
+They should still be valid, but it's not as cool as the fancy UFAsyncApi<UserApi> stuff we've got going on.
+
 ufront-remoting
 ===============
 

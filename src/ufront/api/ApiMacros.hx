@@ -11,7 +11,7 @@ using Lambda;
 
 class ApiMacros
 {
-	macro public static function buildApiContext():Array<Field>
+	public static function buildApiContext():Array<Field>
 	{
 		classPos = Context.currentPos();
 		localClass = Context.getLocalClass().get();
@@ -66,17 +66,16 @@ class ApiMacros
 		return fields;
 	}
 
-	macro public static function buildApiClass():Array<Field>
+	public static function buildApiClass():Array<Field>
 	{
 		return ClassBuilder.run([
 			checkTypeHints,
 			addReturnTypeMetadata,
 			transformClient,
-//			createAsyncClass
 		]);
 	}
 
-	macro public static function buildSpecificApiProxy():Array<Field>
+	public static function buildSpecificApiProxy():Array<Field>
 	{
 		for (iface in Context.getLocalClass().get().interfaces)
 		{
@@ -90,6 +89,12 @@ class ApiMacros
 			}
 		}
 		return null;
+	}
+
+	public static function buildAsyncApiProxy() {
+		return ClassBuilder.run([
+			addProxyMemberMethods
+		]);
 	}
 
 	#if macro
@@ -231,7 +236,7 @@ class ApiMacros
 					expr: clientConstructorBlock,
 					args: [
 						{ value: null, type: macro :String, opt: false, name: "url" },
-						{ value: null, type: macro :haxe.remoting.RemotingError->Void, opt: false, name: "errorHandler" },
+						{ value: null, type: macro :haxe.remoting.RemotingError<Dynamic>->Void, opt: false, name: "errorHandler" },
 					]
 				}
 			),
@@ -274,7 +279,7 @@ class ApiMacros
 						name: "AsyncProxy"
 					});
 					var proxyDefinition = {
-						pos: classPos,
+						pos: cls.pos,
 						params: [],
 						pack: cls.pack,
 						name: cls.name + "Proxy",
@@ -349,6 +354,88 @@ class ApiMacros
 		var t1 = complexType1.toType( pos ).sure();
 		var t2 = complexType2.toType( pos ).sure();
 		return t1.unify( t2 );
+	}
+	
+	/**
+		For example:
+		
+		- `LoginApiAsync extends UFAsyncApi<LoginApi>`
+		- Find all the public methods on LoginApi
+		- Create an appropriate Async method (wrapping the return type as required) 
+	**/
+	static function addProxyMemberMethods( cb:ClassBuilder ) {
+		var params = cb.target.superClass.params;
+		var pos = cb.target.pos;
+		if ( params.length!=1 )
+			pos.errorExpr( 'Expected exactly one type parameter (should be the UFApi you are proxying)' );
+		var origApi = params[0];
+		switch params[0] {
+			case TInst(apiClassType,params):
+				for ( classField in apiClassType.get().fields.get() ) {
+					if ( classField.isPublic ) {
+						var fieldType = classField.type.reduce();
+						switch fieldType {
+							case TFun( args, ret ):
+								var flags = getResultWrapFlagsForReturnType( ret.toComplex(), pos );
+								var asyncRT = asyncifyReturnType( ret, flags );
+								var fnBody = buildAsyncFnBody( classField.name, args, flags );
+								var member:Member = {
+									pos: pos,
+									name: classField.name,
+									meta: [/** Do we need to add the return type meta? **/],
+									kind: FFun({
+										ret: asyncRT,
+										params: [for (p in classField.params) { params:[], name:p.name, constraints:[p.t.toComplex()]}], // TODO: Check if this works correctly...
+										expr: fnBody,
+										args: [for (arg in args) { name:arg.name, opt:arg.opt, type:arg.t.toComplex(), value:null }],
+									}),
+									doc: 'Async call for `${origApi}.${classField.name}()`',
+									access: [ APublic ],
+								}
+								cb.addMember( member );
+							case _:
+						}
+					}
+				}
+			case _:
+				pos.errorExpr( 'The type parameter for UFAsyncApi should be a UFApi class' );
+		}
+	}
+	
+	/**
+		Change `doSomething():String` to `doSomething:Suprise<String,RemotingError<Noise>` etc.
+	**/
+	static function asyncifyReturnType( rt:haxe.macro.Type, flags:EnumFlags<ApiReturnType> ):ComplexType {
+		var typeParams = switch rt {
+			case TType(_,params): params;
+			default: [];
+		}
+		if ( flags.has(ARTVoid) ) {
+			return macro :Surprise<Noise,RemotingError<Noise>>;
+		}
+		else if ( flags.has(ARTFuture) && flags.has(ARTOutcome) ) {
+			var successType = typeParams[0].toComplex();
+			var failureType = typeParams[1].toComplex();
+			return macro :Surprise<$successType,RemotingError<$failureType>>;
+		}
+		else if ( flags.has(ARTFuture) ) {
+			var type = typeParams[0].toComplex();
+			return macro :Surprise<$type,RemotingError<Noise>>;
+		}
+		else if ( flags.has(ARTOutcome) ) {
+			var successType = typeParams[0].toComplex();
+			var failureType = typeParams[1].toComplex();
+			return macro :Surprise<$successType,RemotingError<$failureType>>;
+		}
+		else {
+			var type = rt.toComplex();
+			return macro :Surprise<$type,RemotingError<Noise>>;
+		}
+	}
+	
+	static function buildAsyncFnBody( name:String, args:Array<{t:haxe.macro.Type,opt:Bool,name:String}>, flags:EnumFlags<ApiReturnType> ):Expr {
+		var argIdents = [ for(a in args) macro $i{a.name} ];
+		return macro return _makeApiCall( $v{name}, $a{argIdents}, EnumFlags.ofInt($v{flags}) );
 	}
 	#end
 }
