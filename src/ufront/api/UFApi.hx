@@ -186,7 +186,7 @@ class UFAsyncApi<T:UFApi> {
 				}
 				else if ( flags.has(ARTOutcome) ) {
 					var outcome:Outcome<A,B> = result;
-					wrappedOutcome = switch result {
+					wrappedOutcome = switch outcome {
 						case Success(data): Success(data);
 						case Failure(err): Failure(ApiFailure(remotingCallString,err));
 					}
