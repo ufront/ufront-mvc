@@ -444,6 +444,28 @@ class HttpApplication
 			app.listen( port );
 		}
 	#end
+	
+	/**
+		Use `neko.Web.cacheModule` to speed up requests if using neko and not using `-debug`.
+		
+		Using `cacheModule` will cause your app to execute normally on the first load, but subsequent loads will:
+		
+		- Keep the module loaded
+		- Keep static variables initialised
+		- Skip straight to our `executeRequest` function for each new request
+		
+		A few things to note:
+		
+		- This will have no effect on platforms other than Neko.
+		- This will have no effect if you compile with `-debug`.
+		- If you have multiple simultaneous requests, mod_neko may load up several instances of the module, and keep all of them cached, and pick one for each request.
+		- Using `nekotools server` sometimes fails to clear the cache after you re-compile. You can either restart the server, or compile with `-debug` to avoid this problem.
+	**/
+	public function useModNekoCache():Void {
+		#if (neko && !debug)
+			neko.Web.cacheModule( executeRequest );
+		#end
+	}
 
 	/**
 		Add a URL filter to be used in the HttpContext for `getRequestUri` and `generateUri`
