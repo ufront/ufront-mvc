@@ -2,6 +2,7 @@ package ufront.api;
 
 import haxe.macro.Context;
 import haxe.macro.Expr;
+import haxe.macro.Type;
 import haxe.EnumFlags;
 using haxe.macro.Tools;
 using tink.CoreApi;
@@ -186,13 +187,13 @@ class ApiMacros
 			fields: []
 		};
 	}
-	static function getCnxField()
-	{
+	
+	static function getCnxField():Field {
 		return {
 			pos: classPos,
 			name: "cnx",
 			meta: [],
-			kind: FVar(macro :haxe.remoting.HttpAsyncConnection),
+			kind: FieldType.FVar(macro :haxe.remoting.HttpAsyncConnection),
 			doc: null,
 			access: [APrivate]
 		};
@@ -245,7 +246,7 @@ class ApiMacros
 		};
 	}
 
-	static function defineProxyForType(type:haxe.macro.Type):Null<TypePath>
+	static function defineProxyForType(type:Type):Null<TypePath>
 	{
 		switch (type)
 		{
@@ -304,7 +305,7 @@ class ApiMacros
 			pos: classPos,
 			name: f.name,
 			meta: f.meta,
-			kind: FVar(TPath(proxyTPath)),
+			kind: FieldType.FVar(TPath(proxyTPath)),
 			doc: null,
 			access: f.access
 		};
