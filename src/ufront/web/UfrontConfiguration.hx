@@ -92,14 +92,14 @@ typedef UfrontConfiguration = {
 	/**
 		The request middleware to use with this application
 
-		Default is `[ new InlineSessionMiddleware() ]`
+		Default is `[ new TmpFileUploadMiddleware(), new InlineSessionMiddleware() ]`
 	**/
 	?requestMiddleware:Array<UFRequestMiddleware>,
 
 	/**
 		The response middleware to use with this application
 
-		Default is `[ new InlineSessionMiddleware() ]`
+		Default is `[ new InlineSessionMiddleware(), new TmpFileUploadMiddleware()  ]`
 	**/
 	?responseMiddleware:Array<UFResponseMiddleware>,
 
