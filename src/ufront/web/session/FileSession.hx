@@ -85,7 +85,7 @@ class FileSession implements UFHttpSession
 
 		In general you should create your object using `injector.instantiate( FileSession )`, so that the HttpContext is made available and various the `injectConfig` initializations take place.
 	**/
-	public function new( ?savePath:String, ?sessionName:String, ?expire:Null<Int> ) {
+	public function new() {
 		started = false;
 		commitFlag = false;
 		closeFlag = false;
