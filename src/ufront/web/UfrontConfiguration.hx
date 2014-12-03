@@ -160,22 +160,20 @@ typedef UfrontConfiguration = {
 	?defaultLayout:Null<String>,
 
 	/**
-		A method which can be used to generate a session for the current request, as required.
+		The class which we should use for saving user session state.
 
-		By default, this is `FileSession.getFactory("sessions", null, 0)`
+		This class should be able to be setup using the dependency injector for a request.
 
-		This means using `ufront.web.session.FileSession`, saving to the "sessions" folder, with a default session variable name, and an expiry of 0 (when window closed)
+		By default, this is `ufront.web.session.FileSession`.
 	**/
 	?sessionImplementation:Class<UFHttpSession>,
 
 	/**
-		A method which can be used to generate an AuthHandler for the current request, as required.
+		The class we should use as our authentication handler.
 
-		If using the ufront-easyauth library, the default value is `EasyAuth.getFactory()`
+		If using the ufront-easyauth library, the default value is `EasyAuth`.
 
-		This means it will create an `ufront.auth.EasyAuth` handler using the current session, and the default variable name to store the ID in the session.
-
-		If not using ufront-easyauth, the default value is `YesBoss.getFactory()`
+		If not using ufront-easyauth, the default value is `YesBossAuthHandler`.
 	**/
 	?authImplementation:Class<UFAuthHandler<UFAuthUser>>,
 	
