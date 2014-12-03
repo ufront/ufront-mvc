@@ -209,41 +209,43 @@ class HttpApplication
 	/**
 		Add one or more `UFRequestMiddleware` items to this HttpApplication. This method is chainable.
 	**/
-	inline public function addRequestMiddleware( ?middlewareItem:UFRequestMiddleware, ?middleware:Iterable<UFRequestMiddleware> ):HttpApplication
-		return addModule( requestMiddleware, middlewareItem, middleware );
+	inline public function addRequestMiddleware( ?middlewareItem:UFRequestMiddleware, ?middleware:Iterable<UFRequestMiddleware>, ?first:Bool=false ):HttpApplication
+		return addModule( requestMiddleware, middlewareItem, middleware, first );
 
 	/**
 		Add one or more `UFRequestHandler`s to this HttpApplication. This method is chainable.
 	**/
-	inline public function addRequestHandler( ?handler:UFRequestHandler, ?handlers:Iterable<UFRequestHandler> ):HttpApplication
-		return addModule( requestHandlers, handler, handlers );
+	inline public function addRequestHandler( ?handler:UFRequestHandler, ?handlers:Iterable<UFRequestHandler>, ?first:Bool=false ):HttpApplication
+		return addModule( requestHandlers, handler, handlers, first );
 
 	/**
 		Add one or more `UFErrorHandler`s to this HttpApplication. This method is chainable.
 	**/
-	inline public function addErrorHandler( ?handler:UFErrorHandler, ?handlers:Iterable<UFErrorHandler> ):HttpApplication
-		return addModule( errorHandlers, handler, handlers );
+	inline public function addErrorHandler( ?handler:UFErrorHandler, ?handlers:Iterable<UFErrorHandler>, ?first:Bool=false ):HttpApplication
+		return addModule( errorHandlers, handler, handlers, first );
 
 	/**
 		Add one or more `UFRequestMiddleware` items to this HttpApplication. This method is chainable.
 	**/
-	inline public function addResponseMiddleware( ?middlewareItem:UFResponseMiddleware, ?middleware:Iterable<UFResponseMiddleware> ):HttpApplication
-		return addModule( responseMiddleware, middlewareItem, middleware );
+	inline public function addResponseMiddleware( ?middlewareItem:UFResponseMiddleware, ?middleware:Iterable<UFResponseMiddleware>, ?first:Bool=false ):HttpApplication
+		return addModule( responseMiddleware, middlewareItem, middleware, first );
 
 	/**
 		Add some `UFRequestMiddleware` to this HttpApplication. This method is chainable.
 	**/
-	inline public function addLogHandler( ?logger:UFLogHandler, ?loggers:Iterable<UFLogHandler> ):HttpApplication
-		return addModule( logHandlers, logger, loggers );
+	inline public function addLogHandler( ?logger:UFLogHandler, ?loggers:Iterable<UFLogHandler>, ?first:Bool=false ):HttpApplication
+		return addModule( logHandlers, logger, loggers, first );
 
-	function addModule<T>( modulesArr:Array<T>, ?newModule:T, ?newModules:Iterable<T> ):HttpApplication {
+	function addModule<T>( modulesArr:Array<T>, ?newModule:T, ?newModules:Iterable<T>, first:Bool ):HttpApplication {
 		if (newModule!=null) {
 			injector.injectInto( newModule );
-			modulesArr.push( newModule );
+			if (first) modulesArr.unshift( newModule );
+			else modulesArr.push( newModule );
 		};
 		if (newModules!=null) for (newModule in newModules) {
 			injector.injectInto( newModule );
-			modulesArr.push( newModule );
+			if (first) modulesArr.unshift( newModule );
+			else modulesArr.push( newModule );
 		};
 		return this;
 	}
