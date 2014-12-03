@@ -206,7 +206,7 @@ class DefaultUfrontConfiguration {
 		var inlineSession = new InlineSessionMiddleware();
 		var uploadMiddleware = new TmpFileUploadMiddleware();
 		return {
-			indexController:DefaultController,
+			indexController:DefaultUfrontController,
 			remotingApi:null,
 			urlRewrite:true,
 			basePath:'/',
@@ -250,25 +250,10 @@ class DefaultUfrontConfiguration {
 /**
 	A simple controller to use if no other is specified.
 **/
-class DefaultController extends ufront.web.Controller {
+class DefaultUfrontController extends ufront.web.Controller {
 	@:route( '/*' )
 	function showMessage() {
 		ufTrace("Your Ufront App is almost ready.");
 		return CompileTime.readFile( "ufront/web/DefaultPage.html" );
 	}
-}
-
-/**
-	Hold onto this for when I write some unit tests...
-**/
-class TestController extends ufront.web.Controller {
-	@:route( '/' ) public function home() return "Home";
-	@:route( '/staff.html' ) public function staff() return "Staff";
-	@:route( '/staff/$name/' ) public function viewStaff( name:String ) return 'Staff: $name';
-	@:route( '/contact/', GET ) public function contact() return "Contact <form method='POST' action='/contact/'><input type='submit'/></form>";
-	@:route( '/contact/', POST ) public function emailContact( args:{ subject:String, ?amount:Int } ) return 'Send email about ${args.subject}';
-	@:route( '/pages/*' ) public function pageCatchAll( rest:Array<String> ) return new ufront.web.result.ContentResult( rest.join("/"), "text/html" );
-	@:route( '/void/' ) public function voidReturn() { #if sys Sys.println('void return'); #else trace('void return'); #end };
-
-	@:route( '/default/*' ) public var d:DefaultController;
 }
