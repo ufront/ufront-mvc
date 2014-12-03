@@ -19,7 +19,6 @@ class TestAll
 		runner.addCase( new UserAgentTest() );
 		runner.addCase( new ControllerTest() );
 		runner.addCase( new DispatchTest() );
-		runner.addCase( new DefaultControllerTest() );
 		runner.addCase( new UfrontConfigurationTest() );
 	}
 }
