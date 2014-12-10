@@ -148,16 +148,15 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 		// Save the details of the request to the ActionContext.
 		actionContext.handler = this;
 		actionContext.action = path[path.length-1];
-		actionContext.controller = remotingContext.objects.get( actionContext.action );
+		actionContext.controller = remotingContext.objects.get( path[0] ).obj;
 		actionContext.args = args;
-		// CHECK: are all of the above actionContext values correct?
 		
 		// Get the return type information for the current call.
 		var returnType:Int;
 		try {
 			var fieldsMeta = Meta.getFields( Type.getClass(actionContext.controller) );
 			var actionMeta = Reflect.field( fieldsMeta, actionContext.action );
-			returnType = actionMeta.returnType;
+			returnType = actionMeta.returnType[0];
 		}
 		catch( e:Dynamic ) {
 			#if debug
