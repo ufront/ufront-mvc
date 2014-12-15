@@ -90,6 +90,12 @@ typedef UfrontConfiguration = {
 	?disableBrowserTrace:Bool,
 
 	/**
+		Disable traces going to the server console?
+		Default = false;
+	**/
+	?disableServerTrace:Bool,
+
+	/**
 		The request middleware to use with this application
 
 		Default is `[ new TmpFileUploadMiddleware(), new InlineSessionMiddleware() ]`
@@ -211,6 +217,7 @@ class DefaultUfrontConfiguration {
 			contentDirectory:'uf-content',
 			logFile:null,
 			disableBrowserTrace: false,
+			disableServerTrace: false,
 			controllers: CompileTime.getAllClasses( Controller ),
 			apis: CompileTime.getAllClasses( UFApi ),
 			viewEngine: FileViewEngine,

@@ -10,5 +10,6 @@ class TestAll
 		runner.addCase( new MessageListTest() );
 		runner.addCase( new RemotingLoggerTest() );
 		runner.addCase( new BrowserConsoleLoggerTest() );
+		runner.addCase( new ServerConsoleLoggerTest() );
 	}
 }

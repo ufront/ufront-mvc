@@ -108,6 +108,9 @@ class UfrontApplication extends HttpApplication
 		addErrorHandler( configuration.errorHandlers );
 
 		// Add log handlers according to configuration
+		if ( !configuration.disableServerTrace ) {
+			addLogHandler( new ServerConsoleLogger() );
+		}
 		if ( !configuration.disableBrowserTrace ) {
 			addLogHandler( new BrowserConsoleLogger() );
 			addLogHandler( new RemotingLogger() );
