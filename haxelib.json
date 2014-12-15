@@ -5,16 +5,14 @@
   "tags": ["ufront","web","framework","mvc","neko","php"],
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
-  "releasenote": "Add useModNekoCache to HttpApplication / UfrontApplication.
-Add the ability to add middleware at the start or end of a list.
-Other minor fixes, see git logs.",
-  "version": "1.0.0-rc.8",
+  "releasenote": "Fix ActionContext getting populated correctly in remoting call. Stop using exact version dependencies, use `ufront` if you want exact dependencies.",
+  "version": "1.0.0-rc.9",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
-    "random": "1.4.0",
-    "compiletime": "2.5.1",
-    "minject": "1.3.0",
-    "tink_core": "1.0.0-rc.7",
-    "tink_macro": "0.5.0"
+    "random": "",
+    "compiletime": "",
+    "minject": "",
+    "tink_core": "",
+    "tink_macro": ""
   }
 }
