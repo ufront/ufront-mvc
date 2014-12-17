@@ -1,8 +1,8 @@
 package neko.ufront.web.context;
 
 import haxe.io.Bytes;
-import thx.error.Error;
-import thx.sys.Lib;
+import thx.core.Error;
+import neko.Lib;
 import ufront.web.upload.*;
 import ufront.web.UserAgent;
 import ufront.core.MultiValueMap;
@@ -12,7 +12,7 @@ import ufront.web.context.HttpRequest.OnDataCallback;
 import ufront.web.context.HttpRequest.OnEndPartCallback;
 import ufront.core.Sync;
 using tink.CoreApi;
-using Strings;
+using thx.core.Strings;
 using StringTools;
 
 /**

@@ -9,6 +9,7 @@
 -lib minject
 -lib tink_core
 -lib tink_macro
+-lib thx.core
 -lib mockatoo
 -cp src
 

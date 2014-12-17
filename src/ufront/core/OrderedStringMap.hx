@@ -1,11 +1,14 @@
+package ufront.core;
+
+
 /**
- * ...
- * @author Franco Ponticelli
- */
-
-package thx.collection;
-
-class HashList<T>
+	An ordered map implementation.
+	Copied from `thx.collections.HashList` in Franco's old thx library - it doesn't seem to be in the new version.
+	In future we might change this to an abstract or make it compatible with Map<String,T>
+	@author Franco Ponticelli
+**/
+@:final
+class OrderedStringMap<T>
 {
 	public var length(default, null) : Int;
 

@@ -1,7 +1,7 @@
 package ufront.web.url.filter;
 import ufront.web.context.HttpRequest;
-import thx.error.NullArgument;
-import thx.error.Error;
+import thx.core.error.NullArgument;
+import thx.core.Error;
 
 using StringTools;
 

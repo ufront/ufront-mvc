@@ -1,7 +1,7 @@
 package php.ufront.web.context;
 
 import haxe.io.Bytes;
-import thx.sys.Lib;
+import php.Lib;
 import ufront.web.upload.*;
 import ufront.web.context.HttpRequest.OnPartCallback;
 import ufront.web.context.HttpRequest.OnDataCallback;
@@ -11,7 +11,7 @@ import ufront.core.MultiValueMap;
 import haxe.ds.StringMap;
 import ufront.core.Sync;
 using tink.CoreApi;
-using Strings;
+using thx.core.Strings;
 using StringTools;
 
 /**
@@ -242,7 +242,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 			var h = Lib.hashOfAssociativeArray(untyped __php__("$_SERVER"));
 			for(k in h.keys()) {
 				if(k.substr(0,5) == "HTTP_") {
-					var headerName:String = k.substr(5).toLowerCase().replace("_", "-").ucwords();
+					var headerName:String = k.substr(5).toLowerCase().replace("_", "-").capitalizeWords();
 					var headerValues:String = h.get(k);
 					for ( val in headerValues.split(",") ) {
 						clientHeaders.add(headerName, val.trim());

@@ -1,7 +1,6 @@
 package ufront.web;
 
-import thx.error.NullArgument;
-using Dates;
+import thx.core.error.NullArgument;
 
 /**
 	A class describing a Http Cookie.
@@ -66,11 +65,43 @@ class HttpCookie {
 		return value = v;
 	}
 
+	static var dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+	static var monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+	static var tzOffset:Null<Float>;
+	
 	function get_description() {
 		var buf = new StringBuf();
 		buf.add(value);
-		if ( expires!=null )
-			addPair( buf, "expires", Dates.format(expires,"%a, %d-%b-%Y %T %Z") );
+		if ( expires!=null ) {
+			// Figure out the timezone offset of the local server, our expiry date needs to be GMT.
+			if ( tzOffset==null ) {
+				tzOffset = 
+					#if php untyped __php__("intval(date('Z', $this->expires->__t));");
+					#else Date.fromString( "1970-01-01 00:00:00" ).getTime();
+					#end
+			}
+			var gmtExpires = DateTools.delta( expires, tzOffset );
+			
+			// We need to pad out some ints in our date formatting.
+			function zeroPad( i:Int ) {
+				var str = '$i';
+				while ( str.length < 2 )
+					str = "0"+str;
+				return str;
+			}
+			
+			// Format is 'DAY, DD-MMM-YYYY HH:MM:SS GMT'. 
+			// See http://msdn.microsoft.com/en-us/library/windows/desktop/aa384321%28v=vs.85%29.aspx
+			var day = dayNames[gmtExpires.getDay()];
+			var date = zeroPad( gmtExpires.getDate() );
+			var month = monthNames[gmtExpires.getMonth()];
+			var year = gmtExpires.getFullYear();
+			var hour = zeroPad( gmtExpires.getHours() );
+			var minute = zeroPad( gmtExpires.getMinutes() );
+			var second = zeroPad( gmtExpires.getSeconds() );
+			var dateStr = '$day, $date-$month-$year $hour:$minute:$second GMT';
+			addPair( buf, "expires", dateStr );
+		}
 		addPair( buf, "domain", domain );
 		addPair( buf, "path", path );
 		if ( secure )

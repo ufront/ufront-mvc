@@ -13,6 +13,7 @@
     "compiletime": "",
     "minject": "",
     "tink_core": "",
-    "tink_macro": ""
+    "tink_macro": "",
+    "thx.core": ""
   }
 }

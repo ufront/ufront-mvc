@@ -3,7 +3,6 @@ package ufront.web.result;
 import tink.CoreApi;
 import ufront.web.context.ActionContext;
 import ufront.core.Sync;
-using Types;
 
 /**
 	ActionResult is the base class for all results of actions performed during a MVC request.
@@ -41,7 +40,7 @@ class ActionResult {
 			return new EmptyResult();
 		}
 		else {
-			var actionResultValue = Types.as( resultValue, ActionResult );
+			var actionResultValue = Std.instance( resultValue, ActionResult );
 			if ( actionResultValue==null ) {
 				actionResultValue = new ContentResult( Std.string(resultValue) );
 			}

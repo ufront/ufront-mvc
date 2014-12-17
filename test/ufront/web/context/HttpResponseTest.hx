@@ -3,7 +3,7 @@ package ufront.web.context;
 import utest.Assert;
 import ufront.web.context.HttpResponse;
 import haxe.ds.StringMap;
-import thx.collection.HashList;
+import ufront.core.OrderedStringMap;
 import haxe.io.Bytes;
 
 class HttpResponseTest {
@@ -26,7 +26,7 @@ class HttpResponseTest {
 		Assert.equals( 200, response.status );
 		Assert.is( response.getBuffer(), String );
 		Assert.is( response.getCookies(), StringMap );
-		Assert.is( response.getHeaders(), HashList );
+		Assert.is( response.getHeaders(), OrderedStringMap );
 	}
 
 	public function testFlush() {
