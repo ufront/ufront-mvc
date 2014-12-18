@@ -5,8 +5,12 @@
   "tags": ["ufront","web","framework","mvc","neko","php"],
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
-  "releasenote": "Fix ActionContext getting populated correctly in remoting call. Stop using exact version dependencies, use `ufront` if you want exact dependencies.",
-  "version": "1.0.0-rc.9",
+  "releasenote": "
+Switch to new `thx.core` dependency, stop bundling old `thx`.  This may break some code.
+Add ServerConsoleLogger that traces to a server console on PHP built in server, Nekotools, and JS.
+Fix compilation issues with UfrontConfiguration and TestUtils if not using certain libraries.
+",
+  "version": "1.0.0-rc.10",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
     "random": "",
