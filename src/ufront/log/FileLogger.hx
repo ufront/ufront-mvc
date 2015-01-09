@@ -96,7 +96,8 @@ class FileLogger implements UFLogHandler implements UFInitRequired
 
 	static var REMOVENL = ~/[\n\r]/g;
 	public static function format( msg:Message ) {
-		var text = REMOVENL.replace( msg.msg, '\\n' );
+		var msgStr = Std.string( msg.msg );
+		var text = REMOVENL.replace( msgStr, '\\n' );
 		var type = Type.enumConstructor( msg.type );
 		var pos = msg.pos;
 		return '[$type] ${pos.className}.${pos.methodName}(${pos.lineNumber}): $text';
