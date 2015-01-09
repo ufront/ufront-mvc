@@ -124,7 +124,7 @@ class UfrontApplication extends HttpApplication
 		}
 
 		// Add URL filter for basePath, if it is not "/"
-		var path = Strings.trim( configuration.basePath, "/" );
+		var path = Strings.trimChars( configuration.basePath, "/" );
 		if ( path.length>0 )
 			super.addUrlFilter( new DirectoryUrlFilter(path) );
 
