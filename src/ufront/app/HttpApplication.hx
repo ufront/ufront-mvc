@@ -300,7 +300,7 @@ class HttpApplication
 				// We need to prevent macro-time seeing this code as "Pos" for them is "haxe.macro.Pos" not "haxe.PosInfos"
 				var msg =
 				    'Async callbacks never completed for URI ${httpContext.getRequestUri()}:  ' +
-				    'The last active module was ${currentModule.className}.${currentModule.methodName}(${currentModule.customParams.join(", ")})';
+				    'The last active module was ${currentModule.className}.${currentModule.methodName}';
 				throw msg;
 			}
 		#end
@@ -387,8 +387,8 @@ class HttpApplication
 			//   - the LogHandlers
 			//   - the "flush" stage...
 			// rethrow the error, and hopefully they'll come to this line number and figure out what happened.
-			var msg = 'You had an error after your error handler had already run.  Last active module: $currentModule.';
-			throw '$msg  $err. Error data: ${err.data}';
+			var msg = 'You had an error after your error handler had already run.  Last active module: ${currentModule.className}.${currentModule.methodName}';
+			throw '$msg. \n$err. \nError data: ${err.data}';
 		}
 	}
 

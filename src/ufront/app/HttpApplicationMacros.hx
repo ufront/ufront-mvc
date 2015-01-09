@@ -22,14 +22,14 @@ class HttpApplicationMacros {
 	static macro function prepareModules( modules:ExprOf<Array<Dynamic>>, methodName:String, ?bindArgs:ExprOf<Array<Dynamic>> ):ExprOf<Array<Pair<HttpContext->Surprise<Noise,Error>,PosInfos>>> {
 		#if macro
 			var argsToBind:Array<Expr>;
-			var argsForPos:Array<Dynamic> = [];
+			var argsForPos:Array<String> = [];
 
 			switch bindArgs.expr {
 				case EArrayDecl( args ):
 					argsToBind = args;
 					for ( a in args ) {
 						if ( !a.isWildcard() )
-							argsForPos.push( a );
+							argsForPos.push( a.toString() );
 						else
 							argsForPos.push( "{HttpContext}" );
 					}
