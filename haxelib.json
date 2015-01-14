@@ -6,11 +6,11 @@
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
   "releasenote": "
-Switch to new `thx.core` dependency, stop bundling old `thx`.  This may break some code.
-Add ServerConsoleLogger that traces to a server console on PHP built in server, Nekotools, and JS.
-Fix compilation issues with UfrontConfiguration and TestUtils if not using certain libraries.
+Bug fix for tracing objects not strings with FileLogger.
+Update to new `thx.core`.
+Better error messages when `UfrontApplication.execute()` fails to complete.
 ",
-  "version": "1.0.0-rc.10",
+  "version": "1.0.0-rc.11",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
     "random": "",
