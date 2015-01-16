@@ -1,7 +1,7 @@
 package ufront.web.result;
 
 import haxe.io.Bytes;
-import thx.error.NullArgument;
+import thx.core.error.NullArgument;
 import ufront.web.context.ActionContext;
 import ufront.core.Sync;
 import ufront.web.HttpError;

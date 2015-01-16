@@ -6,9 +6,9 @@ import ufront.app.*;
 import ufront.core.Sync;
 import ufront.web.context.HttpContext;
 import haxe.ds.StringMap;
-using DynamicsT;
-using Strings;
-using Types;
+//using DynamicsT;
+using thx.core.Strings;
+using thx.core.Types;
 
 /**
 	A module which adds an error handler to your application.

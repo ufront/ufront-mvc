@@ -1,6 +1,6 @@
 package ufront.app;
 
-import thx.error.NullArgument;
+import thx.core.error.NullArgument;
 import ufront.app.HttpApplication;
 import haxe.ds.StringMap;
 import minject.Injector;
@@ -18,8 +18,9 @@ import ufront.web.UfrontConfiguration;
 import ufront.web.session.UFHttpSession;
 import ufront.auth.*;
 import ufront.api.UFApi;
+import thx.core.Strings;
 using tink.CoreApi;
-using Objects;
+using thx.core.Objects;
 using ufront.core.InjectionTools;
 
 /**
@@ -87,7 +88,10 @@ class UfrontApplication extends HttpApplication
 		super();
 
 		configuration = DefaultUfrontConfiguration.get();
-		configuration.merge( optionsIn );
+		for ( field in Reflect.fields(optionsIn) ) {
+			var value = Reflect.field( optionsIn, field );
+			Reflect.setField( configuration, field, value );
+		}
 
 		mvcHandler = new MVCHandler();
 		remotingHandler = new RemotingHandler();
@@ -120,7 +124,7 @@ class UfrontApplication extends HttpApplication
 		}
 
 		// Add URL filter for basePath, if it is not "/"
-		var path = Strings.trim( configuration.basePath, "/" );
+		var path = Strings.trimChars( configuration.basePath, "/" );
 		if ( path.length>0 )
 			super.addUrlFilter( new DirectoryUrlFilter(path) );
 

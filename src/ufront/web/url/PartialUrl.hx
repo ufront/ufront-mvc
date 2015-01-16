@@ -1,6 +1,6 @@
 package ufront.web.url;
 
-import thx.collection.HashList;
+import ufront.core.OrderedStringMap;
 
 /**
 	A class which describes a partial URL, separating segments, query parameters and fragments.
@@ -12,12 +12,12 @@ import thx.collection.HashList;
 class PartialUrl
 {
 	public var segments : Array<String>;
-	public var query : HashList<{ value : String, encoded : Bool }>;
+	public var query : OrderedStringMap<{ value : String, encoded : Bool }>;
 	public var fragment : String;
 
 	public function new() {
 		segments = [];
-		query    = new HashList();
+		query    = new OrderedStringMap();
 		fragment = null;
 	}
 

@@ -239,7 +239,7 @@ class DefaultUfrontConfiguration {
 				// We only ever *read* a T:UFAuthUser, any time we ask for one to write or check against the interface accepts any UFAuthUser.
 				// Because we're read only, we're safe, but Haxe doesn't think so.
 				// For now we'll cast our way out of this problem.
-				#if ufront_easyauth
+				#if (ufront_easyauth && server)
 					cast EasyAuth
 				#else
 					cast YesBossAuthHandler // should we use NobodyAuthHandler instead?

@@ -15,8 +15,9 @@ import ufront.web.context.ActionContext;
 import ufront.core.Sync;
 import haxe.rtti.Meta;
 using tink.CoreApi;
-using Strings;
+using thx.core.Strings;
 using haxe.io.Path;
+using StringTools;
 
 /**
 A ViewResult loads a view from a templating engine, optionally wraps it in a layout, and writes the result to the HttpResponse with a `text/html` content type.
@@ -331,7 +332,11 @@ class ViewResult extends ActionResult {
 			viewFolder = viewFolder.removeTrailingSlashes();
 		}
 		else {
-			var controllerName = Type.getClassName( Type.getClass(actionContext.controller) ).split( "." ).pop().lcfirst();
+			// Get the class name
+			var controllerName = Type.getClassName( Type.getClass(actionContext.controller) ).split( "." ).pop();
+			// Lowercase the first letter
+			controllerName = controllerName.charAt(0).toLowerCase() + controllerName.substr(1);
+			// Strip off the word Controller
 			if ( controllerName.endsWith("Controller") )
 				controllerName = controllerName.substr( 0, controllerName.length-10 );
 			viewFolder = controllerName;
@@ -351,7 +356,7 @@ class ViewResult extends ActionResult {
 			var action = actionContext.action;
 			if ( action.startsWith("do") )
 				action = action.substr(2);
-			viewPath = action.lcfirst();
+			viewPath = action.charAt(0).toLowerCase() + action.substr(1);
 		}
 		
 		// Figure out which layout to use.

@@ -221,7 +221,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 				return new EmptyResult();
 			}
 			else {
-				var actionReturnValue = Types.as( returnValue, ActionResult );
+				var actionReturnValue = Std.instance( returnValue, ActionResult );
 				if ( actionReturnValue==null ) {
 					actionReturnValue = new ContentResult( Std.string(returnValue), "text/html" );
 				}

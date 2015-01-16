@@ -3,7 +3,7 @@ package ufront.app;
 #if macro
 	import haxe.macro.Expr;
 #else
-	import thx.error.NullArgument;
+	import thx.core.error.NullArgument;
 	import ufront.app.HttpApplication;
 	import haxe.ds.StringMap;
 	import minject.Injector;

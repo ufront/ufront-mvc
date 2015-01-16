@@ -1,15 +1,13 @@
 package ufront.web.url.filter;
-using Iterables;
-import thx.error.NullArgument;
+import thx.core.error.NullArgument;
 import ufront.web.context.HttpRequest;
-import thx.error.Error;
-
+import thx.core.Error;
 using StringTools;
 
 /**
 	A URL filter that can be used to limit allowed parameters on a URL.
 
-	TODO: decide if this overlaps Dispatch's built in functionality.  Any de-duplication needed
+	TODO: decide if this overlaps with our routing's functionality. Is it needed anymore?
 	TODO: document further
 **/
 class SegmentToParamUrlFilter implements UFUrlFilter
@@ -27,7 +25,7 @@ class SegmentToParamUrlFilter implements UFUrlFilter
 	}
 
 	public function filterIn(url : PartialUrl, request : HttpRequest) {
-		if(allowedValues.contains(url.segments[0])) {
+		if( allowedValues.indexOf(url.segments[0]) > -1 ) {
 			var value = url.segments.shift();
 			request.query.set(paramName, value);
 		}
@@ -37,7 +35,7 @@ class SegmentToParamUrlFilter implements UFUrlFilter
 		var params = url.query;
 		if(params.exists(paramName)) {
 			var value = params.get(paramName).value;
-			if(!allowedValues.contains(value))
+			if( allowedValues.indexOf(value) == -1 )
 				return;
 			params.remove(paramName);
 			if(value != defaultValue)

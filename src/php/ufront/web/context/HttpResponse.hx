@@ -5,9 +5,6 @@
 
 package php.ufront.web.context;
 
-import thx.sys.Lib;
-import thx.error.Error;
-
 using StringTools;
 
 class HttpResponse extends ufront.web.context.HttpResponse
@@ -30,7 +27,7 @@ class HttpResponse extends ufront.web.context.HttpResponse
 			}
 		} catch (e : Dynamic)
 		{
-			throw new Error("you can't set the cookie, output already sent");
+			throw 'Failed to set the cookie, output already sent';
 		}
 
 		try {
@@ -45,12 +42,11 @@ class HttpResponse extends ufront.web.context.HttpResponse
 				}
 				untyped __call__("header", v == null ? key : key + ": " + v, true);
 			}
-		} catch (e : Dynamic)
-		{
-			throw new Error("invalid header: '{0}: {1}' or output already sent", [k, v]);
+		} catch (e : Dynamic) {
+			throw 'Invalid header: "$k: $v", or output already sent';
 		}
 		// write content
-		Lib.print(_buff.toString());
+		Sys.print(_buff.toString());
 	}
 
 	public static function statusDescription( r : Int )

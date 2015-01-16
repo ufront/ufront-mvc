@@ -2,9 +2,9 @@ package ufront.web.context;
 import haxe.io.Bytes;
 import haxe.io.BytesOutput;
 import haxe.io.Output;
-import thx.collection.HashList;
-import thx.error.NullArgument;
-import thx.error.NotImplemented;
+import ufront.core.OrderedStringMap;
+import thx.core.error.NullArgument;
+import thx.core.error.NotImplemented;
 import haxe.ds.StringMap;
 
 /**
@@ -75,7 +75,7 @@ class HttpResponse
 	public var status:Int;
 
 	var _buff:StringBuf;
-	var _headers:HashList<String>;
+	var _headers:OrderedStringMap<String>;
 	var _cookies:StringMap<HttpCookie>;
 	var _flushed:Bool;
 
@@ -137,7 +137,7 @@ class HttpResponse
 		Clear the headers set in this response so far.
 	**/
 	public function clearHeaders():Void {
-		_headers = new HashList();
+		_headers = new OrderedStringMap();
 	}
 
 	/**
@@ -193,11 +193,11 @@ class HttpResponse
 	}
 
 	/**
-		Get the `HashList` of HTTP headers set in this response.
+		Get the `OrderedStringMap` of HTTP headers set in this response.
 
-		A HashList is basically a StringMap, but it preserves the order of the items (headers in this case)
+		A OrderedStringMap is basically a StringMap, but it preserves the order of the items (headers in this case)
 	**/
-	public function getHeaders():HashList<String> {
+	public function getHeaders():OrderedStringMap<String> {
 		return _headers;
 	}
 

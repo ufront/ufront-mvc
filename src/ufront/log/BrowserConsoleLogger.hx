@@ -4,7 +4,7 @@ import ufront.web.context.HttpContext;
 import ufront.app.*;
 import haxe.PosInfos;
 import ufront.core.Sync;
-using Types;
+using thx.core.Types;
 
 /**
 	Trace module that adds javascript snippet to output trace to Javascript console.

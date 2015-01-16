@@ -5,7 +5,6 @@
 
 package neko.ufront.web.context;
 
-import thx.error.Error;
 import neko.Web;
 using StringTools;
 
@@ -30,7 +29,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 			}
 		}
 		catch ( e:Dynamic ) {
-			throw new Error( 'Cannot flush cookies on response: $e' );
+			throw 'Cannot flush cookies on response: $e';
 		}
 
 		// Write headers
@@ -43,7 +42,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 				Web.setHeader( key, val );
 			}
 			catch ( e:Dynamic ) {
-				throw new Error( "Invalid header: '{0}: {1}', or output already sent", [key,val] );
+				throw 'Invalid header: "$key: $val", or output already sent';
 			}
 		}
 
