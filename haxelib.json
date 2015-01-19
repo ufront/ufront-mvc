@@ -6,11 +6,10 @@
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
   "releasenote": "
-Bug fix for tracing objects not strings with FileLogger.
-Update to new `thx.core`.
-Better error messages when `UfrontApplication.execute()` fails to complete.
+Remove the deprecated DispatchApplication.
+Rename "Futuroid" to "Futuristic". Yes, that's a noun.
 ",
-  "version": "1.0.0-rc.11",
+  "version": "1.0.0-rc.12",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
     "random": "",
