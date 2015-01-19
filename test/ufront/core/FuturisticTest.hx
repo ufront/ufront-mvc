@@ -1,12 +1,12 @@
 package ufront.core;
 
 import utest.Assert;
-import ufront.core.Futuroid;
+import ufront.core.Futuristic;
 import tink.CoreApi;
 import mockatoo.Mockatoo.*;
 using mockatoo.Mockatoo;
 
-class FuturoidTest
+class FuturisticTest
 {
     public var trigger:FutureTrigger<Int>;
     public var future:Future<Int>;
@@ -25,12 +25,12 @@ class FuturoidTest
 	public function teardown():Void {}
 
 	public function testFromFuture():Void {
-		var futuroid:Futuroid<Int> = future;
+		var futuroid:Futuristic<Int> = future;
 		Assert.equals( future, futuroid );
 	}
 
 	public function testFromSync():Void {
-		var futuroid:Futuroid<Int> = 10;
+		var futuroid:Futuristic<Int> = 10;
 		var value:Int;
 		futuroid.handle( function(i:Int) {
 			value = i;
@@ -42,7 +42,7 @@ class FuturoidTest
 		var handledValue:Int;
 		var mappedValue:String;
 		var flatMappedValue:Float;
-		var futuroid:Futuroid<Int> = future;
+		var futuroid:Futuristic<Int> = future;
 		futuroid.handle( function(i) handledValue = i);
 		futuroid.map( function(i) return 'number $i' ).handle( function(i) mappedValue = i);
 		futuroid.flatMap( function(i) return Future.sync(i+0.1) ).handle( function(i) flatMappedValue = i);

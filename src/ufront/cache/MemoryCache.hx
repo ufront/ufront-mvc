@@ -1,7 +1,7 @@
 package ufront.cache;
 
 import tink.CoreApi;
-import ufront.core.Futuroid;
+import ufront.core.Futuristic;
 import ufront.cache.UFCache;
 
 class MemoryCacheConnection<T> implements UFCacheConnection<T> {
@@ -50,10 +50,10 @@ class MemoryCache<T> implements UFCache<T> implements UFCacheSync<T> {
 	public function get( id:String ):Surprise<T,CacheError>
 		return Future.sync( getSync(id) );
 
-	public function set( id:String, value:Futuroid<T> ):Surprise<T,CacheError>
+	public function set( id:String, value:Futuristic<T> ):Surprise<T,CacheError>
 		return value.map( function(v:T) return Success(map[id]=v) );
 
-	public function getOrSet( id:String, ?fn:Void->Futuroid<T> ):Surprise<T,CacheError>
+	public function getOrSet( id:String, ?fn:Void->Futuristic<T> ):Surprise<T,CacheError>
 		return
 			if ( map.exists(id) )
 				Future.sync( Success(map[id]) )
