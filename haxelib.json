@@ -6,10 +6,9 @@
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
   "releasenote": "
-Remove the deprecated DispatchApplication.
-Rename "Futuroid" to "Futuristic". Yes, that's a noun.
+POST and GET params are now URL decoded internally, and multiple POST params with the same name on a PHP multipart request now work correctly.
 ",
-  "version": "1.0.0-rc.12",
+  "version": "1.0.0-rc.13",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
     "random": "",
