@@ -102,7 +102,23 @@ class TemplatingEngines {
 			extensions: ["erazor","html"]
 		}
 	#end
-
+	
+	#if stipple
+		/**
+			Stipple is a re-adaptation of the popular [Handlebars](http://handlebarsjs.com/) javascript template framework for the Haxe programming language. 	
+				
+			You can find more about it here: https://bitbucket.org/grumpytoad/stipple
+		**/
+		public static var stipple(get, null):TemplatingEngine;
+		static function get_stipple() return {
+			factory: function ( tplString ):UFTemplate {
+				var t = new stipple.Template().fromString(tplString);
+				return function (data:TemplateData) return t.execute( data.toObject() );
+			},
+			type: "stipple",
+			extensions: ["stipple","html"]
+		}
+	#end
 }
 
 /**
