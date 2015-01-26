@@ -173,10 +173,9 @@ class HttpRequest extends ufront.web.context.HttpRequest
 							var val:Dynamic = untyped __php__("$_POST[$name]");
 							if ( untyped __call__("is_array", val) ) {
 								// For each value in the array, add it to our post object.
-								var h = php.Lib.hashOfAssociativeArray( val );
-								for ( k in h.keys() ) {
-									if ( untyped __call__("is_string", val) )
-										post.add( k, h.get(k) );
+								for ( innerVal in php.Lib.hashOfAssociativeArray(val) ) {
+									if ( untyped __call__("is_string", innerVal) )
+										post.add( name, innerVal );
 									// else: Note that we could try recurse here if there's another array, but for now I'm
 									// giving ufront a rule: only single level `fruit[]` type input arrays are supported,
 									// any recursion goes beyond this, so let's not bother.
