@@ -179,7 +179,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	override function get_query()
 	{
 		if (null == query)
-			query = getHashFromString(queryString);
+			query = getMultiValueMapFromString(queryString);
 		return query;
 	}
 
@@ -192,7 +192,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 				if ( _parsed==false ) parseMultipart();
 			}
 			else {
-				post = getHashFromString(postString);
+				post = getMultiValueMapFromString(postString);
 			}
 		}
 		return post;
@@ -299,19 +299,17 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		return authorization;
 	}
 
-	static var paramPattern = ~/^([^=]+)=(.*?)$/;
-	static function getHashFromString(s:String):MultiValueMap<String>
-	{
-		var qm = new MultiValueMap();
-		for (part in s.split("&"))
-		{
-			if (!paramPattern.match(part))
-				continue;
-			qm.add(
-				StringTools.urlDecode(paramPattern.matched(1)),
-				StringTools.urlDecode(paramPattern.matched(2)));
+	static function getMultiValueMapFromString(s:String):MultiValueMap<String> {
+		var map = new MultiValueMap();
+		for (part in s.split("&")) {
+			var index = part.indexOf("=");
+			if ( index>0 ) {
+				var name = part.substr(0,index);
+				var val = part.substr(index+1);
+				map.add( name, val );
+			}
 		}
-		return qm;
+		return map;
 	}
 
 	static var _get_params_string:Dynamic;
