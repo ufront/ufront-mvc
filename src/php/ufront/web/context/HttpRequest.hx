@@ -27,7 +27,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 
 	override function get_queryString() {
 		if ( queryString==null )
-			queryString = getServerParam( 'QUERY_STRING' );
+			queryString = getServerParam( 'QUERY_STRING' ).urlDecode();
 		return queryString;
 	}
 
@@ -44,6 +44,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 			}
 			if (null == postString)
 				postString = "";
+			postString = (postString!=null) ? postString.urlDecode() : "";
 		}
 		return postString;
 	}
@@ -175,14 +176,14 @@ class HttpRequest extends ufront.web.context.HttpRequest
 								// For each value in the array, add it to our post object.
 								for ( innerVal in php.Lib.hashOfAssociativeArray(val) ) {
 									if ( untyped __call__("is_string", innerVal) )
-										post.add( name, innerVal );
+										post.add( name, StringTools.urlDecode(innerVal ));
 									// else: Note that we could try recurse here if there's another array, but for now I'm
 									// giving ufront a rule: only single level `fruit[]` type input arrays are supported,
 									// any recursion goes beyond this, so let's not bother.
 								}
 							}
 							else if ( untyped __call__("is_string", val) ) {
-								post.add( name, cast val );
+								post.add( name, StringTools.urlDecode(val));
 							}
 						}
 					}
@@ -229,7 +230,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 
 	override function get_uri() {
 		if ( uri==null ) {
-			var s = getServerParam( "REQUEST_URI" );
+			var s = getServerParam( "REQUEST_URI" ).urlDecode();
 			uri = s.split("?")[0];
 		}
 		return uri;

@@ -4,9 +4,7 @@
  */
 
 package nodejs.ufront.web.context;
-import thx.error.NotImplemented;
 import js.Node;
-import thx.error.Error;
 using StringTools;
 
 class HttpResponse extends ufront.web.context.HttpResponse {
@@ -35,7 +33,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 			res.setHeader( "Set-Cookie", cookieHeader );
 		}
 		catch ( e:Dynamic ) {
-			throw new Error( "Cannot flush cookies on response, output already sent" );
+			throw 'Cannot flush cookies on response, output already sent: $e';
 		}
 
 		// Write headers
@@ -48,7 +46,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 				res.setHeader(key, val);
 			}
 			catch ( e:Dynamic ) {
-				throw new Error( "Invalid header: '{0}: {1}', or output already sent", [key,val] );
+				throw 'Invalid header: "$key: $val", or output already sent';
 			}
 		}
 

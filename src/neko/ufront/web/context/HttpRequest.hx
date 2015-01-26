@@ -37,7 +37,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	{
 		if (null == queryString) {
 			var v = _get_params_string();
-			queryString = (v!=null) ? new String(v) : "";
+			queryString = (v!=null) ? new String(v).urlDecode() : "";
 
 			var indexOfHash = queryString.indexOf("#");
 			if (indexOfHash>-1) {
@@ -53,7 +53,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 			return "";
 		if (null == postString) {
 			var v = _get_post_data();
-			postString = (v!=null) ? new String(v) : "";
+			postString = (v!=null) ? new String(v).urlDecode() : "";
 		}
 		return postString;
 	}
@@ -90,11 +90,11 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		if ( onEndPart==null ) onEndPart = function() return Sync.of( Success(Noise) );
 
 		post = new MultiValueMap();
-		var noParts = true,
-		    isFile = false,
-		    partName = null,
-		    fileName = null,
-		    currentContent = null,
+		var noParts:Bool = true,
+		    isFile:Bool = false,
+		    partName:String = null,
+		    fileName:String = null,
+		    currentContent:String = null,
 		    callbackFutures = [],
 		    errors = [];
 
@@ -113,8 +113,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 				processCallbackResult( onEndPart() );
 			}
 			else if ( currentContent!=null ) {
-				// Sys.println( 'SET: $partName = $currentContent<br />' );
-				post.add( partName, currentContent );
+				post.add( partName, currentContent.urlDecode() );
 			}
 		}
 		function doPart( newPartName:String, newPartFilename:String ) {

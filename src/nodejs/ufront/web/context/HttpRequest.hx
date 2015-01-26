@@ -1,7 +1,6 @@
 package nodejs.ufront.web.context;
 
 import haxe.io.Bytes;
-import thx.sys.Lib;
 import ufront.web.upload.*;
 import ufront.web.context.HttpRequest.OnPartCallback;
 import ufront.web.context.HttpRequest.OnDataCallback;
@@ -11,7 +10,7 @@ import ufront.core.MultiValueMap;
 import haxe.ds.StringMap;
 import ufront.core.Sync;
 using tink.CoreApi;
-using Strings;
+using thx.core.Strings;
 using StringTools;
 
 /**
@@ -38,7 +37,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 
 	override function get_queryString() {
 		if ( queryString==null ) {
-			queryString = req.originalUrl.substr( req.originalUrl.indexOf("?")+1 );
+			queryString = req.originalUrl.substr( req.originalUrl.indexOf("?")+1 ).urlDecode();
 			var hashIndex = queryString.indexOf("#");
 			if ( hashIndex>-1 )
 				queryString = queryString.substr( 0,hashIndex+1 );
