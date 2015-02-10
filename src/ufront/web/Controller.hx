@@ -98,7 +98,7 @@ class Controller
 
 		If you want to run some code after this has been injected, you can use for example: `@post public function doAuthCheck() { context.auth.requirePermission(AccessAdminArea); }`.
 	**/
-	@inject public var context(default,null):HttpContext;
+	@inject public var context:HttpContext;
 	
 	/**
 		The Base URI that was used to access this controller.
