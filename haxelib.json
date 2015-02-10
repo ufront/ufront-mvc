@@ -6,9 +6,11 @@
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
   "releasenote": "
-POST and GET params are now URL decoded internally, and multiple POST params with the same name on a PHP multipart request now work correctly.
+Improvements to TestUtils, and add natural language test helpers.
+Small changes to HttpContext and ViewResult to improve unit testing.
+Small change to ufront parameter passing to not use regular expressions when String.split() will do.
 ",
-  "version": "1.0.0-rc.13",
+  "version": "1.0.0-rc.14",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
     "random": "",
