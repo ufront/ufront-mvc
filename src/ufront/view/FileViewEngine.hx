@@ -15,18 +15,22 @@ using haxe.io.Path;
 **/
 class FileViewEngine extends UFViewEngine {
 
+	public function new() {
+		super();
+	}
+
 	/** The script directory for your app. This value should be injected. **/
 	@inject("scriptDirectory") public var scriptDir:String;
 
 	/** The path to your views (absolute, or relative to the script directory). This value should be injected. **/
-	@inject("viewPath") public var path(default,null):String;
+	@inject("viewPath") public var path:String;
 
 	/** Is `path` absolute (true) or relative to `scriptDir` (false)? This value is set in the constructor. **/
 	public var isPathAbsolute(get,null):Bool;
 
 	/** The absolute path to your views.  Basically `$scriptDir$path/` (or `$path/` if path is absolute). **/
 	public var viewDirectory(get,null):String;
-	function get_viewDirectory() return isPathAbsolute ? path.addTrailingSlash() : scriptDir+path.addTrailingSlash();
+	function get_viewDirectory() return isPathAbsolute ? path.addTrailingSlash() : scriptDir.addTrailingSlash()+path.addTrailingSlash();
 
 	/**
 		Check if a file exists, and read a file from the file system using the synchronous `sys.FileSystem` api from the standard library.

@@ -82,22 +82,25 @@ class TestUtils
 			return new HttpContext( request, response, injector, session, auth, [] );
 		}
 		/**
-			Test a route by setting up a UfrontApplication and executing the request.
+			Test a route in a UfrontApplication or a Controller by executing the request.
 
-			If the dispatch is successful, the UfrontApplication is returned as a Success so that you can analyze it.
+			If the app is supplied, the request will be executed with the given context.
+			If only the controller is supplied, a UfrontApplication will be instantiated.
+			It is recommended that your app have `disableBrowserTrace: true` and `errorHandlers: []` in it's configuration.
 
+			If the route is executed successfully, the UfrontApplication and HttpContext are returned as a Success so that you can analyze it.
 			If an error is encountered, the exception is returned as a Failure.
 		**/
-		public static function testRoute( context:HttpContext, controller:Class<Controller> ):RouteTestOutcome {
-			var ufrontConf:UfrontConfiguration = {
-				indexController: controller,
-				urlRewrite: true,
-				basePath: "/",
-				logFile: null,
-				disableBrowserTrace: true,
-				errorHandlers: []
+		public static function testRoute( context:HttpContext, ?app:UfrontApplication, ?controller:Class<Controller> ):RouteTestOutcome {
+			if ( app==null ) {
+				var ufrontConf:UfrontConfiguration = {
+					indexController: controller,
+					disableBrowserTrace: true,
+					errorHandlers: [],
+				}
+				app = new UfrontApplication( ufrontConf );
 			}
-			var app = new UfrontApplication( ufrontConf );
+			context.injector.parentInjector = app.injector;
 			return app.execute( context ).map( function(outcome) return switch outcome {
 				case Success(_): return Success( { app: app, context: context } );
 				case Failure(httpError): return Failure( httpError );
