@@ -222,6 +222,11 @@ class ViewResult extends ActionResult {
 	/** An explicit string to use as the layout template, rather than loading the layout through our UFViewEngine. **/
 	var layoutFromString:UFTemplate;
 
+	// TODO: refactor execute to use these values instead of a mix of viewPath, templateFromString, layoutFromString, layout etc.
+	public var templateSource(default,null):TemplateSource;
+	public var layoutSource(default,null):TemplateSource;
+	public var finalOutput(default,null):String;
+
 	//
 	// Member Functions
 	//
@@ -275,13 +280,17 @@ class ViewResult extends ActionResult {
 		if (templatingEngine==null)
 			templatingEngine = TemplatingEngines.haxe;
 		
-		this.templateFromString = 
-			if (template!=null) templatingEngine.factory( template );
-			else null;
+			if (template!=null) {
+				this.templateFromString = templatingEngine.factory( template );
+				this.templateSource = FromString( template );
+			}
+			else this.templateFromString = null;
 		
-		this.layoutFromString = 
-			if (layout!=null) templatingEngine.factory( layout );
-			else null;
+			if (layout!=null) {
+				this.layoutFromString = templatingEngine.factory( layout );
+				this.layoutSource = FromString( layout );
+			}
+			else this.layoutFromString = null;
 		
 		return this;
 	}
@@ -392,16 +401,25 @@ class ViewResult extends ActionResult {
 			if ( layout==null )
 				layout = (layoutPath!=null) ? Some(new Pair(layoutPath,null)) : None;
 			
-			layoutReady = switch layout {
-				case Some( layoutData ): viewEngine.getTemplate( layoutData.a, layoutData.b );
-				case None: Future.sync( Success(null) );
+			switch layout {
+				case Some( layoutData ):
+					layoutSource = FromEngine( layoutData.a );
+					layoutReady = viewEngine.getTemplate( layoutData.a, layoutData.b );
+				case None:
+					layoutSource = None;
+					layoutReady = Future.sync( Success(null) );
 			}
 		}
 
 		// Get the template future
-		var templateReady = 
-			if ( templateFromString!=null ) Future.sync( Success(templateFromString) )
-			else viewEngine.getTemplate( viewPath, templatingEngine );
+		var templateReady:Surprise<UFTemplate,Error>;
+		if ( templateFromString!=null ) {
+			templateReady = Future.sync( Success(templateFromString) );
+		}
+		else {
+			templateSource = FromEngine( viewPath );
+			templateReady = viewEngine.getTemplate( viewPath, templatingEngine );
+		}
 
 		// Once both futures have loaded, combine them, and then map them, executing the future templates
 		// and writing them to the output, and then completing the Future once done, or returning a Failure
@@ -448,6 +466,7 @@ class ViewResult extends ActionResult {
 				// Write to the response
 				actionContext.httpContext.response.contentType = "text/html";
 				actionContext.httpContext.response.write( finalOut );
+				this.finalOutput = finalOut;
 
 				return Success( Noise );
 			}
@@ -458,4 +477,10 @@ class ViewResult extends ActionResult {
 	function error( reason:String, data:Dynamic, ?pos:haxe.PosInfos ) {
 		return Failure( HttpError.internalServerError(reason,data,pos) );
 	}
+}
+
+enum TemplateSource {
+	FromString( str:String );
+	FromEngine( path:String );
+	None;
 }
