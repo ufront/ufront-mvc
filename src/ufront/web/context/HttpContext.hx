@@ -86,14 +86,14 @@ class HttpContext
 			try this.session = injector.getInstance( UFHttpSession )
 			catch(e:Dynamic) ufLog('Failed to load UFHttpSession: $e. Using VoidSession instead.');
 		if ( this.session==null ) this.session = new VoidSession();
-		injector.inject( UFHttpSession, this.session );
+		inject( UFHttpSession, this.session );
 
 		if ( auth!=null ) this.auth = auth;
 		if ( this.auth==null )
 			try this.auth = injector.getInstance( UFAuthHandler )
 			catch(e:Dynamic) ufLog('Failed to load UFAuthHandler: $e. Using NobodyAuthHandler instead.');
 		if ( this.auth==null ) this.auth = new NobodyAuthHandler();
-		injector.inject( UFAuthHandler, this.auth );
+		inject( UFAuthHandler, this.auth );
 	}
 
 	/**
@@ -261,6 +261,18 @@ class HttpContext
 		return
 			if ( session!=null ) session.commit();
 			else Future.sync( Success(Noise) );
+	}
+
+	/**
+		Shortcut to map a class or value into `injector`.
+
+		See `ufront.core.InjectorTools.inject()` for details on how the injections are applied.
+
+		This method is chainable.
+	**/
+	public inline function inject<T>( cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton:Bool=false, ?named:String ):HttpContext {
+		injector.inject( cl, val, cl2, singleton, named );
+		return this;
 	}
 
 	/**
