@@ -242,6 +242,78 @@ class TestUtils
 	#end
 }
 
+/**
+	Let's you write powerful tests in a fairly natural language.
+
+	```haxe
+	import ufront.test.TestUtils.*;
+	using ufront.test.TestUtils;
+	```
+
+	This then let's you write tests like:
+
+	```haxe
+	whenIVisit("/home")
+	.withTheParameters([ "Name"=>"Jason" ])
+	```
+**/
+class NaturalLanguageTests {
+	#if (utest && mockatoo)
+		/** An alias for `TestUtils.mockHttpContext` **/
+		public static inline function whenIVisit( uri:String, ?method:String, ?params:MultiValueMap<String>, ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser> ):HttpContext
+			return TestUtils.mockHttpContext( uri, method, params, injector, request, response, session, auth );
+
+		/** Tell the Mock Context to use this session handler for `context.request.session` **/
+		public static inline function withTheSessionHandler( context:HttpContext, session:UFHttpSession ):HttpContext {
+			@:privateAccess context.session = session;
+			return context;
+		}
+
+		/** Tell the Mock Context to use this auth handler for `context.request.auth` **/
+		public static inline function withTheAuthHandler( context:HttpContext, auth:UFAuthHandler<UFAuthUser> ):HttpContext {
+			@:privateAccess context.auth = auth;
+			return context;
+		}
+
+		/** An alias for `context.inject` **/
+		public static inline function andInject<T>( context:HttpContext, cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton:Bool=false, ?named:String ):HttpContext {
+			return context.inject( cl, val, cl2, singleton, named );
+		}
+
+		/** An alias for `TestUtils.testRoute` **/
+		public static inline function onTheApp( context:HttpContext, app:UfrontApplication ):RouteTestOutcome
+			return TestUtils.testRoute( context, app );
+
+		/** An alias for `TestUtils.testRoute` **/
+		public static inline function onTheController( context:HttpContext, controller:Class<Controller> ):RouteTestOutcome
+			return TestUtils.testRoute( context, controller );
+
+		/** An alias for `TestUtils.assertSuccess` **/
+		public static inline function itShouldLoad( result:RouteTestOutcome, ?controller:Class<Dynamic>, ?action:String, ?args:Array<Dynamic>, ?p:PosInfos ):Future<RouteTestResult>
+			return TestUtils.assertSuccess( result, controller, action, args, p );
+
+		/** An alias for `TestUtils.assertFailure` **/
+		public static inline function itShouldFail( result:RouteTestOutcome, ?p:PosInfos ):Future<Error>
+			return TestUtils.assertFailure( result, p );
+
+		/** An alias for `TestUtils.assertFailure` **/
+		public static inline function itShouldFailWith( result:RouteTestOutcome, ?code:Int, ?msg:String, ?data:Dynamic, ?p:PosInfos ):Future<Error>
+			return TestUtils.assertFailure( result, code, msg, data, p );
+
+		/** An alias for `TestUtils.checkResult` **/
+		public static inline function itShouldReturn<T:ActionResult>( resultFuture:Future<RouteTestResult>, expectedResultType:Class<T>, ?check:T->Void, ?p:PosInfos ):Future<RouteTestResult>
+			return TestUtils.checkResult( resultFuture, expectedResultType, check, p );
+
+		/** An alias for `TestUtils.responseShouldBe` **/
+		public static inline function theResponseShouldBe( resultFuture:Future<RouteTestResult>, expectedResponse:String, ?p:PosInfos ):Future<RouteTestResult>
+			return TestUtils.responseShouldBe( resultFuture, expectedResponse, p );
+
+		/** Call a `done()` method or similar once the test has completed **/
+		public static inline function andFinishWith( future:Future<Dynamic>, ?done:Callback<Dynamic> )
+			future.handle( done );
+	#end
+}
+
 typedef RouteTestResult = {
 	app: UfrontApplication,
 	context: HttpContext
