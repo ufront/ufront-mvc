@@ -316,13 +316,12 @@ class ViewResult extends ActionResult {
 		var viewEngine = try actionContext.httpContext.injector.getInstance( UFViewEngine ) catch (e:Dynamic) null;
 		if (viewEngine==null) return Sync.httpError( "Failed to find a UFViewEngine in ViewResult.executeResult(), please make sure that one is made available in your application's injector" );
 
-		
 		// Combine the data and the helpers
 		var combinedData = TemplateData.fromMany( [globalValues, helpers, data] );
 		var controller = Std.instance( actionContext.controller, Controller );
 		if ( controller!=null && combinedData.exists('baseUri')==false )
 			combinedData.set( 'baseUri', controller.baseUri );
-		
+
 		// Get the view folder, either from @viewFolder("...") meta or from the controller name.
 		var controllerCls = Type.getClass( actionContext.controller );
 		var viewFolderMeta = Meta.getType( controllerCls ).viewFolder;
@@ -358,7 +357,7 @@ class ViewResult extends ActionResult {
 				action = action.substr(2);
 			viewPath = action.charAt(0).toLowerCase() + action.substr(1);
 		}
-		
+
 		// Figure out which layout to use.
 		var layoutPath:String = null;
 		if ( layout==null ) {
@@ -456,7 +455,7 @@ class ViewResult extends ActionResult {
 		return done;
 	}
 
-	function error( reason:String, data:Dynamic ) {
-		return Failure( HttpError.internalServerError(reason,data) );
+	function error( reason:String, data:Dynamic, ?pos:haxe.PosInfos ) {
+		return Failure( HttpError.internalServerError(reason,data,pos) );
 	}
 }
