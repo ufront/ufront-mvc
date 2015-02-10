@@ -52,7 +52,7 @@ class TestUtils
 			* Session uses `ufront.web.session.VoidSession` as a default mock object, auth uses `ufront.auth.YesBossAuthHandler` by default.
 			* `setUrlFilters` and `generateUri` call the real methods.
 		**/
-		public static function mockHttpContext( uri:String, ?method:String, ?params:MultiValueMap<String>, ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser> )
+		public static function mockHttpContext( uri:String, ?method:String, ?params:MultiValueMap<String>, ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser> ):HttpContext
 		{
 			// Check the supplied arguments
 			NullArgument.throwIfNull( uri );
@@ -62,7 +62,7 @@ class TestUtils
 			if ( request==null ) {
 				request = HttpRequest.mock();
 				request.uri.returns( uri );
-				request.scriptDirectory.returns( "." );
+				request.scriptDirectory.returns( "./" );
 				request.params.returns( (params!=null) ? params : new MultiValueMap() );
 				request.httpMethod.returns( (method!=null) ? method.toUpperCase() : "GET" );
 				request.clientHeaders.returns( new MultiValueMap() );
@@ -194,7 +194,7 @@ class TestUtils
 			var error = "/home/".mockHttpContext().testRoute().assertFailure(404);
 			```
 		**/
-		public static function assertFailure( result:RouteTestOutcome, ?code:Null<Int>, ?p:PosInfos ):Future<Error> {
+		public static function assertFailure( result:RouteTestOutcome, ?code:Null<Int>, ?message:Null<String>, ?innerData:Null<Dynamic>, ?p:PosInfos ):Future<Error> {
 			var doneCallback = Assert.createAsync(function() {});
 			var future = result.map(function processOutcome(outcome) {
 				switch outcome {
@@ -206,6 +206,11 @@ class TestUtils
 						if ( code!=null )
 							if ( code!=failure.code )
 								Assert.fail( 'Failure code [${failure.code}] was not equal to expected failure code [$code]', p );
+						if ( message!=null )
+							if ( message!=failure.message )
+								Assert.fail( 'Failure message [${failure.message}] was not equal to expected failure message [$message]', p );
+						if ( innerData!=null )
+							Assert.same( innerData, failure.data, true, 'Failure data [${failure.data}] was not equal to expected failure data [$innerData]', p );
 						Assert.isTrue(true);
 						doneCallback();
 					return failure;
