@@ -81,6 +81,7 @@ class TestUtils
 			// Build the HttpContext with our mock objects
 			return new HttpContext( request, response, injector, session, auth, [] );
 		}
+
 		/**
 			Test a route in a UfrontApplication or a Controller by executing the request.
 
@@ -91,7 +92,9 @@ class TestUtils
 			If the route is executed successfully, the UfrontApplication and HttpContext are returned as a Success so that you can analyze it.
 			If an error is encountered, the exception is returned as a Failure.
 		**/
-		public static function testRoute( context:HttpContext, ?app:UfrontApplication, ?controller:Class<Controller> ):RouteTestOutcome {
+		public static function testRoute( context:HttpContext, ?app:UfrontApplication, ?controller:Class<Controller>, ?p:PosInfos ):RouteTestOutcome {
+			if ( app==null && controller==null )
+				throw new Error('Either app or controller must be supplied to testRoute', p);
 			if ( app==null ) {
 				var ufrontConf:UfrontConfiguration = {
 					indexController: controller,
@@ -132,9 +135,9 @@ class TestUtils
 			var app = "/home/".mockHttpContext().testRoute().assertSuccess(HomeController, "doDefault", []);
 			```
 		**/
-		public static function assertSuccess( result:RouteTestOutcome, ?controller:Class<Dynamic>, ?action:String, ?args:Array<Dynamic>, ?p:PosInfos ):Future<RouteTestResult> {
+		public static function assertSuccess( routeOutcome:RouteTestOutcome, ?controller:Class<Dynamic>, ?action:String, ?args:Array<Dynamic>, ?p:PosInfos ):RouteTestOutcome {
 			var doneCallback = Assert.createAsync( function() {} );
-			var future = result.map(function (outcome) switch outcome {
+			routeOutcome.handle(function (outcome) switch outcome {
 				case Success( successResult ):
 					var ctx = successResult.context.actionContext;
 					Assert.notNull( ctx );
@@ -165,16 +168,12 @@ class TestUtils
 						}
 					}
 					doneCallback();
-					return successResult;
-
 				case Failure( f ):
 					var exceptionStack = haxe.CallStack.toString(haxe.CallStack.exceptionStack());
 					Assert.fail( 'Expected routing to succeed, but it did not (failed with error $f, ${f.data} ${exceptionStack})', p );
 					doneCallback();
-					return null;
 			});
-			future.handle( function(_) {} );
-			return future;
+			return routeOutcome;
 		}
 
 		/**
@@ -194,14 +193,13 @@ class TestUtils
 			var error = "/home/".mockHttpContext().testRoute().assertFailure(404);
 			```
 		**/
-		public static function assertFailure( result:RouteTestOutcome, ?code:Null<Int>, ?message:Null<String>, ?innerData:Null<Dynamic>, ?p:PosInfos ):Future<Error> {
+		public static function assertFailure( routeOutcome:RouteTestOutcome, ?code:Null<Int>, ?message:Null<String>, ?innerData:Null<Dynamic>, ?p:PosInfos ):RouteTestOutcome {
 			var doneCallback = Assert.createAsync(function() {});
-			var future = result.map(function processOutcome(outcome) {
+			routeOutcome.handle(function processOutcome(outcome) {
 				switch outcome {
 					case Success( _ ):
 						Assert.fail( 'Expected routing to fail, but it was a success', p );
 						doneCallback();
-						return null;
 					case Failure( failure ):
 						if ( code!=null )
 							if ( code!=failure.code )
@@ -213,31 +211,35 @@ class TestUtils
 							Assert.same( innerData, failure.data, true, 'Failure data [${failure.data}] was not equal to expected failure data [$innerData]', p );
 						Assert.isTrue(true);
 						doneCallback();
-					return failure;
 				}
 			});
-			future.handle( function(_) {} );
-			return future;
+			return routeOutcome;
 		}
 
-		public static function responseShouldBe( resultFuture:Future<RouteTestResult>, expectedResponse:String, ?p:PosInfos ):Future<RouteTestResult> {
-			resultFuture.handle( function(result) {
-				Assert.equals( expectedResponse, result.context.response.getBuffer() );
+		public static function responseShouldBe( routeOutcome:RouteTestOutcome, expectedResponse:String, ?p:PosInfos ):RouteTestOutcome {
+			routeOutcome.handle( function(outcome) switch outcome {
+				case Success(result):
+					Assert.equals( expectedResponse, result.context.response.getBuffer() );
+				case Failure(_):
+					// TODO: decide if we should assert a failure here, especially if we called assertFailure earlier.
 			});
-			return resultFuture;
+			return routeOutcome;
 		}
 
-		public static function checkResult<T:ActionResult>( resultFuture:Future<RouteTestResult>, expectedResultType:Class<T>, ?check:T->Void, ?p:PosInfos ):Future<RouteTestResult> {
-			resultFuture.handle( function(result) {
-				var res = result.context.actionContext.actionResult;
-				if ( Std.is(res,expectedResultType)==false ) {
-					Assert.fail( 'Expected result to be ${Type.getClassName(expectedResultType)}, but it was ${Type.getClassName(Type.getClass(res))}', p );
-				}
-				else if ( check!=null ) {
-					check( cast res );
-				}
+		public static function checkResult<T:ActionResult>( routeOutcome:RouteTestOutcome, expectedResultType:Class<T>, ?check:T->Void, ?p:PosInfos ):RouteTestOutcome {
+			routeOutcome.handle( function(outcome) switch outcome {
+				case Success(result):
+					var res = result.context.actionContext.actionResult;
+					if ( Std.is(res,expectedResultType)==false ) {
+						Assert.fail( 'Expected result to be ${Type.getClassName(expectedResultType)}, but it was ${Type.getClassName(Type.getClass(res))}', p );
+					}
+					else if ( check!=null ) {
+						check( cast res );
+					}
+				case Failure(_):
+					// TODO: decide if we should assert a failure here, especially if we called assertFailure earlier.
 			});
-			return resultFuture;
+			return routeOutcome;
 		}
 	#end
 }
@@ -281,31 +283,31 @@ class NaturalLanguageTests {
 		}
 
 		/** An alias for `TestUtils.testRoute` **/
-		public static inline function onTheApp( context:HttpContext, app:UfrontApplication ):RouteTestOutcome
-			return TestUtils.testRoute( context, app );
+		public static inline function onTheApp( context:HttpContext, app:UfrontApplication, ?p:PosInfos ):RouteTestOutcome
+			return TestUtils.testRoute( context, app, p );
 
 		/** An alias for `TestUtils.testRoute` **/
-		public static inline function onTheController( context:HttpContext, controller:Class<Controller> ):RouteTestOutcome
-			return TestUtils.testRoute( context, controller );
+		public static inline function onTheController( context:HttpContext, controller:Class<Controller>, ?p:PosInfos ):RouteTestOutcome
+			return TestUtils.testRoute( context, controller, p );
 
 		/** An alias for `TestUtils.assertSuccess` **/
-		public static inline function itShouldLoad( result:RouteTestOutcome, ?controller:Class<Dynamic>, ?action:String, ?args:Array<Dynamic>, ?p:PosInfos ):Future<RouteTestResult>
+		public static inline function itShouldLoad( result:RouteTestOutcome, ?controller:Class<Dynamic>, ?action:String, ?args:Array<Dynamic>, ?p:PosInfos ):RouteTestOutcome
 			return TestUtils.assertSuccess( result, controller, action, args, p );
 
 		/** An alias for `TestUtils.assertFailure` **/
-		public static inline function itShouldFail( result:RouteTestOutcome, ?p:PosInfos ):Future<Error>
+		public static inline function itShouldFail( result:RouteTestOutcome, ?p:PosInfos ):RouteTestOutcome
 			return TestUtils.assertFailure( result, p );
 
 		/** An alias for `TestUtils.assertFailure` **/
-		public static inline function itShouldFailWith( result:RouteTestOutcome, ?code:Int, ?msg:String, ?data:Dynamic, ?p:PosInfos ):Future<Error>
+		public static inline function itShouldFailWith( result:RouteTestOutcome, ?code:Int, ?msg:String, ?data:Dynamic, ?p:PosInfos ):RouteTestOutcome
 			return TestUtils.assertFailure( result, code, msg, data, p );
 
 		/** An alias for `TestUtils.checkResult` **/
-		public static inline function itShouldReturn<T:ActionResult>( resultFuture:Future<RouteTestResult>, expectedResultType:Class<T>, ?check:T->Void, ?p:PosInfos ):Future<RouteTestResult>
+		public static inline function itShouldReturn<T:ActionResult>( resultFuture:RouteTestOutcome, expectedResultType:Class<T>, ?check:T->Void, ?p:PosInfos ):RouteTestOutcome
 			return TestUtils.checkResult( resultFuture, expectedResultType, check, p );
 
 		/** An alias for `TestUtils.responseShouldBe` **/
-		public static inline function theResponseShouldBe( resultFuture:Future<RouteTestResult>, expectedResponse:String, ?p:PosInfos ):Future<RouteTestResult>
+		public static inline function theResponseShouldBe( resultFuture:RouteTestOutcome, expectedResponse:String, ?p:PosInfos ):RouteTestOutcome
 			return TestUtils.responseShouldBe( resultFuture, expectedResponse, p );
 
 		/** Call a `done()` method or similar once the test has completed **/
