@@ -162,8 +162,9 @@ class HttpApplication
 	public function init():Surprise<Noise,Error> {
 		if ( modulesReady==null ) {
 			var futures = [];
-			for ( module in getModulesThatRequireInit() )
+			for ( module in getModulesThatRequireInit() ) {
 				futures.push( module.init(this) );
+			}
 			modulesReady = Future.ofMany( futures ).map( function(outcomes:Array<Outcome<Noise,Error>>) {
 				for (o in outcomes) {
 					switch o {
