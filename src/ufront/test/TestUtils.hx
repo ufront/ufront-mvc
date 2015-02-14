@@ -160,7 +160,7 @@ class TestUtils
 
 					// If an args array was specified, check length and args match.
 					if ( args!=null ) {
-						Assert.equals( args.length, ctx.args.length, 'Expected ${args.length} arguments for MVC action, but only had ${ctx.args.length}' );
+						Assert.equals( args.length, ctx.args.length, 'Expected ${args.length} arguments for MVC action, but had ${ctx.args.length}' );
 						for ( i in 0...args.length ) {
 							var expected = args[i];
 							var actual = ctx.args[i];
