@@ -261,9 +261,21 @@ class TestUtils
 **/
 class NaturalLanguageTests {
 	#if (utest && mockatoo)
+
 		/** An alias for `TestUtils.mockHttpContext` **/
 		public static inline function whenIVisit( uri:String, ?method:String, ?params:MultiValueMap<String>, ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser> ):HttpContext
 			return TestUtils.mockHttpContext( uri, method, params, injector, request, response, session, auth );
+
+		/**
+			This just takes and returns a MultiValueMap. It's only purpose is for natural language testing.
+			`whenISubmit([ "name"=>"Jason" ]).to( "/signup" )`
+		**/
+		public static inline function whenISubmit( params:MultiValueMap<String> ):MultiValueMap<String>
+			return params;
+
+		/** Turn a MultiValueMap into a POST request using `TestUtils.mockHttpContext`. Should be used like `whenISubmit(params).to(postURL)`. **/
+		public static inline function to( params:MultiValueMap<String>, postAddress:String ):HttpContext
+			return whenIVisit( postAddress, "POST", params );
 
 		/** Tell the Mock Context to use this session handler for `context.request.session` **/
 		public static inline function withTheSessionHandler( context:HttpContext, session:UFHttpSession ):HttpContext {
@@ -289,6 +301,8 @@ class NaturalLanguageTests {
 		/** An alias for `TestUtils.testRoute` **/
 		public static inline function onTheController( context:HttpContext, controller:Class<Controller>, ?p:PosInfos ):RouteTestOutcome
 			return TestUtils.testRoute( context, controller, p );
+
+		// TODO: Create macro for: `itShouldExecute( ProjectController.project("ufront","1.0.0") )`.
 
 		/** An alias for `TestUtils.assertSuccess` **/
 		public static inline function itShouldLoad( result:RouteTestOutcome, ?controller:Class<Dynamic>, ?action:String, ?args:Array<Dynamic>, ?p:PosInfos ):RouteTestOutcome
