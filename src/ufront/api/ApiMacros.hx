@@ -167,7 +167,12 @@ class ApiMacros
 						var returnType = fn.ret;
 						var returnFlags = getResultWrapFlagsForReturnType( returnType, member.pos );
 						var int = returnFlags.toInt();
-						member.addMeta( "returnType", [macro $v{int}] );
+						// If the metadata does not already exist, overwrite it, rather than add it.
+						var metaParams = [macro $v{int}];
+						switch member.extractMeta("returnType") {
+							case Success(metaEntry): metaEntry.params = metaParams;
+							case Failure(_): member.addMeta( "returnType", metaParams );
+						}
 					default:
 				}
 			}
