@@ -49,7 +49,7 @@ __How does it know to look there?__
 
 1. "/view/" is your viewPath, set in `UfrontConfiguration.viewPath`
 2. "admin/" is guessed based on the name "AdminController".  We lower-case the first letter, and ignore the "Controller" part of the name.  Another example is "BlogPostController" or just "BlogPost" looking for views in "/blogPost/".
-3. "dashboard.html" and "takePhoto.html" are guessed based on the action name / method name.  If the name begins with "do", we ignore those two letters.  We also make sure the first letter is lower-case.
+3. "dashboard.html" and "takePhoto.html" are guessed based on the action name / method name.  If the name begins with "do" followed by an uppercase letter, we ignore the "do" letters.  We also make sure the first letter is lower-case.
 
 __How do we change it?__
 
@@ -362,7 +362,9 @@ class ViewResult extends ActionResult {
 		if ( viewPath==null ) {
 			// Otherwise, if viewPath is still null, use the action name to guess a reasonable template.
 			var action = actionContext.action;
-			if ( action.startsWith("do") )
+			var startsWithDo = action.startsWith("do");
+			var thirdCharUpperCase = action.charAt(2)==action.charAt(2).toUpperCase();
+			if ( startsWithDo && thirdCharUpperCase )
 				action = action.substr(2);
 			viewPath = action.charAt(0).toLowerCase() + action.substr(1);
 		}
