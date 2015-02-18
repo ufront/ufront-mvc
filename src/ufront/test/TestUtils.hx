@@ -265,11 +265,16 @@ class NaturalLanguageTests {
 			return TestUtils.mockHttpContext( uri, method, params, injector, request, response, session, auth );
 
 		/**
-			This just takes and returns a MultiValueMap. It's only purpose is for natural language testing.
-			`whenISubmit([ "name"=>"Jason" ]).to( "/signup" )`
+			A helper to add parameters to your mock request.
+			`whenIVist("/search").withTheParams([ "q"=>"search query"])`
 		**/
-		public static inline function whenISubmit( params:MultiValueMap<String> ):MultiValueMap<String>
-			return params;
+		public static function withTheParams( context:HttpContext, params:MultiValueMap<String> ):HttpContext {
+			for ( key in params.keys() ) {
+				for ( val in params.getAll(key) )
+					context.request.params.add( key, val );
+			}
+			return context;
+		}
 
 		/** Turn a MultiValueMap into a POST request using `TestUtils.mockHttpContext`. Should be used like `whenISubmit(params).to(postURL)`. **/
 		public static inline function to( params:MultiValueMap<String>, postAddress:String ):HttpContext
