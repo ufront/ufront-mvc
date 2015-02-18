@@ -230,10 +230,8 @@ class TestUtils
 			routeOutcome.handle( function(outcome) switch outcome {
 				case Success(result):
 					var res = result.context.actionContext.actionResult;
-					if ( Std.is(res,expectedResultType)==false ) {
-						Assert.fail( 'Expected result to be ${Type.getClassName(expectedResultType)}, but it was ${Type.getClassName(Type.getClass(res))}', p );
-					}
-					else if ( check!=null ) {
+					Assert.is( res, expectedResultType, 'Expected result to be ${Type.getClassName(expectedResultType)}, but it was ${Type.getClassName(Type.getClass(res))}', p );
+					if ( check!=null && Std.is(res,expectedResultType) ) {
 						check( cast res );
 					}
 				case Failure(_):
