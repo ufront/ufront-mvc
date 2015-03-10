@@ -273,10 +273,30 @@ class HttpApplication
 
 		httpContext.setUrlFilters( urlFilters );
 
-		var reqMidModules = HttpApplicationMacros.prepareModules(requestMiddleware,"requestIn");
-		var reqHandModules = HttpApplicationMacros.prepareModules(requestHandlers,"handleRequest");
-		var resMidModules = HttpApplicationMacros.prepareModules(responseMiddleware,"responseOut");
-		var logHandModules = HttpApplicationMacros.prepareModules(logHandlers,"log",[_,messages]);
+		var reqMidModules = requestMiddleware.map(
+			function(m) return new Pair(
+				m.requestIn.bind(),
+				HttpError.fakePosition( m, "requestIn", [] )
+			)
+		);
+		var reqHandModules = requestHandlers.map(
+			function(m) return new Pair(
+				m.handleRequest.bind(),
+				HttpError.fakePosition( m, "requestIn", [] )
+			)
+		);
+		var resMidModules = responseMiddleware.map(
+			function(m) return new Pair(
+				m.responseOut.bind(),
+				HttpError.fakePosition( m, "requestIn", [] )
+			)
+		);
+		var logHandModules = logHandlers.map(
+			function(m) return new Pair(
+				m.log.bind(_,messages),
+				HttpError.fakePosition( m, "log", ['httpContext','appMessages'] )
+			)
+		);
 
 		// Here `>>` does a Future flatMap, so each call to `executeModules()` returns a Future, once that Future is done, it does the next `executeModules()`.
 		// The final future returned is for once the `flush()` call has completed, which will happen once all the modules have finished.
@@ -363,9 +383,24 @@ class HttpApplication
 	function handleError( err:Error, ctx:HttpContext, doneTrigger:FutureTrigger<Outcome<Noise,Error>> ):Void {
 		if ( !ctx.completion.has(CErrorHandlersComplete) ) {
 
-			var errHandlerModules = HttpApplicationMacros.prepareModules(errorHandlers,"handleError",[err]);
-			var resMidModules = HttpApplicationMacros.prepareModules(responseMiddleware,"responseOut");
-			var logHandModules = HttpApplicationMacros.prepareModules(logHandlers,"log",[_,messages]);
+			var errHandlerModules = errorHandlers.map(
+				function(m) return new Pair(
+					m.handleError.bind(err),
+					HttpError.fakePosition( m, "handleError", [err.toString()] )
+				)
+			);
+			var resMidModules = responseMiddleware.map(
+				function(m) return new Pair(
+					m.responseOut.bind(),
+					HttpError.fakePosition( m, "requestIn", [] )
+				)
+			);
+			var logHandModules = logHandlers.map(
+				function(m) return new Pair(
+					m.log.bind(_,messages),
+					HttpError.fakePosition( m, "log", ['httpContext','appMessages'] )
+				)
+			);
 
 			var allDone =
 				executeModules( errHandlerModules, ctx, CErrorHandlersComplete ) >>
@@ -436,7 +471,7 @@ class HttpApplication
 			app.use( new js.npm.connect.Static('.') );
 			app.use( new js.npm.connect.BodyParser() );
 			app.use( function(req:js.npm.express.Request,res:js.npm.express.Response,next:?String->Void) {
-				var context:HttpContext = 
+				var context:HttpContext =
 					if ( pathToContentDir!=null ) HttpContext.createNodeJSContext( req, res, urlFilters, pathToContentDir )
 					else HttpContext.createNodeJSContext( req, res, urlFilters );
 				this.execute( context ).handle( function(result) switch result {
@@ -447,18 +482,18 @@ class HttpApplication
 			app.listen( port );
 		}
 	#end
-	
+
 	/**
 		Use `neko.Web.cacheModule` to speed up requests if using neko and not using `-debug`.
-		
+
 		Using `cacheModule` will cause your app to execute normally on the first load, but subsequent loads will:
-		
+
 		- Keep the module loaded
 		- Keep static variables initialised
 		- Skip straight to our `executeRequest` function for each new request
-		
+
 		A few things to note:
-		
+
 		- This will have no effect on platforms other than Neko.
 		- This will have no effect if you compile with `-debug`.
 		- If you have multiple simultaneous requests, mod_neko may load up several instances of the module, and keep all of them cached, and pick one for each request.
