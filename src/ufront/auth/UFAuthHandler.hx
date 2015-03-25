@@ -77,6 +77,9 @@ interface UFAuthHandler<T:UFAuthUser>
 	/** A String representation, usually just the name of the AuthHandler class, and possibly the current user. **/
 	function toString():String;
 
+	/** Type this handler as `UFAuthHandler<UFAuthUser>` to avoid variance issues. **/
+	function asAuthHandler():UFAuthHandler<UFAuthUser>;
+
 	/**
 		The currently logged in user.  Will be null if no user is logged in.
 	**/

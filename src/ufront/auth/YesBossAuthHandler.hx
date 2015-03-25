@@ -36,6 +36,8 @@ class YesBossAuthHandler implements UFAuthHandler<UFAuthUser>
 
 	public function toString() return "YesBossAuthHandler";
 
+	public function asAuthHandler() return this;
+
 	public var currentUser(get,never):Null<UFAuthUser>;
 	function get_currentUser() return new BossUser();
 }
