@@ -65,6 +65,24 @@ class SysUtil {
 		}
 
 		/**
+			Delete a directory and all of it's contents.
+		**/
+		public static function recursiveDelete( dir:String ):Void {
+			if ( FileSystem.exists(dir) ) {
+				for ( file in FileSystem.readDirectory(dir) ) {
+					var filePath = dir.addTrailingSlash()+file;
+					if ( FileSystem.isDirectory( filePath ) ) {
+						recursiveDelete( filePath );
+					}
+					else {
+						FileSystem.deleteFile( filePath );
+					}
+				}
+				FileSystem.deleteDirectory( dir );
+			}
+		}
+
+		/**
 			Run a command and get the command output.
 
 			If the command returns an exit code other than 0, it will throw the console output.
