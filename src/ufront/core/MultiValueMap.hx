@@ -37,7 +37,15 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> to Str
 		If multiple parameters have the same name, all values will be included.
 	**/
 	public function iterator() {
-		return [ for (arr in this) for (v in arr) v ].iterator();
+		return allValues().iterator();
+	}
+
+	/**
+		Return an array containing the values of each parameter in this MultiValueMap.
+		If multiple parameters have the same name, all values will be included.
+	**/
+	public function allValues() {
+		return [ for (arr in this) for (v in arr) v ];
 	}
 
 	/**
