@@ -45,7 +45,7 @@ class FileResult extends ActionResult
 	/**
 		Gets or sets the content-disposition header so that a file-download dialog box is displayed in the browser with the specified file name.
 
-		Setting a non-null value will set the `content-disposition` to `attachment`, which will force the file to be downloaded
+		Setting a non-null value will set the `content-disposition` to `attachment`, which will force the file to be downloaded rather than displayed in the browser.
 	**/
 	public var fileDownloadName:String;
 
