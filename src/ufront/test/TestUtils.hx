@@ -61,11 +61,11 @@ class TestUtils
 			}
 			if ( request==null ) {
 				request = HttpRequest.mock();
-				request.uri.returns( uri );
-				request.scriptDirectory.returns( "./" );
-				request.params.returns( (params!=null) ? params : new MultiValueMap() );
-				request.httpMethod.returns( (method!=null) ? method.toUpperCase() : "GET" );
-				request.clientHeaders.returns( new MultiValueMap() );
+				@:privateAccess request.uri.returns( uri );
+				@:privateAccess request.scriptDirectory.returns( "./" );
+				@:privateAccess request.params.returns( (params!=null) ? params : new MultiValueMap() );
+				@:privateAccess request.httpMethod.returns( (method!=null) ? method.toUpperCase() : "GET" );
+				@:privateAccess request.clientHeaders.returns( new MultiValueMap() );
 			}
 			if ( response==null ) {
 				response = HttpResponse.spy();

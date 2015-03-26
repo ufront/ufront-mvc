@@ -216,7 +216,7 @@ class ViewResult extends ActionResult {
 		Any helpers (dynamic functions) to pass to the template when it is executed.
 	**/
 	public var helpers:TemplateData;
-	
+
 	/** An explicit string to use as the template, rather than loading the template through our UFViewEngine. **/
 	var templateFromString:UFTemplate;
 	/** An explicit string to use as the layout template, rather than loading the layout through our UFViewEngine. **/
@@ -265,12 +265,12 @@ class ViewResult extends ActionResult {
 		this.layout = None;
 		return this;
 	}
-	
+
 	/**
 		Use a static string as the templates, rather than loading from a UFViewEngine.
 
 		If `template` or `layout` is not supplied or null, the usual rules will apply for loading a view using the UFViewEngine.
-		
+
 		@param template The template string for the main view template.
 		@param layout The template string for the layout.
 		@param templatingEngine The templating engine to render the given templates with.
@@ -279,19 +279,19 @@ class ViewResult extends ActionResult {
 	public function usingTemplateString( template:String, ?layout:String, ?templatingEngine:TemplatingEngine ):ViewResult {
 		if (templatingEngine==null)
 			templatingEngine = TemplatingEngines.haxe;
-		
+
 			if (template!=null) {
 				this.templateFromString = templatingEngine.factory( template );
 				this.templateSource = FromString( template );
 			}
 			else this.templateFromString = null;
-		
+
 			if (layout!=null) {
 				this.layoutFromString = templatingEngine.factory( layout );
 				this.layoutSource = FromString( layout );
 			}
 			else this.layoutFromString = null;
-		
+
 		return this;
 	}
 
@@ -387,7 +387,7 @@ class ViewResult extends ActionResult {
 				}
 			} catch (e:Dynamic) {}
 		}
-		
+
 		// If a viewPath (or layoutPath) has a leading slash, it does not go inside our view folder.
 		// So if it is "absolute", drop the leading slash because it's only absolute relative to the view folder.
 		// And if not, append it to the viewFolder.
