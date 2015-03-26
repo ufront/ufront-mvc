@@ -30,6 +30,6 @@ abstract AcceptEither<A,B> (Either<A,B>) {
 
 	inline function get_value() return switch this { case Left(v) | Right(v): v; }
 	@:to inline function get_type() return this;
-	@:from static function fromA( v:A ):AcceptEither<A,B> return new AcceptEither( Left(v) );
-	@:from static function fromB( v:B ):AcceptEither<A,B> return new AcceptEither( Right(v) );
+	@:from static function fromA<A,B>( v:A ):AcceptEither<A,B> return new AcceptEither( Left(v) );
+	@:from static function fromB<A,B>( v:B ):AcceptEither<A,B> return new AcceptEither( Right(v) );
 }
