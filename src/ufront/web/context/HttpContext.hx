@@ -80,6 +80,7 @@ class HttpContext
 		injector.mapValue( HttpResponse, response );
 		injector.mapValue( ActionContext, actionContext );
 		injector.mapValue( MessageList, new MessageList(messages) );
+		injector.mapValue( Injector, injector );
 
 		if ( session!=null ) this.session = session;
 		if ( this.session==null )
