@@ -402,12 +402,12 @@ class ViewResult extends ActionResult {
 		else {
 			if ( layout==null )
 				layout = (layoutPath!=null) ? Some(new Pair(layoutPath,null)) : None;
-			
+
 			switch layout {
 				case Some( layoutData ):
 					layoutSource = FromEngine( layoutData.a );
 					layoutReady = viewEngine.getTemplate( layoutData.a, layoutData.b );
-				case None:
+				case None, null:
 					layoutSource = None;
 					layoutReady = Future.sync( Success(null) );
 			}
