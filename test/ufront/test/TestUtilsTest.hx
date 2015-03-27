@@ -43,7 +43,7 @@ class TestUtilsTest {
 
 		var injector = new Injector();
 		var request = HttpRequest.mock();
-		@:privateAccess request.uri.returns( "/test/3/" );
+		request.uri.returns( "/test/3/" );
 		var response = new HttpResponse();
 		var session = new ufront.web.session.VoidSession();
 		var auth = new ufront.auth.YesBossAuthHandler();

@@ -21,10 +21,10 @@ class HttpRequestTest {
 		var query:MultiValueMap<String> = ["query"=>"QueryVal","letter"=>"Q"];
 		var cookies:MultiValueMap<String> = ["cookies"=>"CookieVal","letter"=>"C"];
 		var instance = HttpRequest.mock();
-		@:privateAccess instance.post.returns( post );
-		@:privateAccess instance.query.returns( query );
-		@:privateAccess instance.cookies.returns( cookies );
-		@:privateAccess instance.params.callsRealMethod();
+		instance.post.returns( post );
+		instance.query.returns( query );
+		instance.cookies.returns( cookies );
+		instance.params.callsRealMethod();
 		Assert.equals( "PostVal", instance.params["post"] );
 		Assert.equals( "QueryVal", instance.params["query"] );
 		Assert.equals( "CookieVal", instance.params["cookies"] );
@@ -35,13 +35,13 @@ class HttpRequestTest {
 	public function testIsMultiPart():Void {
 		var clientHeaders:MultiValueMap<String> = [ "Content-Type"=>"application/x-www-form-urlencoded; charset=UTF-8" ];
 		var instance = HttpRequest.mock();
-		@:privateAccess instance.clientHeaders.returns( clientHeaders );
+		instance.clientHeaders.returns( clientHeaders );
 		instance.isMultipart().callsRealMethod();
 		Assert.isFalse( instance.isMultipart() );
 
 		var clientHeaders:MultiValueMap<String> = [ "Content-Type"=>"multipart/form-data; boundary=something" ];
 		var instance = HttpRequest.mock();
-		@:privateAccess instance.clientHeaders.returns( clientHeaders );
+		instance.clientHeaders.returns( clientHeaders );
 		instance.isMultipart().callsRealMethod();
 		Assert.isTrue( instance.isMultipart() );
 	}
