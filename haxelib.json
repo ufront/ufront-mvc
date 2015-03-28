@@ -6,10 +6,19 @@
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
   "releasenote": "
-Add stipple templating engine.
-More improvements to TestUtils.
+  Fixes for Haxe 3.2-rc.2.
+  Should remain compatible with 3.1.3 for now.
+  Unit tests passing, pending fixes in some of our dependencies.  (Mockatoo, mconsole, detox etc).
+  Add `UFAuthHandler.asAuthHandler()` to avoid variance issues.
+  Add `SysUtil.recursiveDelete()`.
+  Add `MultiValueMap.allValues()`.
+  For each `HttpContext`, inject the context injector into itself.
+  In ViewResult, when guessing view name from function name, don't guess 'cs.html' from 'docs()' or similar words - only remove the `do` prefix if the next character is uppercase.
+  Work around for macro errors when using Mockatoo on a UFApi class.
+  Many small unit testing improvements.
+  Removed `HttpApplicationMacros` - it saved some lines of code but made it hard to understand and debug, and had limited usefulness elsewhere.
 ",
-  "version": "1.0.0-rc.15",
+  "version": "1.0.0-rc.16",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
     "random": "",
