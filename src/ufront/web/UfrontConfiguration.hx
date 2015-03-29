@@ -8,7 +8,6 @@ import ufront.web.Controller;
 import ufront.api.*;
 import ufront.web.session.*;
 import ufront.auth.*;
-import haxe.web.Dispatch.DispatchConfig;
 import ufront.web.context.*;
 import ufront.module.*;
 import ufront.app.UFMiddleware;
@@ -119,7 +118,7 @@ typedef UfrontConfiguration = {
 	/**
 		Controllers to add to the Dependency Injector.
 
-		These classes will be added to the `DispatchHandler`'s injector.
+		These classes will be added to the `MVCHandler`'s injector.
 
 		Default is a list of all `ufront.web.Controller` classes, fetched using `CompileTime.getAllClasses()`
 	**/
@@ -128,7 +127,7 @@ typedef UfrontConfiguration = {
 	/**
 		APIs to add to the Dependency Injector.
 
-		These classes will be added to the `DispatchHandler`'s injector and the `RemotingHandler`'s injector.
+		These classes will be added to the `MVCHandler`'s injector and the `RemotingHandler`'s injector.
 
 		Default is a list of all `ufront.api.UFApi` classes, fetched using `CompileTime.getAllClasses()`
 	**/
@@ -142,20 +141,21 @@ typedef UfrontConfiguration = {
 		Default is `ufront.view.FileViewEngine`, which loads the views from the `viewPath` directory.
 	**/
 	?viewEngine:Null<Class<UFViewEngine>>,
-	
+
 	/**
 		The TemplatingEngines to use, in order of preference.
 
 		The order the templating engines are specified here is the order they are added to the ViewEngine, and the order that views will attempt to be loaded in.
 
-		Default order is `[erazor,hxtemplo,mustache,hxdtl,haxe]`, with the available templates from the haxelibs you have used.
+		The default is set from `TemplatingEngines.all`.
 	**/
 	?templatingEngines:Array<TemplatingEngine>,
 
 	/**
-		The folder (either absolute, or relative to the script directory) to load the views from.
-		This may be ignored if the `viewEngine` you are using does not use folders or a file system.
-		Default is "view", relative to your script directory.
+		The path to load the views from.
+		The type of path (File system path, HTTP URL etc), will depend on the UFViewEngine used.
+		If it is a file path, it should either be absolute (with a leading slash) or relative to the script directory, with no leading slash.
+		Default is "view/".
 	**/
 	?viewPath:Null<String>,
 
@@ -182,7 +182,7 @@ typedef UfrontConfiguration = {
 		If not using ufront-easyauth, the default value is `YesBossAuthHandler`.
 	**/
 	?authImplementation:Class<UFAuthHandler<UFAuthUser>>,
-	
+
 	#if ufront_ufadmin
 		/**
 			Modules to use in the UFAdmin control panel.
@@ -199,8 +199,6 @@ class DefaultUfrontConfiguration {
 
 	/**
 		Fetch a default `UfrontConfiguration`.
-
-		The values here are as explained in the documentation for each field of `UfrontConfiguration`.
 
 		If you do not supply a UfrontConfiguration object to your `UfrontApplication`, or if your object does not specify all the required values, it will use these values as a fallback.
 
@@ -221,13 +219,7 @@ class DefaultUfrontConfiguration {
 			controllers: CompileTime.getAllClasses( Controller ),
 			apis: CompileTime.getAllClasses( UFApi ),
 			viewEngine: FileViewEngine,
-			templatingEngines: [
-				#if erazor TemplatingEngines.erazor, #end
-				#if hxtemplo TemplatingEngines.hxtemplo, #end
-				#if mustache TemplatingEngines.mustache, #end
-				#if hxdtl TemplatingEngines.hxdtl, #end
-				TemplatingEngines.haxe
-			],
+			templatingEngines: TemplatingEngines.all,
 			viewPath: "view/",
 			defaultLayout: null,
 			sessionImplementation: FileSession,
