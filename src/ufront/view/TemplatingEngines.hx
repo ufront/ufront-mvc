@@ -24,6 +24,19 @@ using tink.CoreApi;
 class TemplatingEngines {
 
 	/**
+		An array of all known templating engines that have been included for compilation.
+
+		The default order is `[erazor,hxtemplo,mustache,hxdtl,haxe]`.
+	**/
+	public static var all:Array<TemplatingEngine> = [
+		#if erazor TemplatingEngines.erazor, #end
+		#if hxtemplo TemplatingEngines.hxtemplo, #end
+		#if mustache TemplatingEngines.mustache, #end
+		#if hxdtl TemplatingEngines.hxdtl, #end
+		TemplatingEngines.haxe
+	];
+
+	/**
 		A templating engine for `haxe.Template` templates, using "html" and "tpl" extensions.
 
 		This is available through the standard library.
@@ -102,11 +115,11 @@ class TemplatingEngines {
 			extensions: ["erazor","html"]
 		}
 	#end
-	
+
 	#if stipple
 		/**
-			Stipple is a re-adaptation of the popular [Handlebars](http://handlebarsjs.com/) javascript template framework for the Haxe programming language. 	
-				
+			Stipple is a re-adaptation of the popular [Handlebars](http://handlebarsjs.com/) javascript template framework for the Haxe programming language.
+
 			You can find more about it here: https://bitbucket.org/grumpytoad/stipple
 		**/
 		public static var stipple(get, null):TemplatingEngine;

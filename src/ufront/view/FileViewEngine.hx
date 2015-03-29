@@ -25,7 +25,7 @@ class FileViewEngine extends UFViewEngine {
 	/** The path to your views (absolute, or relative to the script directory). This value should be injected. **/
 	@inject("viewPath") public var path:String;
 
-	/** Is `path` absolute (true) or relative to `scriptDir` (false)? This value is set in the constructor. **/
+	/** Is `path` absolute (true) or relative to `scriptDir` (false)? This is determined by checking if the injected `viewPath` has a leading "/". **/
 	public var isPathAbsolute(get,null):Bool;
 
 	/** The absolute path to your views.  Basically `$scriptDir$path/` (or `$path/` if path is absolute). **/

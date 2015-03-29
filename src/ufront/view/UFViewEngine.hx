@@ -30,6 +30,8 @@ using Lambda;
 	Example implementations may be `ufront.view.FileViewEngine` (load from files on hard drive), "DatabaseViewEngine" (load templates from DB) or "MacroViewEngine" (import views at macro time so we have them ready to go in our code.
 	This `UFViewEngine` base class does provide a `getTemplate()` which will wrap each implementations `getTemplateString()` method and provide appropriate searching, caching and instantiating of templates.
 	See the documentation on the `getTemplate` method for more details.
+
+	TODO: refactor to use an injected UFCache, rather than a map.
 **/
 class UFViewEngine {
 
@@ -38,10 +40,12 @@ class UFViewEngine {
 
 	/**
 		Create a new view engine.
+		The constructor is private, because this is an abstract class.
+		Please use one of the sub-class implementations.
 
 		@param cachingEnabled Should we cache templates in memory so they are ready to re-execute? Default=true.
 	**/
-	function new( ?cachingEnabled=true ) {
+	function new( cachingEnabled=true ) {
 		if ( cachingEnabled ) cache = new Map();
 		engines = [];
 	}
