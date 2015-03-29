@@ -93,16 +93,19 @@ class UfrontApplication extends HttpApplication
 			Reflect.setField( configuration, field, value );
 		}
 
-		mvcHandler = new MVCHandler();
+		// Set up our handlers, and the injections needed for them.
+		mvcHandler = new MVCHandler( configuration.indexController );
 		remotingHandler = new RemotingHandler();
+		remotingHandler.loadApis( configuration.apis );
+		remotingHandler.loadApiContext( configuration.remotingApi );
 
 		// Map some default injector rules
-
 		for ( controller in configuration.controllers ) {
-			injector.inject( controller );
+			inject( controller );
 		}
 		for ( api in configuration.apis ) {
-			injector.inject( api );
+			inject( api );
+			// TODO: Inject Async versions of APIs.
 		}
 
 		// Set up handlers and middleware
@@ -141,20 +144,20 @@ class UfrontApplication extends HttpApplication
 			inject( String, configuration.viewPath, "viewPath" );
 			inject( UFViewEngine, configuration.viewEngine, true );
 		}
-		
+
 		if ( configuration.contentDirectory!=null )
 			setContentDirectory( configuration.contentDirectory );
 
 		if ( configuration.defaultLayout!=null )
 			inject( String, configuration.defaultLayout, "defaultLayout" );
-		
+
 		#if ufront_ufadmin
 			CompileTime.importPackage( "ufront.ufadmin.modules" ); // Ensure all ufront admin controllers are loaded.
 			if ( configuration.adminModules!=null ) {
 				inject( List, Lambda.list(configuration.adminModules), "adminModules" );
 			}
 		#end
-		
+
 		for ( te in configuration.templatingEngines )
 			addTemplatingEngine( te );
 	}

@@ -29,16 +29,20 @@ import haxe.EnumFlags;
 
 	@author Jason O'Neil
 **/
-class RemotingHandler implements UFRequestHandler implements UFInitRequired
+class RemotingHandler implements UFRequestHandler
 {
 	var apiContexts:List<Class<UFApiContext>>;
 	var apis:List<Class<UFApi>>;
 	var context:Context;
 
-	/** Construct a new RemotingModule, optionally adding an API to the remoting Context. **/
+	/**
+		Construct a new RemotingHandler, optionally adding some initial APIs to make available.
+
+		@param A shortcut for
+	**/
 	public function new() {
-		apiContexts = new List();
-		apis = new List();
+		this.apiContexts = new List();
+		this.apis = new List();
 	}
 
 	/** Expose a single UFApi to the request **/
@@ -57,22 +61,6 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 		apiContexts.push( apiContext );
 	}
 
-	/** Initializes a module and prepares it to handle remoting requests. */
-	public function init( app:HttpApplication ):Surprise<Noise,Error> {
-		var ufApp = Std.instance( app, UfrontApplication );
-		if ( ufApp!=null ) {
-			loadApis( ufApp.configuration.apis );
-			loadApiContext( ufApp.configuration.remotingApi );
-		}
-		return Sync.success();
-	}
-
-	/** Disposes of the resources (other than memory) that are used by the module. */
-	public function dispose( app:HttpApplication ):Surprise<Noise,Error> {
-		apiContexts = null;
-		return Sync.success();
-	}
-
 	public function handleRequest( httpContext:HttpContext ):Surprise<Noise,Error> {
 		var doneTrigger = Future.trigger();
 		if ( httpContext.request.clientHeaders.exists("X-Haxe-Remoting") ) {
@@ -80,10 +68,10 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 			// Execute the request
 			var r = httpContext.response;
 			var remotingResponse:Future<String>;
-			
+
 			// Set the status to OK for now, and only change it if an error is thrown.
 			r.setOk();
-			
+
 			try {
 				initializeContext( httpContext.injector );
 
@@ -144,13 +132,13 @@ class RemotingHandler implements UFRequestHandler implements UFInitRequired
 
 	@:access(haxe.remoting.Context)
 	public function executeApiCall( path:Array<String>, args:Array<Dynamic>, remotingContext:Context, actionContext:ActionContext ):Future<Dynamic> {
-		
+
 		// Save the details of the request to the ActionContext.
 		actionContext.handler = this;
 		actionContext.action = path[path.length-1];
 		actionContext.controller = remotingContext.objects.get( path[0] ).obj;
 		actionContext.args = args;
-		
+
 		// Get the return type information for the current call.
 		var returnType:Int;
 		try {

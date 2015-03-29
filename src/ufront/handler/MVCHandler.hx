@@ -23,7 +23,7 @@ import ufront.core.*;
 
 	@author Jason O'Neil
 **/
-class MVCHandler implements UFRequestHandler implements UFInitRequired
+class MVCHandler implements UFRequestHandler
 {
 	/**
 		The index controller which is used to match requests to controllers / actions.
@@ -31,25 +31,11 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 		This controller may sub-dispatch to other controllers.
 
 		The controller will be instantiated using the dependency injector for that request.
-
-		If using `UfrontApplication`, then during `init` we will set `indexController` to `ufrontApp.configuration.indexController`.
 	**/
-	public var indexController:Class<Controller>;
+	public var indexController(default,null):Class<Controller>;
 
-	public function new() {}
-
-	public function init( application:HttpApplication ):Surprise<Noise,Error> {
-		var ufApp = Std.instance( application, UfrontApplication );
-		if ( ufApp!=null ) {
-			indexController = ufApp.configuration.indexController;
-		}
-		return Sync.success();
-	}
-
-	/** Disposes of the resources (other than memory) that are used by the module. */
-	public function dispose( app:HttpApplication ):Surprise<Noise,Error> {
-		indexController = null;
-		return Sync.success();
+	public function new( indexController:Class<Controller> ) {
+		this.indexController = indexController;
 	}
 
 	/** Initializes a module and prepares it to handle requests. */
@@ -61,8 +47,6 @@ class MVCHandler implements UFRequestHandler implements UFInitRequired
 
 	function processRequest( context:HttpContext ):Surprise<Noise,Error> {
 		context.actionContext.handler = this;
-
-		// Create the controller, inject into it, execute it...
 		var controller:Controller = context.injector.instantiate( indexController );
 		var resultFuture =
 			controller.execute() >>

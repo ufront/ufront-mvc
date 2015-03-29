@@ -28,6 +28,7 @@ import haxe.web.Dispatch.DispatchError;
 
 	@author Jason O'Neil
 **/
+@:deprecated("This class is deprecated. Please use MVCHandler instead. If you really need haxe.web.Dispatch support, please volunteer to test and maintain this class.")
 class DispatchHandler implements UFRequestHandler implements UFInitRequired
 {
 	/** The Object (API, Routes or Controller) that Dispatch will check requests against. */
