@@ -7,11 +7,11 @@ import ufront.core.Sync;
 using thx.core.Types;
 
 /**
-	Trace module that adds javascript snippet to output trace to Javascript console.
+	Logger module that prints to a JS console, either on the client directly, or on the server by adding a JS snippet to the output.
 
 	This will flush the messages (traces, logs, warnings and errors) from the current context to the browser.
 
-	If `-debug` is defined, any application level messages (not necessarily associated with this request, made using "trace()" rather than "ufTrace()") will also be sent to the browser.
+	On the server, if `-debug` is defined, any application level messages (not necessarily associated with this request, made using "trace()" rather than "ufTrace()") will also be sent to the browser.
 
 	If the `HttpResponse` output type is not "text/html", the traces will not be displayed.
 
@@ -24,40 +24,66 @@ class BrowserConsoleLogger implements UFLogHandler
 	public function new() {}
 
 	public function log( ctx:HttpContext, appMessages:Array<Message> ) {
+		#if server
+			if( ctx.response.contentType=="text/html" ) {
+				var results = [];
+				for( msg in ctx.messages )
+					results.push( formatMessage(msg) );
 
-		if( ctx.response.contentType=="text/html" ) {
-			var results = [];
-			for( msg in ctx.messages )
-				results.push( formatMessage(msg) );
+				#if debug
+					if ( appMessages!=null) {
+						for( msg in appMessages )
+							results.push( formatMessage(msg) );
+					}
+				#end
 
-			#if debug
-				if ( appMessages!=null) {
-					for( msg in appMessages )
-						results.push( formatMessage(msg) );
+				if( results.length>0 ) {
+					// TODO: splice this in before the </body> tag, rather than at the end.
+					// Technically that is invalid HTML and may be ignored by some browsers.
+					ctx.response.write(
+						'\n<script type="text/javascript">\n${results.join("\n")}\n</script>'
+					);
 				}
-			#end
-
-			if( results.length>0 ) {
-				ctx.response.write(
-					'\n<script type="text/javascript">\n${results.join("\n")}\n</script>'
-				);
 			}
-		}
+		#elseif client
+			for ( msg in ctx.messages )
+				printMessage( msg );
+			for ( msg in appMessages )
+				printMessage( msg );
+		#end
 
 		return Sync.success();
 	}
 
-	public static function formatMessage( m:Message ):String {
-		var type = switch (m.type) {
-			case Trace: "log";
-			case Log: "info";
-			case Warning: "warn";
-			case Error: "error";
+	#if server
+		public static function formatMessage( m:Message ):String {
+			var type = switch (m.type) {
+				case Trace: "log";
+				case Log: "info";
+				case Warning: "warn";
+				case Error: "error";
+			}
+			var extras =
+				if ( m.pos!=null && m.pos.customParams!=null ) ", "+m.pos.customParams.join(", ")
+				else "";
+			var msg = '${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';
+			return 'console.${type}(decodeURIComponent("${StringTools.urlEncode(msg)}"))';
 		}
-		var extras =
-			if ( m.pos!=null && m.pos.customParams!=null ) ", "+m.pos.customParams.join(", ")
-			else "";
-		var msg = '${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';
-		return 'console.${type}(decodeURIComponent("${StringTools.urlEncode(msg)}"))';
-	}
+	#elseif client
+		public static function printMessage( m:Message ):Void {
+			var console = js.Browser.window.console;
+			var logMethod:haxe.extern.Rest<Dynamic>->Void = switch (m.type) {
+				case Trace: console.log;
+				case Log: console.info;
+				case Warning: console.warn;
+				case Error: console.error;
+			}
+			var posString = '${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber})';
+			var params = [posString,m.msg];
+			if ( m.pos!=null && m.pos.customParams!=null )
+				for ( p in m.pos.customParams )
+					params.push( p );
+			Reflect.callMethod( console, logMethod, params );
+		}
+	#end
 }

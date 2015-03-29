@@ -21,7 +21,8 @@ using haxe.io.Path;
 
 	During the `onLogRequest` event, this will open a file (relative to the `HttpContext.contentDirectory`) and append entries to the log.
 
-	This will log traces, logs, warnings and errors from the current request.  	If the current application is a UfrontApplication, it will also log messages which are not associated with a particular request.
+	This will log traces, logs, warnings and errors from the current request.
+	It will also log messages from `HttpApplication.messages`, which may not associated with a particular request.
 
 	Entries are as follows:
 
