@@ -112,7 +112,7 @@ class TemplatingEngines {
 				return function (data:TemplateData) return t.execute( data.toObject() );
 			},
 			type: "erazor.Template",
-			extensions: ["erazor","html"]
+			extensions: ["html","erazor"]
 		}
 	#end
 
