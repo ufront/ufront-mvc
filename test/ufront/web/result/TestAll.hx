@@ -17,5 +17,6 @@ class TestAll
 		runner.addCase( new DirectFilePathResultTest() );
 		runner.addCase( new FilePathResultTest() );
 		runner.addCase( new ActionResultTest() );
+		runner.addCase( new CallJavascriptResultTest() );
 	}
 }
