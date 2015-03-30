@@ -23,26 +23,26 @@ using ufront.core.InjectionTools;
 /**
 	A context describing the current Http request, response and session.
 **/
-class HttpContext
-{
-	#if (php || neko)
+class HttpContext {
+	#if (php || neko || (js && !nodejs))
 		/**
-			Create a HttpContext for Neko or PHP environments.
+			Create a HttpContext for the current environment.
 			If request and response are not supplied, they will created.
 			The rest of the parameters are passed directly to the `HttpContext` constructor.
+			On NodeJS please use `createNodeJsContext()` instead.
 		**/
-		public static function createSysContext( ?request:HttpRequest, ?response:HttpResponse, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
+		public static function createContext( ?request:HttpRequest, ?response:HttpResponse, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
 			if( null==request ) request = HttpRequest.create();
 			if( null==response ) response = HttpResponse.create();
 			return new HttpContext( request, response, appInjector, session, auth, urlFilters, relativeContentDir );
 		}
-	#elseif (nodejs && !macro)
+	#elseif (js && nodejs && !macro)
 		/**
 			Create a HttpContext for the NodeJS environment, using the `js-kit` haxelib.
 			The native express-js request and response objects must be supplied.
 			The rest of the parameters are passed directly to the `HttpContext` constructor.
 		**/
-		public static function createNodeJSContext( req:js.npm.express.Request, res:js.node.http.ServerResponse, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
+		public static function createNodeJsContext( req:js.npm.express.Request, res:js.node.http.ServerResponse, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
 			var request:HttpRequest = new nodejs.ufront.web.context.HttpRequest( req );
 			var response:HttpResponse = new nodejs.ufront.web.context.HttpResponse( res );
 			return new HttpContext( request, response, appInjector, session, auth, urlFilters, relativeContentDir );

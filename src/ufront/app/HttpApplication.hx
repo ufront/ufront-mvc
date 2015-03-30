@@ -443,7 +443,7 @@ class HttpApplication
 		return Noise;
 	}
 
-	#if (php || neko)
+	#if (php || neko || (js && !nodejs))
 		/**
 			Create a HTTPContext for the current request and execute it.
 
@@ -452,8 +452,8 @@ class HttpApplication
 		**/
 		public function executeRequest() {
 			var context =
-				if ( pathToContentDir!=null ) HttpContext.createSysContext( this.injector, urlFilters, pathToContentDir )
-				else HttpContext.createSysContext( this.injector, urlFilters );
+				if ( pathToContentDir!=null ) HttpContext.createContext( this.injector, urlFilters, pathToContentDir )
+				else HttpContext.createContext( this.injector, urlFilters );
 			this.execute( context );
 		}
 	#elseif nodejs

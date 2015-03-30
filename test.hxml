@@ -51,6 +51,8 @@
 ## Javascript (Browser)
 
 -D client
+-lib pushstate
+-lib detox
 -js build/js_client_test.js
 -xml doc/js_browser.xml
 

@@ -27,7 +27,9 @@ class HttpRequest
 				new php.ufront.web.context.HttpRequest();
 			#elseif neko
 				new neko.ufront.web.context.HttpRequest();
-			#elseif nodejs
+			#elseif (js && !nodejs)
+				new js.ufront.web.context.HttpRequest();
+			#elseif (js && nodejs)
 				throw "Please use `new nodejs.ufront.web.HttpRequest(req)` instead";
 			#else
 				throw new NotImplemented();

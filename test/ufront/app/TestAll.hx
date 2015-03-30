@@ -8,5 +8,6 @@ class TestAll
 	public static function addTests( runner:Runner ) {
 		runner.addCase( new UfrontApplicationTest() );
 		runner.addCase( new HttpApplicationTest() );
+		runner.addCase( new ClientJsApplicationTest() );
 	}
 }
