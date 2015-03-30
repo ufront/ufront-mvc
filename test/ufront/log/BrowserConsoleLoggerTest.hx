@@ -56,7 +56,10 @@ class BrowserConsoleLoggerTest {
 
 	public function testLog() {
 		var ctx = "/".mockHttpContext();
-		var pageContent = "<html>Hello!</html>";
+		var before = '<html><body>Hello!';
+		var after = '</body></html>';
+		var pageContent = before+after;
+
 		ctx.response.contentType = "text/html";
 		ctx.response.write( pageContent );
 		ctx.messages.push({ msg: "Hello", type:Trace, pos:fakePosInfos[0] });
@@ -69,13 +72,18 @@ class BrowserConsoleLoggerTest {
 		var browserConsoleLogger:UFLogHandler = new BrowserConsoleLogger();
 		browserConsoleLogger.log( ctx, appMessages );
 
-		// Let's check if that worked
-		var buffer = ctx.response.getBuffer();
-		Assert.equals( pageContent, buffer.substr(0,pageContent.length) );
-		Assert.equals( '\n<script type="text/javascript">\n', buffer.substr(pageContent.length,33) );
-		var expectedNumber = #if debug 4 #else 2 #end;
-		var numberOfLogs = buffer.split("console.").length - 1;
-		Assert.equals( expectedNumber, numberOfLogs );
+		// Let's check if that worked on the server.
+		// The client prints directly to the JS console log functions, so it's a bit hard to verify here.
+		#if server
+			var buffer = ctx.response.getBuffer();
+			Assert.equals( before, buffer.substr(0,before.length) );
+			Assert.equals( after, buffer.substr(buffer.length-after.length) );
+			var scriptOpener = '\n<script type="text/javascript">\n';
+			Assert.equals( scriptOpener, buffer.substr(before.length,scriptOpener.length) );
+			var numberOfLogs = buffer.split("console.").length - 1;
+			var expectedNumber = #if debug 4 #else 2 #end;
+			Assert.equals( expectedNumber, numberOfLogs );
+		#end
 
 		// Now let's check that it doesn't do anything if we have a different content type.
 

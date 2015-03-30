@@ -3,6 +3,7 @@ package ufront.log;
 import ufront.web.context.HttpContext;
 import ufront.app.*;
 import haxe.PosInfos;
+import ufront.web.result.CallJavascriptResult;
 import ufront.core.Sync;
 using thx.core.Types;
 
@@ -38,11 +39,10 @@ class BrowserConsoleLogger implements UFLogHandler
 				#end
 
 				if( results.length>0 ) {
-					// TODO: splice this in before the </body> tag, rather than at the end.
-					// Technically that is invalid HTML and may be ignored by some browsers.
-					ctx.response.write(
-						'\n<script type="text/javascript">\n${results.join("\n")}\n</script>'
-					);
+					var script = '\n<script type="text/javascript">\n${results.join("\n")}\n</script>';
+					var newContent = CallJavascriptResult.insertScriptsBeforeBodyTag( ctx.response.getBuffer(), [script] );
+					ctx.response.clear();
+					ctx.response.write( newContent );
 				}
 			}
 		#elseif client
@@ -55,21 +55,20 @@ class BrowserConsoleLogger implements UFLogHandler
 		return Sync.success();
 	}
 
-	#if server
-		public static function formatMessage( m:Message ):String {
-			var type = switch (m.type) {
-				case Trace: "log";
-				case Log: "info";
-				case Warning: "warn";
-				case Error: "error";
-			}
-			var extras =
-				if ( m.pos!=null && m.pos.customParams!=null ) ", "+m.pos.customParams.join(", ")
-				else "";
-			var msg = '${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';
-			return 'console.${type}(decodeURIComponent("${StringTools.urlEncode(msg)}"))';
+	public static function formatMessage( m:Message ):String {
+		var type = switch (m.type) {
+			case Trace: "log";
+			case Log: "info";
+			case Warning: "warn";
+			case Error: "error";
 		}
-	#elseif client
+		var extras =
+			if ( m.pos!=null && m.pos.customParams!=null ) ", "+m.pos.customParams.join(", ")
+			else "";
+		var msg = '${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';
+		return 'console.${type}(decodeURIComponent("${StringTools.urlEncode(msg)}"))';
+	}
+	#if client
 		public static function printMessage( m:Message ):Void {
 			var console = js.Browser.window.console;
 			var logMethod:haxe.extern.Rest<Dynamic>->Void = switch (m.type) {
