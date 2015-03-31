@@ -50,6 +50,18 @@ will get a "Class not found : my.app.MainApiClient" error.  So instead, do:
 
 @:autoBuild(ufront.api.ApiMacros.buildApiContext())
 class UFApiContext {
-	public function new() {}
 	var injector:Injector;
+
+	public function new() {}
+
+	public static function getApisInContext( context:Class<UFApiContext> ):Array<Class<UFApi>> {
+		var apis = [];
+		var meta = haxe.rtti.Meta.getType( context );
+		if (meta.apiList!=null) for (apiName in meta.apiList) {
+			var api:Class<UFApi> = cast Type.resolveClass(apiName);
+			if (api!=null)
+				apis.push(api);
+		}
+		return apis;
+	}
 }

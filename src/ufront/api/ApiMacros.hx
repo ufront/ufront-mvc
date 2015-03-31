@@ -55,6 +55,19 @@ class ApiMacros
 					var newProxyExpr:Expr = { expr: ENew(proxyTPath, [cnxField]), pos: classPos };
 					var instProxyExpr = macro $i{f.name} = $newProxyExpr;
 					addLineToFnBody(clientConstructorBlock, instProxyExpr);
+
+					// Add the API type name to some metadata, so we can generate a list of included API classes at runtime.
+					var meta = localClass.meta;
+					var params = [];
+					if (meta.has("apiList")) {
+						for (metaEntry in meta.extract("apiList")) if (metaEntry.params!=null) {
+							for(param in metaEntry.params) {
+								params.push(param);
+							}
+						}
+						meta.remove("apiList");
+					}
+					meta.add("apiList",params,localClass.pos);
 				case _:
 					// skip
 			}

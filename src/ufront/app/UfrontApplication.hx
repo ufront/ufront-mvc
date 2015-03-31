@@ -96,7 +96,6 @@ class UfrontApplication extends HttpApplication
 		// Set up our handlers, and the injections needed for them.
 		mvcHandler = new MVCHandler( configuration.indexController );
 		remotingHandler = new RemotingHandler();
-		remotingHandler.loadApis( configuration.apis );
 		if ( configuration.remotingApi!=null ) {
 			remotingHandler.loadApiContext( configuration.remotingApi );
 		}

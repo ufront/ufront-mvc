@@ -129,6 +129,8 @@ typedef UfrontConfiguration = {
 
 		These classes will be added to the `MVCHandler`'s injector and the `RemotingHandler`'s injector.
 
+		Please note this will not make these APIs available through Ufront Remoting, you must specify a `remotingApi` to make APIs available to remoting calls.
+
 		Default is a list of all `ufront.api.UFApi` classes, fetched using `CompileTime.getAllClasses()`
 	**/
 	?apis:Null<Iterable<Class<UFApi>>>,

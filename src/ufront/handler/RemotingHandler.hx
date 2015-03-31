@@ -35,30 +35,43 @@ class RemotingHandler implements UFRequestHandler
 	var apis:List<Class<UFApi>>;
 	var context:Context;
 
-	/**
-		Construct a new RemotingHandler, optionally adding some initial APIs to make available.
-
-		@param A shortcut for
-	**/
 	public function new() {
 		this.apiContexts = new List();
 		this.apis = new List();
 	}
 
-	/** Expose a single UFApi to the request **/
+	/**
+		Expose a single UFApi to the request.
+		This will be available through Ufront style remoting, using `UFApi` or `UFAsyncApi` on the client.
+	**/
 	public inline function loadApi( api:Class<UFApi> ) {
 		apis.push( api );
 	}
 
-	/** Expose a single UFApi to the request **/
+	/**
+		Expose a group of UFApis to the request.
+		These will be available through Ufront style remoting, using `UFApi` or `UFAsyncApi` on the client.
+	**/
 	public inline function loadApis( newAPIs:Iterable<Class<UFApi>> ) {
 		for ( api in newAPIs )
 			loadApi( api );
 	}
 
-	/** Expose a UFApiContext to the request **/
+	/**
+		Expose a UFApiContext to the request.
+
+		This will be available through both Ufront style and Haxe style remoting.
+
+		Ufront style remoting uses the `UFApi` and `UFAsyncApi` on the client.
+		Ufront remoting works synchronously for `UFApi`, or returns a surprise for `UFAsyncApi`.
+
+		Haxe style remoting creates a context class on the client containing all the API proxies.
+		For example a class `ApiContext` with `var signupApi:SignupApi` would generate `ApiContextClient` with `var signupApi:SignupApiProxy`.
+		Haxe style remoting uses remoting calls using plain async callbacks..
+	**/
 	public inline function loadApiContext( apiContext:Class<UFApiContext> ) {
 		apiContexts.push( apiContext );
+		loadApis( UFApiContext.getApisInContext(apiContext) );
 	}
 
 	public function handleRequest( httpContext:HttpContext ):Surprise<Noise,Error> {
