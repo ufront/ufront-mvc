@@ -7,6 +7,7 @@ import haxe.remoting.RemotingError;
 import ufront.auth.*;
 import haxe.CallStack;
 import haxe.remoting.RemotingUtil;
+import haxe.rtti.Meta;
 using tink.CoreApi;
 
 /**
@@ -104,20 +105,20 @@ class UFApi
 	Usage: `class AsyncLoginApi extends UFAsyncApi<LoginApi> {}`
 **/
 @:autoBuild( ufront.api.ApiMacros.buildAsyncApiProxy() )
-class UFAsyncApi<T:UFApi> {
+class UFAsyncApi<SyncApi:UFApi> {
 	var className:String;
 	#if server
-		var api:T;
-		@inject public function new( api:T ) {
-			this.api = api;
-		}
+		/**
+			Because of limitations between minject and generics, we cannot simply use `@inject public var api:T` based on a type paremeter.
+			Instead, we get the build method to create a `@inject public function injectApi( injector:Injector )` method, specifying the class of our sync Api as a constant.
+		**/
+		public var api:SyncApi;
 	#elseif client
-		var cnx:haxe.remoting.HttpAsyncConnectionWithTraces;
-		@inject public function new( cnx:haxe.remoting.HttpAsyncConnectionWithTraces ) {
-			this.cnx = cnx;
-		}
+		@inject public var cnx:haxe.remoting.HttpAsyncConnectionWithTraces;
 	#end
-	
+
+	public function new() {}
+
 	function _makeApiCall<A,B>( method:String, args:Array<Dynamic>, flags:EnumFlags<ApiReturnType> ):Surprise<A,RemotingError<B>> {
 		var remotingCallString = '$className.$method(${args.join(",")})';
 		#if server
@@ -128,7 +129,7 @@ class UFAsyncApi<T:UFApi> {
 				var stack = CallStack.toString( CallStack.exceptionStack() );
 				return Future.sync( Failure(ServerSideException(remotingCallString,e,stack)) );
 			}
-			
+
 			if ( flags.has(ARTVoid) ) {
 				try {
 					callApi();
@@ -198,5 +199,20 @@ class UFAsyncApi<T:UFApi> {
 			});
 			return resultTrigger.asFuture();
 		#end
+	}
+
+	/**
+		For a given sync `UFApi` class, see if a matching `UFAsyncApi` class is available, and return it.
+		Returns null if no matching `UFAsyncApi` was found.
+	**/
+	public static function getAsyncApi<T:UFApi>( syncApi:Class<T> ):Null<Class<UFAsyncApi<T>>> {
+		var meta = Meta.getType(syncApi);
+		if ( meta.asyncApi!=null ) {
+			var asyncApiName:String = meta.asyncApi[0];
+			if ( asyncApiName!=null ) {
+				return cast Type.resolveClass( asyncApiName );
+			}
+		}
+		return null;
 	}
 }
