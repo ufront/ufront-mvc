@@ -1,21 +1,25 @@
 package ufront.app;
 
-import utest.Assert;
-import ufront.app.ClientJsApplication;
+#if client
+	import utest.Assert;
+	import ufront.app.ClientJsApplication;
+#end
 
 class ClientJsApplicationTest {
-	var instance:ClientJsApplication;
-
 	public function new() {}
 
-	public function beforeClass():Void {}
+	#if client
+		var instance:ClientJsApplication;
 
-	public function afterClass():Void {}
+		public function beforeClass():Void {}
 
-	public function setup():Void {}
+		public function afterClass():Void {}
 
-	public function teardown():Void {}
+		public function setup():Void {}
 
-	public function testExample():Void {
-	}
+		public function teardown():Void {}
+
+		public function testExample():Void {
+		}
+	#end
 }

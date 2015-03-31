@@ -18,13 +18,13 @@ class ApiMacrosTest {
 	public function setup():Void {}
 
 	public function teardown():Void {}
-	
+
 	public function testRemoveClientBodies() {
 		var api = new ApiTest1();
 		var result = api.doSysStuff();
 		var myArr = [];
 		api.addToArray( myArr );
-		
+
 		#if server
 			Assert.notNull( api.doSysStuff() );
 			Assert.equals( 1, myArr.length );
@@ -40,7 +40,7 @@ class ApiMacrosTest {
 		var meta = Meta.getFields( ApiTest2 );
 		function hasReturnType( fieldName:String, rt:ApiReturnType ) {
 			var field = Reflect.field( meta, fieldName );
-			if ( field==null ) 
+			if ( field==null )
 				return false;
 			var rtMeta:Array<Int> = Reflect.field(field,"returnType");
 			var rtInt = rtMeta[0];
@@ -50,77 +50,42 @@ class ApiMacrosTest {
 		Assert.isTrue ( hasReturnType("returnVoidFn",ARTVoid) );
 		Assert.isFalse( hasReturnType("returnVoidFn",ARTOutcome) );
 		Assert.isFalse( hasReturnType("returnVoidFn",ARTFuture) );
-		
+
 		Assert.isFalse( hasReturnType("returnStringFn",ARTVoid) );
 		Assert.isFalse( hasReturnType("returnStringFn",ARTOutcome) );
 		Assert.isFalse( hasReturnType("returnStringFn",ARTFuture) );
-		
+
 		Assert.isFalse( hasReturnType("returnOutcomeFn",ARTVoid) );
 		Assert.isTrue ( hasReturnType("returnOutcomeFn",ARTOutcome) );
 		Assert.isFalse( hasReturnType("returnOutcomeFn",ARTFuture) );
-		
+
 		Assert.isFalse( hasReturnType("returnFutureFn",ARTVoid) );
 		Assert.isFalse( hasReturnType("returnFutureFn",ARTOutcome) );
 		Assert.isTrue ( hasReturnType("returnFutureFn",ARTFuture) );
-		
+
 		Assert.isFalse( hasReturnType("returnSurpriseFn",ARTVoid) );
 		Assert.isTrue ( hasReturnType("returnSurpriseFn",ARTOutcome) );
 		Assert.isTrue ( hasReturnType("returnSurpriseFn",ARTFuture) );
 	}
-	
+
 	var asyncApi1:ApiTest1Async;
 	var asyncApi2:ApiTest2Async;
 	public function testAsyncClassExists() {
 		var api1 = new ApiTest1();
-		asyncApi1 = new ApiTest1Async( null );
-		asyncApi2 = new ApiTest2Async( null );
-		
+		asyncApi1 = new ApiTest1Async();
+		asyncApi2 = new ApiTest2Async();
+
 		// Check classes can be used as values
 		Assert.isTrue( Std.is(asyncApi1,ApiTest1Async) );
 		Assert.isTrue( Std.is(asyncApi2,ApiTest2Async) );
 		// Check interfaces
 		Assert.isTrue( Std.is(api1,MyApiInterface) );
 		Assert.isTrue( Std.is(asyncApi1,MyApiInterfaceAsync) );
-		
+
 		// Notes:
 		// Here I'm not testing much, other than that it compiles.
 		// Setting up appropriate testing will require a fair bit of conditional compilation between client and server.
-		// Also I'm using tink_core's operator overloading where `>>` is a map (or flatMap) on a surprise.
-		
-//		// Simple API call that returns a regular result.
-//		asyncApi1.doSysStuff() >> function(result:Outcome<String,RemotingError<Dynamic>>) switch result {
-//			case Success(cwd):
-//			case Failure(remotingError):
-//		}
-//		asyncApi1.doSysStuff() >> function(cwd:String) {
-//			
-//		}
-//		
-//		// API call that returns void, should now return a Noise.
-//		var arr = [];
-//		asyncApi1.addToArray(arr) >> function(result:Outcome<Noise,RemotingError<Dynamic>>) switch result {
-//			case Success(_):
-//			case Failure(remotingError):
-//		}
-//		
-//		// API call that returns an outcome
-//		asyncApi2.returnOutcomeFn(true) >> function(result:Outcome<String,RemotingError<Int>>) switch result {
-//			case Success(outcome):
-//			case Failure(remotingError):
-//		}
-//		
-//		// API call that returns a Future
-//		asyncApi2.returnFutureFn() >> function(result:Outcome<Int,RemotingError<Dynamic>>) switch result {
-//			case Success(int):
-//			case Failure(remotingError):
-//		}
-//		
-//		// API call that returns a Surprise
-//		asyncApi2.returnSurpriseFn() >> function(result:Outcome<Int,RemotingError<String>>) switch result {
-//			case Success(int):
-//			case Failure(remotingError):
-//		}
-//		
+		// It's probably better suited to some BDD style integration tests.
 	}
 }
 
