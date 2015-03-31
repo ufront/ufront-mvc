@@ -41,8 +41,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 		if ( httpMethod=="GET" )
 			return "";
 		if ( null==postString ) {
-			// TODO: work with Pushstate to have a sensible value here.
-			postString = "";
+			postString = window.history.state.post;
 		}
 		return postString;
 	}
@@ -61,11 +60,10 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 	}
 
 	override function get_post() {
-		if ( httpMethod=="GET" )
-			return new MultiValueMap();
 		if ( null==post ) {
-			throw 'Post not supported yet.  Perhaps we can do it using pushstate data?';
-			post = getMultiValueMapFromString(postString);
+			post =
+				if ( httpMethod=="GET" ) new MultiValueMap();
+				else getMultiValueMapFromString( postString, true );
 		}
 		return post;
 	}
@@ -99,8 +97,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 
 	override function get_uri() {
 		if ( uri==null ) {
-			// TODO: check if this should include the querystring.  I don't think it does.
-			uri = document.location.pathname;
+			uri = document.location.pathname.urlDecode();
 		}
 		return uri;
 	}
@@ -115,8 +112,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 
 	override function get_httpMethod() {
 		if ( httpMethod==null ) {
-			// TODO: work with pushstate to emulate "POST" requests.
-			httpMethod = "GET";
+			httpMethod = Reflect.hasField(window.history.state, "post") ? "POST" : "GET";
 		}
 		return httpMethod;
 	}
@@ -134,13 +130,15 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 		return null;
 	}
 
-	static function getMultiValueMapFromString(s:String):MultiValueMap<String> {
+	static function getMultiValueMapFromString(s:String, ?decodeRequired=false):MultiValueMap<String> {
 		var map = new MultiValueMap();
 		for (part in s.split("&")) {
 			var index = part.indexOf("=");
 			if ( index>0 ) {
 				var name = part.substr(0,index);
 				var val = part.substr(index+1);
+				if ( decodeRequired )
+					val = val.urlDecode();
 				map.add( name, val );
 			}
 		}
