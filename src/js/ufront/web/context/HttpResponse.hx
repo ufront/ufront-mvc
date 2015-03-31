@@ -53,7 +53,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 		// Write response content
 		if ( contentType=="text/html" ) {
 			// This method only has IE9 support.  We might need something better in future.
-			var newDoc = document.implementation.createHTMLDocument("MY TITLE");
+			var newDoc = document.implementation.createHTMLDocument("");
 			newDoc.documentElement.innerHTML = _buff.toString();
 
 			// TODO: deleting all old elements and replacing them is fairly brutal.
@@ -63,6 +63,24 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 			newDoc.find( "head" ).children(false).appendTo( document.head.empty() );
 			newDoc.find( "body" ).children(false).appendTo( document.body.empty() );
 		}
-		else throw 'Cannot use ufront-client-mvc to render content type "$contentType". Only "text/html" is supported.';
+		else if ( this.isRedirect() ) {
+			#if pushstate
+				if ( this.redirectLocation.startsWith("/") || this.redirectLocation.startsWith(window.location.origin) ) {
+					// The URL is on this site, attempt a pushstate.
+					// TODO: Not every request here should be on the client, for example, if the redirect points to a download.
+					// We should add a mechanism for the client to defer to the server when it cannot display the appropriate content type.
+					pushstate.PushState.replace( this.redirectLocation );
+				}
+				else {
+					document.location.href = this.redirectLocation;
+				}
+			#else
+				document.location.href = this.redirectLocation;
+			#end
+		}
+		else {
+			// TODO: Figure out if there is a sensible way to fall back to the server.
+			throw 'Cannot use ufront-client-mvc to render content type "$contentType". Only "text/html" is supported.';
+		}
 	}
 }
