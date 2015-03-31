@@ -97,7 +97,9 @@ class UfrontApplication extends HttpApplication
 		mvcHandler = new MVCHandler( configuration.indexController );
 		remotingHandler = new RemotingHandler();
 		remotingHandler.loadApis( configuration.apis );
-		remotingHandler.loadApiContext( configuration.remotingApi );
+		if ( configuration.remotingApi!=null ) {
+			remotingHandler.loadApiContext( configuration.remotingApi );
+		}
 
 		// Map some default injector rules
 		for ( controller in configuration.controllers ) {
@@ -105,7 +107,9 @@ class UfrontApplication extends HttpApplication
 		}
 		for ( api in configuration.apis ) {
 			inject( api );
-			// TODO: Inject Async versions of APIs.
+			var asyncApi = UFAsyncApi.getAsyncApi( api );
+			if ( asyncApi!=null )
+				inject( asyncApi );
 		}
 
 		// Set up handlers and middleware

@@ -7,6 +7,7 @@ import ufront.auth.*;
 import ufront.view.*;
 import ufront.handler.*;
 import ufront.log.*;
+import ufront.api.UFApi;
 import pushstate.PushState;
 import thx.core.Strings;
 import ufront.web.url.filter.*;
@@ -51,9 +52,10 @@ class ClientJsApplication extends HttpApplication {
 		}
 		for ( api in configuration.apis ) {
 			inject( api );
-			// TODO: Inject Async versions of APIs.
+			var asyncApi = UFAsyncApi.getAsyncApi( api );
+			if ( asyncApi!=null )
+				inject( asyncApi );
 		}
-		// TODO: inject API Proxies, both sync and async versions.
 
 		// Set up handlers and middleware
 		addRequestMiddleware( configuration.requestMiddleware );
@@ -109,7 +111,6 @@ class ClientJsApplication extends HttpApplication {
 		var basePath = null;
 		PushState.init( basePath, false );
 		PushState.addEventListener(function(url,data) {
-			// TODO: Work with "data" to set up some fake "POST" variables in our HttpRequest
 			this.executeRequest();
 		});
 		return this;
