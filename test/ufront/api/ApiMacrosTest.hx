@@ -1,7 +1,7 @@
 package ufront.api;
 
 import ufront.api.UFApi;
-import haxe.remoting.RemotingError;
+import ufront.remoting.RemotingError;
 import utest.Assert;
 import haxe.rtti.Meta;
 import haxe.EnumFlags;

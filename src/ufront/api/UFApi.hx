@@ -3,10 +3,10 @@ package ufront.api;
 import haxe.PosInfos;
 import ufront.log.MessageList;
 import haxe.EnumFlags;
-import haxe.remoting.RemotingError;
+import ufront.remoting.RemotingError;
 import ufront.auth.*;
 import haxe.CallStack;
-import haxe.remoting.RemotingUtil;
+import ufront.remoting.RemotingUtil;
 import haxe.rtti.Meta;
 using tink.CoreApi;
 
@@ -100,7 +100,7 @@ class UFApi
 /**
 	A class that builds an API proxy of an existing UFApi.
 	On the server it just wraps results in Futures.
-	On the client it uses a `HttpAsyncConnectionWithTraces` to perform remoting.
+	On the client it uses a `HttpAsyncConnection` to perform remoting.
 	Constructor dependency injection is used to get the original API on the server or the remoting connection on the client.
 	Usage: `class AsyncLoginApi extends UFAsyncApi<LoginApi> {}`
 **/
@@ -114,7 +114,7 @@ class UFAsyncApi<SyncApi:UFApi> {
 		**/
 		public var api:SyncApi;
 	#elseif client
-		@inject public var cnx:haxe.remoting.HttpAsyncConnectionWithTraces;
+		@inject public var cnx:ufront.remoting.HttpAsyncConnection;
 	#end
 
 	public function new() {}

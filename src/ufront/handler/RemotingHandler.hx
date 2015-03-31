@@ -169,19 +169,29 @@ class RemotingHandler implements UFRequestHandler
 		// Log the error
 		httpContext.ufError( e );
 
-		// Serialize the exception
-		var s = new haxe.Serializer();
-		s.serializeException(e);
-		var serializedException = "hxe" + s.toString();
+		if ( httpContext.request.clientHeaders.exists("X-Ufront-Remoting") ) {
+			// We can include the "hxe" and "hxs" exception and stack trace.
+			// Serialize the exception
+			var s = new haxe.Serializer();
+			s.serializeException(e);
+			var serializedException = "hxe" + s.toString();
 
-		#if debug
-			// Serialize the stack trace
-			var exceptionStack = CallStack.toString( CallStack.exceptionStack() );
-			var serializedStack = "hxs" + Serializer.run( exceptionStack );
-			return serializedStack + "\n" + serializedException;
-		#else
-			return serializedException;
-		#end
+			#if debug
+				// Serialize the stack trace
+				var exceptionStack = CallStack.toString( CallStack.exceptionStack() );
+				var serializedStack = "hxs" + Serializer.run( exceptionStack );
+				return serializedStack + "\n" + serializedException;
+			#else
+				return serializedException;
+			#end
+		}
+		else {
+			// This is standard Haxe remoting.  Only use the "hxr" line with a serialized exception.
+			var s = new haxe.Serializer();
+			s.serializeException(e);
+			return "hxr" + s.toString();
+		}
+
 	}
 
 	public function toString() return "ufront.handler.RemotingHandler";

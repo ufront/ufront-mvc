@@ -200,7 +200,7 @@ class ApiMacros
 			pos: classPos,
 			name: "cnx",
 			meta: [],
-			kind: FieldType.FVar(macro :haxe.remoting.HttpAsyncConnection),
+			kind: FieldType.FVar(macro :ufront.remoting.HttpAsyncConnection),
 			doc: null,
 			access: [APrivate]
 		};
@@ -231,7 +231,7 @@ class ApiMacros
 	static function getClientConstructorField()
 	{
 		clientConstructorBlock = macro {
-			cnx = haxe.remoting.HttpAsyncConnectionWithTraces.urlConnect(url,errorHandler);
+			cnx = ufront.remoting.HttpAsyncConnection.urlConnect(url,errorHandler);
 		}
 		return {
 			pos: classPos,
@@ -244,7 +244,7 @@ class ApiMacros
 					expr: clientConstructorBlock,
 					args: [
 						{ value: null, type: macro :String, opt: false, name: "url" },
-						{ value: null, type: macro :haxe.remoting.RemotingError<Dynamic>->Void, opt: false, name: "errorHandler" },
+						{ value: null, type: macro :ufront.remoting.RemotingError<Dynamic>->Void, opt: false, name: "errorHandler" },
 					]
 				}
 			),
@@ -471,25 +471,25 @@ class ApiMacros
 			default: [];
 		}
 		if ( flags.has(ARTVoid) ) {
-			return macro :tink.core.Future.Surprise<Noise,haxe.remoting.RemotingError<tink.core.Noise>>;
+			return macro :tink.core.Future.Surprise<Noise,ufront.remoting.RemotingError<tink.core.Noise>>;
 		}
 		else if ( flags.has(ARTFuture) && flags.has(ARTOutcome) ) {
 			var successType = typeParams[0].toComplex();
 			var failureType = typeParams[1].toComplex();
-			return macro :tink.core.Future.Surprise<$successType,haxe.remoting.RemotingError<$failureType>>;
+			return macro :tink.core.Future.Surprise<$successType,ufront.remoting.RemotingError<$failureType>>;
 		}
 		else if ( flags.has(ARTFuture) ) {
 			var type = typeParams[0].toComplex();
-			return macro :tink.core.Future.Surprise<$type,haxe.remoting.RemotingError<tink.core.Noise>>;
+			return macro :tink.core.Future.Surprise<$type,ufront.remoting.RemotingError<tink.core.Noise>>;
 		}
 		else if ( flags.has(ARTOutcome) ) {
 			var successType = typeParams[0].toComplex();
 			var failureType = typeParams[1].toComplex();
-			return macro :tink.core.Future.Surprise<$successType,haxe.remoting.RemotingError<$failureType>>;
+			return macro :tink.core.Future.Surprise<$successType,ufront.remoting.RemotingError<$failureType>>;
 		}
 		else {
 			var type = rt.toComplex();
-			return macro :tink.core.Future.Surprise<$type,haxe.remoting.RemotingError<tink.core.Noise>>;
+			return macro :tink.core.Future.Surprise<$type,ufront.remoting.RemotingError<tink.core.Noise>>;
 		}
 	}
 

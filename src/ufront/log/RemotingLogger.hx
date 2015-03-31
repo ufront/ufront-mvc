@@ -21,7 +21,7 @@ class RemotingLogger implements UFLogHandler
 
 	public function log( httpContext:HttpContext, appMessages:Array<Message> ) {
 
-		if( httpContext.response.contentType=="application/x-haxe-remoting" ) {
+		if( httpContext.request.clientHeaders.exists("X-Ufront-Remoting") && httpContext.response.contentType=="application/x-haxe-remoting" ) {
 			var results = [];
 			for( msg in httpContext.messages )
 				results.push( formatMessage(msg) );

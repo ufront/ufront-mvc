@@ -1,10 +1,10 @@
-package haxe.remoting;
+package ufront.remoting;
 
 import utest.Assert;
-import haxe.remoting.HttpAsyncConnectionWithTraces;
+import ufront.remoting.HttpAsyncConnection;
 
-class HttpAsyncConnectionWithTracesTest {
-	var instance:HttpAsyncConnectionWithTraces;
+class HttpAsyncConnectionTest {
+	var instance:HttpAsyncConnection;
 
 	public function new() {}
 

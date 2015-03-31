@@ -50,6 +50,9 @@ class RemotingLoggerTest {
 
 	public function testLog() {
 		var ctx = "/".mockHttpContext();
+		ctx.request.clientHeaders.set( "X-Ufront-Remoting", "1" );
+		ctx.request.clientHeaders.set( "X-Haxe-Remoting", "1" );
+
 		var pageContent = "HXR Remoting Response";
 		ctx.response.contentType = "application/x-haxe-remoting";
 		ctx.response.write( pageContent );

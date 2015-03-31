@@ -1,7 +1,7 @@
-package haxe.remoting;
+package ufront.remoting;
 
 import utest.Assert;
-import haxe.remoting.RemotingUtil;
+import ufront.remoting.RemotingUtil;
 
 class RemotingUtilTest {
 	var instance:RemotingUtil;

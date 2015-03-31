@@ -18,5 +18,6 @@ class TestAll
 		ufront.sys.TestAll.addTests( runner );
 		ufront.test.TestAll.addTests( runner );
 		ufront.auth.TestAll.addTests( runner );
+		ufront.remoting.TestAll.addTests( runner );
 	}
 }
