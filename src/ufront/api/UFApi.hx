@@ -1,95 +1,118 @@
 package ufront.api;
 
 import haxe.PosInfos;
-import ufront.log.MessageList;
 import haxe.EnumFlags;
 import ufront.remoting.RemotingError;
-import ufront.auth.*;
 import haxe.CallStack;
 import ufront.remoting.RemotingUtil;
 import haxe.rtti.Meta;
 using tink.CoreApi;
 
 /**
-	This class provides a build macro that will take some extra precautions to make
-	sure your Api class compiles successfully on the client as well as the server.
+	A UFApi is an API that can be used in Ufront controllers, tasks, other APIs, over via remoting.
 
-	Basically, the build macro strips out private methods, and the method bodies of public methods,
-	so all that is left is the method signiature.
+	Features:
 
-	This way, the Proxy class will still be created successfully, but none of the server-side APIs
-	get tangled up in client side code.
+	- Compiles on Client and Server
+	- Dependency injection (into this class)
+	- Dependency injection (into other APIs or controllers)
+	- ufTrace, ufLog, ufWarn, ufError
+	- auth
+	- Sync Remoting on the client
+	- Async Remoting on the client with UFAsyncApi
+	- Async on the server with UFAsyncApi
+	- Remoting with ApiContext
+
 **/
 @:autoBuild(ufront.api.ApiMacros.buildApiClass())
-class UFApi
-{
-	/**
-		The current `ufront.auth.UFAuthHandler`.
+class UFApi {
 
-		You can use this to check permissions etc.
+	#if server
+		/**
+			The current `ufront.auth.UFAuthHandler`.
 
-		This is inserted via dependency injection.
-	**/
-	@inject public var auth:UFAuthHandler<UFAuthUser>;
+			You can use this to check permissions etc.
 
-	/**
-		The messages list.
+			This is inserted via dependency injection.
 
-		When called from a web context, this will usually result in the HttpContext's `messages` array being pushed to so your log handlers can handle the messages appropriately.
+			This property only exists when compiled with `-D server`.
+		**/
+		@inject public var auth:ufront.auth.UFAuthHandler<ufront.auth.UFAuthUser>;
 
-		This is inserted via dependency injection, and must be injected for `ufTrace`, `ufLog`, `ufWarn` and `ufError` to function correctly.
-	**/
-	@:noCompletion @inject public var messages:MessageList;
+		/**
+			The messages list.
 
-	/**
-		A default constructor.
+			When called from a web context, this will usually result in the HttpContext's `messages` array being pushed to so your log handlers can handle the messages appropriately.
 
-		This has no effect, it just exists so you don't need to create a constructor on every child class.
-	**/
+			This is inserted via dependency injection, and must be injected for `ufTrace`, `ufLog`, `ufWarn` and `ufError` to function correctly.
+
+			This property only exists when compiled with `-D server`.
+		**/
+		@:noCompletion @inject public var messages:ufront.log.MessageList;
+	#elseif client
+		/**
+			The `haxe.remoting.Connection` needed on the client to make a synchronous remoting call, matching the usage server side.
+
+			This is inserted via dependency injection, and is required for client side synchronous remoting to function correctly.
+
+			This property only exists when compiled with `-D client`.
+		**/
+		@inject public var cnx:haxe.remoting.Connection;
+	#end
+
 	public function new() {}
 
+	#if server
+		/**
+			A shortcut to `HttpContext.ufTrace`
+
+			A `messages` array must be injected for these to function correctly.  Use `ufront.handler.MVCHandler` and `ufront.handler.RemotingHandler` to inject this correctly.
+		**/
+		@:noCompletion
+		inline function ufTrace( msg:Dynamic, ?pos:PosInfos ) {
+			messages.push({ msg: msg, pos: pos, type:Trace });
+		}
+
+		/**
+			A shortcut to `HttpContext.ufLog`
+
+			A `messages` array must be injected for these to function correctly.  Use `ufront.handler.MVCHandler` and `ufront.handler.RemotingHandler` to inject this correctly.
+		**/
+		@:noCompletion
+		inline function ufLog( msg:Dynamic, ?pos:PosInfos ) {
+			messages.push({ msg: msg, pos: pos, type:Log });
+		}
+
+		/**
+			A shortcut to `HttpContext.ufWarn`
+
+			A `messages` array must be injected for these to function correctly.  Use `ufront.handler.MVCHandler` and `ufront.handler.RemotingHandler` to inject this correctly.
+		**/
+		@:noCompletion
+		inline function ufWarn( msg:Dynamic, ?pos:PosInfos ) {
+			messages.push({ msg: msg, pos: pos, type:Warning });
+		}
+
+		/**
+			A shortcut to `HttpContext.ufError`
+
+			A `messages` array must be injected for these to function correctly.  Use `ufront.handler.MVCHandler` and `ufront.handler.RemotingHandler` to inject this correctly.
+		**/
+		@:noCompletion
+		inline function ufError( msg:Dynamic, ?pos:PosInfos ) {
+			messages.push({ msg: msg, pos: pos, type:Error });
+		}
+	#elseif client
+		var className:String;
+		inline function _makeApiCall<A>( method:String, args:Array<Dynamic> ):A {
+			if ( className==null )
+				className = Type.getClassName( Type.getClass(this) );
+			return cnx.resolve( className ).resolve( method ).call( args );
+		}
+	#end
+
 	/**
-		A shortcut to `HttpContext.ufTrace`
-
-		A `messages` array must be injected for these to function correctly.  Use `ufront.handler.MVCHandler` and `ufront.handler.RemotingHandler` to inject this correctly.
-	**/
-	@:noCompletion
-	inline function ufTrace( msg:Dynamic, ?pos:PosInfos ) {
-		messages.push({ msg: msg, pos: pos, type:Trace });
-	}
-
-	/**
-		A shortcut to `HttpContext.ufLog`
-
-		A `messages` array must be injected for these to function correctly.  Use `ufront.handler.MVCHandler` and `ufront.handler.RemotingHandler` to inject this correctly.
-	**/
-	@:noCompletion
-	inline function ufLog( msg:Dynamic, ?pos:PosInfos ) {
-		messages.push({ msg: msg, pos: pos, type:Log });
-	}
-
-	/**
-		A shortcut to `HttpContext.ufWarn`
-
-		A `messages` array must be injected for these to function correctly.  Use `ufront.handler.MVCHandler` and `ufront.handler.RemotingHandler` to inject this correctly.
-	**/
-	@:noCompletion
-	inline function ufWarn( msg:Dynamic, ?pos:PosInfos ) {
-		messages.push({ msg: msg, pos: pos, type:Warning });
-	}
-
-	/**
-		A shortcut to `HttpContext.ufError`
-
-		A `messages` array must be injected for these to function correctly.  Use `ufront.handler.MVCHandler` and `ufront.handler.RemotingHandler` to inject this correctly.
-	**/
-	@:noCompletion
-	inline function ufError( msg:Dynamic, ?pos:PosInfos ) {
-		messages.push({ msg: msg, pos: pos, type:Error });
-	}
-
-	/**
-		Print the current class name
+		Print the current class name.
 	**/
 	@:noCompletion
 	public function toString() {
@@ -98,10 +121,14 @@ class UFApi
 }
 
 /**
-	A class that builds an API proxy of an existing UFApi.
-	On the server it just wraps results in Futures.
-	On the client it uses a `HttpAsyncConnection` to perform remoting.
-	Constructor dependency injection is used to get the original API on the server or the remoting connection on the client.
+	A class that builds an Asynchronous API proxy of an existing UFApi.
+
+	On the client it uses a `HttpAsyncConnection` to perform remoting, and wraps the results in a `Surprise<A,RemotingError<B>>` type, where a `Success` is the original return result, and a `Failure` describes the remoting failure or the API failure.
+
+	On the server it just wraps results in the same `Surprise` type, so that the Async API can be used identically on the client or the server.
+
+	Dependency injection is used to get the original API on the server, or the remoting connection on the client.
+
 	Usage: `class AsyncLoginApi extends UFAsyncApi<LoginApi> {}`
 **/
 @:autoBuild( ufront.api.ApiMacros.buildAsyncApiProxy() )
@@ -114,7 +141,7 @@ class UFAsyncApi<SyncApi:UFApi> {
 		**/
 		public var api:SyncApi;
 	#elseif client
-		@inject public var cnx:ufront.remoting.HttpAsyncConnection;
+		@inject public var cnx:haxe.remoting.AsyncConnection;
 	#end
 
 	public function new() {}

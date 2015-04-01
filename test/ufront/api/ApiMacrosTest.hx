@@ -6,7 +6,9 @@ import utest.Assert;
 import haxe.rtti.Meta;
 import haxe.EnumFlags;
 import haxe.macro.MacroType;
+import mockatoo.Mockatoo.*;
 using tink.CoreApi;
+using mockatoo.Mockatoo;
 
 class ApiMacrosTest {
 	public function new() {}
@@ -19,19 +21,35 @@ class ApiMacrosTest {
 
 	public function teardown():Void {}
 
-	public function testRemoveClientBodies() {
+	public function testClientTransformation() {
 		var api = new ApiTest1();
-		var result = api.doSysStuff();
 		var myArr = [];
-		api.addToArray( myArr );
 
 		#if server
+			var result = api.doSysStuff();
+			api.addToArray( myArr );
 			Assert.notNull( api.doSysStuff() );
 			Assert.equals( 1, myArr.length );
 			Assert.equals( "New Test", api.name );
 		#elseif client
-			Assert.isNull( api.doSysStuff() );
-			Assert.equals( 0, myArr.length );
+			var mockConnection = mock( haxe.remoting.HttpConnection );
+			mockConnection.resolve( cast anyString ).returns( mockConnection );
+			api.cnx = mockConnection;
+			api.addToArray( myArr );
+
+			mockConnection.resolve( "ufront.api.ApiTest1" ).verify( 1 );
+			mockConnection.resolve( "addToArray" ).verify( 1 );
+			mockConnection.call(cast any).verify( 1 );
+
+			mockConnection.call(cast any).returns( "fake cwd" );
+			var result = api.doSysStuff();
+			// TODO: I believe ".verify()" resets the count after it is called.
+			// I need to double check this, because .resolve("ufront.api.ApiTest1") is called twice, so if I'm wrong these tests are wrong.
+			mockConnection.resolve( "ufront.api.ApiTest1" ).verify( 1 );
+			mockConnection.resolve( "doSysStuff" ).verify( 1 );
+			Assert.equals( "fake cwd", api.doSysStuff() );
+
+			// Check that a variable was stripped out on the client. Only public API methods should remain.
 			Assert.isFalse( Reflect.hasField(api,"name") );
 		#end
 	}
@@ -84,8 +102,10 @@ class ApiMacrosTest {
 
 		// Notes:
 		// Here I'm not testing much, other than that it compiles.
-		// Setting up appropriate testing will require a fair bit of conditional compilation between client and server.
-		// It's probably better suited to some BDD style integration tests.
+		// We do some tests for the sync stuff in `testClientTransformation` above, using a mock `haxe.remoting.Connection`.
+		// We could probably do a mock `haxe.remoting.AsyncConnection` and run some similar tests here.
+		// Then if we have tests on `RemotingHandler`, that gives us good coverage.
+		// An full stack integration test would still be useful.
 	}
 }
 

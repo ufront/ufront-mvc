@@ -2,51 +2,105 @@ package ufront.api;
 
 import minject.Injector;
 
-/** RemotingApi is a base class for setting up your Haxe remoting API context.
+/**
+	`UFApiContext` is a base class for setting up your Haxe remoting API context.
 
-It uses the `ApiMacros.buildApiContext` macro and `minject` together.
+	If set in your `UfrontConfiguration.remotingApi`, your UFApiContext class will share all the APIs over both Haxe style remoting (using proxies with callbacks) and Ufront style remoting (using `UFApi` and `UFAsyncApi`).
 
-Please only define public variables in the sub class, each one representing an API class
-you wish to share with your remoting context.  Eg:
+	An example API context might look like this:
 
-	class MainApi extends ufront.api.RemotingApi {
+	```haxe
+	class MainApi extends ufront.api.UFApiContext {
 		var clientAPI:app.client.ClientAPI;
 		var purchaseAPI:app.purchase.PurchasingAPI;
 	}
+	```
 
-Please don't use properties.  And don't define any functions, including the constructor.
-All of your API objects (that is, all the variables you specify) will be instantiated
-by some of our macro code.
+	This will make both ClientAPI and PurchasingAPI available to remoting calls.
 
-For the server side, this API object can be used in the remoting controller:
+	### Ufront Style Remoting.
 
-	RemotingController.remotingApi = MyApi;
+	The `UFApi` and `UFAsyncApi` classes have build macros that allow them to work seamlessly on the client or the server.
 
-For the client side, another class will be generated in the same location.  So if you have
+	The `UFApi` will make synchronous remoting calls using an injected `haxe.remoting.Connection`, which will usually be a `ufront.remoting.HttpConnection`.
+	Please note on Javascript making a synchronous HTTP call may result in the browser UI locking while the request completes, so it is generally recommended you use `UFAsyncApi`.
+	Another note: APIs that execute asynchronously on the server, and return a Future or a Surprise, may not serialize correctly during synchronous remoting.  It is advised to use `UFAsyncApi` for these use cases.
 
-	my.app.MainApi;
+	The `UFAsyncApi` will make asynchronous remoting calls using an injected `haxe.remoting.AsyncConnection`, which will usually be a `ufront.remoting.HttpAsyncConnection`.
 
-The build macro will generate
+	If we had the following `ClientAPI` class included in our UFApiContext:
 
-	my.app.MainApiClient;
+	```haxe
+	class ClientAPI extends UFApi {
+		public function getClient( id:Int ):Client { ... }
+	}
+	```
 
-as well as the proxy classes for any APIs that you used:
+	The Async API would be created with:
 
-	my.app.ClientApiProxy;
-	my.app.PurchasingApiProxy;
+	```haxe
+	class AsyncClientAPI extends UFAsyncApi<ClientAPI> {}
+	```
 
-Your ApiClient can be initialised with two constructor arguments: the URL of the remoting end point, and an error handler:
+	This would have transform the `getClient` method to return a `Surprise`:
 
-	new my.app.MainApiClient(url, errorHandler);
-	new my.app.MainApiClient("http://api.google.com/haxeremoting/", function (e:Dynamic) trace (e));
+	```haxe
+	class AsyncClientAPI {
+		public function getClient( id:Int ):Surprise<Client,RemotingError<Dynamic>>;
+	}
+	```
 
-Please note, you will need to explicitly import the API so that the build macro runs and the proxy is generated.  Otherwise you
-will get a "Class not found : my.app.MainApiClient" error.  So instead, do:
+	You can use `UFAsyncApi` directly on the server as well, so that your client code and server code can interact with the API in the same way.
 
-	import my.app.MainApi;
-	...
-	new my.app.MainApiClient(url, errorHandler);
-*/
+	### Haxe Style Remoting
+
+	Haxe style remoting creates a proxy class on the client that uses asynchronous callbacks for each call.
+	This style of remoting may feel more natural if you are not using ufront on your client.
+
+	The build macro for `UFApiContext` will also create a "Client" version of the class when `-D client` is used during compilation:
+
+	```haxe
+	class MainApiClient {
+		var clientAPI:app.client.ClientAPIProxy;
+		var purchaseAPI:app.purchase.PurchasingApiProxy;
+	}
+	```
+
+	Furthermore, it will create a "Proxy" class for each API.
+	If we had the following `ClientAPI` class included in our UFApiContext:
+
+	```haxe
+	class ClientAPI extends UFApi {
+		public function getClient( id:Int ):Client { ... }
+	}
+	```
+
+	Then a proxy class would be generated:
+
+	```haxe
+	class ClientAPIProxy {
+		public function getClient( id:Int, callback:Client->Void ):Void
+	}
+	```
+
+	You could access this on your client application using:
+
+	```haxe
+	var api = new MainApiClient( url, errorHandler );
+	api.clientAPI.getClient( 1, function(client) {
+		trace( 'Found client 1: '+client.name );
+	});
+	```
+
+	### Other Notes
+
+	- Please only define public variables in the sub classes, each one representing a `UFApi` class.
+	- Please don't create any methods, properties, private variables or a constructor. They will be removed during the macros.
+	- The API variables do not need to be initialised - dependency injection will be used for that.
+	- You can construct an API Context on the client using `new MyApiClient( url, errorHandler )`.
+	- If you never import your API Context on the client, the build macro will not run and the Haxe style remoting proxy classes will not be generated.
+	  The `UFApi` and `UFAsyncApi` classes are both generated with the correct remoting calls when you import them on the client, regardless of if the `UFApiContext` is imported.
+**/
 
 @:autoBuild(ufront.api.ApiMacros.buildApiContext())
 class UFApiContext {

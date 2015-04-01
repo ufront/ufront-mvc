@@ -140,7 +140,8 @@ class ApiMacros
 	}
 
 	/**
-		To compile correctly on the client, keep only the public methods, and only their signiatures - remove the actual function body.
+		Replace all the public API methods on the client with synchronous remoting calls, that have a matching type signiature so they can be used interchangeably.
+		Remove any member methods or variables which are not part of the public API.
 	**/
 	static function transformClient( cb:ClassBuilder ) {
 		// To compile correctly on the client, keep only the public methods, and only their signiatures - remove the actual function body.
@@ -149,10 +150,11 @@ class ApiMacros
 				if ( member.isPublic==true && !member.isStatic ) {
 					switch member.kind {
 						case FFun(fun):
-							// Trim the function body
+							var remotingCall = buildSyncFnBody(member.name,fun.args);
+							var returnsVoid = fun.ret==null || fun.ret.match(TPath({name:"Void"}));
 							fun.expr =
- 								if ( fun.ret==null ) macro {};
-								else macro return null;
+ 								if ( returnsVoid ) macro $remotingCall;
+								else macro return $remotingCall;
 						default:
 							// Not a function, get rid of it
 							cb.removeMember( member );
@@ -213,7 +215,7 @@ class ApiMacros
 			pos: classPos,
 			name: "cnx",
 			meta: [],
-			kind: FieldType.FVar(macro :ufront.remoting.HttpAsyncConnection),
+			kind: FieldType.FVar(macro :haxe.remoting.Connection),
 			doc: null,
 			access: [APrivate]
 		};
@@ -246,24 +248,10 @@ class ApiMacros
 		clientConstructorBlock = macro {
 			cnx = ufront.remoting.HttpAsyncConnection.urlConnect(url,errorHandler);
 		}
-		return {
-			pos: classPos,
-			name: "new",
-			meta: [],
-			kind: FFun(
-				{
-					ret: null,
-					params: [],
-					expr: clientConstructorBlock,
-					args: [
-						{ value: null, type: macro :String, opt: false, name: "url" },
-						{ value: null, type: macro :ufront.remoting.RemotingError<Dynamic>->Void, opt: false, name: "errorHandler" },
-					]
-				}
-			),
-			doc: null,
-			access: [APublic]
-		};
+		var typeDefinition = macro class Reification {
+			public function new( url:String, errorHandler:ufront.remoting.RemotingError<Dynamic>->Void ) $clientConstructorBlock;
+		}
+		return typeDefinition.fields[0];
 	}
 
 	static function defineProxyForType(type:Type):Null<TypePath>
@@ -402,7 +390,8 @@ class ApiMacros
 								meta: [/** Do we need to add the return type meta? **/],
 								kind: FFun({
 									ret: asyncRT,
-									params: [for (p in classField.params) { params:[], name:p.name, constraints:[p.t.toComplex()]}], // TODO: Check if this works correctly...
+									// TODO: write some unit tests to check type parameters in API functions are correctly supported.
+									params: [for (p in classField.params) { params:[], name:p.name, constraints:[p.t.toComplex()]}],
 									expr: fnBody,
 									args: [for (arg in args) { name:arg.name, opt:arg.opt, type:arg.t.toComplex(), value:null }],
 								}),
@@ -509,6 +498,11 @@ class ApiMacros
 	static function buildAsyncFnBody( name:String, args:Array<{t:haxe.macro.Type,opt:Bool,name:String}>, flags:EnumFlags<ApiReturnType> ):Expr {
 		var argIdents = [ for(a in args) macro $i{a.name} ];
 		return macro return _makeApiCall( $v{name}, $a{argIdents}, haxe.EnumFlags.ofInt($v{flags}) );
+	}
+
+	static function buildSyncFnBody( name:String, args:Array<{type:Null<ComplexType>,opt:Bool,name:String}> ):Expr {
+		var argIdents = [ for(a in args) macro $i{a.name} ];
+		return macro _makeApiCall( $v{name}, $a{argIdents} );
 	}
 	#end
 }
