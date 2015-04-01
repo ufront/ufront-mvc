@@ -8,6 +8,10 @@ package ufront.app;
 	import ufront.view.*;
 	import ufront.handler.*;
 	import ufront.log.*;
+	import ufront.remoting.HttpConnection;
+	import ufront.remoting.HttpAsyncConnection;
+	import haxe.remoting.Connection;
+	import haxe.remoting.AsyncConnection;
 	import ufront.api.UFApi;
 	import pushstate.PushState;
 	import thx.core.Strings;
@@ -56,6 +60,14 @@ package ufront.app;
 				var asyncApi = UFAsyncApi.getAsyncApi( api );
 				if ( asyncApi!=null )
 					inject( asyncApi );
+			}
+
+			// Add the remoting connections.
+			if ( configuration.remotingPath!=null ) {
+				var syncRemotingConnection = HttpConnection.urlConnect( "/" );
+				var asyncRemotingConnection = HttpAsyncConnection.urlConnect( "/" );
+				inject( Connection, syncRemotingConnection );
+				inject( AsyncConnection, asyncRemotingConnection );
 			}
 
 			// Set up handlers and middleware

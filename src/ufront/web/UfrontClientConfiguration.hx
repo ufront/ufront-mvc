@@ -48,6 +48,14 @@ typedef UfrontClientConfiguration = {
 	?basePath:String,
 
 	/**
+		The URL to use for remoting requests.
+		Should be treated as a URL, eg "/", "rel/path/", "/abs/path/" or "http://example.com/".
+		If set to "null", no remoting connection classes will be injected.
+		Default = "/" (the root of the current domain)
+	**/
+	?remotingPath:String,
+
+	/**
 		Disable traces going to the browser console?
 		Could be useful if you have sensitive information in your traces.
 		Default = false;
@@ -157,6 +165,7 @@ K
 			indexController:ufront.web.UfrontConfiguration.DefaultUfrontController,
 			urlRewrite:true,
 			basePath:'/',
+			remotingPath:'/',
 			disableBrowserTrace: false,
 			controllers: CompileTime.getAllClasses( Controller ),
 			apis: CompileTime.getAllClasses( UFApi ),
