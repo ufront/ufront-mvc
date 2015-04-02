@@ -10,78 +10,26 @@ using tink.MacroApi;
 using StringTools;
 using Lambda;
 
-class ApiMacros
-{
-	public static function buildApiContext():Array<Field>
-	{
-		classPos = Context.currentPos();
-		localClass = Context.getLocalClass().get();
-		fields = Context.getBuildFields();
+class ApiMacros {
 
-		// Add an empty constructor
-		var apiConstructor = getApiConstructorField();
+	//
+	// BUILD METHODS
+	//
 
-		// For the client
-			// Define a new type, in the same package, same name but with "Client" on the end
-			// The constructor initiates the connection and the error handling
-
-		var clientClass = getClientClassDefinition();
-		clientClass.fields.push(getCnxField());
-		clientClass.fields.push(getClientConstructorField());
-
-		// For each var
-		for (f in fields.copy())
-		{
-			switch (f.kind)
-			{
-				case FVar(TPath(p), _):
-					// Add @inject metadata so that injection goes down the line...
-					var newExpr:Expr = { expr: ENew(p, []), pos: classPos };
-					if (!f.meta.exists(function (me) return me.name=="inject")) {
-						f.meta.push({ name:"inject", params:[], pos: f.pos });
-					}
-
-					// Define a proxy for the given type
-					var typeName = p.pack.concat([p.name]).join(".");
-					var type = Context.getType(typeName);
-					var proxyTPath = defineProxyForType(type);
-
-					// Create a copy of the field for the client class (change type to proxy)
-					clientClass.fields.push(convertFieldToProxy(f, proxyTPath));
-
-					// Generate an instantiation for the Proxy constructor
-					var fName = f.name;
-					var cnxField = macro cnx.$fName;
-					var newProxyExpr:Expr = { expr: ENew(proxyTPath, [cnxField]), pos: classPos };
-					var instProxyExpr = macro $i{f.name} = $newProxyExpr;
-					addLineToFnBody(clientConstructorBlock, instProxyExpr);
-
-					// Add the API type name to some metadata, so we can generate a list of included API classes at runtime.
-					var meta = localClass.meta;
-					var params = [];
-					if (meta.has("apiList")) {
-						for (metaEntry in meta.extract("apiList")) if (metaEntry.params!=null) {
-							for(param in metaEntry.params) {
-								params.push(param);
-							}
-						}
-						meta.remove("apiList");
-					}
-					meta.add("apiList",params,localClass.pos);
-				case _:
-					// skip
-			}
-		}
-
-		// Now that we have all our fields, define the client type and add our constructor to the server api
-		Context.defineType(clientClass);
-		fields.push(apiConstructor);
-
-		return fields;
+	public static function buildApiContext():Array<Field> {
+		return ClassBuilder.run([
+			addApiListMetaToContext,
+			addInjectMetaToContextFields,
+		]);
 	}
 
-	public static function buildApiClass():Array<Field>
-	{
+	public static function buildClientApiContext():Array<Field> {
+		return ClassBuilder.run([
+			createClientContextProxyFields,
+		]);
+	}
+
+	public static function buildApiClass():Array<Field> {
 		return ClassBuilder.run([
 			checkTypeHints,
 			addReturnTypeMetadata,
@@ -89,35 +37,85 @@ class ApiMacros
 		]);
 	}
 
-	public static function buildSpecificApiProxy():Array<Field>
-	{
-		for (iface in Context.getLocalClass().get().interfaces)
-		{
-			if (iface.t.toString() == "ufront.api.RequireApiProxy")
-			{
-				// If this class implements RequireApiProxy<T>, find <T>
-				for (api in iface.params)
-				{
-					defineProxyForType(api);
+	public static function buildAsyncApiProxy() {
+		return ClassBuilder.run([
+			addAsyncProxyMemberMethods,
+			addAsyncApiMetadata.bind( "asyncApi" ),
+			addInjectApiMethod,
+		]);
+	}
+
+	public static function buildAsyncApiCallbackProxy() {
+		return ClassBuilder.run([
+			addCallbackProxyMemberMethods,
+			addAsyncApiMetadata.bind( "asyncCallbackApi" ),
+			addInjectApiMethod,
+		]);
+	}
+
+	public static function buildSpecificApiProxy():Array<Field> {
+		for (iface in Context.getLocalClass().get().interfaces) {
+			if ( iface.t.toString()=="ufront.remoting.RequireAsyncCallbackApi" ) {
+				for ( api in iface.params ) {
+					defineCallbackProxyForType( api );
 				}
 			}
 		}
 		return null;
 	}
 
-	public static function buildAsyncApiProxy() {
-		return ClassBuilder.run([
-			addProxyMemberMethods,
-			addToAsyncApiMapMetadata,
-			addInjectApiMethod,
-		]);
-	}
-
 	#if macro
 
-	static var classPos;
-	static var localClass;
-	static var fields;
+	//
+	// CLASSBUILDER FUNCTIONS
+	//
+
+	static function addApiListMetaToContext( cb:ClassBuilder ) {
+		var apis = [];
+		for ( member in cb ) {
+			switch member.getVar().sure().type {
+				case TPath(p):
+					var typeName = p.pack.concat([p.name]).join(".");
+					apis.push( macro $v{typeName} );
+				case _:
+			}
+		}
+		cb.target.meta.remove( "apiList" );
+		cb.target.meta.add( "apiList", apis, cb.target.pos );
+	}
+	static function addInjectMetaToContextFields( cb:ClassBuilder ) {
+		for ( member in cb ) {
+			if ( member.isStatic==false && member.kind.match(FVar(_,_)) ) {
+				member.addMeta( "inject" );
+				member.publish();
+			}
+		}
+	}
+
+	static function createClientContextProxyFields( cb:ClassBuilder ) {
+		var serverContext = getClassTypeFromFirstTypeParam( cb ).get();
+
+		// Get (or create) a constructor.
+		// The tink_macro default will forward all arguments (url and errorHandler), which is fine for us.
+		var constructor = cb.getConstructor();
+
+		for ( field in serverContext.fields.get() ) {
+			// Create the proxy if it doesn't exist yet.
+			var apiType = field.type;
+			var typePathForProxy = defineCallbackProxyForType( apiType );
+			var proxyComplexType = TPath( typePathForProxy );
+
+			// Add the field.
+			var fieldName = field.name;
+			var tmp = macro class Tmp {
+				public var $fieldName:$proxyComplexType;
+			}
+			cb.addMember( tmp.fields[0] );
+
+			// Add the initialisation statement.
+			constructor.addStatement( macro this.$fieldName = new $typePathForProxy( this.cnx ) );
+		}
+	}
 
 	/**
 		Check that the user has provided explicit type hints all round, because we need them for our macros.
@@ -196,138 +194,206 @@ class ApiMacros
 		}
 	}
 
-	static function getClientClassDefinition()
-	{
-		return {
-			pos: classPos,
-			params: [],
-			pack: localClass.pack,
-			name: localClass.name + "Client",
-			meta: [],
-			kind: TDClass(),
-			isExtern: false,
-			fields: []
-		};
-	}
-
-	static function getCnxField():Field {
-		return {
-			pos: classPos,
-			name: "cnx",
-			meta: [],
-			kind: FieldType.FVar(macro :haxe.remoting.Connection),
-			doc: null,
-			access: [APrivate]
-		};
-	}
-
-	static var apiConstructorBlock:Expr;
-	static function getApiConstructorField()
-	{
-		apiConstructorBlock = macro { super(); }
-		return {
-			pos: classPos,
-			name: "new",
-			meta: [],
-			kind: FFun(
-				{
-					ret: null,
-					params: [],
-					expr: apiConstructorBlock,
-					args: []
+	/**
+		We cannot use `@inject public var api:T` on our UFAsyncApi objects, because minject does not play nice with generics.
+		Instead we add a `@inject public var setApi()` method.
+		This should also set the `className` field.
+	**/
+	static function addInjectApiMethod( cb:ClassBuilder ) {
+		var syncApiClassType = getClassTypeFromFirstTypeParam( cb );
+		if ( syncApiClassType!=null ) {
+			var syncApiName = syncApiClassType.toString();
+			var syncApiReference = syncApiName.resolve();
+			var tmp = macro class Tmp {
+				@inject public function injectApi( injector:minject.Injector ) {
+					#if server
+						this.api =
+							try injector.getInstance( $syncApiReference )
+							catch (e:Dynamic) throw 'Failed to inject '+Type.getClassName($syncApiReference)+' into '+Type.getClassName(Type.getClass(this));
+					#end
+					this.className = $v{syncApiName};
 				}
-			),
-			doc: null,
-			access: [APublic]
-		};
-	}
-
-	static var clientConstructorBlock:Expr;
-	static function getClientConstructorField()
-	{
-		clientConstructorBlock = macro {
-			cnx = ufront.remoting.HttpAsyncConnection.urlConnect(url,errorHandler);
+			}
+			cb.addMember( tmp.fields[0] );
 		}
-		var typeDefinition = macro class Reification {
-			public function new( url:String, errorHandler:ufront.remoting.RemotingError<Dynamic>->Void ) $clientConstructorBlock;
-		}
-		return typeDefinition.fields[0];
 	}
 
-	static function defineProxyForType(type:Type):Null<TypePath>
-	{
-		switch (type)
-		{
-			case TInst(t, _):
-				var cls = t.get();
+	/**
+		Add some metadata to `UFAsyncApi` to map the API class name to the AsyncAPI class name, so we can inject both at runtime.
+	**/
+	static function addAsyncApiMetadata( metaName:String, cb:ClassBuilder ) {
+		var syncApiClassType = getClassTypeFromFirstTypeParam( cb );
+		if ( syncApiClassType!=null ) {
+			var pack = cb.target.pack.join(".");
+			var name = cb.target.name;
+			var asyncName = (pack!="") ? '$pack.$name' : name;
 
-				// See if it already exists
-				var alreadyExists = false;
-				var proxyName = t.toString() + "Proxy";
-				try
-				{
-					var existing = Context.getType(proxyName);
-					alreadyExists = true;
-				}
-				catch (e:Dynamic)
-				{
-					if (e == 'Type not found \'$proxyName\'')
-						alreadyExists = false;
-					else
-						throw (e);
-				}
+			var meta = syncApiClassType.get().meta;
+			if ( meta.has(metaName) )
+				meta.remove( metaName );
+			meta.add( metaName, [macro $v{asyncName}], cb.target.pos );
+		}
+	}
 
-				if (!alreadyExists)
-				{
-					// If not, define the new type
-					var complex = Context.toComplexType(type);
-					var superClass = TDClass({ // haxe.remoting.AsyncProxy<app.login.LoginAPI>
-						sub: null,
-						params: [TPType(complex)],
-						pack: ["haxe","remoting"],
-						name: "AsyncProxy"
-					});
-					var proxyDefinition = {
-						pos: cls.pos,
-						params: [],
-						pack: cls.pack,
-						name: cls.name + "Proxy",
-						meta: [],
-						kind: superClass,
-						isExtern: false,
-						fields: []
-					};
-					Context.defineType(proxyDefinition);
-				}
+	static function addAsyncProxyMemberMethods( cb:ClassBuilder ) {
+		function getExtraArgs( _, _ ) return [];
+		addProxyMemberMethods( cb, getExtraArgs, buildAsyncFnBody, asyncifyReturnType );
+	}
 
-				// Return the TypePath
-				return { sub: null, params: [], pack: cls.pack, name: cls.name + "Proxy" };
-			default: // do nothing
+	static function addCallbackProxyMemberMethods( cb:ClassBuilder ) {
+		function getReturnType(_,_) return macro :Void;
+		addProxyMemberMethods( cb, getCallbackArgsForField, buildAsyncCallbackFnBody, getReturnType );
+	}
+
+	/**
+		For example:
+
+		- `LoginApiAsync extends UFAsyncApi<LoginApi>`
+		- Find all the public methods on LoginApi
+		- Create an appropriate Async method, using `getExtraArgs`, `getFnBoy` and `getReturnType` to transform it.
+		- See `addAsyncProxyMemberMethods` and `addCallbackProxyMemberMethods` for examples.
+
+		@param cb The current ClassBuilder.
+		@param getExtraArgs A function that takes the return type and the flags and generates extra arguments for the field.
+		@param getFnBody A function that takes the field name, arguments and return type flags and generates a function body expression.
+		@param getReturnType A function that takes the return type and the flags and generates a new return type to use for the field.
+	**/
+	static function addProxyMemberMethods( cb:ClassBuilder, getExtraArgs:haxe.macro.Type->EnumFlags<ApiReturnType>->Array<FunctionArg>, getFnBody:String->Array<{name:String}>->EnumFlags<ApiReturnType>->Expr, getReturnType:haxe.macro.Type->EnumFlags<ApiReturnType>->ComplexType  ) {
+		var apiClassType = getClassTypeFromFirstTypeParam( cb );
+		var pos = cb.target.pos;
+		if ( apiClassType!=null ) {
+			for ( classField in apiClassType.get().fields.get() ) {
+				if ( classField.isPublic ) {
+					var fieldType = classField.type.reduce();
+					switch fieldType {
+						case TFun( args, ret ):
+							var flags = getResultWrapFlagsForReturnType( ret.toComplex(), pos );
+							var member:Member = {
+								pos: pos,
+								name: classField.name,
+								meta: [/** Do we need to add the return type meta? **/],
+								kind: FFun({
+									ret: getReturnType( ret, flags ),
+									// TODO: write some unit tests to check type parameters in API functions are correctly supported.
+									params: [for (p in classField.params) { params:[], name:p.name, constraints:[p.t.toComplex()]}],
+									expr: getFnBody( classField.name, args, flags ),
+									args: [for (arg in args) { name:arg.name, opt:arg.opt, type:arg.t.toComplex(), value:null }].concat( getExtraArgs(ret,flags) ),
+								}),
+								doc: 'Async call for `${apiClassType.toString()}.${classField.name}()`',
+								access: [ APublic ],
+							}
+							cb.addMember( member );
+						case _:
+					}
+				}
+			}
+		}
+	}
+
+	//
+	// HELPER METHODS
+	//
+
+	static function getClassTypeFromFirstTypeParam( cb:ClassBuilder ):Null<haxe.macro.Ref<ClassType>> {
+		var params = cb.target.superClass.params;
+		var pos = cb.target.pos;
+		if ( params.length!=1 ) {
+			pos.errorExpr( 'Expected exactly one type parameter' );
+			return null;
+		}
+		var origApi = params[0];
+		switch origApi {
+			case TInst(apiClassTypeRef,params):
+				return apiClassTypeRef;
+			case _:
+				pos.errorExpr( 'Expected type parameter to be a class' );
 				return null;
 		}
 	}
 
-	static function convertFieldToProxy(f:Field, proxyTPath:TypePath)
-	{
-		return {
-			pos: classPos,
-			name: f.name,
-			meta: f.meta,
-			kind: FieldType.FVar(TPath(proxyTPath)),
-			doc: null,
-			access: f.access
-		};
+	/**
+		Change `doSomething():String` to `doSomething:Suprise<String,RemotingError<Noise>` etc.
+	**/
+	static function asyncifyReturnType( rt:haxe.macro.Type, flags:EnumFlags<ApiReturnType> ):ComplexType {
+		var typeParams = switch rt {
+			case TType(_,params): params;
+			default: [];
+		}
+		if ( flags.has(ARTVoid) ) {
+			return macro :tink.core.Future.Surprise<Noise,ufront.remoting.RemotingError<tink.core.Noise>>;
+		}
+		else if ( flags.has(ARTFuture) && flags.has(ARTOutcome) ) {
+			var successType = typeParams[0].toComplex();
+			var failureType = typeParams[1].toComplex();
+			return macro :tink.core.Future.Surprise<$successType,ufront.remoting.RemotingError<$failureType>>;
+		}
+		else if ( flags.has(ARTFuture) ) {
+			var type = typeParams[0].toComplex();
+			return macro :tink.core.Future.Surprise<$type,ufront.remoting.RemotingError<tink.core.Noise>>;
+		}
+		else if ( flags.has(ARTOutcome) ) {
+			var successType = typeParams[0].toComplex();
+			var failureType = typeParams[1].toComplex();
+			return macro :tink.core.Future.Surprise<$successType,ufront.remoting.RemotingError<$failureType>>;
+		}
+		else {
+			var type = rt.toComplex();
+			return macro :tink.core.Future.Surprise<$type,ufront.remoting.RemotingError<tink.core.Noise>>;
+		}
 	}
 
-	static function addLineToFnBody(fnBody:Expr, line:Expr)
-	{
-		switch (fnBody.expr)
-		{
-			case EBlock(exprs):
-				exprs.push(line);
-			case _:
-				fnBody.expr = EBlock([ fnBody, line ]);
+	static function getCallbackArgsForField( rt:haxe.macro.Type, flags:EnumFlags<ApiReturnType> ):Array<FunctionArg> {
+		var typeParams = switch rt {
+			case TType(_,params): params;
+			default: [];
 		}
+		var onResultType:ComplexType,
+			onErrorType:ComplexType;
+		if ( flags.has(ARTVoid) ) {
+			onResultType = macro :tink.core.Callback<tink.core.Noise>;
+			onErrorType = macro :tink.core.Callback<ufront.remoting.RemotingError<tink.core.Noise>>;
+		}
+		else if ( flags.has(ARTFuture) && flags.has(ARTOutcome) ) {
+			var successType = typeParams[0].toComplex();
+			var failureType = typeParams[1].toComplex();
+			onResultType = macro :tink.core.Callback<$successType>;
+			onErrorType = macro :tink.core.Callback<ufront.remoting.RemotingError<$failureType>>;
+		}
+		else if ( flags.has(ARTFuture) ) {
+			var type = typeParams[0].toComplex();
+			onResultType = macro :tink.core.Callback<$type>;
+			onErrorType = macro :tink.core.Callback<ufront.remoting.RemotingError<tink.core.Noise>>;
+		}
+		else if ( flags.has(ARTOutcome) ) {
+			var successType = typeParams[0].toComplex();
+			var failureType = typeParams[1].toComplex();
+			onResultType = macro :tink.core.Callback<$successType>;
+			onErrorType = macro :tink.core.Callback<ufront.remoting.RemotingError<$failureType>>;
+		}
+		else {
+			var type = rt.toComplex();
+			onResultType = macro :tink.core.Callback<$type>;
+			onErrorType = macro :tink.core.Callback<ufront.remoting.RemotingError<tink.core.Noise>>;
+		}
+		return [
+			{ name:"onResult", opt:false, type:onResultType, value:null },
+			{ name:"onError", opt:true, type:onErrorType, value:null },
+		];
+	}
+
+	static function buildAsyncFnBody( name:String, args:Array<{name:String}>, flags:EnumFlags<ApiReturnType> ):Expr {
+		var argIdents = [ for(a in args) macro $i{a.name} ];
+		return macro return _makeApiCall( $v{name}, $a{argIdents}, haxe.EnumFlags.ofInt($v{flags}) );
+	}
+
+	static function buildAsyncCallbackFnBody( name:String, args:Array<{name:String}>, flags:EnumFlags<ApiReturnType> ):Expr {
+		var argIdents = [ for(a in args) macro $i{a.name} ];
+		return macro return _makeApiCall( $v{name}, $a{argIdents}, onResult, onError );
+	}
+
+	static function buildSyncFnBody( name:String, args:Array<{type:Null<ComplexType>,opt:Bool,name:String}> ):Expr {
+		var argIdents = [ for(a in args) macro $i{a.name} ];
+		return macro _makeApiCall( $v{name}, $a{argIdents} );
 	}
 
 	/**
@@ -365,144 +431,43 @@ class ApiMacros
 		return t1.unify( t2 );
 	}
 
-	/**
-		For example:
+	static function defineCallbackProxyForType( type:Type ):Null<TypePath> {
+		switch (type) {
+			case TInst(t, _):
+				var cls = t.get();
 
-		- `LoginApiAsync extends UFAsyncApi<LoginApi>`
-		- Find all the public methods on LoginApi
-		- Create an appropriate Async method (wrapping the return type as required)
-	**/
-	static function addProxyMemberMethods( cb:ClassBuilder ) {
-		var apiClassType = getSyncApiClassType( cb );
-		var pos = cb.target.pos;
-		if ( apiClassType!=null ) {
-			for ( classField in apiClassType.get().fields.get() ) {
-				if ( classField.isPublic ) {
-					var fieldType = classField.type.reduce();
-					switch fieldType {
-						case TFun( args, ret ):
-							var flags = getResultWrapFlagsForReturnType( ret.toComplex(), pos );
-							var asyncRT = asyncifyReturnType( ret, flags );
-							var fnBody = buildAsyncFnBody( classField.name, args, flags );
-							var member:Member = {
-								pos: pos,
-								name: classField.name,
-								meta: [/** Do we need to add the return type meta? **/],
-								kind: FFun({
-									ret: asyncRT,
-									// TODO: write some unit tests to check type parameters in API functions are correctly supported.
-									params: [for (p in classField.params) { params:[], name:p.name, constraints:[p.t.toComplex()]}],
-									expr: fnBody,
-									args: [for (arg in args) { name:arg.name, opt:arg.opt, type:arg.t.toComplex(), value:null }],
-								}),
-								doc: 'Async call for `${apiClassType.toString()}.${classField.name}()`',
-								access: [ APublic ],
-							}
-							cb.addMember( member );
-						case _:
-					}
+				// TODO: consider checking for an existing, manually defined version of this class.
+				// `cls.meta.has("asyncCallbackApi")` would tell us if one had been built already, but that will depend on build order, so we may end up building it twice anyway.
+
+				var suffix = "Proxy";
+				var fullName = t.toString()+suffix;
+				var className = cls.name+suffix;
+				var classPackage = cls.pack;
+
+				// Use `Context.getType` to see if it already exists.
+				var alreadyExists = false;
+				try {
+					var existing = Context.getType( fullName );
+					alreadyExists = true;
 				}
-			}
-		}
-	}
-
-	/**
-		Add some metadata to `UFAsyncApi` to map the API class name to the AsyncAPI class name, so we can inject both at runtime.
-	**/
-	static function addToAsyncApiMapMetadata( cb:ClassBuilder ) {
-		var syncApiClassType = getSyncApiClassType( cb );
-		if ( syncApiClassType!=null ) {
-			var pack = cb.target.pack.join(".");
-			var name = cb.target.name;
-			var asyncName = (pack!="") ? '$pack.$name' : name;
-
-			var meta = syncApiClassType.get().meta;
-			if ( meta.has("asyncApi") )
-				meta.remove( "asyncApi" );
-			meta.add( "asyncApi", [macro $v{asyncName}], cb.target.pos );
-		}
-	}
-
-	/**
-		We cannot use `@inject public var api:T` on our UFAsyncApi objects, because minject does not play nice with generics.
-		Instead we add a `@inject public var setApi()` method.
-		This should also set the `className` field.
-	**/
-	static function addInjectApiMethod( cb:ClassBuilder ) {
-		var syncApiClassType = getSyncApiClassType( cb );
-		if ( syncApiClassType!=null ) {
-			var syncApiName = syncApiClassType.toString();
-			var syncApiReference = syncApiName.resolve();
-			var cls = macro class Fields {
-				@inject public function injectApi( injector:minject.Injector ) {
-					#if server
-						this.api =
-							try injector.getInstance( $syncApiReference )
-							catch (e:Dynamic) throw 'Failed to inject '+Type.getClassName($syncApiReference)+' into '+Type.getClassName(Type.getClass(this));
-					#end
-					this.className = $v{syncApiName};
+				catch ( e:Dynamic ) {
+					if ( e=="Type not found '"+fullName+"'" ) alreadyExists = false;
+					else neko.Lib.rethrow(e);
 				}
-			}
-			cb.addMember( cls.fields[0] );
-		}
-	}
 
-	static function getSyncApiClassType( cb:ClassBuilder ):Null<haxe.macro.Ref<ClassType>> {
-		var params = cb.target.superClass.params;
-		var pos = cb.target.pos;
-		if ( params.length!=1 ) {
-			pos.errorExpr( 'Expected exactly one type parameter (which should be the UFApi you are proxying)' );
-			return null;
-		}
-		var origApi = params[0];
-		switch origApi {
-			case TInst(apiClassTypeRef,params):
-				return apiClassTypeRef;
-			case _:
-				pos.errorExpr( 'The type parameter for UFAsyncApi should be a UFApi class' );
+				// If it does not exist, create it now.
+				if (!alreadyExists) {
+					var complex = Context.toComplexType(type);
+					var proxyDefinition = macro class $className extends ufront.remoting.UFCallbackApi<$complex> {};
+					proxyDefinition.pack = classPackage;
+					Context.defineType(proxyDefinition);
+				}
+
+				// Return the TypePath
+				return { sub: null, params: [], pack: classPackage, name: className };
+			default: // do nothing
 				return null;
 		}
-	}
-
-	/**
-		Change `doSomething():String` to `doSomething:Suprise<String,RemotingError<Noise>` etc.
-	**/
-	static function asyncifyReturnType( rt:haxe.macro.Type, flags:EnumFlags<ApiReturnType> ):ComplexType {
-		var typeParams = switch rt {
-			case TType(_,params): params;
-			default: [];
-		}
-		if ( flags.has(ARTVoid) ) {
-			return macro :tink.core.Future.Surprise<Noise,ufront.remoting.RemotingError<tink.core.Noise>>;
-		}
-		else if ( flags.has(ARTFuture) && flags.has(ARTOutcome) ) {
-			var successType = typeParams[0].toComplex();
-			var failureType = typeParams[1].toComplex();
-			return macro :tink.core.Future.Surprise<$successType,ufront.remoting.RemotingError<$failureType>>;
-		}
-		else if ( flags.has(ARTFuture) ) {
-			var type = typeParams[0].toComplex();
-			return macro :tink.core.Future.Surprise<$type,ufront.remoting.RemotingError<tink.core.Noise>>;
-		}
-		else if ( flags.has(ARTOutcome) ) {
-			var successType = typeParams[0].toComplex();
-			var failureType = typeParams[1].toComplex();
-			return macro :tink.core.Future.Surprise<$successType,ufront.remoting.RemotingError<$failureType>>;
-		}
-		else {
-			var type = rt.toComplex();
-			return macro :tink.core.Future.Surprise<$type,ufront.remoting.RemotingError<tink.core.Noise>>;
-		}
-	}
-
-	static function buildAsyncFnBody( name:String, args:Array<{t:haxe.macro.Type,opt:Bool,name:String}>, flags:EnumFlags<ApiReturnType> ):Expr {
-		var argIdents = [ for(a in args) macro $i{a.name} ];
-		return macro return _makeApiCall( $v{name}, $a{argIdents}, haxe.EnumFlags.ofInt($v{flags}) );
-	}
-
-	static function buildSyncFnBody( name:String, args:Array<{type:Null<ComplexType>,opt:Bool,name:String}> ):Expr {
-		var argIdents = [ for(a in args) macro $i{a.name} ];
-		return macro _makeApiCall( $v{name}, $a{argIdents} );
 	}
 	#end
 }

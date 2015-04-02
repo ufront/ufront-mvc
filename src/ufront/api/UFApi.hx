@@ -36,7 +36,7 @@ import haxe.PosInfos;
 	- A UFApi is created once per request, and is discarded at the end of the request. So it can store information relevant to that request.
 	- Static variables are sometimes shared between requests on mod_neko, mod_tora and client side JS, meaning you should not rely on static variables to have a "fresh" state for each request.
 	- If your API needs to run asynchronously, make sure it returns a `Future` or a `Surprise`.
-	- If your API returns an `Outcome` it has some special behaviour when being used with `UFAsyncApi` or `UFAsyncCallbackApi`.
+	- If your API returns an `Outcome` it has some special behaviour when being used with `UFAsyncApi` or `UFCallbackApi`.
 
 	**Using APIs on the client:**
 
@@ -47,10 +47,10 @@ import haxe.PosInfos;
 		When you compile the client it will use asynchronous HTTP remoting calls.
 		See `UFAsyncApi` for more details.
 
-	2. **With a `UFAsyncCallbackApi<YourApi>` proxy.**
+	2. **With a `UFCallbackApi<YourApi>` proxy.**
 		This will wrap your API, and use callback methods for `onResult` and `onError` rather than returning a result directly.
 		When you compile the client it will use asynchronous HTTP remoting calls.
-		See `UFAsyncCallbackApi` for more details.
+		See `UFCallbackApi` for more details.
 
 	3. **By calling your `UFApi` directly on the client.**
 		When you compile your `UFApi` on the client, it will attempt to use a synchronous remoting connection to the server.
