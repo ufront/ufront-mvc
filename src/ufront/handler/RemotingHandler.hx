@@ -4,10 +4,9 @@ import haxe.remoting.Context;
 import haxe.Serializer;
 import haxe.Unserializer;
 import haxe.CallStack;
-import ufront.app.HttpApplication;
 import ufront.log.Message;
-import ufront.web.result.*;
 import ufront.web.context.*;
+import ufront.remoting.RemotingError;
 import minject.Injector;
 import ufront.api.*;
 import ufront.app.*;
@@ -99,8 +98,8 @@ class RemotingHandler implements UFRequestHandler
 
 				// Understand the request that is being made and then execute it
 				var u = new Unserializer( params["__x"] );
-				path:Array<String> = u.unserialize();
-				args:Array<Dynamic> = u.unserialize();
+				path = u.unserialize();
+				args = u.unserialize();
 				var apiCallFinished = executeApiCall( path, args, context, httpContext.actionContext );
 				remotingResponse = apiCallFinished.map(function(data:Dynamic) {
 					var s = new Serializer();
@@ -115,8 +114,8 @@ class RemotingHandler implements UFRequestHandler
 					var error:String = e;
 					var apiNotFoundMessages = ["Invalid path","No such object","Can't access","No such method"];
 					for ( msg in apiNotFoundMessages ) {
-						 if ( error.startsWith(msg) ) {
-							var remotingCallString = '${parts.join(".")}(${args.join(",")})';
+						 if ( StringTools.startsWith(error,msg) ) {
+							var remotingCallString = '${path.join(".")}(${args.join(",")})';
 							e = ApiNotFound( remotingCallString, error );
 						}
 					}
@@ -147,13 +146,13 @@ class RemotingHandler implements UFRequestHandler
 			for ( fieldName in Reflect.fields(apiContext) ) {
 				var api = Reflect.field( apiContext, fieldName );
 				if ( Reflect.isObject(api) )
-					context.addObject( fieldName, api );
+					context.addObject( fieldName, api, false );
 			}
 		}
 		for ( apiClass in apis ) {
 			var className = Type.getClassName( apiClass );
 			var api = injector.instantiate( apiClass );
-			context.addObject( className, api );
+			context.addObject( className, api, false );
 		}
 	}
 

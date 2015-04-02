@@ -1,6 +1,11 @@
 package ufront.api;
 
 import haxe.PosInfos;
+#if client
+	import haxe.EnumFlags;
+	import haxe.rtti.Meta;
+	import tink.CoreApi;
+#end
 
 /**
 	An API that can be used in Ufront controllers, tasks, other APIs, or via remoting.
@@ -193,10 +198,9 @@ class UFApi {
 
 			// Find out if this is a Future
 			var isFuture = false;
-			var isVoid = false;
 			try {
 				var fieldsMeta = Meta.getFields( Type.getClass(this) );
-				var actionMeta = Reflect.field( fieldsMeta, actionContext.action );
+				var actionMeta = Reflect.field( fieldsMeta, method );
 				var returnType:Int = actionMeta.returnType[0];
 				var flags:EnumFlags<ApiReturnType> = EnumFlags.ofInt( returnType );
 				isFuture = flags.has(ARTFuture);
@@ -204,7 +208,7 @@ class UFApi {
 
 			var flags:EnumFlags<ApiReturnType>;
 			var result = cnx.resolve( className ).resolve( method ).call( args );
-			return if (isFuture) Future.sync(result) : result;
+			return (isFuture) ? cast Future.sync(result) : result;
 		}
 	#end
 

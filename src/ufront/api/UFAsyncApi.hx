@@ -126,7 +126,7 @@ class UFAsyncApi<SyncApi:UFApi> {
 				try {
 					var outcome:Outcome<A,B> = callApi();
 					return switch outcome {
-						case Success(data): Future.sync( outcome );
+						case Success(data): Future.sync( Success(data) );
 						case Failure(err): Future.sync( Failure(ApiFailure(remotingCallString,err)) );
 					}
 				}
