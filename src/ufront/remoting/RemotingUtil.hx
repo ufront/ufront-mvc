@@ -119,6 +119,9 @@ class RemotingUtil {
 			case HttpError( remotingCallString, responseCode, responseData ):
 				trace( 'Error during remoting call $remotingCallString: The HTTP Request returned status [$responseCode].' );
 				trace( 'Returned data: $responseData' );
+			case ApiNotFound( remotingCallString, err ):
+				trace( 'Error during remoting call $remotingCallString: API or Method is not found or not available in the remoting context.' );
+				trace( 'Error message: $err' );
 			case ServerSideException( remotingCallString, e, stack ):
 				trace( 'Error during remoting call $remotingCallString: The server threw an error "$e".' );
 				trace( stack );

@@ -7,6 +7,8 @@ package ufront.remoting;
 enum RemotingError<FailureType> {
 	/** The HttpError gave a response code other than 200. **/
 	HttpError( remotingCallString:String, responseCode:Int, responseData:String );
+	/** The server did not have an API or method matching the remoting call, or it was not shared in the remoting context. **/
+	ApiNotFound( remotingCallString:String, errorMessage:String );
 	/** The Server threw an exception during the remoting call. **/
 	ServerSideException( remotingCallString:String, e:Dynamic, stack:String );
 	/** The Client threw an exception while executing the callback for the remoting call. **/

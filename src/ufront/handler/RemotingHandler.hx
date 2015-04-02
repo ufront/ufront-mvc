@@ -85,6 +85,10 @@ class RemotingHandler implements UFRequestHandler
 			// Set the status to OK for now, and only change it if an error is thrown.
 			r.setOk();
 
+			// We are keeping these outside of the try {} so they can be referenced in the catch {}
+			var path:Array<String> = null;
+			var args:Array<Dynamic> = null;
+
 			try {
 				initializeContext( httpContext.injector );
 
@@ -95,8 +99,8 @@ class RemotingHandler implements UFRequestHandler
 
 				// Understand the request that is being made and then execute it
 				var u = new Unserializer( params["__x"] );
-				var path:Array<String> = u.unserialize();
-				var args:Array<Dynamic> = u.unserialize();
+				path:Array<String> = u.unserialize();
+				args:Array<Dynamic> = u.unserialize();
 				var apiCallFinished = executeApiCall( path, args, context, httpContext.actionContext );
 				remotingResponse = apiCallFinished.map(function(data:Dynamic) {
 					var s = new Serializer();
@@ -107,6 +111,16 @@ class RemotingHandler implements UFRequestHandler
 			catch ( e:Dynamic ) {
 				// Don't use the `async.error` handler and the ErrorModule, rather, send the error over the remoting protocol.
 				r.setInternalError();
+				if ( path!=null && args!=null && Std.is(e,String) ) {
+					var error:String = e;
+					var apiNotFoundMessages = ["Invalid path","No such object","Can't access","No such method"];
+					for ( msg in apiNotFoundMessages ) {
+						 if ( error.startsWith(msg) ) {
+							var remotingCallString = '${parts.join(".")}(${args.join(",")})';
+							e = ApiNotFound( remotingCallString, error );
+						}
+					}
+				}
 				remotingResponse = Future.sync( remotingError(e,httpContext) );
 			}
 
@@ -145,6 +159,10 @@ class RemotingHandler implements UFRequestHandler
 
 	@:access(haxe.remoting.Context)
 	public function executeApiCall( path:Array<String>, args:Array<Dynamic>, remotingContext:Context, actionContext:ActionContext ):Future<Dynamic> {
+		// Preliminary check that the path exists.
+		if ( remotingContext.objects.exists(path[0])==false ) {
+			throw 'Invalid path ${path.join(".")}';
+		}
 
 		// Save the details of the request to the ActionContext.
 		actionContext.handler = this;
