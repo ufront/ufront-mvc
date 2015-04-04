@@ -8,67 +8,67 @@ import haxe.rtti.Meta;
 using tink.CoreApi;
 
 /**
-	An asynchronous proxy that calls a server API, using a `Surprise` to wait for the result.
+An asynchronous proxy that calls a server API, using a `Surprise` to wait for the result.
 
-	**Transformation**
+#### Transformation:
 
-	Each public method of the `UFApi` you are proxying will be available in the proxy.
-	Instead of returning a synchronous value though, each method will return a `Surprise`, (a `Future<Outcome>`), which will hold the result of the remoting call, whether it succeeded or failed.
+Each public method of the `UFApi` you are proxying will be available in the proxy.
+Instead of returning a synchronous value though, each method will return a `Surprise`, (a `Future<Outcome>`), which will hold the result of the remoting call, whether it succeeded or failed.
 
-	**Return typing:**
+#### Return typing:
 
-	The return type for each function will be typed as follows:
+The return type for each function will be typed as follows:
 
-	- An API return type of `:Surprise<A,B>` will become `:Surprise<A,RemotingError<B>>`.
-	- An API return type of `:Future<T>` will become `:Surprise<T,RemotingError<Dynamic>>`.
-	- An API return type of `:Outcome<A,B>` will become `:Surprise<A,RemotingError<B>>`.
-	- An API return type of `:Void` will become `:Surprise<Noise,RemotingError<Dynamic>>`.
-	- An API return type of `:T` will become `:Surprise<T,RemotingError<Dynamic>>`.
+- An API return type of `:Surprise<A,B>` will become `:Surprise<A,RemotingError<B>>`.
+- An API return type of `:Future<T>` will become `:Surprise<T,RemotingError<Dynamic>>`.
+- An API return type of `:Outcome<A,B>` will become `:Surprise<A,RemotingError<B>>`.
+- An API return type of `:Void` will become `:Surprise<Noise,RemotingError<Dynamic>>`.
+- An API return type of `:T` will become `:Surprise<T,RemotingError<Dynamic>>`.
 
-	**Client and Server differences**
+#### Client and Server differences:
 
-	On the client it uses an injected `AsyncConnection` to perform the remoting call.
+On the client it uses an injected `AsyncConnection` to perform the remoting call.
 
-	On the server, the original API will be called, and the result will be wrapped in a `Surprise` as described above.
-	If the server API is synchronous, the Surprise will also be resolved (and handled) synchronously.
+On the server, the original API will be called, and the result will be wrapped in a `Surprise` as described above.
+If the server API is synchronous, the Surprise will also be resolved (and handled) synchronously.
 
-	Using the same `Surprise` results allows identical usage of the API on both the client or the server.
+Using the same `Surprise` results allows identical usage of the API on both the client or the server.
 
-	**Injections:**
+#### Injections:
 
-	The class must have the following injected to be functional:
+The class must have the following injected to be functional:
 
-	- On the server, `api` - an instance of the original API object.
-	- On the client, `cnx` - an `AsyncConnection` to use for remoting.
-	- Both will be injected if you are using ufront's `Injector`.
+- On the server, `api` - an instance of the original API object.
+- On the client, `cnx` - an `AsyncConnection` to use for remoting.
+- Both will be injected if you are using ufront's `Injector`.
 
-	**UFAsyncApi and UFAsyncCallbackApi:**
+#### UFAsyncApi and UFAsyncCallbackApi:
 
-	This class is quite similar to `UFAsyncCallbackApi`, except it returns a `Surprise` rather than using callbacks.
-	If your client code is using Ufront, it will probably be easier to use `UFAsyncApi` and call them from your controllers on the client or server.
-	If your client code is not using Ufront, or particularly if it is not written in Haxe, it may be easier to create a `UFClientApiContext` and use the callback style APIs.
+This class is quite similar to `UFAsyncCallbackApi`, except it returns a `Surprise` rather than using callbacks.
+If your client code is using Ufront, it will probably be easier to use `UFAsyncApi` and call them from your controllers on the client or server.
+If your client code is not using Ufront, or particularly if it is not written in Haxe, it may be easier to create a `UFClientApiContext` and use the callback style APIs.
 
-	**Usage:**
+#### Usage:
 
-	```haxe
-	class AsyncLoginApi extends UFAsyncApi<LoginApi> {}
+```haxe
+class AsyncLoginApi extends UFAsyncApi<LoginApi> {}
 
-	@inject public var api:AsyncLoginApi;
+@inject public var api:AsyncLoginApi;
 
-	// The long way:
-	var surprise = api.attemptLogin( username, password );
-	var result = "";
-	surprise.handle(function(outcome) switch outcome {
-		case Success(user): result = 'You are logged in as $user!';
-		case Failure(err): result = 'Failed to log in: $err';
-	}
-	return result;
+// The long way:
+var surprise = api.attemptLogin( username, password );
+var result = "";
+surprise.handle(function(outcome) switch outcome {
+  case Success(user): result = 'You are logged in as $user!';
+  case Failure(err): result = 'Failed to log in: $err';
+}
+return result;
 
-	// The short way, using the ">>" operator from tink_core, which allows you to just handle a success:
-	return api.attemptLogin( username, password ) >> function( user ) {
-		return 'You are logged in as $user!';
-	}
-	```
+// The short way, using the ">>" operator from tink_core, which allows you to just handle a success:
+return api.attemptLogin( username, password ) >> function( user ) {
+  return 'You are logged in as $user!';
+}
+```
 **/
 @:autoBuild( ufront.api.ApiMacros.buildAsyncApiProxy() )
 class UFAsyncApi<SyncApi:UFApi> {
@@ -167,12 +167,12 @@ class UFAsyncApi<SyncApi:UFApi> {
 	}
 
 	/**
-		For a given sync `UFApi` class, see if a matching `UFAsyncApi` class is available, and return it.
+	For a given sync `UFApi` class, see if a matching `UFAsyncApi` class is available, and return it.
 
-		Returns null if no matching `UFAsyncApi` was found.
+	Returns null if no matching `UFAsyncApi` was found.
 
-		This works by looking for `@asyncApi("path.to.AsyncApi")` metadata on the given `syncApi` class.
-		This metadata should be generated by `UFAsyncApi`'s build macro.
+	This works by looking for `@asyncApi("path.to.AsyncApi")` metadata on the given `syncApi` class.
+	This metadata should be generated by `UFAsyncApi`'s build macro.
 	**/
 	public static function getAsyncApi<T:UFApi>( syncApi:Class<T> ):Null<Class<UFAsyncApi<T>>> {
 		var meta = Meta.getType(syncApi);

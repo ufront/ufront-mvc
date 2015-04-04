@@ -8,86 +8,86 @@ import haxe.rtti.Meta;
 using tink.CoreApi;
 
 /**
-	An asynchronous proxy that calls a server API, using callbacks to wait for the result.
+An asynchronous proxy that calls a server API, using callbacks to wait for the result.
 
-	**Transformation**
+#### Transformation:
 
-	Each public method of the `UFApi` you are proxying will be available in the proxy.
-	Instead of returning a value though, each method will contain two callbacks:
+Each public method of the `UFApi` you are proxying will be available in the proxy.
+Instead of returning a value though, each method will contain two callbacks:
 
-	- An `onResult:T->Void` callback, to process a succesful request.
-	- An optional `onError:T->Void` callback, to process a failed request.
+- An `onResult:T->Void` callback, to process a succesful request.
+- An optional `onError:T->Void` callback, to process a failed request.
 
-	**Callback typing:**
+#### Callback typing:
 
-	The `onResult` and `onError` callbacks for each function will be typed as follows:
+The `onResult` and `onError` callbacks for each function will be typed as follows:
 
-	- A return type of `:Surprise<A,B>` will create a callback of `A->Void`, and an error callback of `RemotingError<B>->Void`.
-	- A return type of `:Future<T>` will create a callback of `T->Void`, and an error callback of `RemotingError<Noise>->Void`.
-	- A return type of `:Outcome<A,B>` will create a callback of `A->Void`, and an error callback of `RemotingError<B>->Void`.
-	- A return type of `:Void` will create a callback of `Noise->Void`, and an error callback of `RemotingError<Noise>->Void`.
-	- A return type of `:T` will create a callback of `T->Void`, and an error callback of `RemotingError<Noise>->Void`.
+- A return type of `:Surprise<A,B>` will create a callback of `A->Void`, and an error callback of `RemotingError<B>->Void`.
+- A return type of `:Future<T>` will create a callback of `T->Void`, and an error callback of `RemotingError<Noise>->Void`.
+- A return type of `:Outcome<A,B>` will create a callback of `A->Void`, and an error callback of `RemotingError<B>->Void`.
+- A return type of `:Void` will create a callback of `Noise->Void`, and an error callback of `RemotingError<Noise>->Void`.
+- A return type of `:T` will create a callback of `T->Void`, and an error callback of `RemotingError<Noise>->Void`.
 
-	Each callback is typed as `tink.core.Callback`, so both `T->Void` and `Void->Void` callbacks are accepted.
+Each callback is typed as `tink.core.Callback`, so both `T->Void` and `Void->Void` callbacks are accepted.
 
-	**Client and Server differences**
+#### Client and Server differences:
 
-	On the client it uses an injected `AsyncConnection` to perform the remoting call.
+On the client it uses an injected `AsyncConnection` to perform the remoting call.
 
-	On the server, the original API will be called, and the result will be passed to our callbacks.
-	If the server API is synchronous, the callbacks will also be called synchronously.
+On the server, the original API will be called, and the result will be passed to our callbacks.
+If the server API is synchronous, the callbacks will also be called synchronously.
 
-	Using the same Async Callback methods allows identical usage of the API on both the client or the server.
+Using the same Async Callback methods allows identical usage of the API on both the client or the server.
 
-	**Injections:**
+#### Injections:
 
-	The class must have the following injected to be functional:
+The class must have the following injected to be functional:
 
-	- On the server, `api` - an instance of the original API object.
-	- On the client, `cnx` - an `AsyncConnection` to use for remoting.
-	- Both will be injected if you are using ufront's `Injector`.
+- On the server, `api` - an instance of the original API object.
+- On the client, `cnx` - an `AsyncConnection` to use for remoting.
+- Both will be injected if you are using ufront's `Injector`.
 
-	**Integration with UFApiContext**
+#### Integration with UFApiContext:
 
-	If a `UFApiClientContext` is generated, it will automatically create a `UFCallbackApi` for each `UFApi` in the `UFApiContext`.
-	This allows you to quickly generate a single class controlling all remoting access to your client.
+If a `UFApiClientContext` is generated, it will automatically create a `UFCallbackApi` for each `UFApi` in the `UFApiContext`.
+This allows you to quickly generate a single class controlling all remoting access to your client.
 
-	**UFCallbackApi and UFAsyncApi:**
+#### UFCallbackApi and UFAsyncApi:
 
-	This class is quite similar to `UFAsyncApi`, except it uses callbacks rather than returning a `Surprise`.
-	If your client code is using Ufront, it will probably be easier to use `UFAsyncApi` and call them from your controllers on the client or server.
-	If your client code is not using Ufront, or particularly if it is not written in Haxe, it may be easier to create a `UFClientApiContext` and use the callback style APIs.
+This class is quite similar to `UFAsyncApi`, except it uses callbacks rather than returning a `Surprise`.
+If your client code is using Ufront, it will probably be easier to use `UFAsyncApi` and call them from your controllers on the client or server.
+If your client code is not using Ufront, or particularly if it is not written in Haxe, it may be easier to create a `UFClientApiContext` and use the callback style APIs.
 
-	**Usage:**
+#### Usage:
 
-	```haxe
-	class AsyncLoginApi extends UFCallbackApi<LoginApi> {}
+```haxe
+class AsyncLoginApi extends UFCallbackApi<LoginApi> {}
 
-	var api = new AsyncLoginApi();
-	api.attemptLogin( username, password, function(user:User) {
-		trace( 'You are logged in as $user!');
-	}, function(err:RemotingError<Dynamic>) {
-		trace( 'Error while logging in: $err' );
-	});
-	```
+var api = new AsyncLoginApi();
+api.attemptLogin( username, password, function(user:User) {
+  trace( 'You are logged in as $user!');
+}, function(err:RemotingError<Dynamic>) {
+  trace( 'Error while logging in: $err' );
+});
+```
 
-	**Trivia:**
+#### Trivia:
 
-	Extending this class produces an almost identical result to extending `haxe.remoting.AsyncProxy`.
-	However, `AsyncProxy` is documented as "magic", using internal compiler code rather than readable code or macros in the standard library.
-	This makes it hard to reason about, and impossible to customise.
-	The motivation to re-implement it using macros came for 2 reasons:
+Extending this class produces an almost identical result to extending `haxe.remoting.AsyncProxy`.
+However, `AsyncProxy` is documented as "magic", using internal compiler code rather than readable code or macros in the standard library.
+This makes it hard to reason about, and impossible to customise.
+The motivation to re-implement it using macros came for 2 reasons:
 
-	1. To handle the case of APIs that return a `Future` or a `Surprise`.
-	2. To avoid creating the `Async${apiName}` class that is auto-generated by Haxe, which was causing naming conflicts in some Ufront projects.
+1. To handle the case of APIs that return a `Future` or a `Surprise`.
+2. To avoid creating the `Async${apiName}` class that is auto-generated by Haxe, which was causing naming conflicts in some Ufront projects.
 **/
 @:autoBuild( ufront.api.ApiMacros.buildCallbackApiProxy() )
 class UFCallbackApi<SyncApi:UFApi> {
 	var className:String;
 	#if server
 		/**
-			Because of limitations between minject and generics, we cannot simply use `@inject public var api:T` based on a type paremeter.
-			Instead, we get the build macro to create a `@inject public function injectApi( injector:Injector )` method, specifying the class of our sync Api as a constant.
+		Because of limitations between minject and generics, we cannot simply use `@inject public var api:T` based on a type paremeter.
+		Instead, we get the build macro to create a `@inject public function injectApi( injector:Injector )` method, specifying the class of our sync Api as a constant.
 		**/
 		public var api:SyncApi;
 		public function new() {}
@@ -186,12 +186,12 @@ class UFCallbackApi<SyncApi:UFApi> {
 	}
 
 	/**
-		For a given sync `UFApi` class, see if a matching `UFCallbackApi` class is available, and return it.
+	For a given sync `UFApi` class, see if a matching `UFCallbackApi` class is available, and return it.
 
-		Returns null if no matching `UFCallbackApi` was found.
+	Returns null if no matching `UFCallbackApi` was found.
 
-		This works by looking for `@callbackApi("path.to.AsyncCallbackApi")` metadata on the given `syncApi` class.
-		This metadata should be generated by `UFCallbackApi`'s build macro.
+	This works by looking for `@callbackApi("path.to.AsyncCallbackApi")` metadata on the given `syncApi` class.
+	This metadata should be generated by `UFCallbackApi`'s build macro.
 	**/
 	public static function getCallbackApi<T:UFApi>( syncApi:Class<T> ):Null<Class<UFCallbackApi<T>>> {
 		var meta = Meta.getType(syncApi);
