@@ -1,7 +1,7 @@
 package ufront.api;
 
 import haxe.remoting.AsyncConnection;
-import ufront.remoting.HttpAsyncConnection;
+import ufront.remoting.*;
 
 /**
 	UFApiClientContext is a macro-powered class that will generate callback style proxies for your `UFApiContext`.
@@ -43,7 +43,8 @@ import ufront.remoting.HttpAsyncConnection;
 	});
 	```
 **/
-class UFApiClientContext {
+@:autoBuild( ufront.api.ApiMacros.buildClientApiContext() )
+class UFApiClientContext<ServerContext:UFApiContext> {
 
 	public var cnx:AsyncConnection;
 

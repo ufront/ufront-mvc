@@ -86,12 +86,10 @@ class ApiMacrosTest {
 		Assert.isTrue ( hasReturnType("returnSurpriseFn",ARTFuture) );
 	}
 
-	var asyncApi1:ApiTest1Async;
-	var asyncApi2:ApiTest2Async;
-	public function testAsyncClassExists() {
+	public function testAsyncProxies() {
 		var api1 = new ApiTest1();
-		asyncApi1 = new ApiTest1Async();
-		asyncApi2 = new ApiTest2Async();
+		var asyncApi1 = new ApiTest1Async();
+		var asyncApi2 = new ApiTest2Async();
 
 		// Check classes can be used as values
 		Assert.isTrue( Std.is(asyncApi1,ApiTest1Async) );
@@ -100,15 +98,30 @@ class ApiMacrosTest {
 		Assert.isTrue( Std.is(api1,MyApiInterface) );
 		Assert.isTrue( Std.is(asyncApi1,MyApiInterfaceAsync) );
 
-		// Notes:
-		// Here I'm not testing much, other than that it compiles.
-		// We do some tests for the sync stuff in `testClientTransformation` above, using a mock `haxe.remoting.Connection`.
-		// We could probably do a mock `haxe.remoting.AsyncConnection` and run some similar tests here.
-		// Then if we have tests on `RemotingHandler`, that gives us good coverage.
-		// An full stack integration test would still be useful.
+		// TODO: Create more tests using a mock `haxe.remoting.AsyncConnection`.
+	}
+
+	public function testCallbackProxies() {
+		var cnx = null;
+		var api1 = new ApiTest1();
+		var cbApi = new ApiTest1Callback( #if client cnx #end );
+		var clientContext = new MyApiClient( "/" );
+
+		// Check classes can be used as values
+		Assert.isTrue( Std.is(cbApi,ApiTest1Callback) );
+		Assert.isTrue( Std.is(clientContext.test1,ApiTest1Proxy) );
+		Assert.isTrue( Std.is(clientContext.test2,ApiTest2Proxy) );
+		// Check interfaces
+		Assert.isTrue( Std.is(api1,MyApiInterface) );
+		Assert.isTrue( Std.is(cbApi,MyApiInterfaceCallback) );
+
+		// TODO: Create more tests using a mock `haxe.remoting.AsyncConnection`.
 	}
 }
 
+//
+// Test API 1
+//
 class ApiTest1 extends UFApi implements MyApiInterface {
 	public var name:String = "Test";
 	public function new() {
@@ -124,7 +137,20 @@ class ApiTest1 extends UFApi implements MyApiInterface {
 	}
 }
 class ApiTest1Async extends UFAsyncApi<ApiTest1> implements MyApiInterfaceAsync {}
+class ApiTest1Callback extends UFCallbackApi<ApiTest1> implements MyApiInterfaceCallback {}
+interface MyApiInterface {
+	function doSysStuff():String;
+}
+interface MyApiInterfaceAsync {
+	function doSysStuff():Surprise<String,RemotingError<Noise>>;
+}
+interface MyApiInterfaceCallback {
+	function doSysStuff( onResult:Callback<String>, ?onError:Callback<RemotingError<Noise>> ):Void;
+}
 
+//
+// Test API 2
+//
 class ApiTest2 extends UFApi {
 	public function returnVoidFn():Void {}
 	public function returnStringFn():String return "Hey";
@@ -134,9 +160,11 @@ class ApiTest2 extends UFApi {
 }
 class ApiTest2Async extends UFAsyncApi<ApiTest2> {}
 
-interface MyApiInterface {
-	function doSysStuff():String;
+//
+// Contexts
+//
+class MyApi extends UFApiContext {
+	var test1:ApiTest1;
+	var test2:ApiTest2;
 }
-interface MyApiInterfaceAsync {
-	function doSysStuff():Surprise<String,RemotingError<Noise>>;
-}
+class MyApiClient extends UFApiClientContext<MyApi> {}
