@@ -109,18 +109,16 @@ class RemotingHandler implements UFRequestHandler
 			}
 			catch ( e:Dynamic ) {
 				// Don't use the `async.error` handler and the ErrorModule, rather, send the error over the remoting protocol.
-				r.setInternalError();
-				if ( path!=null && args!=null && Std.is(e,String) ) {
-					var error:String = e;
-					var apiNotFoundMessages = ["Invalid path","No such object","Can't access","No such method"];
-					for ( msg in apiNotFoundMessages ) {
-						 if ( StringTools.startsWith(error,msg) ) {
-							var remotingCallString = '${path.join(".")}(${args.join(",")})';
-							e = ApiNotFound( remotingCallString, error );
-						}
-					}
+				var error:String = e;
+				var apiNotFoundMessages = ["Invalid path","No such object","Can't access","No such method"];
+				if ( path!=null && args!=null && Std.is(e,String) && Lambda.exists(apiNotFoundMessages,function(msg) return StringTools.startsWith(error,msg)) ) {
+					remotingResponse = Future.sync( 'Unable to access ${path.join(".")} - API Not Found ($error). See ${@:privateAccess context.objects}' );
+					r.setNotFound();
 				}
-				remotingResponse = Future.sync( remotingError(e,httpContext) );
+				else {
+					r.setInternalError();
+					remotingResponse = Future.sync( remotingError(e,httpContext) );
+				}
 			}
 
 			remotingResponse.handle(function(response:String) {

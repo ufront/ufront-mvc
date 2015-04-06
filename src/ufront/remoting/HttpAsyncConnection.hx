@@ -53,8 +53,12 @@ class HttpAsyncConnection extends haxe.remoting.HttpAsyncConnection
 				// If it was a different kind of 500 error, it will throw a NoRemotingResult.
 				RemotingUtil.processResponse( h.responseData, onResult, __data.error, remotingCallString );
 			}
+			else if ( 404==responseCode ) {
+				var errorHandler = __data.error;
+				errorHandler( ApiNotFound(remotingCallString, h.responseData) );
+			}
 			else {
-				// We got an error HTTP response code, and it was not a 500, so is not from our remoting handler.
+				// We got an error HTTP response code, and it was not a 500 or a 404, so is not from our remoting handler.
 				// This may be due to a server being inaccessible etc.
 				var errorHandler = __data.error;
 				errorHandler( HttpError(remotingCallString, responseCode, h.responseData) );
