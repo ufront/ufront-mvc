@@ -15,141 +15,147 @@ using tink.CoreApi;
 using ufront.core.InjectionTools;
 
 /**
-	The base class for a HTTP Application
+A HttpApplication responds to each request by generating a `HttpContext` and passing it through each stage of the request.
 
-	This provides the framework for setting up a web-app that either uses Http or emulates Http behaviour - receiving requests and issuing responses.
+It is the base class for `UfrontApplication` and `ClientJsApplication`, and could be used for other implementations also.
 
-	It's function is:
+#### Request life-cycle:
 
-	- Have a handful of events, one after another.  The event chain fires for each request.
-	- Have different modules that do things (eg, a module to check a cache, a module to fire a controller action, a module to log a request)
-	- Modules listen to events, and trigger their functionality at the right part of the request.
-	- Each request has a HttpContext, describing the request, the response, the current session, authorization handler and other things.
-	- Once the request is complete, or if there is an error, the HTTP response is sent to the client.
+The `HttpApplication` is responsible for managing the lifecycle of each request.
 
-	Depending on the environment, a HttpApplication may be created once per request, or the application may be persistent and have many requests.
+The lifecycle is:
+
+- Set up the HttpApplication.
+- Initialise each of the modules (`UFRequestMiddleware`, `UFRequestHandler`, `UFResponseMiddleware`, `UFLogHandler` and `UFErrorHandler`).
+- Create a `HttpContext` for each request, and then:
+- Pass the `HttpContext` through the `UFRequestMiddleware`.
+- Once the request middleware is complete, pass the `HttpContext` through each `UFRequestHandler`.
+- Once the request handler is complete, pass the `HttpContext` through each `UFResponseMiddleware`.
+- Once the response middleware is complete, pass the `HttpContext` through each `UFLogHandler`.
+- Once the log handlers have completed, flush the `HttpResponse` from `HttpContext.response`, this sends the result to the browser.
+- Any stage can result in an error, in which case the the `Error` and the `HttpContext` are passed through each `UFErrorHandler` and `UFLogHandler`.
+- Any module can modify the `completion` flags of `HttpContext`, allowing it to skip other modules during the lifecycle of the request. See `HttpContext.completion`.
+
+Each module returns a `Surprise`, allowing it to run asynchronously, and the request chain will wait for each module to complete before moving.
+
+See the documentation for `this.execute` for more details.
+
+#### Persistence:
+
+Depending on the environment, a `HttpApplication` may be created once per request, or the application may be persistent and have many requests.
+Client JS, NodeJS and Neko (when using `mod_tora` or `mod_neko` and the `Web.cacheModule` feature) are able to keep the same application alive and respond to multiple requests.
+PHP, and Neko (when not using `Web.cacheModule`) create a new application for each request.
 **/
 class HttpApplication
 {
 	/**
-		An injector for things that should be available to all parts of the application.
+	A dependency injector for the current application.
 
-		Things we could inject:
+	Any dependencies injected here will be available to all parts of the application, including the `UFMiddleware`, `UFRequestHandler`, `UFLogHandler` and `UFErrorHandler` modules.
+	It will also be used as the parent injector for each request, which will be used for `Controller` and `UFApi` objects.
 
-		- Your App Configuration
-		- An ICacheStore implementation
-		- An IMailer implementation
+	It is smart to include things available to all requests at this level: for example, app configuration, a `UFCache` implementations, a `UFMailer` implementation etc.
+	You should avoid injecting things which might be particular to a given request: for example, a `UFHttpSession` should belong to just one request, not the whole application.
+	If you wish to inject something into a specific request, you can use middleware and access the `HttpContext.injector`.
 
-		etc.
+	The `this.inject()` method can be used as a helper to inject dependencies.
 
-		This will be made available to the following:
-
-		- Any Middleware - see `ufront.app.UFMiddleware` - for example, RemotingModule, DispatchModule or CacheModule
-		- Any request handlers, error or log handlers - see `ufront.app.UFRequestHandler` and `ufront.app.UFErrorHandler`
-		- Any child injectors, for example, "controllerInjector" or "apiInjector" in `UfrontApplication`
-
-		By default, any handlers or middleware you add will be added to the injector also.
+	The `injector` is injected into itself so that modules, APIs and controllers can have access to the injector also.
 	**/
 	public var injector:Injector;
 
 	/**
-		Middleware to be used in the application, before the request is processed.
+	Middleware that can read and respond to the current HttpRequest, before the `UFRequestHandler` handlers execute.
+
+	See `UFRequestMiddleware` for details and examples.
 	**/
 	public var requestMiddleware(default,null):Array<UFRequestMiddleware>;
 
 	/**
-		Handlers that can process this request and write a response.
+	Handlers that can process this request and write a response.
 
-		Examples:
+	Examples:
 
-		 - `ufront.handler.DispatchHandler`
-		 - `ufront.handler.RemotingHandler`
-		 - StaticHandler (share static files over HTTP)
-		 - SASS handler (compile *.css requests from *.sass files using the SASS compiler)
+	 - `ufront.handler.MVCHandler`
+	 - `ufront.handler.RemotingHandler`
+	 - A handler which passes static assets to the client (in case your web server does not do this automatically)
+	 - A CSS Preprocesser handler (compile *.css requests from *.sass or *.less files using an appropriate CSS preprocessor)
+
+	See `UFRequestHandler` for details and examples.
 	**/
 	public var requestHandlers(default,null):Array<UFRequestHandler>;
 
 	/**
-		Middleware to be used in the application, after the request is processed.
+	Middleware that can read and respond to the current HttpRequest, after the `UFRequestHandler` handlers execute.
+
+	See `UFResponseMiddleware` for details and examples.
 	**/
 	public var responseMiddleware(default,null):Array<UFResponseMiddleware>;
 
 	/**
-		Log handlers to use for traces, logs, warnings and errors.
+	Log handlers to use for traces, logs, warnings and errors.
 
-		These may write to log files, trace to the browser console etc.
+	See `UFLogHandler` for details and examples.
 	**/
 	public var logHandlers(default,null):Array<UFLogHandler>;
 
 	/**
-		Error handlers to use if unhandled exceptions or Failures occur.
+	Error handlers to use if unhandled exceptions or Failures occur.
 
-		These may write to log files, help with debugging, present error pages to the browser etc.
+	See `UFErrorHandler` for details and examples.
 	**/
 	public var errorHandlers(default,null):Array<UFErrorHandler>;
 
 	/**
-		UrlFilters for the current application.
-		These will be used in the HttpContext for `getRequestUri` and `generateUri`.
-		See `addUrlFilter()` and `clearUrlFilters()` below.
-		Modifying this list will take effect at the beginning of the next `execute()` request.
+	UrlFilters for the current application.
+
+	These will be used in the HttpContext for `getRequestUri` and `generateUri`.
+
+	Modifying this list will only have an effect on future requests - modifications after a request has started will not affect that request.
+
+	See `this.addUrlFilter()` and `this.clearUrlFilters()` below, and `UFUrlFilter` for more details.
 	**/
 	public var urlFilters(default,null):Array<UFUrlFilter>;
 
 	/**
-		Messages (traces, logs, warnings, errors) that are not associated with a specific request.
+	Messages (traces, logs, warnings and errors) that are not associated with a specific request.
+
+	These are generally recorded from calls to `trace()` or `haxe.Log.trace()`, which have no knowledge of the current request.
 	**/
 	public var messages:Array<Message>;
 
-	/**
-		A future trigger, for internal use, that lets us tell if all our modules (middleware and handlers) are ready for use
-	**/
+	/** A future trigger, for internal use, that lets us tell if all our modules (middleware and handlers) are ready for use. **/
 	var modulesReady:Surprise<Noise,Error>;
 
 	/** A position representing the current module.  Useful for diagnosing if something in our async chain never completed. **/
 	var currentModule:Pos;
 
-	/** The (relative) path to the content directory. **/
+	/** The relative path to the content directory. **/
 	var pathToContentDir:String = null;
 
 	/**
-		Start a new HttpApplication
-
-		Depending on the platform, this may run multiple requests or it may be created per request.
-
-		The constructor will initialize each of the events, and add a single `onPostLogRequest` event handler to make sure logs are not executed twice in the event of an error.
-
-		After creating the application, you can initialize the modules and then execute requests with a given HttpContext.
+	Start a new HttpApplication and initialise the internal state.
 	**/
 	@:access(ufront.web.context.HttpContext)
 	public function new() {
 		// Set up injector
-		injector = new Injector();
-		injector.mapValue( Injector, injector );
-
-		// Set up modules
 		requestMiddleware = [];
 		requestHandlers = [];
 		responseMiddleware = [];
 		logHandlers = [];
 		errorHandlers = [];
-
-		// Set up URL Filters...
 		urlFilters = [];
-
-		// Set up custom trace.  Will save messages to the `messages` array, and let modules log as they desire.
 		messages = [];
-		haxe.Log.trace = function(msg:Dynamic, ?pos:PosInfos) {
-			messages.push({ msg: msg, pos: pos, type: Trace });
-		}
+		injector = new Injector();
+		injector.mapValue( Injector, injector );
 	}
 
 	/**
-		Shortcut to map a class or value into `injector`.
+	Map a value or a class into `this.injector`.
 
-		See `ufront.core.InjectorTools.inject()` for details on how the injections are applied.
+	See `InjectionTools.inject()` for details on how the injections are applied.
 
-		This method is chainable.
+	This method is chainable.
 	**/
 	public function inject<T>( cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton:Bool=false, ?named:String ):HttpApplication {
 		injector.inject( cl, val, cl2, singleton, named );
@@ -157,9 +163,21 @@ class HttpApplication
 	}
 
 	/**
-		Perform `init()` on any handlers or middleware that require it
+	Initialise the modules used in this application.
+
+	This will:
+	- Redirect `haxe.Log.trace()` to save messages to `this.messages`.
+	- Check all modules which require initialisation (`UFInitRequired`) and run those initialisations.
+	- Return a `Surprise`, which triggers once the modules are complete, and is either a `Success` or a `Failure` if any modules failed to initialise.
+
+	If `init()` is called more than once, it will return the same `Surprise` as the first `init()` call, meaning that modules are only initiated once per application.
+
+	When responding to a request, `init()` is called as the first step of our chain in each `execute()` call.
 	**/
 	public function init():Surprise<Noise,Error> {
+		haxe.Log.trace = function(msg:Dynamic, ?pos:PosInfos) {
+			messages.push({ msg: msg, pos: pos, type: Trace });
+		}
 		if ( modulesReady==null ) {
 			var futures = [];
 			for ( module in getModulesThatRequireInit() ) {
@@ -179,7 +197,7 @@ class HttpApplication
 	}
 
 	/**
-		Perform `dispose()` on any handlers or middleware that require it
+	Perform `dispose()` on any modules that require it (those marked with the `UFInitRequired` interface).
 	**/
 	public function dispose():Surprise<Noise,Error> {
 		var futures = [];
@@ -208,31 +226,31 @@ class HttpApplication
 	}
 
 	/**
-		Add one or more `UFRequestMiddleware` items to this HttpApplication. This method is chainable.
+	Add one or more `UFRequestMiddleware` modules to this HttpApplication. This method is chainable.
 	**/
 	inline public function addRequestMiddleware( ?middlewareItem:UFRequestMiddleware, ?middleware:Iterable<UFRequestMiddleware>, ?first:Bool=false ):HttpApplication
 		return addModule( requestMiddleware, middlewareItem, middleware, first );
 
 	/**
-		Add one or more `UFRequestHandler`s to this HttpApplication. This method is chainable.
+	Add one or more `UFRequestHandler` modules to this HttpApplication. This method is chainable.
 	**/
 	inline public function addRequestHandler( ?handler:UFRequestHandler, ?handlers:Iterable<UFRequestHandler>, ?first:Bool=false ):HttpApplication
 		return addModule( requestHandlers, handler, handlers, first );
 
 	/**
-		Add one or more `UFErrorHandler`s to this HttpApplication. This method is chainable.
+	Add one or more `UFErrorHandler` modules to this HttpApplication. This method is chainable.
 	**/
 	inline public function addErrorHandler( ?handler:UFErrorHandler, ?handlers:Iterable<UFErrorHandler>, ?first:Bool=false ):HttpApplication
 		return addModule( errorHandlers, handler, handlers, first );
 
 	/**
-		Add one or more `UFRequestMiddleware` items to this HttpApplication. This method is chainable.
+	Add one or more `UFRequestMiddleware` modules to this HttpApplication. This method is chainable.
 	**/
 	inline public function addResponseMiddleware( ?middlewareItem:UFResponseMiddleware, ?middleware:Iterable<UFResponseMiddleware>, ?first:Bool=false ):HttpApplication
 		return addModule( responseMiddleware, middlewareItem, middleware, first );
 
 	/**
-		Add some `UFRequestMiddleware` to this HttpApplication. This method is chainable.
+	Add one or more `UFLogHandler` modules to this HttpApplication. This method is chainable.
 	**/
 	inline public function addLogHandler( ?logger:UFLogHandler, ?loggers:Iterable<UFLogHandler>, ?first:Bool=false ):HttpApplication
 		return addModule( logHandlers, logger, loggers, first );
@@ -252,21 +270,41 @@ class HttpApplication
 	}
 
 	/**
-		Execute the request
+	Execute the current request, passing the HttpContext through each module until the request is complete.
 
-		Ṫhis involves:
+	**Execution Chain:**
 
-		- Setting the URL filters on the HttpContext.
-		- Firing all `UFRequestMiddleware`, in order
-		- Using the various `UFRequestHandler`s, until one of them is able to handle and process our request.
-		- Firing all `UFResponseMiddleware`, in order
-		- Logging any messages (traces, logs, warnings, errors) that occured during the request
-		- Flushing the response to the browser and concluding the request
+	- Setting the URL filters on the HttpContext.
+	- Running `this.init()` to make sure all modules are initialized and ready to receive requests.
+	- Executing each `UFRequestMiddleware` module, in order.
+	- Executing each `UFRequestHandler` module, in order, until one of them is able to handle and process our request.
+	- Executing each `UFResponseMiddleware` module, in order.
+	- Executing each `UFLogHandler` module, in order, to log messages. We pass the current `HttpContext` and `this.appMessages` to each handler.
+	- Flushing the response to the browser and concluding the request.
 
-		If errors occur (an unhandled exception or `ufront.core.Outcome.Failure` is returned by one of the modules), we will run through each of the `UFErrorHandler`s.
-		These may print a nice error message, provide recover, diagnostics, logging etc.
+	Each module returns a `Surprise`, which is a `Future<Outcome>`.
+	This waits until the module is complete, and returns either a `Success` (in which case we continue with the execute chain) or a `Failure`, in which case we handle the error.
 
-		Each module can modify `HttpContext.completion` to cause certain parts of the request life-cycle to be skipped.
+	If errors occur (an unhandled exception is thrown or an `Outcome.Failure` is returned by one of the modules), we will then abandon the execution chain and work through the error handling chain.
+
+	**Error Handling Chain:**
+
+	- Executing each `UFErrorHandler` module, in order, passing the relevant `Error` and `HttpContext` objects.
+	- Executing each `UFResponseMiddleware` module, in order, if they haven't already been run.
+	- Executing all  `UFLogHandler` module, in order, if they haven't already been run.
+	- Flushing the response to the browser and concluding the request.
+	- If any exceptions are thrown or failures encountered during the error handling chain, an exception will be thrown, so please be careful that middleware, error handlers and log handlers fail gracefully.
+
+	**Marking a stage as "complete":**
+
+	Before executing any module in either the `execute` chain or the `handleError` chain, we check `HttpContext.completion` to see if the current request stage has been marked as completed.
+	If the current stage has been marked as complete, the remaining modules in that stage will be skipped and the execution chain will continue from the next stage.
+
+	**Breaking the asynchronous chain:**
+
+	If any modules return a `Surprise` that fails to trigger, the asynchronous call chain will be broken and the request will fail to complete.
+	The synchronous platforms (Neko and PHP), when compiled with `-debug`, will alert you to which module in the chain failed to trigger correctly.
+	At this stage there is no time-out functionality, so please be careful that all modules always return and trigger a valid Future.
 	**/
 	@:access(ufront.web.context.HttpContext)
 	public function execute( httpContext:HttpContext ):Surprise<Noise,Error> {
@@ -282,13 +320,13 @@ class HttpApplication
 		var reqHandModules = requestHandlers.map(
 			function(m) return new Pair(
 				m.handleRequest.bind(),
-				HttpError.fakePosition( m, "requestIn", [] )
+				HttpError.fakePosition( m, "handleRequest", [] )
 			)
 		);
 		var resMidModules = responseMiddleware.map(
 			function(m) return new Pair(
 				m.responseOut.bind(),
-				HttpError.fakePosition( m, "requestIn", [] )
+				HttpError.fakePosition( m, "requestOut", [] )
 			)
 		);
 		var logHandModules = logHandlers.map(
@@ -298,8 +336,10 @@ class HttpApplication
 			)
 		);
 
-		// Here `>>` does a Future flatMap, so each call to `executeModules()` returns a Future, once that Future is done, it does the next `executeModules()`.
+		// Here we use the '>>' operator from `tink.core.Future`, which allows us to perform a `flatMap()` only when the `Surprise` returns a `Success`.
+		// This is great for chaining operations together, and propagating the error from any stage through the chain.
 		// The final future returned is for once the `flush()` call has completed, which will happen once all the modules have finished.
+		// See https://github.com/haxetink/tink_core#operators
 
 		var allDone =
 			init() >>
@@ -311,17 +351,16 @@ class HttpApplication
 			function (n:Noise) return flush( httpContext );
 
 		// We need an empty handler to make sure all the `executeModules` calls above fire correctly.
-		// This may be tink_core trying to be clever with Lazy evaluation, and never performing the `flatMap` if it is never handled.
+		// This seems to be tink_core trying to be clever with Lazy evaluation, and never performing the `flatMap` if it is never handled.
 		allDone.handle( function() {} );
 
 		#if (debug && (neko || php))
 			// Do a quick check that the async code actually completed, and if not, inform which module dropped the ball.
 			// For now we are only testing sync targets, in future we may provide a "timeout" on async targets to perform a similar test.
 			if ( httpContext.completion.has(CFlushComplete)==false ) {
-				// We need to prevent macro-time seeing this code as "Pos" for them is "haxe.macro.Pos" not "haxe.PosInfos"
 				var msg =
-				    'Async callbacks never completed for URI ${httpContext.getRequestUri()}:  ' +
-				    'The last active module was ${currentModule.className}.${currentModule.methodName}';
+					'Async callbacks never completed for URI ${httpContext.getRequestUri()}:  ' +
+					'The last active module was ${currentModule.className}.${currentModule.methodName}';
 				throw msg;
 			}
 		#end
@@ -330,17 +369,16 @@ class HttpApplication
 	}
 
 	/**
-		Given a collection of modules (middleware or handlers, anything that returns Future<Void>),
-		execute the modules one at a time, waiting for each to finish before starting the next one.
+	Execute a collection of modules (middleware or handlers) in order, until either a certain flag is marked as complete for that request, or all the modules have completed sucessfully.
 
-		If a `RequestCompletion` flag is provided, modules will not run if the request has that completion
-		flag already set.  Once all the modules have run, it will set the flag.
+	Usage:
 
-		Usage:
+	```haxe
+	var reqHandlerModules = requestHandlers.map(function (r) return new Pair(r.handleRequest, HttpError.fakePosition(r,"handleRequest",['httpContext'])));
+	requestHandlersDone:Future<Noise> = executeModules( reqHandlerModules, httpContext, CRequestHandler );
+	```
 
-		`requestHandlersDone:Future<Noise> = executeModules( requestHandlers.map(function (r) return new Pair(Type.getClassName(Type.getClass(r)), r.handleRequest)), httpContext, CRequestHandler );`
-
-		Returns a future that will be a Success if the chain completed successfully, or a Failure containing the error otherwise.
+	Returns a future that will be a Success if the chain completed successfully, or a Failure containing the error otherwise.
 	**/
 	function executeModules( modules:Array<Pair<HttpContext->Surprise<Noise,Error>,Pos>>, ctx:HttpContext, ?flag:RequestCompletion ):Surprise<Noise,Error> {
 		var done:FutureTrigger<Outcome<Noise,Error>> = Future.trigger();
@@ -376,9 +414,9 @@ class HttpApplication
 	}
 
 	/**
-		Run through each of the error handlers, then the log handlers (if they haven't run already)
+	Run through each of the error handlers, then the log handlers (if they haven't run already)
 
-		Then mark the middleware and requestHandlers as complete, so the `execute` function can log, flush and finish the request.
+	Then mark the middleware and requestHandlers as complete, so the `execute` function can log, flush and finish the request.
 	**/
 	function handleError( err:Error, ctx:HttpContext, doneTrigger:FutureTrigger<Outcome<Noise,Error>> ):Void {
 		if ( !ctx.completion.has(CErrorHandlersComplete) ) {
@@ -392,7 +430,7 @@ class HttpApplication
 			var resMidModules = responseMiddleware.map(
 				function(m) return new Pair(
 					m.responseOut.bind(),
-					HttpError.fakePosition( m, "requestIn", [] )
+					HttpError.fakePosition( m, "requestOut", [] )
 				)
 			);
 			var logHandModules = logHandlers.map(
@@ -421,6 +459,7 @@ class HttpApplication
 			// This means an error was thrown in one of:
 			//   - the ErrorHandlers
 			//   - the LogHandlers
+			//   - the ResponseMiddleware
 			//   - the "flush" stage...
 			// rethrow the error, and hopefully they'll come to this line number and figure out what happened.
 			var msg = 'You had an error after your error handler had already run.  Last active module: ${currentModule.className}.${currentModule.methodName}';
@@ -445,10 +484,9 @@ class HttpApplication
 
 	#if (php || neko || (js && !nodejs))
 		/**
-			Create a HTTPContext for the current request and execute it.
+		Create a `HttpContext` for the current request and execute it.
 
-			This will ensure that the current injector and it's mappings are included in the HttpContext.
-			Available on PHP and Neko.
+		Available on PHP, Neko and Client JS.
 		**/
 		public function executeRequest() {
 			var context =
@@ -458,13 +496,13 @@ class HttpApplication
 		}
 	#elseif nodejs
 		/**
-			Start a HTTP server using `js.npm.Express`, listening on the specified port.
-			Includes the `js.npm.connect.Static` and `js.npm.connect.BodyParser` middleware.
-			Will create a HttpContext and execute each request.
+		Start a HTTP server using `js.npm.Express`, listening on the specified port.
+		Includes the `js.npm.connect.Static` and `js.npm.connect.BodyParser` middleware.
+		Will create a HttpContext and execute each request.
 
-			@param port The port to listen on (default 2987).
+		Available on NodeJS only.
 
-			NodeJS only.
+		@param port The port to listen on (default 2987).
 		**/
 		public function listen( ?port:Int=2987 ):Void {
 			var app = new js.npm.Express();
@@ -484,20 +522,20 @@ class HttpApplication
 	#end
 
 	/**
-		Use `neko.Web.cacheModule` to speed up requests if using neko and not using `-debug`.
+	Use `neko.Web.cacheModule` to speed up requests if using neko and not using `-debug`.
 
-		Using `cacheModule` will cause your app to execute normally on the first load, but subsequent loads will:
+	Using `cacheModule` will cause your app to execute normally on the first load, but then:
 
-		- Keep the module loaded
-		- Keep static variables initialised
-		- Skip straight to our `executeRequest` function for each new request
+	- Keep the module loaded in memory on the server for subsequent page loads
+	- Keep static variables initialised, so their values are kept between requests
+	- Skip straight to our `executeRequest` function for each new request
 
-		A few things to note:
+	A few things to note:
 
-		- This will have no effect on platforms other than Neko.
-		- This will have no effect if you compile with `-debug`.
-		- If you have multiple simultaneous requests, mod_neko may load up several instances of the module, and keep all of them cached, and pick one for each request.
-		- Using `nekotools server` sometimes fails to clear the cache after you re-compile. You can either restart the server, or compile with `-debug` to avoid this problem.
+	- This will have no effect on platforms other than Neko.
+	- This will have no effect if you compile with `-debug`.
+	- If you have multiple simultaneous requests, mod_neko may load up several instances of the module, and keep all of them cached, and pick one for each request.
+	- Using `nekotools server` fails to clear the cache after you re-compile. You can either restart the server, or compile with `-debug` to avoid this problem.
 	**/
 	public function useModNekoCache():Void {
 		#if (neko && !debug)
@@ -506,7 +544,8 @@ class HttpApplication
 	}
 
 	/**
-		Add a URL filter to be used in the HttpContext for `getRequestUri` and `generateUri`
+	Add a URL filter to be used in `HttpContext.getRequestUri` and `HttpContext.generateUri`.
+	This will take effect from the next request to execute, it will not affect a currently executing request.
 	**/
 	public function addUrlFilter( filter:UFUrlFilter ):Void {
 		NullArgument.throwIfNull( filter );
@@ -514,14 +553,16 @@ class HttpApplication
 	}
 
 	/**
-		Remove existing URL filters
+	Remove existing URL filters.
+	This will take effect from the next request to execute, it will not affect a currently executing request.
 	**/
 	public function clearUrlFilters():Void {
 		urlFilters = [];
 	}
 
 	/**
-		Set the relative path to the content directory.
+	Set the relative path to the content directory.
+	This will take effect from the next request to execute, it will not affect a currently executing request.
 	**/
 	public function setContentDirectory( relativePath:String ):Void {
 		pathToContentDir = relativePath;

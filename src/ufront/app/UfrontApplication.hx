@@ -23,65 +23,66 @@ using thx.core.Objects;
 using ufront.core.InjectionTools;
 
 /**
-	A standard Ufront Application.  This extends HttpApplication and provides:
+A standard Ufront Application for executing requests on the server.
 
-	- Routing with `ufront.handler.MVCHandler`
-	- Easily add a Haxe remoting API context and initiate the `ufront.handler.RemotingHandler`
-	- Tracing, to console, logfile or remoting call, based on your `ufront.web.UfrontConfiguration`
+This extends `HttpApplication` for a "batteries included" way to set up your server-side Ufront app.
 
-	Ufront uses `minject.Injector` for dependency injection, and `UfrontApplication` adds several things to the injector, depending on your configuration:
+Out of the box it provides:
 
-	- All of the controllers specified in your configuration (by default: all of them)
-	- All of the APIs specified in your configuration (by default: all of them)
-	- A singleton of the UFViewEngine specified in your UfronConfiguration.
-	- The implementation of `UFHttpSession` you chose in your UfrontConfiguration, to be instantiated on each request.
-	- The implementation of `UFAuthHandler` you chose in your UfrontConfiguration, to be instantiated on each request.
-	- A String named `viewPath` for the path to your view folder, specified in your configuration.
-	- A String name `scriptDirectory`, containing the path to the directory the current app is located in.
-	- A String name `contentDirectory`, containing the path to the content directory specified in your configuration.
+- The `MVCHandler` for macro powered routing and a model / view / controller style of responding to requests.
+- The `RemotingHandler` for automatic Haxe powered remoting APIs.
+- Tracing to a browser console during a web request or a remoting call, based on your `UfrontConfiguration`.
+- Default URL Filtering rules, based on your `UfrontConfiguration`.
 
-	Futher injections may take place in various middleware / handlers also.
+Ufront uses `minject.Injector` for dependency injection, and `UfrontApplication` adds several things to the injector, depending on your configuration:
 
-	@author Jason O'Neil
-	@author Andreas Soderlund
-	@author Franco Ponticelli
+- All of the controllers specified in your configuration (By default: every `Controller` imported into your app).
+- All of the APIs specified in your configuration (by default: every `UFApi` imported into your app).
+- The `UFAsyncApi` versions of any `UFApi` classes injected above.
+- A singleton of the `UFViewEngine` specified in your `UfronConfiguration`.
+- The implementation of `UFHttpSession` you chose in your `UfrontConfiguration`, to be instantiated on each request.
+- The implementation of `UFAuthHandler` you chose in your `UfrontConfiguration`, to be instantiated on each request.
+- A String named `viewPath` for the path to your view folder, specified in your `UfrontConfiguration`.
+- A String name `scriptDirectory`, containing the path to the directory the current app is located in.
+- A String name `contentDirectory`, containing the path to the content directory specified in your configuration.
+
+Futher injections may take place in various middleware / handlers also.
 **/
-class UfrontApplication extends HttpApplication
-{
+class UfrontApplication extends HttpApplication {
 	/**
-		The configuration that was used when setting up the application.
+	The configuration that was used when setting up the application.
 
-		This is set during the constructor.  Changing values of this object is not guaranteed to have any effect.
+	This is set during the constructor.  Changing values of this object is not likely to have any effect.
 	**/
 	public var configuration(default,null):UfrontConfiguration;
 
 	/**
-		The dispatch handler used for this application.
+	The MVC handler used for this application.
 
-		This is mostly made accessible for unit testing and logging purposes.  You are unlikely to need to access it for anything else.
+	This is made accessible for unit testing and logging purposes, you are unlikely to need to access it directly for anything else.
 	**/
 	public var mvcHandler(default,null):MVCHandler;
 
 	/**
-		The remoting handler used for this application.
+	The remoting handler used for this application.
 
-		It is automatically set up if a `UFApiContext` class is supplied
+	It is automatically set up if a `UFApiContext` class is supplied.
+
+	This is made accessible for unit testing and logging purposes, you are unlikely to need to access it directly for anything else.
 	**/
 	public var remotingHandler(default,null):RemotingHandler;
 
 	/**
-		The view engine being used with this application
+	The view engine being used with this application.
 
-		It is configured using the `viewEngine` property on your `UfrontConfiguration`.
+	It is configured using the `viewEngine` property on your `UfrontConfiguration`.
 	**/
 	public var viewEngine(default,null):UFViewEngine;
 
 	/**
-		Initialize a new UfrontApplication with the given configurations.
+	Initialize a new UfrontApplication with the given configurations.
 
-		@param	?optionsIn		Options for UfrontApplication.  See `DefaultUfrontConfiguration` for details.  Any missing values will imply defaults should be used.
-
-		This will redirect `haxe.Log.trace` to a local function which adds trace messages to the `messages` property of this application.  You will need to use an appropriate tracing module to view these.
+	@param ?optionsIn Options for UfrontApplication.  See `DefaultUfrontConfiguration` for details.  Any missing values will imply defaults should be used.
 	**/
 	public function new( ?optionsIn:UfrontConfiguration ) {
 		super();
@@ -165,14 +166,15 @@ class UfrontApplication extends HttpApplication
 	}
 
 	/**
-		Execute the current request.
+	Execute the current request.
 
-		The first time this runs, `initOnFirstExecute()` will be called, which runs some more initialization that requires the HttpContext to be ready before running.
+	The first time this runs, `this.initOnFirstExecute()` will be called, which runs some more initialization that requires the HttpContext to be ready before running.
 	**/
 	override public function execute( httpContext:HttpContext ):Surprise<Noise,Error> {
 		NullArgument.throwIfNull( httpContext );
 
-		if ( firstRun ) initOnFirstExecute( httpContext );
+		if ( firstRun )
+			initOnFirstExecute( httpContext );
 
 		// execute
 		return super.execute( httpContext );
@@ -199,22 +201,14 @@ class UfrontApplication extends HttpApplication
 		}
 	}
 
-	/**
-		Shortcut for `remotingHandler.loadApiContext()`
-
-		Returns itself so chaining is enabled.
-	**/
+	/** Shortcut for `remotingHandler.loadApiContext()`. See `RemotingHandler.loadApiContext()` for details. **/
 	public inline function loadApiContext( apiContext:Class<UFApiContext> ):UfrontApplication {
 		remotingHandler.loadApiContext( apiContext );
 		return this;
 	}
 
 	var appTemplatingEngines = new List();
-	/**
-		Add support for a templating engine to your view engine.
-
-		Some ready-to-go templating engines are included `ufront.view.TemplatingEngines`.
-	**/
+	/** Add support for a templating engine to your view engine. **/
 	public function addTemplatingEngine( engine:TemplatingEngine ):UfrontApplication {
 		appTemplatingEngines.add( engine );
 		if ( viewEngine!=null )
@@ -223,11 +217,9 @@ class UfrontApplication extends HttpApplication
 	}
 
 	/**
-		Shortcut to map a class or value into `injector`.
+	Shortcut to map a class or value into `this.injector`.
 
-		See `ufront.core.InjectorTools.inject()` for details on how the injections are applied.
-
-		This method is chainable.
+	See `InjectionTools.inject()` for details on how the injections are applied.
 	**/
 	override public function inject<T>( cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton:Bool=false, ?named:String ):UfrontApplication {
 		return cast super.inject( cl, val, cl2, singleton, named );

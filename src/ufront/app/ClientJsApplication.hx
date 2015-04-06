@@ -17,28 +17,57 @@ package ufront.app;
 	import thx.core.Strings;
 	import ufront.web.url.filter.*;
 
+	/**
+	A standard Ufront Client-Side Application for executing requests in the browser.
+
+	This extends `HttpApplication` for a "batteries included" way to set up your client-side Ufront app.
+
+	Out of the box it provides:
+
+	- The `MVCHandler` for macro powered routing and a model / view / controller style of responding to requests.
+	- Tracing directly to a browser console, based on your `UfrontClientConfiguration`.
+	- Default URL Filtering rules, based on your `UfrontClientConfiguration`.
+
+	Ufront uses `minject.Injector` for dependency injection, and `UfrontApplication` adds several things to the injector, depending on your configuration:
+
+	- All of the controllers specified in your configuration (By default: every `Controller` imported into your app).
+	- If a remoting path is supplied in your `UfrontClientConfiguration`, then an appropriate `ufront.remoting.HttpConnection` and `ufront.remoting.HttpAsyncConnection` will be injected.
+	- The `UFApi` proxy versions of all of the APIs specified in your configuration (by default: every `UFApi` imported into your app).
+	- The `UFAsyncApi` proxy versions of all `UFApi` objects injected above.
+	- A singleton of the `UFViewEngine` specified in your `UfrontClientConfiguration`.
+	- The implementation of `UFHttpSession` you chose in your `UfrontClientConfiguration`, to be instantiated on each request.
+	- The implementation of `UFAuthHandler` you chose in your `UfrontClientConfiguration`, to be instantiated on each request.
+	- A String named `viewPath` for the path to your view folder, specified in your `UfrontClientConfiguration`.
+
+	Futher injections may take place in various middleware / handlers also.
+	**/
 	class ClientJsApplication extends HttpApplication {
 		/**
-			The configuration that was used when setting up the client application.
+		The configuration that was used when setting up the application.
 
-			This is set during the constructor.  Changing values of this object is not guaranteed to have any effect.
+		This is set during the constructor.  Changing values of this object is not likely to have any effect.
 		**/
 		public var configuration(default,null):UfrontClientConfiguration;
 
 		/**
-			The dispatch handler used for this application.
+		The MVC handler used for this application.
 
-			This is mostly made accessible for unit testing and logging purposes.  You are unlikely to need to access it for anything else.
+		This is made accessible for unit testing and logging purposes, you are unlikely to need to access it directly for anything else.
 		**/
 		public var mvcHandler(default,null):MVCHandler;
 
 		/**
-			The view engine being used with this application
+		The view engine being used with this application
 
-			It is configured using the `viewEngine` property on your `UfrontConfiguration`.
+		It is configured using the `viewEngine` property on your `UfrontClientConfiguration`.
 		**/
 		public var viewEngine(default,null):UFViewEngine;
 
+		/**
+		Initialize a new ClientJsApplication with the given configurations.
+
+		@param ?optionsIn Options for ClientJsApplication.  See `DefaultUfrontClientConfiguration` for details.  Any missing values will imply defaults should be used.
+		**/
 		public function new( optionsIn:UfrontClientConfiguration ) {
 			super();
 
@@ -118,7 +147,11 @@ package ufront.app;
 		}
 
 		/**
-			Re-execute the app each time a PushState event occurs.
+		Use `PushState.addEventListener` to re-execute the app each time a PushState event occurs.
+
+		This allows you to respond to users clicking "pushstate" links, submitting "pushstate" forms, using the back button etc.
+
+		This does not execute on the initial page load - please also call `this.executeRequest()` if you need to execute on the initial page load.
 		**/
 		public function listen():ClientJsApplication {
 			var basePath = null;
@@ -130,11 +163,9 @@ package ufront.app;
 		}
 
 		/**
-			Shortcut to map a class or value into `injector`.
+		Shortcut to map a class or value into `injector`.
 
-			See `ufront.core.InjectorTools.inject()` for details on how the injections are applied.
-
-			This method is chainable.
+		See `InjectionTools.inject()` for details on how the injections are applied.
 		**/
 		override public function inject<T>( cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton:Bool=false, ?named:String ):ClientJsApplication {
 			return cast super.inject( cl, val, cl2, singleton, named );
