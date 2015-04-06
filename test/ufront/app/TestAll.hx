@@ -9,5 +9,7 @@ class TestAll
 		runner.addCase( new UfrontApplicationTest() );
 		runner.addCase( new HttpApplicationTest() );
 		runner.addCase( new ClientJsApplicationTest() );
+		runner.addCase( new DefaultUfrontConfigurationTest() );
+		runner.addCase( new UfrontConfigurationTest() );
 	}
 }

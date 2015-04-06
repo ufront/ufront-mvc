@@ -1,7 +1,7 @@
 package ufront.app;
 
 #if client
-	import ufront.web.UfrontClientConfiguration;
+	import ufront.app.UfrontClientConfiguration;
 	import ufront.web.context.HttpContext;
 	import ufront.web.session.*;
 	import ufront.auth.*;

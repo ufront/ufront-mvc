@@ -8,7 +8,7 @@ import thx.collection.*;
 import haxe.PosInfos;
 import ufront.web.Controller;
 import ufront.app.UfrontApplication;
-import ufront.web.UfrontConfiguration;
+import ufront.app.UfrontConfiguration;
 import ufront.web.result.ActionResult;
 import ufront.core.MultiValueMap;
 import minject.Injector;

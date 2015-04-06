@@ -14,7 +14,7 @@ import ufront.web.Dispatch;
 import ufront.web.session.*;
 import ufront.web.url.filter.*;
 import ufront.web.Controller;
-import ufront.web.UfrontConfiguration;
+import ufront.app.UfrontConfiguration;
 import ufront.web.session.UFHttpSession;
 import ufront.auth.*;
 import thx.core.Strings;

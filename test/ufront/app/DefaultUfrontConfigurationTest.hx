@@ -1,10 +1,10 @@
-package ufront.web;
+package ufront.app;
 
 import utest.Assert;
-import ufront.web.UfrontConfiguration;
+import ufront.app.UfrontConfiguration.DefaultUfrontConfiguration;
 
-class UfrontConfigurationTest {
-	var instance:UfrontConfiguration;
+class DefaultUfrontConfigurationTest {
+	var instance:DefaultUfrontConfiguration;
 
 	public function new() {}
 
