@@ -86,6 +86,14 @@ class ApiMacrosTest {
 		Assert.isTrue ( hasReturnType("returnSurpriseFn",ARTFuture) );
 	}
 
+	public function testContext() {
+		// Check that `UFApiContext.getApisInContext()` works.
+		var apis = UFApiContext.getApisInContext( MyApi );
+		Assert.equals( 2, apis.length );
+		Assert.equals( "ufront.api.ApiTest1", Type.getClassName(apis[0]) );
+		Assert.equals( "ufront.api.ApiTest2", Type.getClassName(apis[1]) );
+	}
+
 	public function testAsyncProxies() {
 		var api1 = new ApiTest1();
 		var asyncApi1 = new ApiTest1Async();

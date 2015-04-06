@@ -19,6 +19,7 @@ class ApiMacros {
 	public static function buildApiContext():Array<Field> {
 		return ClassBuilder.run([
 			logBuild.bind(_,"Start"),
+			generalizeComplexTypes,
 			addApiListMetaToContext,
 			addInjectMetaToContextFields,
 			logBuild.bind(_,"Finish"),
@@ -39,7 +40,7 @@ class ApiMacros {
 			cacheAPIMembers,
 			checkTypeHints,
 			addReturnTypeMetadata,
-			generalizeComplexTypesOnApiMethods,
+			generalizeComplexTypes,
 			transformClient,
 			logBuild.bind(_,"Finish"),
 		]);
@@ -98,7 +99,7 @@ class ApiMacros {
 	static function addApiListMetaToContext( cb:ClassBuilder ) {
 		var apis = [];
 		for ( member in cb ) {
-			var typeName = fullNameFromComplexType( member.getVar().sure().type );
+			var typeName = runtimeNameFromComplexType( member.getVar().sure().type );
 			if ( typeName!=null )
 				apis.push( macro $v{typeName} );
 		}
@@ -221,17 +222,23 @@ class ApiMacros {
 	/**
 		Because we cache our members and re-use them in build macros for our API proxies, we need the ComplexTypes to be generalized to work in a different "context".
 		See documentation of `addProxyMemberMethods` for more details.
+		This is also needed for `UFApiContext` when it saves the names to metadata.
 	**/
-	static function generalizeComplexTypesOnApiMethods( cb:ClassBuilder ) {
+	static function generalizeComplexTypes( cb:ClassBuilder ) {
 		for ( member in cb ) {
 			if ( member.isPublic && !member.isStatic ) {
-				switch member.getFunction() {
-					case Success(fn):
+				switch member.kind {
+					case FFun(fn):
 						fn.ret = generalizeComplexType( fn.ret, member.pos );
 						for ( arg in fn.args ) {
 							arg.type = generalizeComplexType( arg.type, member.pos );
 						}
-					default:
+					case FVar(ct,e):
+						var newCT = generalizeComplexType( ct, member.pos );
+						member.kind = FieldType.FVar( newCT, e );
+					case FProp(get,set,ct,e):
+						var newCT = generalizeComplexType( ct, member.pos );
+						member.kind = FieldType.FProp( get, set, newCT, e );
 				}
 			}
 		}
@@ -312,7 +319,7 @@ class ApiMacros {
 			- This will return a ComplexType the same as the original, but with absolute paths that will work independently of context.
 		- Our final solution:
 			- If our Proxy builds before the UFApi, we try to trigger the build on the UFApi.
-			- When we build our `UFApi`, we convert all ComplexTypes to use absolut paths in the `generalizeComplexTypesOnApiMethods()` method.
+			- When we build our `UFApi`, we convert all ComplexTypes to use absolut paths in the `generalizeComplexTypes()` method.
 			- When we build our `UFApi`, we also cache the `Array<Member>` for the API in `cachedApiMembers`.
 			- We can use these members to then create the appropriate fields for the proxy.
 			- Our call to `getResultWrapFlagsForReturnType` still requires `unify()` and therefore converting ComplexType to Type, but because of the transformations in our build macro above, it all works.
@@ -384,6 +391,19 @@ class ApiMacros {
 		return switch ct {
 			case TPath(p):
 				if ( p.sub!=null ) p.pack.concat([p.name,p.sub]).join(".");
+				else p.pack.concat([p.name]).join(".");
+			case _:
+				throw "Expected TPath";
+		}
+	}
+
+	/**
+		Unlike `fullNameFromComplexType`, this generates a name that will match `Type.getClassName()` at runtime.
+	**/
+	static function runtimeNameFromComplexType( ct:ComplexType ):Null<String> {
+		return switch ct {
+			case TPath(p):
+				if ( p.sub!=null ) p.pack.concat([p.sub]).join(".");
 				else p.pack.concat([p.name]).join(".");
 			case _:
 				throw "Expected TPath";
