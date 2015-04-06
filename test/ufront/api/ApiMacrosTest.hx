@@ -1,6 +1,6 @@
 package ufront.api;
 
-import ufront.api.UFApi;
+import ufront.api.*;
 import ufront.remoting.RemotingError;
 import utest.Assert;
 import haxe.rtti.Meta;
@@ -97,6 +97,9 @@ class ApiMacrosTest {
 		// Check interfaces
 		Assert.isTrue( Std.is(api1,MyApiInterface) );
 		Assert.isTrue( Std.is(asyncApi1,MyApiInterfaceAsync) );
+		// Check the `getAsyncApi` functionality.
+		var result = UFAsyncApi.getAsyncApi( ApiTest1 );
+		Assert.equals( "ufront.api.ApiTest1Async", Type.getClassName(result) );
 
 		// TODO: Create more tests using a mock `haxe.remoting.AsyncConnection`.
 	}
@@ -114,6 +117,9 @@ class ApiMacrosTest {
 		// Check interfaces
 		Assert.isTrue( Std.is(api1,MyApiInterface) );
 		Assert.isTrue( Std.is(cbApi,MyApiInterfaceCallback) );
+		// Check the `getAsyncApi` functionality.
+		var result = UFCallbackApi.getCallbackApi( ApiTest2 );
+		Assert.equals( "ufront.api.ApiTest2Proxy", Type.getClassName(result) );
 
 		// TODO: Create more tests using a mock `haxe.remoting.AsyncConnection`.
 	}

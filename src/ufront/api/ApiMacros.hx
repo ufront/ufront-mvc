@@ -267,7 +267,7 @@ class ApiMacros {
 	static function addAsyncApiMetadata( metaName:String, cb:ClassBuilder ) {
 		var syncApiType = getTypeFromFirstTypeParam( cb );
 		if ( syncApiType!=null ) {
-			var asyncName = fullNameFromComplexType( syncApiType.toComplex() );
+			var asyncName = Context.getLocalClass().toString();
 			var syncApiClassType = getClassTypeFromFirstTypeParam( cb );
 			var meta = syncApiClassType.get().meta;
 			if ( meta.has(metaName) )
