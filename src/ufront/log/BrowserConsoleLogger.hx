@@ -71,7 +71,7 @@ class BrowserConsoleLogger implements UFLogHandler
 	#if client
 		public static function printMessage( m:Message ):Void {
 			var console = js.Browser.window.console;
-			var logMethod:haxe.extern.Rest<Dynamic>->Void = switch (m.type) {
+			var logMethod = switch (m.type) {
 				case Trace: console.log;
 				case Log: console.info;
 				case Warning: console.warn;
