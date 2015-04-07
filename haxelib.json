@@ -6,19 +6,51 @@
   "description": "MVC Framework that is at the core of ufront.",
   "contributors": ["fponticelli","jason"],
   "releasenote": "
-  Fixes for Haxe 3.2-rc.2.
-  Should remain compatible with 3.1.3 for now.
-  Unit tests passing, pending fixes in some of our dependencies.  (Mockatoo, mconsole, detox etc).
-  Add `UFAuthHandler.asAuthHandler()` to avoid variance issues.
-  Add `SysUtil.recursiveDelete()`.
-  Add `MultiValueMap.allValues()`.
-  For each `HttpContext`, inject the context injector into itself.
-  In ViewResult, when guessing view name from function name, don't guess 'cs.html' from 'docs()' or similar words - only remove the `do` prefix if the next character is uppercase.
-  Work around for macro errors when using Mockatoo on a UFApi class.
-  Many small unit testing improvements.
-  Removed `HttpApplicationMacros` - it saved some lines of code but made it hard to understand and debug, and had limited usefulness elsewhere.
+This is a fairly significant release, with a few breaking changes and many new features and improvements.
+
+With this release I'm confident the majority of the public APIs can be considered stable, and we can have a 1.0.0 stable release soon.
+The main remaining issue is waiting for a `minject:2.0.0` release.
+
+New features are:
+
+1. Add client JS support, which includes:
+    1. `ClientJsApplication` behaving similarly to `UfrontApplication`, but runs in the browser as a single-page-app.
+    2. It uses `PushState` to detect new page loads and respond to them.
+    3. Faking 'POST' requests using PushState to read FORM data.
+    4. It uses the DOM API to render the new page and replace the old content.
+    5. It uses the new `HttpViewEngine` to asynchronously load view files (and keep them cached)
+    6. It can use the same routing, controllers, view results etc.
+    7. It can use API proxies. See `UFAsyncApi` and `UFCallbackApi`.
+    8. A `remotingPath` configuration parameter that automatically injects a `HttpConnection` and `HttpAsyncConnection` for our API proxies to use.
+    9. Allow `BrowserConsoleLogger` to work on the client side.
+2. Changes to `api` classes and remoting, including:
+    1. `UFApiContext` does not generate client context automatically, you must define `UFApiClientContext`.
+    2. `UFCallbackApi` behaves like the old `haxe.remoting.Proxy`, but is macro powered (not magic powered) and works with Async APIs, more predictable naming etc.
+    3. `UFCallbackApi` also supports error callbacks, unlike the old `Proxy` which just supports result callbacks.
+    4. `UFAsyncApi` classes are injected into the request by default now.
+    5. Methods to find `UFAsyncApi` or `UFCallbackApi` classes based on the `UFApi`.
+    6. Methods to get list of APIs in `UFApiContext`.
+    7. Renamed `haxe.remoting.HttpAsyncConnectionWithTraces` to `ufront.remoting.HttpAsyncConnection`.
+    8. Renamed `haxe.remoting.HttpConnectionWithTraces` to `ufront.remoting.HttpConnection`.
+    9. Changed `RemotingHandler` to only give ufront specific information (log messages, stack traces etc) if it's a Ufront remoting connection. This makes it compatible with pure Haxe remoting again.
+    10. Provide a default error handler in `RemotingUtil`.
+    11. Don't expose every API to remoting, only this in the `UfrontConfiguration.remotingApi:UFApiContext`.
+    12. `UFApi` when compiled on the client will now attempt a synchronous HTTP connection. Not much use on JS (unless in a web worker), but good for CLI tools.
+    13. Moved each type in `ufront.api.*` into a separate module.
+    14. Renamed `RequireApiProxy` to `RequireAsyncCallbackApi`.
+    15. Major refactor of `UFApiMacros` to use much cleaner `tink_macros` ClassBuilder style, much cleaner, avoids build order issues.
+    16. When API is not found the request now uses HTTP status 404, and generates a `RemotingError.ApiNotFound` enum to be handled on the client.
+3. Majorly improved documentation in `ufront.app` and `ufront.api` packages. More to come.
+4. Moved `UfrontConfiguration` and `UfrontClientConfiguration` from `ufront.web` to `ufront.app`.
+5. With erazor templates, look for `.html` files before `.erazor` files.
+6. Insert browser console log script before </body> close tag, rather than after it.
+7. Add CallJavascriptResult for adding JS to the end of a text/html response.
+8. Change MVCHandler and RemotingHandler to no longer use init()/dispose().
+9. Add `TemplatingEngines.all` as a central place to list all ufront-known templating engines, use it as a default value in `UfrontConfiguration`.
+10. Small update to example code on `DefaultUfrontController`.
+11. Improved documentation for `FileLogger`.
 ",
-  "version": "1.0.0-rc.16",
+  "version": "1.0.0-rc.17",
   "url": "https://github.com/ufront/ufront-mvc",
   "dependencies": {
     "random": "",
