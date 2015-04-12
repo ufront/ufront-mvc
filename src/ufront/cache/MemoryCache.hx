@@ -4,38 +4,41 @@ import tink.CoreApi;
 import ufront.core.Futuristic;
 import ufront.cache.UFCache;
 
-class MemoryCacheConnection<T> implements UFCacheConnection<T> {
-	var caches:Map<String,MemoryCache<T>>;
+class MemoryCacheConnection implements UFCacheConnection implements UFCacheConnectionSync {
+	var caches:Map<String,MemoryCache>;
 
 	public function new()
 		caches = new Map();
 
-	public function getNamespace( namespace:String ):UFCache<T>
+	public function getNamespaceSync( namespace:String ):UFCache
 		return
 			if ( caches.exists(namespace) )
 				caches[namespace]
 			else
 				caches[namespace] = new MemoryCache();
+
+	public function getNamespace( namespace:String ):UFCache
+		return getNamespaceSync( namespace );
 }
 
-class MemoryCache<T> implements UFCache<T> implements UFCacheSync<T> {
+class MemoryCache implements UFCache implements UFCacheSync {
 
-	var map:Map<String,T>;
+	var map:Map<String,Dynamic>;
 
 	public function new()
 		map = new Map();
 
-	public function getSync( id:String ):Outcome<T,CacheError>
+	public function getSync( id:String ):Outcome<Dynamic,CacheError>
 		return
 			if ( map.exists(id) )
 				Success( map[id] )
 			else
 				Failure( ENotInCache );
 
-	public function setSync( id:String, value:T ):Outcome<T,CacheError>
+	public function setSync<T>( id:String, value:T ):Outcome<T,CacheError>
 		return Success( map[id] = value );
 
-	public function getOrSetSync( id:String, ?fn:Void->T ):Outcome<T,CacheError>
+	public function getOrSetSync<T>( id:String, ?fn:Void->T ):Outcome<Dynamic,CacheError>
 		return
 			if ( map.exists(id) )
 				Success( map[id] )
@@ -50,10 +53,10 @@ class MemoryCache<T> implements UFCache<T> implements UFCacheSync<T> {
 	public function get( id:String ):Surprise<T,CacheError>
 		return Future.sync( getSync(id) );
 
-	public function set( id:String, value:Futuristic<T> ):Surprise<T,CacheError>
+	public function set<T>( id:String, value:Futuristic<T> ):Surprise<T,CacheError>
 		return value.map( function(v:T) return Success(map[id]=v) );
 
-	public function getOrSet( id:String, ?fn:Void->Futuristic<T> ):Surprise<T,CacheError>
+	public function getOrSet<T>( id:String, ?fn:Void->Futuristic<T> ):Surprise<Dynamic,CacheError>
 		return
 			if ( map.exists(id) )
 				Future.sync( Success(map[id]) )
