@@ -40,9 +40,9 @@ class RequestCacheMiddleware implements UFMiddleware
 
 		Will be injected by the `ufront.app.HttpApplication` when the middleware is added.
 	**/
-	@inject public var cacheConnection:UFCacheConnection<HttpResponse>;
+	@inject public var cacheConnection:UFCacheConnection;
 
-	var cache:UFCache<HttpResponse>;
+	var cache:UFCache;
 
 	public function new() {
 	}
@@ -52,15 +52,19 @@ class RequestCacheMiddleware implements UFMiddleware
 		If it does, mirror the cached request and mark the request as complete.
 	**/
 	public function requestIn( ctx:HttpContext ):Surprise<Noise,Error> {
+		#if debug
+			// Don't cache requests if we're working in debug mode.
+			return Sync.success();
+		#end
 		if ( cache==null ) {
 			cache = cacheConnection.getNamespace("ufront.middleware.RequestCache");
 		}
 		if ( ctx.request.httpMethod.toLowerCase()=="get" ) {
 			var uri = ctx.request.uri;
-			var keys:Iterator<String> = untyped cache.map.keys();
 			return cache.get( uri ).map(function(result) {
 				switch result {
-					case Success(cachedResponse):
+					case Success(res):
+						var cachedResponse:HttpResponse = res;
 						ctx.ufTrace( 'Loading $uri from cache' );
 						ctx.response.clearContent();
 						ctx.response.contentType = cachedResponse.contentType;
@@ -108,7 +112,6 @@ class RequestCacheMiddleware implements UFMiddleware
 								ctx.ufError( 'Failed to save cache for $uri: $e' );
 							default:
 						}
-						var keys:Iterator<String> = untyped cache.map.keys();
 						return Success( Noise );
 					}
 				}

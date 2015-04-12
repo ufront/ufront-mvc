@@ -1,5 +1,6 @@
 package ufront.core;
 
+import haxe.ds.StringMap;
 
 /**
 	An ordered map implementation.
@@ -16,7 +17,7 @@ class OrderedStringMap<T>
 	{
 		length = 0;
 		__keys = [];
-		__hash = new Map ();
+		__hash = new StringMap ();
 	}
 
 	public function set( key : String, value : T ) : Void
@@ -99,7 +100,7 @@ class OrderedStringMap<T>
 
 	public function clear() : Void
 	{
-		__hash = new Map ();
+		__hash = new StringMap ();
 		__keys = [];
 		length = 0;
 	}
@@ -129,5 +130,5 @@ class OrderedStringMap<T>
 	}
 
 	var __keys : Array<String>;
-	var __hash : Map<String, T>;
+	var __hash : StringMap<T>;
 }

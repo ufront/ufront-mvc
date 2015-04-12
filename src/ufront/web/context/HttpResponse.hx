@@ -275,6 +275,23 @@ class HttpResponse
 		return status == MOVED_PERMANENTLY;
 	}
 
+	@:keep
+	function hxSerialize( s:haxe.Serializer ) {
+		s.serialize( _buff.toString() );
+		s.serialize( _headers );
+		s.serialize( _cookies );
+		s.serialize( _flushed );
+	}
+
+	@:keep
+	function hxUnserialize( u:haxe.Unserializer ) {
+		_buff = new StringBuf();
+		_buff.add( u.unserialize() );
+		_headers = u.unserialize();
+		_cookies = u.unserialize();
+		_flushed = u.unserialize();
+	}
+
 	function get_contentType():String {
 		return _headers.get( CONTENT_TYPE );
 	}
