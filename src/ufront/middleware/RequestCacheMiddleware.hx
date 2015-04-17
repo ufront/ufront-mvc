@@ -94,6 +94,9 @@ class RequestCacheMiddleware implements UFMiddleware
 	**/
 	public function responseOut( ctx:HttpContext ):Surprise<Noise,Error> {
 		// If it's a get request and we have data about the controller/action used
+		if ( cache==null ) {
+			cache = cacheConnection.getNamespace("ufront.middleware.RequestCache");
+		}
 		if ( ctx.request.httpMethod.toLowerCase()=="get" && ctx.actionContext!=null && ctx.actionContext.controller!=null && ctx.actionContext.action!=null ) {
 
 			// If it's one of our approved content types.
