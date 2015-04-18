@@ -65,7 +65,6 @@ class FileSession implements UFHttpSession
 	var regenerateFlag:Bool;
 	var expiryFlag:Bool;
 	var sessionID:String;
-	var oldSessionID:Null<String>;
 	var sessionData:StringMap<Dynamic>;
 
 	// Public members
@@ -99,7 +98,6 @@ class FileSession implements UFHttpSession
 		expiryFlag = false;
 		sessionData = null;
 		sessionID = null;
-		oldSessionID = null;
 	}
 
 	/**
@@ -181,62 +179,49 @@ class FileSession implements UFHttpSession
 	public function init():Surprise<Noise,Error> {
 		var t = Future.trigger();
 		#if sys
-
 			if ( !started ) {
-				SysUtil.mkdir( savePath.removeTrailingSlashes() );
+				try {
+					SysUtil.mkdir( savePath.removeTrailingSlashes() );
 
-				var file : String;
-				var fileData : String;
+					var file : String;
+					var fileData : String;
 
-				// Try to restore an existing session
-				get_id();
-				if ( sessionID!=null ) {
-					testValidId( id );
-					file = getSessionFilePath( id );
-					if ( !FileSystem.exists(file) ) {
-						sessionID = null;
-					}
-					else {
-						fileData = try File.getContent( file ) catch ( e:Dynamic ) null;
-						if ( fileData!=null ) {
-							try
-								sessionData = cast( Unserializer.run(fileData), StringMap<Dynamic> )
-							catch ( e:Dynamic ) {
-								context.ufWarn('Failed to unserialize session data, resetting session: $e');
-								fileData = null; // invalid data
+					// Try to restore an existing session
+					get_id();
+					if ( sessionID!=null ) {
+						testValidId( id );
+						file = getSessionFilePath( id );
+						if ( !FileSystem.exists(file) ) {
+							sessionID = null;
+						}
+						else {
+							fileData = try File.getContent( file ) catch ( e:Dynamic ) null;
+							if ( fileData!=null ) {
+								try
+									sessionData = cast( Unserializer.run(fileData), StringMap<Dynamic> )
+								catch ( e:Dynamic ) {
+									context.ufWarn('Failed to unserialize session data, resetting session: $e');
+									fileData = null; // invalid data
+								}
+							}
+							if ( fileData==null ) {
+								// delete file and start new session
+								sessionID = null;
+								try FileSystem.deleteFile( file ) catch( e:Dynamic ) {};
 							}
 						}
-						if ( fileData==null ) {
-							// delete file and start new session
-							sessionID = null;
-							try FileSystem.deleteFile( file ) catch( e:Dynamic ) {};
-						}
 					}
-				}
 
-				// No session existed, or it was invalid - start a new one
-				if( sessionID==null ) {
-					sessionData = new StringMap<Dynamic>();
+					// No session existed, or it was invalid - start a new one
+					if( sessionID==null ) {
+						sessionData = new StringMap<Dynamic>();
+						sessionID = reserveNewSessionID();
+						setCookie( sessionID, expiry );
+					}
 					started = true;
-
-					var tryID = null;
-					do {
-						tryID = generateSessionID();
-						file = savePath + tryID + ".sess";
-					} while( FileSystem.exists(file) );
-
-					sessionID = tryID;
-
-					// Create the file so no one else takes it
-					File.saveContent( file, "" );
-
-					setCookie( tryID, expiry );
-
-					commit();
+					t.trigger( Success(Noise) );
 				}
-
-				started = true;
-				t.trigger( Success(Noise) );
+				catch( e:Dynamic ) t.trigger( Failure(new Error('Unable to save session: $e')) );
 			}
 			else t.trigger( Success(Noise) );
 
@@ -245,6 +230,21 @@ class FileSession implements UFHttpSession
 		#end
 		return t.asFuture();
 	}
+
+	#if sys
+		function reserveNewSessionID():String {
+			var tryID = null;
+			var file:String;
+			do {
+				tryID = generateSessionID();
+				file = savePath + tryID + ".sess";
+			} while( FileSystem.exists(file) );
+			// Create the file so no one else takes it
+			File.saveContent( file, "" );
+
+			return tryID;
+		}
+	#end
 
 	function setCookie( id:String, expiryLength:Int ) {
 		var expireAt = ( expiryLength<=0 ) ? null : DateTools.delta( Date.now(), 1000.0*expiryLength );
@@ -271,6 +271,8 @@ class FileSession implements UFHttpSession
 			try {
 				if ( regenerateFlag ) {
 					handled = true;
+					var oldSessionID = sessionID;
+					sessionID = reserveNewSessionID();
 					FileSystem.rename( getSessionFilePath(oldSessionID), getSessionFilePath(sessionID) );
 					setCookie( sessionID, expiry );
 					t.trigger( Success(Noise) );
@@ -364,17 +366,10 @@ class FileSession implements UFHttpSession
 	}
 
 	/**
-		Regenerate the ID for this session, renaming the file on the server and sending a new session ID to the cookie.
-
-		TODO: Refactor this to actually reserve the file for the new session ID now, rather than waiting for `commit`.
+		Trigger a regeneration of the session ID when `commit` is called.
 	**/
-	public function regenerateID():Surprise<String,Error> {
-		var t = Future.trigger();
-		oldSessionID = sessionID;
-		sessionID = generateSessionID();
+	public function regenerateID():Void {
 		regenerateFlag = true;
-		t.trigger( Success(sessionID) );
-		return t.asFuture();
 	}
 
 	/**

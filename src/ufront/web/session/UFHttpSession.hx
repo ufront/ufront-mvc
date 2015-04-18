@@ -3,14 +3,14 @@ package ufront.web.session;
 import tink.CoreApi;
 
 /**
-	An interface describing an open HTTP session.
+An interface describing an open HTTP session.
 
-	The methods are similar to `Map`, with `get()`, `set()`, `exists()`, `remove()` and `clear()`.
+The methods are similar to `Map`, with `get()`, `set()`, `exists()`, `remove()` and `clear()`.
 
-	There are also some methods to do with the actual session, not the data inside it: `init()`, `isActive()`, `getID()`, `close()`, `commit()`, `regenerateID()` and `setExpiry()`.
+There are also some methods to do with the actual session, not the data inside it: `init()`, `isActive()`, `getID()`, `close()`, `commit()`, `regenerateID()` and `setExpiry()`.
 
-	@author Franco Ponticelli
-	@author Jason O'Neil
+@author Franco Ponticelli
+@author Jason O'Neil
 **/
 interface UFHttpSession
 {
@@ -18,11 +18,11 @@ interface UFHttpSession
 	public var id(get,null):String;
 
 	/**
-		Initiate the session (either read existing or start new session) and prepare so other operations can happen synchronously
+	Initiate the session (either read existing or start new session) and prepare so other operations can happen synchronously
 
-		Returns a Surprise to let you know when the session is ready, after which operations can happen synchronously until you `commit()`.
+	Returns a Surprise to let you know when the session is ready, after which operations can happen synchronously until you `commit()`.
 
-		If the session fails to initiate, the Surprise will be a Failure, containing the error message.
+	If the session fails to initiate, the Surprise will be a Failure, containing the error message.
 	**/
 	public function init():Surprise<Noise,Error>;
 
@@ -53,17 +53,20 @@ interface UFHttpSession
 	/** Commit the request.  Return a surprise, either notifying you of completion or giving an error message if it failed. **/
 	public function commit():Surprise<Noise,Error>;
 
-	/** Flag this session for a commit.  This will happen automatically if you call `set`, `remove`, `clear`, or `regenerateID`, but this can be useful if a value has updated without "set" being called. **/
+	/**
+	Flag this session for a commit.
+
+	This will happen automatically if you call `set`, `remove`, `clear`, or `regenerateID`.
+	Otherwise, this can be useful if a value has updated without `set` being called - for example by pushing a new item to an array that was already in the session.
+	**/
 	public function triggerCommit():Void;
 
 	/**
-		Regenerate the session ID, making the changes on the server and informing the client.
+	Request the session ID be regenerated on the next commit.
 
-		The new ID should be reserved now, though the actual content should not be saved until commit() is called.
+	This will generate a new ID on the server, move the session data to the new ID, and inform the client of the new ID.
 
-		If commit() is not called, the existing ID will remain.
-
-		Returns a Surprise to notify you when a new ID has been selected, or if a new ID was not able to be set.
+	If `commit()` is not called, the existing ID will remain.
 	**/
-	public function regenerateID():Surprise<String,Error>;
+	public function regenerateID():Void;
 }

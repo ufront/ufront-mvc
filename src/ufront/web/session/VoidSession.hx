@@ -37,7 +37,7 @@ class VoidSession implements UFHttpSession
 
 	public function clear():Void {}
 
-	public function regenerateID():Surprise<String,Error> return Future.sync( Success("") );
+	public function regenerateID():Void {}
 
 	public function close():Void {}
 
