@@ -64,12 +64,20 @@ class DBCache implements UFCache implements UFCacheSync {
 		}
 	}
 
+	public function removeSync( id:String ):Outcome<Noise,CacheError> {
+		try {
+			DBCacheItem.manager.delete( $namespace==namespace && $cacheID==id );
+			return Success(Noise);
+		}
+		catch ( e:Dynamic ) return Failure( ECacheNotWriteable('Unable to delete item "$id" in namespace "$namespace" from DBCacheItem table: $e') );
+	}
+
 	public function clearSync():Outcome<Noise,CacheError> {
 		try {
 			DBCacheItem.manager.delete( $namespace==namespace );
 			return Success(Noise);
 		}
-		catch ( e:Dynamic ) return Failure( ECacheNotWriteable('Unable to clear "$namespace" items frpm DBCacheItem table: $e') );
+		catch ( e:Dynamic ) return Failure( ECacheNotWriteable('Unable to clear "$namespace" items from DBCacheItem table: $e') );
 	}
 
 	public function get( id:String ):Surprise<Dynamic,CacheError> {
@@ -86,6 +94,10 @@ class DBCache implements UFCache implements UFCacheSync {
 			case Failure(ENotInCache): set( id, fn() );
 			case _: Future.sync( getResult );
 		}
+	}
+
+	public function remove( id:String ):Surprise<Noise,CacheError> {
+		return Future.sync( removeSync(id) );
 	}
 
 	public function clear():Surprise<Noise,CacheError>

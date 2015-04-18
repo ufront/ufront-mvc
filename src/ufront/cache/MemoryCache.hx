@@ -45,10 +45,17 @@ class MemoryCache implements UFCache implements UFCacheSync {
 			else
 				Success( map[id] = fn() );
 
+	public function removeSync( id:String ):Outcome<Noise,CacheError> {
+		map.remove( id );
+		return Success(Noise);
+	}
+
 	public function clearSync():Outcome<Noise,CacheError> {
 		map = new Map();
 		return Success(Noise);
 	}
+
+
 
 	public function get( id:String ):Surprise<Dynamic,CacheError>
 		return Future.sync( getSync(id) );
@@ -65,4 +72,7 @@ class MemoryCache implements UFCache implements UFCacheSync {
 
 	public function clear():Surprise<Noise,CacheError>
 		return Future.sync( clearSync() );
+
+	public function remove( id:String ):Surprise<Noise,CacheError>
+		return Future.sync( removeSync(id) );
 }

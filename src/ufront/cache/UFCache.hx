@@ -15,6 +15,7 @@ interface UFCache {
 	public function get( id:String ):Surprise<Dynamic,CacheError>;
 	public function set<T>( id:String, value:Futuristic<T> ):Surprise<T,CacheError>;
 	public function getOrSet<T>( id:String, ?fn:Void->Futuristic<T> ):Surprise<Dynamic,CacheError>;
+	public function remove( id:String ):Surprise<Noise,CacheError>;
 	public function clear():Surprise<Noise,CacheError>;
 }
 
@@ -22,6 +23,7 @@ interface UFCacheSync {
 	public function getSync( id:String ):Outcome<Dynamic,CacheError>;
 	public function setSync<T>( id:String, value:T ):Outcome<T,CacheError>;
 	public function getOrSetSync<T>( id:String, ?fn:Void->T ):Outcome<Dynamic,CacheError>;
+	public function removeSync<T>( id:String ):Outcome<Noise,CacheError>;
 	public function clearSync():Outcome<Noise,CacheError>;
 }
 
