@@ -14,7 +14,12 @@ There are also some methods to do with the actual session, not the data inside i
 **/
 interface UFHttpSession
 {
-	/** The ID of the current session **/
+	/**
+		The ID of the current session.
+		This is usually read from cookies or other HTTP parameters.
+		If an ID is not set, or if `this.regenerateID()` is called, a new ID will be generated during `this.commit()`.
+		You cannot set the ID manually, you can only request a new ID using `this.regenerateID()`.
+	**/
 	public var id(get,null):String;
 
 	/**

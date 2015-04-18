@@ -71,7 +71,7 @@ class FileSession implements UFHttpSession
 
 	/**
 	The current session ID.
-	If not set, it will be read from the cookies, or failing that, the request parameters.
+	It will be read from the cookies, or failing that, the request parameters.
 	This cannot be set manually, please see `regenerateID` for a way to change the session ID.
 	**/
 	public var id(get,never):Null<String>;
@@ -215,7 +215,6 @@ class FileSession implements UFHttpSession
 					// No session existed, or it was invalid - start a new one
 					if( this.sessionID==null ) {
 						this.sessionData = new StringMap<Dynamic>();
-						this.sessionID = reserveNewSessionID();
 					}
 					this.started = true;
 					t.trigger( Success(Noise) );
@@ -229,21 +228,6 @@ class FileSession implements UFHttpSession
 		#end
 		return t.asFuture();
 	}
-
-	#if sys
-		function reserveNewSessionID():String {
-			var tryID = null;
-			var file:String;
-			do {
-				tryID = generateSessionID();
-				file = savePath + tryID + ".sess";
-			} while( FileSystem.exists(file) );
-			// Create the file so no one else takes it
-			File.saveContent( file, "" );
-			setCookie( this.sessionID, this.expiry );
-			return tryID;
-		}
-	#end
 
 	function setCookie( id:String, expiryLength:Int ) {
 		var expireAt = ( expiryLength<=0 ) ? null : DateTools.delta( Date.now(), 1000.0*expiryLength );
@@ -265,7 +249,6 @@ class FileSession implements UFHttpSession
 	public function commit():Surprise<Noise,Error> {
 		var t = Future.trigger();
 		#if sys
-			var handled = false;
 			try {
 				if ( regenerateFlag ) {
 					var oldSessionID = sessionID;
@@ -292,6 +275,21 @@ class FileSession implements UFHttpSession
 		#end
 		return t.asFuture();
 	}
+
+	#if sys
+		function reserveNewSessionID():String {
+			var tryID = null;
+			var file:String;
+			do {
+				tryID = generateSessionID();
+				file = savePath + tryID + ".sess";
+			} while( FileSystem.exists(file) );
+			// Create the file so no one else takes it
+			File.saveContent( file, "" );
+			setCookie( this.sessionID, this.expiry );
+			return tryID;
+		}
+	#end
 
 	/**
 		Retrieve an item from the session data
