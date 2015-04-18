@@ -70,9 +70,15 @@ class FileSession implements UFHttpSession
 
 	// Public members
 
+	/**
+	The current session ID.
+	If not set, it will be read from the cookies, or failing that, the request parameters.
+	This cannot be set manually, please see `regenerateID` for a way to change the session ID.
+	**/
+	public var id(get,never):Null<String>;
+
 	/** The current HttpContext, should be supplied by injection. **/
 	@inject public var context:HttpContext;
-	public var id(get,never):Null<String>;
 
 	/**
 		Construct a new session object.
@@ -223,9 +229,9 @@ class FileSession implements UFHttpSession
 
 					// Create the file so no one else takes it
 					File.saveContent( file, "" );
-					
+
 					setCookie( tryID, expiry );
-					
+
 					commit();
 				}
 
@@ -239,7 +245,7 @@ class FileSession implements UFHttpSession
 			return throw "Not implemented";
 		#end
 	}
-	
+
 	function setCookie( id:String, expiryLength:Int ) {
 		var expireAt = ( expiryLength<=0 ) ? null : DateTools.delta( Date.now(), 1000.0*expiryLength );
 		var path = '/'; // TODO: Set cookie path to application path, right now it's global.
@@ -278,7 +284,7 @@ class FileSession implements UFHttpSession
 				}
 				if ( closeFlag ) {
 					handled = true;
-					// Because Date.now() on the server is in local time, but the cookie header is in GMT, 
+					// Because Date.now() on the server is in local time, but the cookie header is in GMT,
 					setCookie( "", -1 );
 					FileSystem.deleteFile( getSessionFilePath(sessionID) );
 					t.trigger( Success(Noise) );
@@ -308,11 +314,11 @@ class FileSession implements UFHttpSession
 
 	/**
 		Set an item in the session data.
-
-		Note this will not commit the value to a file until dispose() is called (generally at the end of a request)
+		Note this will not commit the value to a file until `this.commit()` is called (generally at the end of a request).
+		This will throw an error if `init()` has not already been called.
 	**/
 	public inline function set( name:String, value:Dynamic ):Void {
-		init();
+		checkStarted();
 		if ( sessionData!=null ) {
 			sessionData.set( name, value );
 			commitFlag = true;
@@ -321,15 +327,17 @@ class FileSession implements UFHttpSession
 
 	/**
 		Check if a session has the specified item.
+		This will throw an error if `init()` has not already been called.
 	**/
 	public inline function exists( name:String ):Bool {
-		if ( !isActive() ) return false;
 		checkStarted();
 		return sessionData!=null && sessionData.exists( name );
 	}
 
 	/**
-		Remove an item from the session
+		Remove an item from the session.
+		Note this will not commit the value to a file until `this.commit()` is called (generally at the end of a request).
+		This will throw an error if `init()` has not already been called.
 	**/
 	public inline function remove( name:String ):Void {
 		checkStarted();
@@ -340,7 +348,7 @@ class FileSession implements UFHttpSession
 	}
 
 	/**
-		Empty all items from the current session data without closing the session
+		Empty all items from the current session data without closing the session.
 	**/
 	public inline function clear():Void {
 		if ( sessionData!=null && isActive() ) {
@@ -393,7 +401,7 @@ class FileSession implements UFHttpSession
 		The sessionData and sessionID will be set to null, and the session will be flagged for deletion (when `commit` is called)
 	**/
 	public function close():Void {
-		init();
+		checkStarted();
 		sessionData = null;
 		closeFlag = true;
 	}
@@ -414,7 +422,7 @@ class FileSession implements UFHttpSession
 
 	inline function checkStarted() {
 		if ( !started )
-			throw "Trying to access session data before calling init()";
+			throw "Trying to access session data before init() has been run";
 	}
 
 	static var validID = ~/^[a-zA-Z0-9]+$/;
