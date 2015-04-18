@@ -47,7 +47,7 @@ class InlineSessionMiddleware implements UFMiddleware
 				ctx.session.commit() >>
 				function (outcome) switch (outcome) {
 					case Success(s): return Success(s);
-					case Failure(f): return Failure( HttpError.internalServerError(f) );
+					case Failure(err): return Failure( err );
 				}
 			else Sync.success();
 	}

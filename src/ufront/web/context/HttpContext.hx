@@ -258,7 +258,7 @@ class HttpContext {
 
 		Will return a future letting you know when the session commit has been completed
 	**/
-	public function commitSession():Surprise<Noise,String> {
+	public function commitSession():Surprise<Noise,Error> {
 		return
 			if ( session!=null ) session.commit();
 			else Future.sync( Success(Noise) );

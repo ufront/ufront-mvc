@@ -19,9 +19,9 @@ class VoidSession implements UFHttpSession
 
 	public function setExpiry( e:Int ) {}
 
-	public function init():Surprise<Noise,String> return Future.sync( Success(Noise) );
+	public function init():Surprise<Noise,Error> return Future.sync( Success(Noise) );
 
-	public function commit():Surprise<Noise,String> return Future.sync( Success(Noise) );
+	public function commit():Surprise<Noise,Error> return Future.sync( Success(Noise) );
 
 	public function triggerCommit():Void {};
 
@@ -37,7 +37,7 @@ class VoidSession implements UFHttpSession
 
 	public function clear():Void {}
 
-	public function regenerateID() return Future.sync( Success("") );
+	public function regenerateID():Surprise<String,Error> return Future.sync( Success("") );
 
 	public function close():Void {}
 

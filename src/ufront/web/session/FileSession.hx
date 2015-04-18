@@ -140,9 +140,9 @@ class FileSession implements UFHttpSession
 	/**
 		The lifetime/expiry of the cookie, in seconds.
 
-		A positive value sets the cookie to expire that many seconds from the current time.
-		A value of 0 represents expiry when the browser window is closed.
-		A negative value expires the cookie immediately.
+		- A positive value sets the cookie to expire that many seconds from the current time.
+		- A value of 0 represents expiry when the browser window is closed.
+		- A negative value expires the cookie immediately.
 
 		This is set by injecting a `InjectionRef<Int> named "sessionExpiry", otherwise the default `defaultExpiry` value is used.
 	**/
@@ -178,9 +178,9 @@ class FileSession implements UFHttpSession
 
 		This is called before any other operations which require access to the current session.
 	**/
-	public function init():Surprise<Noise,String> {
+	public function init():Surprise<Noise,Error> {
+		var t = Future.trigger();
 		#if sys
-			var t = Future.trigger();
 
 			if ( !started ) {
 				SysUtil.mkdir( savePath.removeTrailingSlashes() );
@@ -240,10 +240,10 @@ class FileSession implements UFHttpSession
 			}
 			else t.trigger( Success(Noise) );
 
-			return t.asFuture();
 		#else
-			return throw "Not implemented";
+			t.trigger( Failure(new Error('FileSession not implemented on this platform.')) );
 		#end
+		return t.asFuture();
 	}
 
 	function setCookie( id:String, expiryLength:Int ) {
@@ -263,9 +263,9 @@ class FileSession implements UFHttpSession
 
 		Returns an Outcome, which is a Failure if the commit failed, usually because of not having permission to write to disk.
 	**/
-	public function commit():Surprise<Noise,String> {
+	public function commit():Surprise<Noise,Error> {
+		var t = Future.trigger();
 		#if sys
-			var t = Future.trigger();
 			var handled = false;
 
 			try {
@@ -296,12 +296,11 @@ class FileSession implements UFHttpSession
 				}
 				if ( !handled ) t.trigger( Success(Noise) );
 			}
-			catch( e:Dynamic ) t.trigger( Failure('Unable to save session: $e') );
-
-			return t.asFuture();
+			catch( e:Dynamic ) t.trigger( Failure(new Error('Unable to save session: $e')) );
 		#else
-			return throw "Not implemented";
+			t.trigger( Failure(new Error('FileSession not implemented on this platform.')) );
 		#end
+		return t.asFuture();
 	}
 
 	/**
@@ -366,8 +365,10 @@ class FileSession implements UFHttpSession
 
 	/**
 		Regenerate the ID for this session, renaming the file on the server and sending a new session ID to the cookie.
+
+		TODO: Refactor this to actually reserve the file for the new session ID now, rather than waiting for `commit`.
 	**/
-	public function regenerateID():Surprise<String,String> {
+	public function regenerateID():Surprise<String,Error> {
 		var t = Future.trigger();
 		oldSessionID = sessionID;
 		sessionID = generateSessionID();

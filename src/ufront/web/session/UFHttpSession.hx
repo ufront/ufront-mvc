@@ -24,7 +24,7 @@ interface UFHttpSession
 
 		If the session fails to initiate, the Surprise will be a Failure, containing the error message.
 	**/
-	public function init():Surprise<Noise,String>;
+	public function init():Surprise<Noise,Error>;
 
 	/** Empty the session of values.  Please note this does not end the session. **/
 	public function clear():Void;
@@ -51,7 +51,7 @@ interface UFHttpSession
 	public function setExpiry( lifetime:Int ):Void;
 
 	/** Commit the request.  Return a surprise, either notifying you of completion or giving an error message if it failed. **/
-	public function commit():Surprise<Noise,String>;
+	public function commit():Surprise<Noise,Error>;
 
 	/** Flag this session for a commit.  This will happen automatically if you call `set`, `remove`, `clear`, or `regenerateID`, but this can be useful if a value has updated without "set" being called. **/
 	public function triggerCommit():Void;
@@ -65,5 +65,5 @@ interface UFHttpSession
 
 		Returns a Surprise to notify you when a new ID has been selected, or if a new ID was not able to be set.
 	**/
-	public function regenerateID():Surprise<String,String>;
+	public function regenerateID():Surprise<String,Error>;
 }
