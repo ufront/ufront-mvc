@@ -10,14 +10,14 @@ class MemoryCacheConnection implements UFCacheConnection implements UFCacheConne
 	public function new()
 		caches = new Map();
 
-	public function getNamespaceSync( namespace:String ):UFCache
+	public function getNamespaceSync( namespace:String ):MemoryCache
 		return
 			if ( caches.exists(namespace) )
 				caches[namespace]
 			else
 				caches[namespace] = new MemoryCache();
 
-	public function getNamespace( namespace:String ):UFCache
+	public function getNamespace( namespace:String ):MemoryCache
 		return getNamespaceSync( namespace );
 }
 
@@ -50,7 +50,7 @@ class MemoryCache implements UFCache implements UFCacheSync {
 		return Success(Noise);
 	}
 
-	public function get( id:String ):Surprise<T,CacheError>
+	public function get( id:String ):Surprise<Dynamic,CacheError>
 		return Future.sync( getSync(id) );
 
 	public function set<T>( id:String, value:Futuristic<T> ):Surprise<T,CacheError>
