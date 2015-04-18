@@ -172,9 +172,9 @@ class FileSession implements UFHttpSession
 
 		This will check for an existing session ID.  If one exists, it will read and unserialize the session data from that session's file.
 
-		If a session does not exist, one will be created.
+		If a session does not exist, one will be created, including generating and reserving a new session ID.
 
-		This is called before any other operations which require access to the current session.
+		This must be called before any other operations which require access to the current session.
 	**/
 	public function init():Surprise<Noise,Error> {
 		var t = Future.trigger();
@@ -186,13 +186,13 @@ class FileSession implements UFHttpSession
 					var file : String;
 					var fileData : String;
 
-					// Try to restore an existing session
+					// Try to restore an existing session.
 					get_id();
-					if ( sessionID!=null ) {
-						testValidId( id );
-						file = getSessionFilePath( id );
+					if ( this.sessionID!=null ) {
+						testValidId( this.sessionID );
+						file = getSessionFilePath( this.sessionID );
 						if ( !FileSystem.exists(file) ) {
-							sessionID = null;
+							this.sessionID = null;
 						}
 						else {
 							fileData = try File.getContent( file ) catch ( e:Dynamic ) null;
@@ -206,19 +206,18 @@ class FileSession implements UFHttpSession
 							}
 							if ( fileData==null ) {
 								// delete file and start new session
-								sessionID = null;
+								this.sessionID = null;
 								try FileSystem.deleteFile( file ) catch( e:Dynamic ) {};
 							}
 						}
 					}
 
 					// No session existed, or it was invalid - start a new one
-					if( sessionID==null ) {
-						sessionData = new StringMap<Dynamic>();
-						sessionID = reserveNewSessionID();
-						setCookie( sessionID, expiry );
+					if( this.sessionID==null ) {
+						this.sessionData = new StringMap<Dynamic>();
+						this.sessionID = reserveNewSessionID();
 					}
-					started = true;
+					this.started = true;
 					t.trigger( Success(Noise) );
 				}
 				catch( e:Dynamic ) t.trigger( Failure(new Error('Unable to save session: $e')) );
@@ -241,7 +240,7 @@ class FileSession implements UFHttpSession
 			} while( FileSystem.exists(file) );
 			// Create the file so no one else takes it
 			File.saveContent( file, "" );
-
+			setCookie( this.sessionID, this.expiry );
 			return tryID;
 		}
 	#end
@@ -267,36 +266,25 @@ class FileSession implements UFHttpSession
 		var t = Future.trigger();
 		#if sys
 			var handled = false;
-
 			try {
 				if ( regenerateFlag ) {
-					handled = true;
 					var oldSessionID = sessionID;
 					sessionID = reserveNewSessionID();
 					FileSystem.rename( getSessionFilePath(oldSessionID), getSessionFilePath(sessionID) );
-					setCookie( sessionID, expiry );
-					t.trigger( Success(Noise) );
 				}
 				if ( commitFlag && sessionData!=null ) {
-					handled = true;
 					var filePath = getSessionFilePath(sessionID);
 					var content = Serializer.run(sessionData);
 					File.saveContent(filePath, content);
-					t.trigger( Success(Noise) );
-				}
-				if ( closeFlag ) {
-					handled = true;
-					// Because Date.now() on the server is in local time, but the cookie header is in GMT,
-					setCookie( "", -1 );
-					FileSystem.deleteFile( getSessionFilePath(sessionID) );
-					t.trigger( Success(Noise) );
 				}
 				if ( expiryFlag ) {
-					handled = true;
 					setCookie( sessionID, expiry );
-					t.trigger( Success(Noise) );
 				}
-				if ( !handled ) t.trigger( Success(Noise) );
+				if ( closeFlag ) {
+					setCookie( "", -1 );
+					FileSystem.deleteFile( getSessionFilePath(sessionID) );
+				}
+				t.trigger( Success(Noise) );
 			}
 			catch( e:Dynamic ) t.trigger( Failure(new Error('Unable to save session: $e')) );
 		#else
@@ -373,17 +361,14 @@ class FileSession implements UFHttpSession
 	}
 
 	/**
-		Whether or not the current session is active.
-
-		This is determined by if a sessionID exists, which will happen if init() has been called or if a SessionID was provided in the request context (via Cookie or GET/POST parameter etc).
-
+	Whether or not the current session is active, meaning it has been assigned an ID and has been initialized.
 	**/
 	public inline function isActive():Bool {
 		return started && get_id()!=null;
 	}
 
 	/**
-		Return the current ID
+	Return the current ID, either one that has been set during `init()`, or one found in either `HttpRequest.cookies` or `HttpRequest.params`.
 	**/
 	function get_id():String {
 		if ( sessionID==null ) sessionID = context.request.cookies[sessionName];
