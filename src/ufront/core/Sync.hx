@@ -6,17 +6,17 @@ using tink.CoreApi;
 
 /**
 	Simple shortcuts for creating Future's synchronously
+
+	TODO: Deprecate this before a stable release.
 **/
 class Sync {
 
 	/**
 		Return a Success(Noise) to satisfy Surprise<Noise,T>
 	**/
-	public static function success<F>():Surprise<Noise,F> {
-		if ( s==null ) s = Future.sync( Success(Noise) );
-		return cast s;
+	public static inline function success<F>():Surprise<Noise,F> {
+		return SurpriseTools.success();
 	}
-	static var s:Surprise<Noise,Dynamic>;
 
 	/**
 		Return a Failure(Error) to satisfy Surprise<T,HttpError>
@@ -25,12 +25,13 @@ class Sync {
 	**/
 	public static function httpError<S>( ?msg:String, ?err:Dynamic, ?p:Pos ):Surprise<S,Error> {
 		return Future.sync( Failure( HttpError.wrap(err,msg,p) ) );
+		// return SurpriseTools.asSurpriseError( msg, err, p );
 	}
 
 	/**
 		Alias for `tink.core.Future.sync(v)`
 	**/
-	public static function of<T>( v:T ):Future<T> {
-		return Future.sync( v );
+	public static inline function of<T>( v:T ):Future<T> {
+		return SurpriseTools.asFuture( v );
 	}
 }
