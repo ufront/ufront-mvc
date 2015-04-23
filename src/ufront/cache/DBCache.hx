@@ -36,7 +36,7 @@ class DBCache implements UFCache implements UFCacheSync {
 		try {
 			var item = DBCacheItem.manager.select( namespace==$namespace && $cacheID==id );
 			return
-				if ( item!=null ) Success( cast item.data );
+				if ( item!=null ) Success( item.data );
 				else Failure( ENotInCache );
 		}
 		catch ( e:Dynamic ) return Failure( ECacheNotReadable('Unable to read from DBCacheItem table: $e') );
