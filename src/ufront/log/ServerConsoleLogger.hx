@@ -1,6 +1,7 @@
 package ufront.log;
 
 import ufront.web.context.HttpContext;
+import ufront.log.Message;
 import ufront.app.*;
 import haxe.PosInfos;
 import ufront.core.Sync;
@@ -22,35 +23,44 @@ class ServerConsoleLogger implements UFLogHandler
 	public function new() {}
 
 	public function log( ctx:HttpContext, appMessages:Array<Message> ) {
+		var messages = [];
+
+		var userDetails = ctx.request.clientIP;
+		if ( ctx.sessionID!=null ) userDetails += ' ${ctx.sessionID}';
+		if ( ctx.currentUserID!=null ) userDetails += ' ${ctx.currentUserID}';
+		var requestLog = '[${ctx.request.httpMethod} ${ctx.request.uri}] from [$userDetails], response: [${ctx.response.status} ${ctx.response.contentType}]';
+
+		messages.push( requestLog );
+
 		for( msg in ctx.messages )
-			logMessage( msg );
+			messages.push( formatMsg(msg) );
 
 		if ( appMessages!=null) {
 			for( msg in appMessages )
-				logMessage( msg );
+				messages.push( formatMsg(msg) );
 		}
+
+		writeLog( messages.join("\n  ") );
 
 		return Sync.success();
 	}
 
-	public static function logMessage( m:Message ):Void {
+	public static function formatMsg( m:Message ):String {
 		var extras =
 			if ( m.pos!=null && m.pos.customParams!=null ) ", "+m.pos.customParams.join(", ")
 			else "";
-		var message = '${m.type}: ${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';
+		return '${m.type}: ${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';
+	}
 
+	public static function writeLog( message:String, ?type:MessageType=null ):Void {
 		#if neko
 			neko.Web.logMessage( message );
 		#elseif php
 			untyped __call__( "error_log", message );
 		#elseif js
+			// We're choosing to include these all as one 'log', rather than separate 'log', 'warn', 'trace' and 'error' entries.
 			var console:js.html.Console = untyped console;
-			switch (m.type) {
-				case Trace: console.log( message );
-				case Log: console.info( message );
-				case Warning: console.warn( message );
-				case Error: console.error( message );
-			}
+			console.log( message );
 		#end
 	}
 }
