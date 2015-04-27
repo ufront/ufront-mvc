@@ -63,38 +63,41 @@ class HttpContext {
 		@param relativeContentDir (optional) The path to the content directory, relative to the script directory. Default is "uf-content".
 	**/
 	public function new( request:HttpRequest, response:HttpResponse, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
-		NullArgument.throwIfNull( response );
-		NullArgument.throwIfNull( request );
 
-		this.request = request;
-		this.response = response;
-		this.urlFilters = ( urlFilters!=null ) ? urlFilters : [];
-		this.relativeContentDir = relativeContentDir;
-		this.actionContext = new ActionContext( this );
-		this.messages = [];
-		this.completion = new EnumFlags<RequestCompletion>();
+		#if !macro // The `InjectionTools` are macros, and so trying to call them at macro time is messy.
+			NullArgument.throwIfNull( response );
+			NullArgument.throwIfNull( request );
 
-		this.injector = (appInjector!=null) ? appInjector.createChildInjector() : new Injector();
-		injector.mapValue( HttpContext, this );
-		injector.mapValue( HttpRequest, request );
-		injector.mapValue( HttpResponse, response );
-		injector.mapValue( ActionContext, actionContext );
-		injector.mapValue( MessageList, new MessageList(messages) );
-		injector.mapValue( Injector, injector );
+			this.request = request;
+			this.response = response;
+			this.urlFilters = ( urlFilters!=null ) ? urlFilters : [];
+			this.relativeContentDir = relativeContentDir;
+			this.actionContext = new ActionContext( this );
+			this.messages = [];
+			this.completion = new EnumFlags<RequestCompletion>();
 
-		if ( session!=null ) this.session = session;
-		if ( this.session==null )
-			try this.session = injector.getInstance( UFHttpSession )
-			catch(e:Dynamic) ufLog('Failed to load UFHttpSession: $e. Using VoidSession instead.');
-		if ( this.session==null ) this.session = new VoidSession();
-		inject( UFHttpSession, this.session );
+			this.injector = (appInjector!=null) ? appInjector.createChildInjector() : new Injector();
+			injector.injectValue( HttpContext, this );
+			injector.injectValue( HttpRequest, request );
+			injector.injectValue( HttpResponse, response );
+			injector.injectValue( ActionContext, actionContext );
+			injector.injectValue( MessageList, new MessageList(messages) );
+			injector.injectValue( Injector, injector );
 
-		if ( auth!=null ) this.auth = auth;
-		if ( this.auth==null )
-			try this.auth = injector.getInstance( UFAuthHandler )
-			catch(e:Dynamic) ufLog('Failed to load UFAuthHandler: $e. Using NobodyAuthHandler instead.');
-		if ( this.auth==null ) this.auth = new NobodyAuthHandler();
-		inject( UFAuthHandler, this.auth );
+			if ( session!=null ) this.session = session;
+			if ( this.session==null )
+				try this.session = injector.getInstance( UFHttpSession )
+				catch(e:Dynamic) ufLog('Failed to load UFHttpSession: $e. Using VoidSession instead.');
+			if ( this.session==null ) this.session = new VoidSession();
+			injector.injectValue( UFHttpSession, this.session );
+
+			if ( auth!=null ) this.auth = auth;
+			if ( this.auth==null )
+				try this.auth = injector.getInstance( UFAuthHandler )
+				catch(e:Dynamic) ufLog('Failed to load UFAuthHandler: $e. Using NobodyAuthHandler instead.');
+			if ( this.auth==null ) this.auth = new NobodyAuthHandler();
+			injector.injectValue( UFAuthHandler, this.auth );
+		#end
 	}
 
 	/**
@@ -265,18 +268,6 @@ class HttpContext {
 	}
 
 	/**
-		Shortcut to map a class or value into `injector`.
-
-		See `ufront.core.InjectorTools.inject()` for details on how the injections are applied.
-
-		This method is chainable.
-	**/
-	public inline function inject<T>( cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton:Bool=false, ?named:String ):HttpContext {
-		injector.inject( cl, val, cl2, singleton, named );
-		return this;
-	}
-
-	/**
 		A trace statement that will be associated with this HttpContext
 
 		Because of the static nature of Haxe's `trace` (it always uses `haxe.Log.trace`, and that does not have access to information about our request), it can be hard to differentiate which traces belong to which requests.
@@ -317,6 +308,10 @@ class HttpContext {
 	**/
 	public inline function ufError( msg:Dynamic, ?pos:PosInfos ) {
 		messages.push({ msg: msg, pos: pos, type:Error });
+	}
+
+	public function toString() {
+		return 'HttpContext';
 	}
 
 	/**

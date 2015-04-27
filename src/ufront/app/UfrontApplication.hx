@@ -102,13 +102,13 @@ class UfrontApplication extends HttpApplication {
 
 		// Map some default injector rules
 		for ( controller in configuration.controllers ) {
-			inject( controller );
+			injector.injectClass( controller );
 		}
 		for ( api in configuration.apis ) {
-			inject( api );
+			injector.injectClass( api );
 			var asyncApi = UFAsyncApi.getAsyncApi( api );
 			if ( asyncApi!=null )
-				inject( asyncApi );
+				injector.injectClass( asyncApi );
 		}
 
 		// Set up handlers and middleware
@@ -139,25 +139,25 @@ class UfrontApplication extends HttpApplication {
 			super.addUrlFilter( new PathInfoUrlFilter() );
 
 		// Save the session / auth factories for later, when we're building requests
-		if (configuration.sessionImplementation!=null) inject( UFHttpSession, configuration.sessionImplementation );
-		if (configuration.authImplementation!=null) inject( UFAuthHandler, configuration.authImplementation );
+		if (configuration.sessionImplementation!=null) injector.injectClass( UFHttpSession, configuration.sessionImplementation );
+		if (configuration.authImplementation!=null) injector.injectClass( UFAuthHandler, configuration.authImplementation );
 
 		// Inject some settings for the view engine.
 		if ( configuration.viewEngine!=null ) {
-			inject( String, configuration.viewPath, "viewPath" );
-			inject( UFViewEngine, configuration.viewEngine, true );
+			injector.injectValue( String, configuration.viewPath, "viewPath" );
+			injector.injectClass( UFViewEngine, configuration.viewEngine, true );
 		}
 
 		if ( configuration.contentDirectory!=null )
 			setContentDirectory( configuration.contentDirectory );
 
 		if ( configuration.defaultLayout!=null )
-			inject( String, configuration.defaultLayout, "defaultLayout" );
+			injector.injectValue( String, configuration.defaultLayout, "defaultLayout" );
 
 		#if ufront_ufadmin
 			CompileTime.importPackage( "ufront.ufadmin.modules" ); // Ensure all ufront admin controllers are loaded.
 			if ( configuration.adminModules!=null ) {
-				inject( List, Lambda.list(configuration.adminModules), "adminModules" );
+				injector.injectValue( List, Lambda.list(configuration.adminModules), "adminModules" );
 			}
 		#end
 
@@ -183,13 +183,13 @@ class UfrontApplication extends HttpApplication {
 	var firstRun = true;
 	function initOnFirstExecute( httpContext:HttpContext ):Void {
 		firstRun = false;
-		inject( String, httpContext.request.scriptDirectory, "scriptDirectory" );
-		inject( String, httpContext.contentDirectory, "contentDirectory" );
+		injector.injectValue( String, httpContext.request.scriptDirectory, "scriptDirectory" );
+		injector.injectValue( String, httpContext.contentDirectory, "contentDirectory" );
 
 		// Make the UFViewEngine available (and inject into it, in case it needs anything)
 		if ( configuration.viewEngine!=null ) {
 			try {
-				inject( configuration.viewEngine );
+				injector.injectClass( configuration.viewEngine );
 				viewEngine = injector.getInstance( UFViewEngine );
 				for ( te in appTemplatingEngines ) {
 					viewEngine.addTemplatingEngine( te );
@@ -214,14 +214,5 @@ class UfrontApplication extends HttpApplication {
 		if ( viewEngine!=null )
 			viewEngine.addTemplatingEngine( engine );
 		return this;
-	}
-
-	/**
-	Shortcut to map a class or value into `this.injector`.
-
-	See `InjectionTools.inject()` for details on how the injections are applied.
-	**/
-	override public function inject<T>( cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton:Bool=false, ?named:String ):UfrontApplication {
-		return cast super.inject( cl, val, cl2, singleton, named );
 	}
 }

@@ -15,6 +15,7 @@ import minject.Injector;
 #if utest import utest.Assert; #end
 #if mockatoo using mockatoo.Mockatoo; #end
 using tink.CoreApi;
+using ufront.core.InjectionTools;
 
 /**
 	A set of functions to make it easier to mock and test various ufront classes and interfaces.
@@ -103,7 +104,7 @@ class TestUtils
 				}
 				app = new UfrontApplication( ufrontConf );
 			}
-			context.injector.parentInjector = app.injector;
+			@:privateAccess context.injector.parent = app.injector;
 			return app.execute( context ).map( function(outcome) return switch outcome {
 				case Success(_): return Success( { app: app, context: context } );
 				case Failure(httpError): return Failure( httpError );
@@ -293,9 +294,22 @@ class NaturalLanguageTests {
 			return context;
 		}
 
-		/** An alias for `context.inject` **/
-		public static inline function andInject<T>( context:HttpContext, cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton:Bool=false, ?named:String ):HttpContext {
-			return context.inject( cl, val, cl2, singleton, named );
+		/** An alias for `InjectionTools.injectValue( context.injector )` **/
+		public static macro function andInjectValue<T>( context:ExprOf<HttpContext>, cl, val ):ExprOf<HttpContext> {
+			var injectExpr = ufront.core.InjectionTools.injectValue( injector, cl, val, named );
+			return macro {
+				$injectExpr;
+				context;
+			};
+		}
+
+		/** An alias for `InjectionTools.injectClass( context.injector )` **/
+		public static macro function andInjectClass<T>( context:ExprOf<HttpContext>, cl, ?cl2, ?singleton, ?named ):ExprOf<HttpContext> {
+			var injectExpr = ufront.core.InjectionTools.injectValue( injector, cl, val, named );
+			return macro {
+				$injectExpr;
+				context;
+			};
 		}
 
 		/** An alias for `TestUtils.testRoute` **/

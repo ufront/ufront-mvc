@@ -20,7 +20,13 @@ class ControllerTest {
 
 	public function testExample():Void {
 	}
-	
+
+	public function testInjection():Void {
+		var context = '/'.mockHttpContext();
+		var controller:Controller = context.injector.instantiate( TopController );
+		Assert.equals( context, controller.context );
+	}
+
 	public function testBaseUri():Void {
 		'/baseurl/'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "/" );
 		'/sub/baseurl/'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "/sub/" );
@@ -32,11 +38,11 @@ class ControllerTest {
 
 class TopController extends Controller {
 	@:route('/sub/*') public var subController:SubController;
-	
+
 	@:route('/custom/$name/*') function custom( name:String, rest:Array<String> ) {
 		return executeSubController( SubController );
 	}
-	
+
 	@:route('/baseurl/') function testBaseUrl() {
 		return this.baseUri;
 	}

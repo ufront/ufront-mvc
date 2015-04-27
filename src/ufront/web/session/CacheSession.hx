@@ -146,15 +146,15 @@ class CacheSession implements UFHttpSession
 	@post public function injectConfig() {
 		// Manually check for these injections, because if they're not provided we have defaults - we don't want minject to throw an error.
 		this.sessionName =
-			if ( context.injector.hasMapping(String,"sessionName") )
+			if ( context.injector.hasRule(String,"sessionName") )
 				context.injector.getInstance( String, "sessionName" )
 			else defaultSessionName;
 		this.expiry =
-			if ( context.injector.hasMapping(InjectionRef,"sessionExpiry") )
+			if ( context.injector.hasRule(InjectionRef,"sessionExpiry") )
 				context.injector.getInstance( InjectionRef, "sessionExpiry" ).get()
 			else defaultExpiry;
 		this.savePath =
-			if ( context.injector.hasMapping(String,"sessionSavePath") )
+			if ( context.injector.hasRule(String,"sessionSavePath") )
 				context.injector.getInstance( String, "sessionSavePath" )
 			else defaultSavePath;
 		this.cache = this.cacheConnection.getNamespace( savePath );

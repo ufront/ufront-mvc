@@ -91,7 +91,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 		}
 
 		public function init( application:HttpApplication ):Surprise<Noise,Error> {
-			injector.parentInjector = application.injector;
+			@:privateAccess injector.parent = application.injector;
 			return Sync.success();
 		}
 

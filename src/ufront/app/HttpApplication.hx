@@ -12,7 +12,6 @@ import thx.core.error.NullArgument;
 import haxe.PosInfos;
 import tink.core.Error.Pos;
 using tink.CoreApi;
-using ufront.core.InjectionTools;
 
 /**
 A HttpApplication responds to each request by generating a `HttpContext` and passing it through each stage of the request.
@@ -148,18 +147,6 @@ class HttpApplication
 		messages = [];
 		injector = new Injector();
 		injector.mapValue( Injector, injector );
-	}
-
-	/**
-	Map a value or a class into `this.injector`.
-
-	See `InjectionTools.inject()` for details on how the injections are applied.
-
-	This method is chainable.
-	**/
-	public function inject<T>( cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton:Bool=false, ?named:String ):HttpApplication {
-		injector.inject( cl, val, cl2, singleton, named );
-		return this;
 	}
 
 	/**

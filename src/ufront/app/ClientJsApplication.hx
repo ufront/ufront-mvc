@@ -16,6 +16,7 @@ package ufront.app;
 	import pushstate.PushState;
 	import thx.core.Strings;
 	import ufront.web.url.filter.*;
+	using ufront.core.InjectionTools;
 
 	/**
 	A standard Ufront Client-Side Application for executing requests in the browser.
@@ -82,21 +83,21 @@ package ufront.app;
 
 			// Map some default injector rules
 			for ( controller in configuration.controllers ) {
-				inject( controller );
+				injector.injectClass( controller );
 			}
 			for ( api in configuration.apis ) {
-				inject( api );
+				injector.injectClass( api );
 				var asyncApi = UFAsyncApi.getAsyncApi( api );
 				if ( asyncApi!=null )
-					inject( asyncApi );
+					injector.injectClass( asyncApi );
 			}
 
 			// Add the remoting connections.
 			if ( configuration.remotingPath!=null ) {
 				var syncRemotingConnection = HttpConnection.urlConnect( "/" );
 				var asyncRemotingConnection = HttpAsyncConnection.urlConnect( "/" );
-				inject( Connection, syncRemotingConnection );
-				inject( AsyncConnection, asyncRemotingConnection );
+				injector.injectValue( Connection, syncRemotingConnection );
+				injector.injectValue( AsyncConnection, asyncRemotingConnection );
 			}
 
 			// Set up handlers and middleware
@@ -120,21 +121,21 @@ package ufront.app;
 				super.addUrlFilter( new PathInfoUrlFilter() );
 
 			// Save the session / auth factories for later, when we're building requests
-			if (configuration.sessionImplementation!=null) inject( UFHttpSession, configuration.sessionImplementation );
-			if (configuration.authImplementation!=null) inject( UFAuthHandler, configuration.authImplementation );
+			if (configuration.sessionImplementation!=null) injector.injectClass( UFHttpSession, configuration.sessionImplementation );
+			if (configuration.authImplementation!=null) injector.injectClass( UFAuthHandler, configuration.authImplementation );
 
 			// Inject some settings for the view engine.
 			if ( configuration.viewEngine!=null ) {
-				inject( String, configuration.viewPath, "viewPath" );
-				inject( UFViewEngine, configuration.viewEngine, true );
+				injector.injectValue( String, configuration.viewPath, "viewPath" );
+				injector.injectClass( UFViewEngine, configuration.viewEngine, true );
 			}
 
 			if ( configuration.defaultLayout!=null )
-				inject( String, configuration.defaultLayout, "defaultLayout" );
+				injector.injectValue( String, configuration.defaultLayout, "defaultLayout" );
 
 			if ( configuration.viewEngine!=null ) {
 				try {
-					inject( configuration.viewEngine );
+					injector.injectClass( configuration.viewEngine );
 					viewEngine = injector.getInstance( UFViewEngine );
 					for ( te in configuration.templatingEngines ) {
 						viewEngine.addTemplatingEngine( te );
@@ -160,15 +161,6 @@ package ufront.app;
 				this.executeRequest();
 			});
 			return this;
-		}
-
-		/**
-		Shortcut to map a class or value into `injector`.
-
-		See `InjectionTools.inject()` for details on how the injections are applied.
-		**/
-		override public function inject<T>( cl:Class<T>, ?val:T, ?cl2:Class<T>, ?singleton:Bool=false, ?named:String ):ClientJsApplication {
-			return cast super.inject( cl, val, cl2, singleton, named );
 		}
 	}
 #end
