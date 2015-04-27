@@ -115,7 +115,9 @@ Placing your checks in the API ensures they will always run on a server before y
 
 See `UFAuthHandler` for a complete description of the API.
 **/
+#if !macro
 @:autoBuild(ufront.api.ApiMacros.buildApiClass())
+#end
 class UFApi {
 
 	#if server

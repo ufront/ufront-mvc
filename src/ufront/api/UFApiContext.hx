@@ -34,7 +34,9 @@ See `UFCallbackApi` and `UFApiClientContext` for more details.
 - Functions, properties and static variables will be ignored.
 - You don't have to worry about initialising your API variables - dependency injection will be used.
 **/
+#if !macro
 @:autoBuild(ufront.api.ApiMacros.buildApiContext())
+#end
 class UFApiContext {
 	var injector:Injector;
 

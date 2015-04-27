@@ -70,7 +70,9 @@ return api.attemptLogin( username, password ) >> function( user ) {
 }
 ```
 **/
+#if !macro
 @:autoBuild( ufront.api.ApiMacros.buildAsyncApiProxy() )
+#end
 class UFAsyncApi<SyncApi:UFApi> {
 	var className:String;
 	#if server

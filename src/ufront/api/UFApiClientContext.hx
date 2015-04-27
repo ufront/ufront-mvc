@@ -43,7 +43,9 @@ apiClient.loginApi.attemptLogin( username, password, function(u:User) {
 });
 ```
 **/
+#if !macro
 @:autoBuild( ufront.api.ApiMacros.buildClientApiContext() )
+#end
 class UFApiClientContext<ServerContext:UFApiContext> {
 
 	public var cnx:AsyncConnection;
