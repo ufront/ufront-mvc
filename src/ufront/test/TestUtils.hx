@@ -160,11 +160,12 @@ class TestUtils
 
 					// If an args array was specified, check length and args match.
 					if ( args!=null ) {
-						Assert.equals( args.length, ctx.args.length, 'Expected ${args.length} arguments for MVC action, but had ${ctx.args.length}' );
+						Assert.equals( args.length, ctx.args.length, 'Expected ${args.length} arguments for MVC action, but had ${ctx.args.length}', p );
 						for ( i in 0...args.length ) {
 							var expected = args[i];
 							var actual = ctx.args[i];
-							Assert.same( expected, actual, true, 'Expected MVC action argument ${i+1} to be $expected, but was $actual' );
+							var recursive = true;
+							Assert.same( expected, actual, recursive, 'Expected argument ${i+1} for MVC action `$action()` to be `$expected`, but was `$actual`', p );
 						}
 					}
 					doneCallback();
