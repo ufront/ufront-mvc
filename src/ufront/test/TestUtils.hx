@@ -294,21 +294,23 @@ class NaturalLanguageTests {
 			return context;
 		}
 
-		/** An alias for `InjectionTools.injectValue( context.injector )` **/
-		public static macro function andInjectValue<T>( context:ExprOf<HttpContext>, cl, val ):ExprOf<HttpContext> {
-			var injectExpr = ufront.core.InjectionTools.injectValue( injector, cl, val, named );
+		/** An alias for `InjectionTools.injectValue( context.injector, cl, val, named )` **/
+		public static macro function andInjectValue<T>( context:haxe.macro.Expr.ExprOf<HttpContext>, cl, val, named ):haxe.macro.Expr.ExprOf<HttpContext> {
+			var injectorExpr = macro $context.injector;
+			var injectExpr = ufront.core.InjectionTools.injectValue( injectorExpr, cl, val, named );
 			return macro {
 				$injectExpr;
-				context;
+				$context;
 			};
 		}
 
-		/** An alias for `InjectionTools.injectClass( context.injector )` **/
-		public static macro function andInjectClass<T>( context:ExprOf<HttpContext>, cl, ?cl2, ?singleton, ?named ):ExprOf<HttpContext> {
-			var injectExpr = ufront.core.InjectionTools.injectValue( injector, cl, val, named );
+		/** An alias for `InjectionTools.injectClass( context.injector, cl, cl2, singleton, named )` **/
+		public static macro function andInjectClass<T>( context:haxe.macro.Expr.ExprOf<HttpContext>, cl, ?cl2, ?singleton, ?named ):haxe.macro.Expr.ExprOf<HttpContext> {
+			var injectorExpr = macro $context.injector;
+			var injectExpr = ufront.core.InjectionTools.injectValue( injectorExpr, cl, cl2, singleton, named );
 			return macro {
 				$injectExpr;
-				context;
+				$context;
 			};
 		}
 
