@@ -267,6 +267,26 @@ class HttpContext {
 			else Future.sync( Success(Noise) );
 	}
 
+	/** An alias for `InjectionTools.injectValue( context.injector, cl, val, named )` **/
+	public macro function injectValue<T>( ethis, cl, val, ?named ) {
+		var injectorExpr = macro $ethis.injector;
+		var injectExpr = ufront.core.InjectionTools.injectValue( injectorExpr, cl, val, named );
+		return macro {
+			$injectExpr;
+			$ethis;
+		};
+	}
+
+	/** An alias for `InjectionTools.injectClass( context.injector, cl, cl2, singleton, named )` **/
+	public macro function injectClass<T>( ethis, cl, ?cl2, ?singleton, ?named ) {
+		var injectorExpr = macro $ethis.injector;
+		var injectExpr = ufront.core.InjectionTools.injectClass( injectorExpr, cl, cl2, singleton, named );
+		return macro {
+			$injectExpr;
+			$ethis;
+		};
+	}
+
 	/**
 		A trace statement that will be associated with this HttpContext
 
