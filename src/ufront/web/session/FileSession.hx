@@ -1,7 +1,6 @@
 package ufront.web.session;
 
 import haxe.io.Path;
-import ufront.core.InjectionRef;
 import ufront.web.context.HttpContext;
 import ufront.web.HttpCookie;
 import ufront.web.session.UFHttpSession;
@@ -112,8 +111,8 @@ class FileSession implements UFHttpSession
 				context.injector.getInstance( String, "sessionName" )
 			else defaultSessionName;
 		this.expiry =
-			if ( context.injector.hasRule(InjectionRef,"sessionExpiry") )
-				context.injector.getInstance( InjectionRef, "sessionExpiry" ).get()
+			if ( context.injector.hasRule(Int,"sessionExpiry") )
+				context.injector.getRule( Int, "sessionExpiry" ).getResponse(null);
 			else defaultExpiry;
 		this.savePath =
 			if ( context.injector.hasRule(String,"sessionSavePath") )
@@ -142,7 +141,7 @@ class FileSession implements UFHttpSession
 		- A value of 0 represents expiry when the browser window is closed.
 		- A negative value expires the cookie immediately.
 
-		This is set by injecting a `InjectionRef<Int> named "sessionExpiry", otherwise the default `defaultExpiry` value is used.
+		This is set by injecting an `Int named "sessionExpiry", otherwise the default `defaultExpiry` value is used.
 	**/
 	public var expiry(default,null):Null<Int>;
 
