@@ -402,7 +402,7 @@ class ControllerMacros {
 			case TPath(_):
 				switch (type.toType()) 
 				{
-					case TType(t, parmas):
+					case TType(t, params):
 						return parseArgsArgument( t.get().type.toComplexType(), allOptional, pos );
 					case _:
 				}
