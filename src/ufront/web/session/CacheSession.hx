@@ -150,7 +150,7 @@ class CacheSession implements UFHttpSession
 			else defaultSessionName;
 		this.expiry =
 			if ( context.injector.hasRule(Int,"sessionExpiry") )
-				context.injector.getRule( Int, "sessionExpiry" ).getResponse(null);
+				context.injector.getRule( Int, "sessionExpiry" ).getResponse(context.injector);
 			else defaultExpiry;
 		this.savePath =
 			if ( context.injector.hasRule(String,"sessionSavePath") )
