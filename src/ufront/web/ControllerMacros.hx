@@ -13,6 +13,8 @@ using tink.CoreApi;
 using tink.MacroApi;
 using haxe.macro.Tools;
 using StringTools;
+using haxe.macro.ComplexTypeTools;
+using haxe.macro.TypeTools;
 
 class ControllerMacros {
 	public static function processRoutesAndGenerateExecuteFunction():Array<Field> {
@@ -269,7 +271,7 @@ class ControllerMacros {
 
 				if ( arg.name=="args" ) {
 
-					argKind = parseArgsArgument( arg, pos );
+					argKind = parseArgsArgument( arg.type, arg.opt, pos );
 
 				}
 				else if ( arg.name=="rest" && complexTypesUnify(arg.type,macro :Array<String>) ) {
@@ -373,10 +375,9 @@ class ControllerMacros {
 		Throw a context error if it failed to parse the object.
 		Return null if it wasn't an anonymous object, an error will be thrown later if it isn't a compatible type.
 	**/
-	static function parseArgsArgument( arg:FunctionArg, pos:Pos ) {
-		switch arg.type {
+	static function parseArgsArgument( type:ComplexType, allOptional:Bool, pos:Pos ) {
+		switch type {
 			case TAnonymous( fields ):
-				var allOptional = arg.opt;
 				var params = [];
 				try {
 					for ( f in fields ) {
@@ -398,6 +399,14 @@ class ControllerMacros {
 					var msg = 'Failed to parse function argument `args`.  The args object must contain only the types String, Int, Float and Bool. \n$e';
 					Context.error( msg, pos );
 				}
+			case TPath(_):
+				switch (type.toType()) 
+				{
+					case TType(t, parmas):
+						return parseArgsArgument( t.get().type.toComplexType(), allOptional, pos );
+					case _:
+				}
+				
 			case _:
 		}
 		return null;
