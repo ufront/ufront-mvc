@@ -4,7 +4,7 @@ import ufront.web.context.HttpContext;
 import ufront.app.*;
 import haxe.PosInfos;
 import ufront.core.Sync;
-using thx.core.Types;
+using thx.Types;
 
 /**
 	Trace module that adds a "hxt" line to haxe remoting call, that can work with `ufront.api.HttpAsyncConnectionWithTraces`

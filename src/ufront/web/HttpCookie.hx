@@ -1,6 +1,6 @@
 package ufront.web;
 
-import thx.core.error.NullArgument;
+import thx.error.NullArgument;
 
 /**
 	A class describing a Http Cookie.

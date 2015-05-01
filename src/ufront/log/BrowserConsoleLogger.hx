@@ -5,7 +5,7 @@ import ufront.app.*;
 import haxe.PosInfos;
 import ufront.web.result.CallJavascriptResult;
 import ufront.core.Sync;
-using thx.core.Types;
+using thx.Types;
 
 /**
 	Logger module that prints to a JS console, either on the client directly, or on the server by adding a JS snippet to the output.

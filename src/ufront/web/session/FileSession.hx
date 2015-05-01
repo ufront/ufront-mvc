@@ -4,11 +4,11 @@ import haxe.io.Path;
 import ufront.web.context.HttpContext;
 import ufront.web.HttpCookie;
 import ufront.web.session.UFHttpSession;
-import thx.core.error.NotImplemented;
+import thx.error.NotImplemented;
 import haxe.ds.StringMap;
 import haxe.Serializer;
 import haxe.Unserializer;
-import thx.core.error.NullArgument;
+import thx.error.NullArgument;
 import tink.CoreApi;
 #if sys
 	import sys.FileSystem;

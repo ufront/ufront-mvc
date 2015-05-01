@@ -5,7 +5,7 @@ import ufront.log.Message;
 import ufront.app.*;
 import haxe.PosInfos;
 import ufront.core.Sync;
-using thx.core.Types;
+using thx.Types;
 
 /**
 	Trace module that prints to the server console where it makes sense to do so.

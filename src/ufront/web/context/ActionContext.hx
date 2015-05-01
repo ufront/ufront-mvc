@@ -1,7 +1,7 @@
 package ufront.web.context;
 
 import ufront.web.result.ActionResult;
-import thx.core.error.NullArgument;
+import thx.error.NullArgument;
 
 /**
 	A context describing the result returned by an action.

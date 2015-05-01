@@ -11,7 +11,7 @@ import ufront.core.MultiValueMap;
 import haxe.ds.StringMap;
 import ufront.core.Sync;
 using tink.CoreApi;
-using thx.core.Strings;
+using thx.Strings;
 using StringTools;
 
 /**

@@ -1,8 +1,8 @@
 package ufront.web.context;
-import thx.core.error.AbstractMethod;
+import thx.error.AbstractMethod;
 import haxe.io.Bytes;
 import haxe.ds.StringMap;
-import thx.core.error.NotImplemented;
+import thx.error.NotImplemented;
 import ufront.web.upload.FileUpload;
 import ufront.core.MultiValueMap;
 using tink.CoreApi;

@@ -2,7 +2,7 @@ package ufront.web;
 
 import haxe.EnumFlags;
 import haxe.PosInfos;
-import thx.core.error.NullArgument;
+import thx.error.NullArgument;
 import ufront.web.context.HttpContext;
 import ufront.web.result.ActionResult;
 import ufront.web.result.EmptyResult;

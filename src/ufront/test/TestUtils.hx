@@ -3,7 +3,7 @@ package ufront.test;
 import ufront.web.context.*;
 import ufront.web.session.UFHttpSession;
 import ufront.auth.*;
-import thx.core.error.*;
+import thx.error.*;
 import thx.collection.*;
 import haxe.PosInfos;
 import ufront.web.Controller;

@@ -8,7 +8,7 @@ import ufront.web.context.HttpContext;
 import ufront.web.HttpError;
 import ufront.auth.*;
 import ufront.log.Message;
-import thx.core.error.NullArgument;
+import thx.error.NullArgument;
 import haxe.PosInfos;
 import tink.core.Error.Pos;
 using tink.CoreApi;

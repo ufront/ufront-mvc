@@ -3,8 +3,8 @@ import haxe.io.Bytes;
 import haxe.io.BytesOutput;
 import haxe.io.Output;
 import ufront.core.OrderedStringMap;
-import thx.core.error.NullArgument;
-import thx.core.error.NotImplemented;
+import thx.error.NullArgument;
+import thx.error.NotImplemented;
 import haxe.ds.StringMap;
 
 /**

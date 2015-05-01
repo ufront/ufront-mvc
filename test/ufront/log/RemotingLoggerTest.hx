@@ -5,7 +5,7 @@ import ufront.log.RemotingLogger;
 import ufront.log.Message;
 import ufront.app.UFLogHandler;
 using ufront.test.TestUtils;
-using thx.core.Objects;
+using thx.Objects;
 
 class RemotingLoggerTest {
 

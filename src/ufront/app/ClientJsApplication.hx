@@ -14,7 +14,7 @@ package ufront.app;
 	import haxe.remoting.AsyncConnection;
 	import ufront.api.*;
 	import pushstate.PushState;
-	import thx.core.Strings;
+	import thx.Strings;
 	import ufront.web.url.filter.*;
 	using ufront.core.InjectionTools;
 

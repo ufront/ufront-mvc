@@ -1,7 +1,7 @@
 package js.ufront.web.context;
 
 import haxe.io.Bytes;
-import thx.core.Error;
+import thx.Error;
 import ufront.web.upload.*;
 import ufront.web.UserAgent;
 import ufront.core.MultiValueMap;
@@ -12,7 +12,7 @@ import ufront.web.context.HttpRequest.OnEndPartCallback;
 import ufront.core.Sync;
 import js.Browser.*;
 using tink.CoreApi;
-using thx.core.Strings;
+using thx.Strings;
 using StringTools;
 
 /**

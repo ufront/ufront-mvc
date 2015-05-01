@@ -1,6 +1,6 @@
 package ufront.app;
 
-import thx.core.error.NullArgument;
+import thx.error.NullArgument;
 import ufront.app.HttpApplication;
 import haxe.ds.StringMap;
 import minject.Injector;
@@ -17,9 +17,9 @@ import ufront.web.Controller;
 import ufront.app.UfrontConfiguration;
 import ufront.web.session.UFHttpSession;
 import ufront.auth.*;
-import thx.core.Strings;
+import thx.Strings;
 using tink.CoreApi;
-using thx.core.Objects;
+using thx.Objects;
 using ufront.core.InjectionTools;
 
 /**
