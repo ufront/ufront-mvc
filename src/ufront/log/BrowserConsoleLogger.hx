@@ -26,7 +26,7 @@ class BrowserConsoleLogger implements UFLogHandler
 
 	public function log( ctx:HttpContext, appMessages:Array<Message> ) {
 		#if server
-			if( ctx.response.contentType=="text/html" ) {
+			if( ctx.response.contentType=="text/html" && !ctx.response.isRedirect() ) {
 				var results = [];
 				for( msg in ctx.messages )
 					results.push( formatMessage(msg) );
