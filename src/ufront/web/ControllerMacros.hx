@@ -13,6 +13,8 @@ using tink.CoreApi;
 using tink.MacroApi;
 using haxe.macro.Tools;
 using StringTools;
+using haxe.macro.ComplexTypeTools;
+using haxe.macro.TypeTools;
 
 class ControllerMacros {
 	public static function processRoutesAndGenerateExecuteFunction():Array<Field> {
@@ -269,7 +271,7 @@ class ControllerMacros {
 
 				if ( arg.name=="args" ) {
 
-					argKind = parseArgsArgument( arg, pos );
+					argKind = parseArgsArgument( arg.type, arg.opt, pos );
 
 				}
 				else if ( arg.name=="rest" && complexTypesUnify(arg.type,macro :Array<String>) ) {
@@ -373,10 +375,9 @@ class ControllerMacros {
 		Throw a context error if it failed to parse the object.
 		Return null if it wasn't an anonymous object, an error will be thrown later if it isn't a compatible type.
 	**/
-	static function parseArgsArgument( arg:FunctionArg, pos:Pos ) {
-		switch arg.type {
+	static function parseArgsArgument( type:ComplexType, allOptional:Bool, pos:Pos ) {
+		switch type {
 			case TAnonymous( fields ):
-				var allOptional = arg.opt;
 				var params = [];
 				try {
 					for ( f in fields ) {
@@ -399,6 +400,14 @@ class ControllerMacros {
 					var msg = 'Failed to parse function argument `args`.  The args object must contain only the types String, Int, Float and Bool. \n$e';
 					Context.error( msg, pos );
 				}
+			case TPath(_):
+				switch (type.toType()) 
+				{
+					case TType(t, parmas):
+						return parseArgsArgument( t.get().type.toComplexType(), allOptional, pos );
+					case _:
+				}
+				
 			case _:
 		}
 		return null;
@@ -559,7 +568,7 @@ class ControllerMacros {
 					if ( optional ) macro (uriParts[$v{partNum}]!=null && uriParts[$v{partNum}]!="") ? uriParts[$v{partNum}] : $defaultValue
 					else macro uriParts[$v{partNum}]
 				;
-				var lines = createReadExprForType( name, expr, type, optional );
+				var lines = createReadExprForType( name, expr, type, optional, false);
 				return { ident: ident, lines: lines };
 			case AKParams( params, allParamsOptional ):
 				var lines = [];
@@ -577,7 +586,7 @@ class ControllerMacros {
 					var tmpIdentName = '_param_tmp_'+p.name;
 					var tmpIdent = tmpIdentName.resolve();
 					var getValueExpr = if(p.array) macro params.getAll($v{p.name}) else macro params.get($v{p.name});
-					for ( l in createReadExprForType(tmpIdentName, getValueExpr, p.type, isOptional) ) {
+					for ( l in createReadExprForType(tmpIdentName, getValueExpr, p.type, isOptional, p.array) ) {
 						lines.push( l );
 					}
 					fields.push( { field: p.name, expr: tmpIdent } );
@@ -603,7 +612,7 @@ class ControllerMacros {
 		- validates the input
 		- declares and sets the value of the ident
 	**/
-	static function createReadExprForType( identName:String, readExpr:ExprOf<String>, type:RouteArgType, optional:Bool ):Array<Expr> {
+	static function createReadExprForType( identName:String, readExpr:ExprOf<String>, type:RouteArgType, optional:Bool, array:Bool ):Array<Expr> {
 		// Reification of `macro var $i{identName} = $readExpr` isn't working, so I'm using this helper
 		function createVarDecl( name:String, expr:Expr ) {
 			return {
@@ -621,19 +630,19 @@ class ControllerMacros {
 				var declaration = createVarDecl( identName, readExpr );
 				[declaration];
 			case SATInt:
-				var declaration = createVarDecl( identName, macro Std.parseInt($readExpr) );
+				var declaration = createVarDecl( identName, if(array) macro $readExpr.map(function(a) return Std.parseInt(a)) else macro Std.parseInt($readExpr) );
 				var check = macro if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{identName}+":Int = "+$readExpr );
 				( optional ) ? [declaration] : [declaration,check];
 			case SATFloat:
-				var declaration = createVarDecl( identName, macro Std.parseFloat($readExpr) );
+				var declaration = createVarDecl( identName, if(array) macro $readExpr.map(function(a) return Std.parseFloat(a)) else macro Std.parseFloat($readExpr) );
 				var check = macro if (Math.isNaN($i{identName})) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{identName}+":Float = "+$readExpr );
 				( optional ) ? [declaration] : [declaration,check];
 			case SATBool:
 				var readStr = macro var v = $readExpr;
-				var transformToBool = createVarDecl( identName, macro (v!="false" && v!="0" && v!="null") );
+				var transformToBool = createVarDecl( identName, if(array) macro $readExpr.map(function(v) return (v!="false" && v!="0" && v!="null")) else macro (v!="false" && v!="0" && v!="null") );
 				[readStr,transformToBool];
 			case SATDate:
-				var declaration = createVarDecl( identName, macro try Date.fromString($readExpr) catch(e:Dynamic) null );
+				var declaration = createVarDecl( identName, if(array) macro $readExpr.map(function(a) return try Date.fromString(a) catch(e:Dynamic) null) else macro try Date.fromString($readExpr) catch(e:Dynamic) null );
 				var check = macro if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{identName}+":Date = "+$readExpr );
 				( optional ) ? [declaration] : [declaration,check];
 		}
