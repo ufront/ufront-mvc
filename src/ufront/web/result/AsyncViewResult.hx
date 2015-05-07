@@ -20,8 +20,7 @@ class AsyncViewResult extends ViewResult
 		super(null, viewPath, templatingEngine);
 	}
 	
-	override function executeResult(actionContext:ActionContext) 
-	{
+	override function executeResult(actionContext:ActionContext) {
 		return asyncData.flatMap(function(data)
 		{
 			this.data = data;
