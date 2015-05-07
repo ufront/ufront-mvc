@@ -13,15 +13,15 @@ using tink.CoreApi;
  */
 class AsyncViewResult extends ViewResult
 {
-	private var asyncData:Future<TemplateData>;
+	private var futureData:Future<TemplateData>;
 	
-	public function new(?asyncData:Future<TemplateData>, ?viewPath:String, ?templatingEngine:TemplatingEngine) {
-		this.asyncData = asyncData;
+	public function new(?futureData:Future<TemplateData>, ?viewPath:String, ?templatingEngine:TemplatingEngine) {
+		this.futureData = futureData;
 		super(null, viewPath, templatingEngine);
 	}
 	
 	override function executeResult(actionContext:ActionContext) {
-		return asyncData.flatMap(function(data)
+		return futureData.flatMap(function(data)
 		{
 			this.data = data;
 			return internalExecuteResult(actionContext);
