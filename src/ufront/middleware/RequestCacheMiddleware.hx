@@ -70,7 +70,7 @@ class RequestCacheMiddleware implements UFMiddleware
 						ctx.response.contentType = cachedResponse.contentType;
 						ctx.response.redirectLocation = cachedResponse.redirectLocation;
 						ctx.response.charset = cachedResponse.charset;
-						ctx.response.status = cachedResponse.status;
+						ctx.response.status = (cachedResponse.status!=null) ? cachedResponse.status : 200;
 						for ( c in cachedResponse.getCookies() ) {
 							ctx.response.setCookie( c );
 						}
