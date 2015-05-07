@@ -15,8 +15,7 @@ class AsyncViewResult extends ViewResult
 {
 	private var asyncData:Future<TemplateData>;
 	
-	public function new(?asyncData:Future<TemplateData>, ?viewPath:String, ?templatingEngine:TemplatingEngine) 
-	{
+	public function new(?asyncData:Future<TemplateData>, ?viewPath:String, ?templatingEngine:TemplatingEngine) {
 		this.asyncData = asyncData;
 		super(null, viewPath, templatingEngine);
 	}

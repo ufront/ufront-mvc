@@ -16,8 +16,11 @@ class JsonResult<T> extends ActionResult
 	}
 
 	override function executeResult( actionContext:ActionContext ) {
+		return writeContentToResponse(actionContext);
+	}
+	
+	private function writeContentToResponse(actionContext:ActionContext) {
 		NullArgument.throwIfNull(actionContext);
-
 		actionContext.httpContext.response.contentType = "application/json";
 		var serialized = Json.stringify( content );
 		actionContext.httpContext.response.write( serialized );
