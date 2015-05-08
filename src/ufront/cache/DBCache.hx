@@ -3,6 +3,7 @@ package ufront.cache;
 #if ufront_orm
 import ufront.cache.UFCache;
 import ufront.db.Object;
+import ufront.api.UFApi;
 import sys.db.Types;
 import ufront.core.Futuristic;
 using tink.CoreApi;
@@ -111,4 +112,38 @@ class DBCacheItem extends Object {
 	public var cacheID:SString<255>;
 	public var data:SData<Dynamic>;
 }
+
+class DBCacheApi extends UFApi {
+	/** Delete all items from the cache. **/
+	public function clearAll():Void {
+		DBCacheItem.manager.delete( true );
+	}
+
+	/** Delete all items from a certain namespace. **/
+	public function clearNamespace( namespace:String ):Void {
+		DBCacheItem.manager.delete( $namespace==namespace );
+	}
+
+	/** Delete a particular item from the cache. **/
+	public function clearItem( namespace:String, cacheID:String ):Void {
+		DBCacheItem.manager.delete( $namespace==namespace && $cacheID==cacheID );
+	}
+
+	/** Delete items from the cache where the `cacheID` contains the string `cacheIDLike`. **/
+	public function clearItemLike( namespace:String, cacheIDLike:String ):Void {
+		DBCacheItem.manager.delete( $namespace==namespace && $cacheID.like(cacheIDLike) );
+	}
+}
+
+#if ufront_uftasks
+	class DBCacheTasks extends ufront.tasks.UFTaskSet {
+		@:skip @inject public var api:DBCacheApi;
+
+		public function clearAll():Void api.clearAll();
+		public function clearNamespace( namespace:String ) api.clearNamespace( namespace );
+		public function clearItem( namespace:String, cacheID:String ) api.clearItem( namespace, cacheID );
+		public function clearItemLike( namespace:String, cacheIDLike:String ) api.clearItemLike( namespace, cacheIDLike );
+	}
+#end
+
 #end
