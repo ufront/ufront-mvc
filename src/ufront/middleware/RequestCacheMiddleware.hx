@@ -19,6 +19,8 @@ using tink.CoreApi;
 **/
 class RequestCacheMiddleware implements UFMiddleware
 {
+	public static inline var namespace = "ufront.middleware.RequestCache";
+	
 	public static var contentTypesToCache:Array<String> = [
 		"text/plain",
 		"text/html",
@@ -57,7 +59,7 @@ class RequestCacheMiddleware implements UFMiddleware
 			return Sync.success();
 		#end
 		if ( cache==null ) {
-			cache = cacheConnection.getNamespace("ufront.middleware.RequestCache");
+			cache = cacheConnection.getNamespace( namespace );
 		}
 		if ( ctx.request.httpMethod.toLowerCase()=="get" ) {
 			var uri = ctx.request.uri;
@@ -95,7 +97,7 @@ class RequestCacheMiddleware implements UFMiddleware
 	public function responseOut( ctx:HttpContext ):Surprise<Noise,Error> {
 		// If it's a get request and we have data about the controller/action used
 		if ( cache==null ) {
-			cache = cacheConnection.getNamespace("ufront.middleware.RequestCache");
+			cache = cacheConnection.getNamespace( namespace );
 		}
 		if ( ctx.request.httpMethod.toLowerCase()=="get" && ctx.actionContext!=null && ctx.actionContext.controller!=null && ctx.actionContext.action!=null ) {
 
