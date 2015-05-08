@@ -5,6 +5,7 @@ import ufront.cache.UFCache;
 import ufront.db.Object;
 import ufront.api.UFApi;
 import sys.db.Types;
+import sys.db.TableCreate;
 import ufront.core.Futuristic;
 using tink.CoreApi;
 
@@ -114,6 +115,15 @@ class DBCacheItem extends Object {
 }
 
 class DBCacheApi extends UFApi {
+	/** Set up cache table. Returns `true` if the table was newly created, or false if it already existed. **/
+	public function setup():Bool {
+		if ( TableCreate.exists(DBCacheItem.manager)==false ) {
+			TableCreate.create( DBCacheItem.manager );
+			return true;
+		}
+		return false;
+	}
+
 	/** Delete all items from the cache. **/
 	public function clearAll():Void {
 		DBCacheItem.manager.delete( true );
@@ -139,6 +149,7 @@ class DBCacheApi extends UFApi {
 	class DBCacheTasks extends ufront.tasks.UFTaskSet {
 		@:skip @inject public var api:DBCacheApi;
 
+		public function setup():Void api.setup();
 		public function clearAll():Void api.clearAll();
 		public function clearNamespace( namespace:String ) api.clearNamespace( namespace );
 		public function clearItem( namespace:String, cacheID:String ) api.clearItem( namespace, cacheID );

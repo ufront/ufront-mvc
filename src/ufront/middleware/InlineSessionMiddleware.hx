@@ -9,7 +9,7 @@ import ufront.core.Sync;
 using thx.Types;
 
 /**
-	Make sure we `init()` sessions before the request starts, and `commit()` them before it ends
+	Make sure we `init()` sessions before the request starts, and `commit()` them before it ends.
 
 	@author Jason O'Neil
 **/
