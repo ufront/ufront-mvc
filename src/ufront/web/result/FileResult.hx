@@ -6,11 +6,15 @@ import ufront.web.context.ActionContext;
 import ufront.core.Sync;
 using haxe.io.Path;
 
-/** Represents a base class that is used to send binary file content to the response. **/
+/**
+A base `ActionResult` that is used to send binary file content to the client response.
+
+This is an abstract class, please see `BytesResult` and `FilePathResult` for implementations you can use.
+**/
 class FileResult extends ActionResult
 {
 	/**
-		A mapping of common extensions to mime content types.
+	A mapping of common file extensions to mime content types.
 	**/
 	public static var extMap = [
 		// @todo: add complete list from http://en.wikipedia.org/wiki/Internet_media_type#List_of_common_media_types
@@ -39,15 +43,19 @@ class FileResult extends ActionResult
 		"gz" => "application/gzip",
 	];
 
-	/** Gets the content type to use for the response.  If it is null, no content-type header will be set, and the client will do it's best guess as to the type **/
+	/**
+	The content type to use for the response.
+	If it is not supplied in the constructor, but a filename is supplied, the content type will be set using the mappings in `extMap`.
+	If it is null, no content-type header will be set, and the client will do its best to guess the type.
+	**/
 	public var contentType:String;
 
 	/**
-		Gets or sets the content-disposition header so that a file-download dialog box is displayed in the browser with the specified file name.
-
-		Setting a non-null value will set the `content-disposition` to `attachment`, which will force the file to be downloaded rather than displayed in the browser.
+	The file name for the current download.
+	If this is a non-null value, the client will force the file to display a download window with the specified filename.
+	This is achieved by setting the HTTP Header `content-disposition: attachment; filename=$fileDownloadName`.
 	**/
-	public var fileDownloadName:String;
+	public var fileDownloadName:Null<String>;
 
 	function new( contentType:String, fileDownloadName:String ) {
 		this.contentType = contentType;
@@ -58,9 +66,8 @@ class FileResult extends ActionResult
 	}
 
 	/**
-		Using the extension of a filename, attempt to use the correct content-type.
-
-		If `filename` is not supplied, and fileDownloadName exists, it will be used.
+	Using the extension of a filename, attempt to use the correct content-type.
+	If `filename` is not supplied, and fileDownloadName exists, it will be used instead.
 	**/
 	public function setContentTypeByFilename( ?filename:String ) {
 		if ( filename==null ) filename = fileDownloadName;

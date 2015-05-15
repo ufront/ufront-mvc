@@ -20,7 +20,7 @@ using haxe.io.Path;
 using StringTools;
 
 /**
-A ViewResult loads a view from a templating engine, optionally wraps it in a layout, and writes the result to the HttpResponse with a `text/html` content type.
+A ViewResult loads a view from a `TemplatingEngine`, optionally wraps it in a layout, and writes the result to the `HttpResponse` with a `text/html` content type.
 
 ### Choosing a view
 
@@ -174,46 +174,46 @@ class ViewResult extends ActionResult {
 	//
 
 	/**
-		The path to the view.
+	The path to the view.
 
-		If not specified when `executeResult` is called, it will be inferred from the Http Context.
-		If an extension is not specified, any extensions that match the given templating engines will be used.
-		See `executeResult` for details on this selection process.
+	If not specified when `executeResult` is called, it will be inferred from the Http Context.
+	If an extension is not specified, any extensions that match the given templating engines will be used.
+	See `executeResult` for details on this selection process.
 	**/
 	public var viewPath:Null<String>;
 
 	/**
-		A specific templating engine to use for this request.
-		This is helpful if you have views with file extensions shared by more than one view engine (eg: *.html).
-		Specifying an engine explicitly when a viewPath has been set will force that view to be rendered with a specific engine.
-		Specifying an engine when no view path is set, or a view path without an extension, will search for views with an extension matching thos supported by this templating engine.
+	A specific templating engine to use for this request.
+	This is helpful if you have views with file extensions shared by more than one view engine (eg: *.html).
+	Specifying an engine explicitly when a viewPath has been set will force that view to be rendered with a specific engine.
+	Specifying an engine when no view path is set, or a view path without an extension, will search for views with an extension matching thos supported by this templating engine.
 	**/
 	public var templatingEngine:Null<TemplatingEngine>;
 
 	/**
-		The data to pass to the template during `executeResult`.
-		This will be combined with the `helpers` and `globalData` before being passed to the templates `execute` function.
-		This is set during the constructor, and you can add to it using the `setVar` and `setVars` helper methods.
+	The data to pass to the template during `executeResult`.
+	This will be combined with the `helpers` and `globalData` before being passed to the templates `execute` function.
+	This is set during the constructor, and you can add to it using the `setVar` and `setVars` helper methods.
 	**/
 	public var data:TemplateData;
 
 	/**
-		The layout to wrap around this view.
+	The layout to wrap around this view.
 
-		A layout is another `ufront.view.UFTemplate` which takes the parameter "viewContent".
-		The result of the current view will be inserted into the "viewContent" field of the layout.
+	A layout is another `ufront.view.UFTemplate` which takes the parameter "viewContent".
+	The result of the current view will be inserted into the "viewContent" field of the layout.
 
-		All of the same data mappings and helpers will be available to the layout when it renders.
+	All of the same data mappings and helpers will be available to the layout when it renders.
 
-		If no layout is specified, then we will see if there is a default one for the application.
-		(You can set a default layout for a `UfrontApplication` using the `UfrontConfiguration.defaultLayout` configuration property).
+	If no layout is specified, then we will see if there is a default one for the application.
+	(You can set a default layout for a `UfrontApplication` using the `UfrontConfiguration.defaultLayout` configuration property).
 
-		If you call `viewResult.withoutLayout()` then no layout will wrap the current view, even if a default layout is specified.
+	If you call `viewResult.withoutLayout()` then no layout will wrap the current view, even if a default layout is specified.
 	**/
 	public var layout:Null<Option<Pair<String,TemplatingEngine>>>;
 
 	/**
-		Any helpers (dynamic functions) to pass to the template when it is executed.
+	Any helpers (dynamic functions) to pass to the template when it is executed.
 	**/
 	public var helpers:TemplateData;
 
@@ -232,12 +232,12 @@ class ViewResult extends ActionResult {
 	//
 
 	/**
-		Create a new ViewResult, with the specified data.
+	Create a new ViewResult, with the specified data.
 
-		You can optionally specify a custom `viewPath` or a specific `templatingEngine`.
+	You can optionally specify a custom `viewPath` or a specific `templatingEngine`.
 
-		If `viewPath` is not specified, the `actionContext` will be used to choose a view during `executeResult`.
-		See the documentation on `executeResult` for details.
+	If `viewPath` is not specified, the `actionContext` will be used to choose a view during `executeResult`.
+	See the documentation on `executeResult` for details.
 	**/
 	public function new( ?data:TemplateData, ?viewPath:String, ?templatingEngine:TemplatingEngine ) {
 		this.viewPath = viewPath;
@@ -248,10 +248,10 @@ class ViewResult extends ActionResult {
 	}
 
 	/**
-		Specify a layout to wrap this view.
+	Specify a layout to wrap this view.
 
-		@param layoutPath
-		@param ?templatingEngine A templating engine to use with this layout. If none is specified, the first templating engine matching the layoutPath's extension will be used. (If layoutPath is not specified, this parameter will have no effect).
+	@param layoutPath
+	@param ?templatingEngine A templating engine to use with this layout. If none is specified, the first templating engine matching the layoutPath's extension will be used. (If layoutPath is not specified, this parameter will have no effect).
 	**/
 	public function withLayout( layoutPath:String, ?templatingEngine:TemplatingEngine ):ViewResult {
 		this.layout = Some( new Pair(layoutPath, templatingEngine) );
@@ -259,7 +259,7 @@ class ViewResult extends ActionResult {
 	}
 
 	/**
-		Prevent a default layout from wrapping this view - this view will appear unwrapped.
+	Prevent a default layout from wrapping this view - this view will appear unwrapped.
 	**/
 	public function withoutLayout():ViewResult {
 		this.layout = None;
@@ -267,14 +267,14 @@ class ViewResult extends ActionResult {
 	}
 
 	/**
-		Use a static string as the templates, rather than loading from a UFViewEngine.
+	Use a static string as the templates, rather than loading from a UFViewEngine.
 
-		If `template` or `layout` is not supplied or null, the usual rules will apply for loading a view using the UFViewEngine.
+	If `template` or `layout` is not supplied or null, the usual rules will apply for loading a view using the UFViewEngine.
 
-		@param template The template string for the main view template.
-		@param layout The template string for the layout.
-		@param templatingEngine The templating engine to render the given templates with.
-		@return ViewResult (to allow method chaining).
+	@param template The template string for the main view template.
+	@param layout The template string for the layout.
+	@param templatingEngine The templating engine to render the given templates with.
+	@return ViewResult (to allow method chaining).
 	**/
 	public function usingTemplateString( template:String, ?layout:String, ?templatingEngine:TemplatingEngine ):ViewResult {
 		if (templatingEngine==null)
@@ -309,15 +309,15 @@ class ViewResult extends ActionResult {
 	}
 
 	/**
-		Execute the given view, wrap it in a layout, and write it to the response.
+	Execute the given view, wrap it in a layout, and write it to the response.
 
-		In detail:
+	In detail:
 
-		- Figure out which template and which layout to use. (See the documentation at the top of this class for more details.)
-		- Load the template and layout.
-		- Once loaded, execute the view template with all of our data (a combination of `globalValues`, `helpers` and `data`).
-		- If a layout is used, execute the layout with the same data, inserting our view into the `viewContent` variable of the layout.
-		- Write the final output to the `ufront.web.context.HttpResponse` with a `text/html` content type.
+	- Figure out which template and which layout to use. (See the documentation at the top of this class for more details.)
+	- Load the template and layout.
+	- Once loaded, execute the view template with all of our data (a combination of `globalValues`, `helpers` and `data`).
+	- If a layout is used, execute the layout with the same data, inserting our view into the `viewContent` variable of the layout.
+	- Write the final output to the `ufront.web.context.HttpResponse` with a `text/html` content type.
 	**/
 	override function executeResult( actionContext:ActionContext ) {
 

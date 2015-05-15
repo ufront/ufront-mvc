@@ -4,13 +4,31 @@ import ufront.web.context.*;
 import ufront.core.Sync;
 using tink.CoreApi;
 
+/**
+A `CallJavascriptResult` wraps another `ActionResult`, and if it is a `text/html` response, it will insert some Javascript code to be executed on the client.
+
+It is easiest to use this through static extension:
+
+```haxe
+using ufront.web.result.CallJavascriptResult;
+
+public function showHomepage() {
+	return
+		new ViewResult({ title: "Home" })
+		.addInlineJsToResult( "console.log('arbitrary JS')" )
+		.addJsScriptToResult( "datepicker.jquery.js" );
+}
+```
+**/
 class CallJavascriptResult<T:ActionResult> extends ActionResult {
 
 	// Static helpers
 
+	/** Wrap an `ActionResult` in a `CallJavascriptResult`, adding some inline JS. **/
 	public static function addInlineJsToResult<T:ActionResult>( originalResult:T, js:String )
 		return new CallJavascriptResult( originalResult ).addInlineJs( js );
 
+	/** Wrap an `ActionResult` in a `CallJavascriptResult`, adding a JS script. **/
 	public static function addJsScriptToResult<T:ActionResult>( originalResult:T, path:String )
 		return new CallJavascriptResult( originalResult ).addJsScript( path );
 
@@ -21,6 +39,7 @@ class CallJavascriptResult<T:ActionResult> extends ActionResult {
 	// Member
 
 	public var originalResult:T;
+	/** The collection of script tags that we are adding to the response. **/
 	public var scripts:Array<String>;
 
 	public function new( originalResult:T ) {
@@ -39,9 +58,9 @@ class CallJavascriptResult<T:ActionResult> extends ActionResult {
 	}
 
 	/**
-		Execute the result.
-		This will execute the original result, and then attempt to add the script just before the body tag.
-		If the content type is not "text/html", this will have no effect - it will just execute the original result.
+	Execute the result.
+	This will execute the original result, and then attempt to add the script just before the body tag.
+	If the content type is not "text/html", this will have no effect - it will just execute the original result and ignore the scripts.
 	**/
 	override public function executeResult( actionContext:ActionContext ):Surprise<Noise,Error> {
 		return originalResult.executeResult( actionContext ) >> function(n:Noise) {
@@ -55,6 +74,10 @@ class CallJavascriptResult<T:ActionResult> extends ActionResult {
 		};
 	}
 
+	/**
+	This helper function will take a HTML string, and insert the given scripts before the `</body>` tag.
+	If there is no `</body>` substring, then the scripts will be inserted at the end of the content.
+	**/
 	public static function insertScriptsBeforeBodyTag( content:String, scripts:Array<String> ) {
 		var script = scripts.join("");
 		var bodyCloseIndex = content.lastIndexOf( "</body>" );

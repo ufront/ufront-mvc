@@ -19,16 +19,22 @@ class RedirectResultTest {
 
 	public function testRedirect():Void {
 
+		var done1 = Assert.createAsync();
 		var ctx1 = "/".mockHttpContext();
 		var r1 = new RedirectResult( "/homepage", false );
-		r1.executeResult( ctx1.actionContext );
-		Assert.equals( "/homepage", ctx1.response.redirectLocation );
-		Assert.isFalse( ctx1.response.isPermanentRedirect() );
+		r1.executeResult( ctx1.actionContext ).handle(function(_) {
+			Assert.equals( "/homepage", ctx1.response.redirectLocation );
+			Assert.isFalse( ctx1.response.isPermanentRedirect() );
+			done1();
+		});
 
+		var done2 = Assert.createAsync();
 		var ctx2 = "/homepage".mockHttpContext();
 		var r1 = new RedirectResult( "http://facebook.com/ourpage/", true );
-		r1.executeResult( ctx2.actionContext );
-		Assert.equals( "http://facebook.com/ourpage/", ctx2.response.redirectLocation );
-		Assert.isTrue( ctx2.response.isPermanentRedirect() );
+		r1.executeResult( ctx2.actionContext ).handle(function(_) {
+			Assert.equals( "http://facebook.com/ourpage/", ctx2.response.redirectLocation );
+			Assert.isTrue( ctx2.response.isPermanentRedirect() );
+			done2();
+		});
 	}
 }

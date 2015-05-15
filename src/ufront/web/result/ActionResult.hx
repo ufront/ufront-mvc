@@ -34,6 +34,8 @@ class ActionResult {
 		If it is null, an `EmptyResult` will be used.
 		If it is an ActionResult, it will be left as is.
 		If it is a different type, it will be converted to a String and used in a ContentResult.
+
+		Please note this assumes that `resultValue` is a synchronous value, not a `Future`.
 	**/
 	public static function wrap( resultValue:Dynamic ):ActionResult {
 		if ( resultValue==null ) {

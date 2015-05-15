@@ -2,25 +2,33 @@ package ufront.web.result;
 import haxe.Json;
 import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
-import ufront.core.Sync;
+import ufront.core.Futuristic;
+import tink.CoreApi;
 
-/** Represents a class that is used to send JSON-formatted content to the response. */
+/**
+An `ActionResult` that sends a JSON response to the client.
+
+The response content type will be set to `application/json`, and `Json.stringify` will be used to generate the JSON representation of the data.
+
+`JsonResult` uses `Futuristic` for its content, meaning it can work with either synchronous content or asynchronous content.
+**/
 class JsonResult<T> extends ActionResult
 {
-	/** The content to be serialized **/
-	public var content : T;
-	public var allowOrigin : String;
+	/** A `Future` containing the content to be serialized. **/
+	public var contentFuture:Future<T>;
 
-	public function new( content:T ) {
-		this.content = content;
+	public function new( content:Futuristic<T> ) {
+		this.contentFuture = content;
 	}
 
 	override function executeResult( actionContext:ActionContext ) {
 		NullArgument.throwIfNull(actionContext);
-
-		actionContext.httpContext.response.contentType = "application/json";
-		var serialized = Json.stringify( content );
-		actionContext.httpContext.response.write( serialized );
-		return Sync.success();
+		NullArgument.throwIfNull(contentFuture);
+		return contentFuture.map(function (content) {
+			var serialized = Json.stringify( content );
+			actionContext.httpContext.response.write( serialized );
+			actionContext.httpContext.response.contentType = "application/json";
+			return Success(Noise);
+		});
 	}
 }

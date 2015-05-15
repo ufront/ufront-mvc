@@ -15,18 +15,22 @@ class ContentResultTest {
 
 	public function teardown():Void {}
 
-	public function testContentResult():Void {
+	public function testContentType():Void {
+		var done1 = Assert.createAsync();
 		var ctx = "/".mockHttpContext();
 		var defaultContentType = ctx.response.contentType;
-		new ContentResult().executeResult( ctx.actionContext );
-		Assert.equals( "", ctx.response.getBuffer() );
-		Assert.equals( defaultContentType, ctx.response.contentType );
+		new ContentResult().executeResult( ctx.actionContext ).handle(function(result) {
+			Assert.equals( "", ctx.response.getBuffer() );
+			Assert.equals( defaultContentType, ctx.response.contentType );
+			done1();
+		});
 
-		// Now with some actual content...
-
+		var done2 = Assert.createAsync();
 		var ctx = "/".mockHttpContext();
-		new ContentResult( "Hello!", "text/plain" ).executeResult( ctx.actionContext );
-		Assert.equals( "Hello!", ctx.response.getBuffer() );
-		Assert.equals( "text/plain", ctx.response.contentType );
+		new ContentResult( "Hello!", "text/plain" ).executeResult( ctx.actionContext ).handle(function() {
+			Assert.equals( "Hello!", ctx.response.getBuffer() );
+			Assert.equals( "text/plain", ctx.response.contentType );
+			done2();
+		});
 	}
 }

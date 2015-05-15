@@ -29,20 +29,26 @@ class ActionResultTest {
 		Assert.isFalse( ctx1.response._flushed );
 
 		// Check a normal value is converted to a String and wrapped in a ContentResult.
+		var done1 = Assert.createAsync();
 		var ctx2 = "/".mockHttpContext();
 		var contentResult = ActionResult.wrap( 123 );
 		Assert.is( contentResult, ContentResult );
-		contentResult.executeResult( ctx2.actionContext );
-		Assert.equals( "123", ctx2.response.getBuffer() );
-		Assert.equals( "text/html", ctx2.response.contentType );
+		contentResult.executeResult( ctx2.actionContext ).handle(function(_) {
+			Assert.equals( "123", ctx2.response.getBuffer() );
+			Assert.equals( "text/html", ctx2.response.contentType );
+			done1();
+		});
 
 		// Check an existing content result is used as is.
+		var done2 = Assert.createAsync();
 		var ctx3 = "/".mockHttpContext();
 		var r = new RedirectResult( "/homepage/" );
 		var redirectResult = ActionResult.wrap( r );
 		Assert.is( redirectResult, RedirectResult );
 		Assert.equals( r, redirectResult );
-		redirectResult.executeResult( ctx3.actionContext );
-		Assert.equals( "/homepage/", ctx3.response.redirectLocation );
+		redirectResult.executeResult( ctx3.actionContext ).handle(function(_) {
+			Assert.equals( "/homepage/", ctx3.response.redirectLocation );
+			done2();
+		});
 	}
 }

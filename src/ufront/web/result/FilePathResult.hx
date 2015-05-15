@@ -1,6 +1,6 @@
 package ufront.web.result;
 
-#if server
+#if sys
 	import sys.io.File;
 	import sys.FileSystem;
 #end
@@ -13,15 +13,13 @@ using haxe.io.Path;
 /**  Sends the contents of a file to the response.  */
 class FilePathResult extends FileResult
 {
-	static var BUF_SIZE = 4096;
-
 	/** Gets or sets the path of the file that is sent to the response. */
 	public var fileName:String;
 
 	/**
-		@param fileName - absolute path to the file to be sent in response.  If null, no content is written to the response.
-		@param contentType - Internet Media Type to use.  If null, it will be inferred from the extension of 'fileName' (only image types supported at the moment).  If this fails, it will remain null, and no header will be added.  In this situation the client tries to correctly guess the type of the file.
-		@param fileDownloadName - file name to display to the client.  Default is null.  If non-null value is supplied, the file will be forced as a download to the client.
+	@param fileName - Absolute path to the file to be sent in response.  If null, no content is written to the response.
+	@param contentType - Internet Media Type to use.  If null, it will be inferred from the extension of 'fileName' (only image types supported at the moment).  If this fails, it will remain null, and no header will be added.  In this situation the client tries to correctly guess the type of the file.
+	@param fileDownloadName - file name to display to the client.  Default is null.  If non-null value is supplied, the file will be forced as a download to the client.
 	**/
 	public function new( ?fileName:String, ?contentType:String, ?fileDownloadName:String ) {
 		super( contentType, fileDownloadName );
@@ -30,7 +28,7 @@ class FilePathResult extends FileResult
 
 	override function executeResult( actionContext:ActionContext ) {
 		super.executeResult( actionContext );
-		#if server
+		#if sys
 			if ( null!=fileName ) {
 				if ( !FileSystem.exists(fileName) )
 					throw HttpError.pageNotFound();
@@ -43,7 +41,9 @@ class FilePathResult extends FileResult
 					throw HttpError.internalServerError( 'Failed to read file $fileName in FilePathResult: $e', e );
 				}
 			}
+			return Sync.success();
+		#else
+			return throw "FilePathResult is only implemented on `sys` platforms.";
 		#end
-		return Sync.success();
 	}
 }
