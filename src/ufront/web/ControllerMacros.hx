@@ -344,11 +344,11 @@ class ControllerMacros {
 	**/
 	static function getRouteArgType( argType:ComplexType ) {
 		return
-			if ( complexTypesUnify(argType, macro :String) ) Success(SATString);
-			else if ( complexTypesUnify(argType, macro :Int) ) Success(SATInt);
-			else if ( complexTypesUnify(argType, macro :Float) ) Success(SATFloat);
-			else if ( complexTypesUnify(argType, macro :Bool) ) Success(SATBool);
-			else if ( complexTypesUnify(argType, macro :Date) ) Success(SATDate);
+			if ( complexTypesUnify(argType, macro :String) || complexTypesUnify(argType, macro :Array<String>) ) Success(SATString);
+			else if ( complexTypesUnify(argType, macro :Int) || complexTypesUnify(argType, macro :Array<Int>) ) Success(SATInt);
+			else if ( complexTypesUnify(argType, macro :Float) || complexTypesUnify(argType, macro :Array<Float>) ) Success(SATFloat);
+			else if ( complexTypesUnify(argType, macro :Bool) || complexTypesUnify(argType, macro :Array<Bool>) ) Success(SATBool);
+			else if ( complexTypesUnify(argType, macro :Date) || complexTypesUnify(argType, macro :Array<Date>) ) Success(SATDate);
 			else Failure( Noise );
 	}
 
@@ -389,7 +389,8 @@ class ControllerMacros {
 						params.push({
 							name: f.name,
 							type: argType,
-							optional: optional
+							optional: optional,
+							array: complexTypesUnify( paramVar.type, macro:Array<Dynamic> ),
 						});
 					}
 					return AKParams( params, allOptional );
@@ -558,7 +559,7 @@ class ControllerMacros {
 					if ( optional ) macro (uriParts[$v{partNum}]!=null && uriParts[$v{partNum}]!="") ? uriParts[$v{partNum}] : $defaultValue
 					else macro uriParts[$v{partNum}]
 				;
-				var lines = createReadExprForType( name, expr, type, optional );
+				var lines = createReadExprForType( name, expr, type, optional, false);
 				return { ident: ident, lines: lines };
 			case AKParams( params, allParamsOptional ):
 				var lines = [];
@@ -575,8 +576,8 @@ class ControllerMacros {
 
 					var tmpIdentName = '_param_tmp_'+p.name;
 					var tmpIdent = tmpIdentName.resolve();
-					var getValueExpr = macro params.get($v{p.name});
-					for ( l in createReadExprForType(tmpIdentName, getValueExpr, p.type, isOptional) ) {
+					var getValueExpr = if(p.array) macro params.getAll($v{p.name}) else macro params.get($v{p.name});
+					for ( l in createReadExprForType(tmpIdentName, getValueExpr, p.type, isOptional, p.array) ) {
 						lines.push( l );
 					}
 					fields.push( { field: p.name, expr: tmpIdent } );
@@ -602,7 +603,7 @@ class ControllerMacros {
 		- validates the input
 		- declares and sets the value of the ident
 	**/
-	static function createReadExprForType( identName:String, readExpr:ExprOf<String>, type:RouteArgType, optional:Bool ):Array<Expr> {
+	static function createReadExprForType( identName:String, readExpr:ExprOf<String>, type:RouteArgType, optional:Bool, array:Bool ):Array<Expr> {
 		// Reification of `macro var $i{identName} = $readExpr` isn't working, so I'm using this helper
 		function createVarDecl( name:String, expr:Expr ) {
 			return {
@@ -620,19 +621,19 @@ class ControllerMacros {
 				var declaration = createVarDecl( identName, readExpr );
 				[declaration];
 			case SATInt:
-				var declaration = createVarDecl( identName, macro Std.parseInt($readExpr) );
+				var declaration = createVarDecl( identName, if(array) macro $readExpr.map(function(a) return Std.parseInt(a)) else macro Std.parseInt($readExpr) );
 				var check = macro if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{identName}+":Int = "+$readExpr );
 				( optional ) ? [declaration] : [declaration,check];
 			case SATFloat:
-				var declaration = createVarDecl( identName, macro Std.parseFloat($readExpr) );
+				var declaration = createVarDecl( identName, if(array) macro $readExpr.map(function(a) return Std.parseFloat(a)) else macro Std.parseFloat($readExpr) );
 				var check = macro if (Math.isNaN($i{identName})) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{identName}+":Float = "+$readExpr );
 				( optional ) ? [declaration] : [declaration,check];
 			case SATBool:
 				var readStr = macro var v = $readExpr;
-				var transformToBool = createVarDecl( identName, macro (v!="false" && v!="0" && v!="null") );
+				var transformToBool = createVarDecl( identName, if(array) macro $readExpr.map(function(v) return (v!="false" && v!="0" && v!="null")) else macro (v!="false" && v!="0" && v!="null") );
 				[readStr,transformToBool];
 			case SATDate:
-				var declaration = createVarDecl( identName, macro try Date.fromString($readExpr) catch(e:Dynamic) null );
+				var declaration = createVarDecl( identName, if(array) macro $readExpr.map(function(a) return try Date.fromString(a) catch(e:Dynamic) null) else macro try Date.fromString($readExpr) catch(e:Dynamic) null );
 				var check = macro if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{identName}+":Date = "+$readExpr );
 				( optional ) ? [declaration] : [declaration,check];
 		}
@@ -811,7 +812,7 @@ typedef RouteInfo = {
 
 enum ArgumentKind {
 	AKPart( name:String, partNum:Int, type:RouteArgType, optional:Bool, defaultValue:Expr );
-	AKParams( params:Array<{ name:String, type:RouteArgType, optional:Bool }>, ?allOptional:Bool );
+	AKParams( params:Array<{ name:String, type:RouteArgType, optional:Bool, array:Bool }>, ?allOptional:Bool );
 	AKRest;
 }
 
