@@ -320,7 +320,10 @@ class ViewResult extends ActionResult {
 		- Write the final output to the `ufront.web.context.HttpResponse` with a `text/html` content type.
 	**/
 	override function executeResult( actionContext:ActionContext ) {
-
+		return internalExecuteResult(actionContext);
+	}
+	
+	private function internalExecuteResult( actionContext:ActionContext ) {
 		// Get the viewEngine
 		var viewEngine = try actionContext.httpContext.injector.getInstance( UFViewEngine ) catch (e:Dynamic) null;
 		if (viewEngine==null) return Sync.httpError( "Failed to find a UFViewEngine in ViewResult.executeResult(), please make sure that one is made available in your application's injector" );

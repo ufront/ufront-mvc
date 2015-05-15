@@ -20,6 +20,10 @@ class RedirectResult extends ActionResult
 	}
 
 	override function executeResult( actionContext:ActionContext ) {
+		return redirect(actionContext);
+	}
+	
+	private function redirect(actionContext:ActionContext) {
 		// Clear content and headers, but not cookies
 		actionContext.httpContext.response.clearContent();
 		actionContext.httpContext.response.clearHeaders();
