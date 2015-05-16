@@ -3,7 +3,7 @@ package ufront.handler;
 import haxe.CallStack;
 import tink.core.Error;
 import ufront.app.*;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 import ufront.web.context.HttpContext;
 import haxe.ds.StringMap;
 //using DynamicsT;
@@ -66,7 +66,7 @@ class ErrorPageHandler implements UFErrorHandler
 		// rethrow error if catchErrors has been disabled
 		if (!catchErrors) throw httpError;
 
-		return Sync.success();
+		return SurpriseTools.success();
 	}
 
 	/**

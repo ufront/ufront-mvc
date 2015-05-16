@@ -3,7 +3,7 @@ package ufront.web.result;
 import haxe.io.Bytes;
 import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 using haxe.io.Path;
 
 /**
@@ -86,6 +86,6 @@ class FileResult extends ActionResult
 		if( null!=fileDownloadName )
 			actionContext.httpContext.response.setHeader( "content-disposition", 'attachment; filename=$fileDownloadName' );
 
-		return Sync.success();
+		return SurpriseTools.success();
 	}
 }

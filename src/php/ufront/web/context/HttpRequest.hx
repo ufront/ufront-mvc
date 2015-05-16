@@ -9,7 +9,7 @@ import ufront.web.context.HttpRequest.OnEndPartCallback;
 import ufront.web.UserAgent;
 import ufront.core.MultiValueMap;
 import haxe.ds.StringMap;
-import ufront.core.Sync;
+using ufront.core.AsyncTools;
 using tink.CoreApi;
 using thx.Strings;
 using StringTools;
@@ -53,7 +53,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 
 	override public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error> {
 		if ( !isMultipart() )
-			return Sync.success();
+			return SurpriseTools.success();
 
 		if (_parsed)
 			return throw new Error('parseMultipart() can only been called once');
@@ -67,9 +67,9 @@ class HttpRequest extends ufront.web.context.HttpRequest
 			var errors = [];
 			var allPartFutures = [];
 
-			if ( onPart==null ) onPart = function(_,_) return Sync.of( Success(Noise) );
-			if ( onData==null ) onData = function(_,_,_) return Sync.of( Success(Noise) );
-			if ( onEndPart==null ) onEndPart = function() return Sync.of( Success(Noise) );
+			if ( onPart==null ) onPart = function(_,_) return Success(Noise).asFuture();
+			if ( onData==null ) onData = function(_,_,_) return Success(Noise).asFuture();
+			if ( onEndPart==null ) onEndPart = function() return Success(Noise).asFuture();
 
 			for(part in parts) {
 				// Extract the info from PHP's $_FILES
@@ -151,7 +151,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 				else return Failure(Error.withData('Error parsing multipart request data', errors));
 			});
 		}
-		else return Sync.of( Success(Noise) );
+		else return Success(Noise).asFuture();
 	}
 
 	override function get_query() {

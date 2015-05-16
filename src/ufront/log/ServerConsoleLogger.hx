@@ -4,7 +4,7 @@ import ufront.web.context.HttpContext;
 import ufront.log.Message;
 import ufront.app.*;
 import haxe.PosInfos;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 using thx.Types;
 
 /**
@@ -42,7 +42,7 @@ class ServerConsoleLogger implements UFLogHandler
 
 		writeLog( messages.join("\n  ") );
 
-		return Sync.success();
+		return SurpriseTools.success();
 	}
 
 	public static function formatMsg( m:Message ):String {

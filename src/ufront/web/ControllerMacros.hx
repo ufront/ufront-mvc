@@ -401,13 +401,13 @@ class ControllerMacros {
 					Context.error( msg, pos );
 				}
 			case TPath(_):
-				switch (type.toType()) 
+				switch (type.toType())
 				{
 					case TType(t, params):
 						return parseArgsArgument( t.get().type.toComplexType(), allOptional, pos );
 					case _:
 				}
-				
+
 			case _:
 		}
 		return null;
@@ -443,7 +443,7 @@ class ControllerMacros {
 				return throw ufront.web.HttpError.pageNotFound();
 			}
 			catch ( e:Dynamic ) {
-				return ufront.core.Sync.httpError( 'Uncaught error while executing '+context.actionContext.controller+'.'+context.actionContext.action+'()', e );
+				return ufront.core.AsyncTools.SurpriseTools.asSurpriseError( e, 'Uncaught error while executing '+context.actionContext.controller+'.'+context.actionContext.action+'()' );
 			}
 
 		}

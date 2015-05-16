@@ -20,6 +20,7 @@ import haxe.web.Dispatch.DispatchError;
 	import minject.Injector;
 	import ufront.web.result.*;
 	import ufront.web.context.*;
+	import ufront.core.AsyncTools;
 	import ufront.core.*;
 #end
 
@@ -92,7 +93,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 
 		public function init( application:HttpApplication ):Surprise<Noise,Error> {
 			@:privateAccess injector.parent = application.injector;
-			return Sync.success();
+			return SurpriseTools.success();
 		}
 
 		/** Disposes of the resources (other than memory) that are used by the module. */
@@ -100,7 +101,7 @@ class DispatchHandler implements UFRequestHandler implements UFInitRequired
 			dispatchConfig = null;
 			dispatch = null;
 			injector = null;
-			return Sync.success();
+			return SurpriseTools.success();
 		}
 
 		/** Initializes a module and prepares it to handle requests. */

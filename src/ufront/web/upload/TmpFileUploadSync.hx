@@ -7,7 +7,7 @@ import haxe.io.Eof;
 	import sys.io.File;
 #end
 import ufront.web.upload.FileUpload;
-import ufront.core.Sync;
+using ufront.core.AsyncTools;
 using tink.CoreApi;
 using haxe.io.Path;
 
@@ -58,9 +58,9 @@ class TmpFileUploadSync implements FileUpload {
 	public function getBytes():Surprise<Bytes,Error> {
 		#if sys
 			try {
-				return Sync.of( Success(File.getBytes(tmpFileName)) );
+				return Success(File.getBytes(tmpFileName)).asFuture();
 			}
-			catch ( e:Dynamic ) return Sync.of( Failure(Error.withData("Error during SyncFileUpload.getBytes()",e)) );
+			catch ( e:Dynamic ) return Failure(Error.withData("Error during SyncFileUpload.getBytes()",e)).asFuture();
 		#else
 			return throw "Not implemented";
 		#end
@@ -74,9 +74,9 @@ class TmpFileUploadSync implements FileUpload {
 	public function getString():Surprise<String,Error> {
 		#if sys
 			try {
-				return Sync.of( Success(File.getContent(tmpFileName)) );
+				return Success(File.getContent(tmpFileName)).asFuture();
 			}
-			catch ( e:Dynamic ) return Sync.of( Failure(Error.withData("Error during SyncFileUpload.getString()",e)) );
+			catch ( e:Dynamic ) return Failure(Error.withData("Error during SyncFileUpload.getString()",e)).asFuture();
 		#else
 			return throw "Not implemented";
 		#end
@@ -91,9 +91,9 @@ class TmpFileUploadSync implements FileUpload {
 		#if sys
 			try {
 				File.copy(tmpFileName, newFilePath);
-				return Sync.success();
+				return SurpriseTools.success();
 			}
-			catch ( e:Dynamic ) return Sync.of( Failure(Error.withData("Error during SyncFileUpload.writeToFile()",e)) );
+			catch ( e:Dynamic ) return Failure(Error.withData("Error during SyncFileUpload.writeToFile()",e)).asFuture();
 		#else
 			return throw "Not implemented";
 		#end
@@ -146,7 +146,7 @@ class TmpFileUploadSync implements FileUpload {
 
 				return doneTrigger.asFuture();
 			}
-			catch ( e:Dynamic ) return Sync.of( Failure(Error.withData("Error during SyncFileUpload.process()",e)) );
+			catch ( e:Dynamic ) return Failure(Error.withData("Error during SyncFileUpload.process()",e)).asFuture();
 		#else
 			return throw "Not implemented";
 		#end

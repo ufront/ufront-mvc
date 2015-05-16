@@ -10,7 +10,7 @@ import haxe.ds.StringMap;
 import ufront.web.context.HttpRequest.OnPartCallback;
 import ufront.web.context.HttpRequest.OnDataCallback;
 import ufront.web.context.HttpRequest.OnEndPartCallback;
-import ufront.core.Sync;
+using ufront.core.AsyncTools;
 using tink.CoreApi;
 using thx.Strings;
 using StringTools;
@@ -76,7 +76,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	override public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error>
 	{
 		if ( !isMultipart() )
-			return Sync.success();
+			return SurpriseTools.success();
 
 		// Prevent this running more than once.
 		if (_parsed)
@@ -85,9 +85,9 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		_parsed = true;
 
 		// Default values, prepare for processing
-		if ( onPart==null ) onPart = function(_,_) return Sync.of( Success(Noise) );
-		if ( onData==null ) onData = function(_,_,_) return Sync.of( Success(Noise) );
-		if ( onEndPart==null ) onEndPart = function() return Sync.of( Success(Noise) );
+		if ( onPart==null ) onPart = function(_,_) return Success(Noise).asFuture();
+		if ( onData==null ) onData = function(_,_,_) return Success(Noise).asFuture();
+		if ( onEndPart==null ) onEndPart = function() return Success(Noise).asFuture();
 
 		post = new MultiValueMap();
 		var noParts:Bool = true,
@@ -169,11 +169,11 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		if ( callbackFutures.length>0 ) {
 			return Future.ofMany( callbackFutures ).flatMap( function(_) {
 				return
-					if ( errors.length==0 ) Sync.of( Success(Noise) )
-					else Sync.of( Failure(Error.withData('Error parsing multipart request data', errors)) );
+					if ( errors.length==0 ) Success(Noise).asFuture()
+					else Failure(Error.withData('Error parsing multipart request data', errors)).asFuture();
 			});
 		}
-		else return Sync.of( Success(Noise) );
+		else return Success(Noise).asFuture();
 	}
 
 	override function get_query()

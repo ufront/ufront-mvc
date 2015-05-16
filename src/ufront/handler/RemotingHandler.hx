@@ -11,7 +11,7 @@ import minject.Injector;
 import ufront.api.*;
 import ufront.app.*;
 import ufront.auth.*;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 import tink.CoreApi;
 import haxe.rtti.Meta;
 import haxe.EnumFlags;

@@ -6,9 +6,9 @@ import utest.Assert;
 import ufront.web.context.*;
 import ufront.web.session.UFHttpSession;
 import ufront.auth.UFAuthHandler;
-import ufront.core.Sync;
 import minject.Injector;
 import tink.CoreApi;
+import ufront.core.AsyncTools;
 using ufront.test.TestUtils;
 using mockatoo.Mockatoo;
 
@@ -149,7 +149,7 @@ class TestController extends ufront.web.Controller {
 	@:route(GET, "/user/$id/") function getUser( id:Int ) return 'Get $id';
 	@:route(POST, "/user/$id/") function setUser( id:Int, args:{ name:String } ) return 'Set $id to ${args.name}';
 	@:route("/error") function error() return throw "Ouch!";
-	@:route("/failure") function failure() return Sync.httpError( "Ouch!" );
+	@:route("/failure") function failure() return SurpriseTools.asSurpriseError(null,"Ouch!");
 }
 class TestController2 extends ufront.web.Controller {
 	@:route("/") function index() return "Hello 2!";

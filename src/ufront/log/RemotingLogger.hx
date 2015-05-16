@@ -3,7 +3,7 @@ package ufront.log;
 import ufront.web.context.HttpContext;
 import ufront.app.*;
 import haxe.PosInfos;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 using thx.Types;
 
 /**
@@ -38,7 +38,7 @@ class RemotingLogger implements UFLogHandler
 			}
 		}
 
-		return Sync.success();
+		return SurpriseTools.success();
 	}
 
 	public static function formatMessage( m:Message ):String {

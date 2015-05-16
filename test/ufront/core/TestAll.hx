@@ -9,7 +9,6 @@ class TestAll
 		runner.addCase( new FuturisticTest() );
 		runner.addCase( new AcceptEitherTest() );
 		runner.addCase( new MultiValueMapTest() );
-		runner.addCase( new SyncTest() );
 		runner.addCase( new AsyncToolsTest() );
 		runner.addCase( new InjectionToolsTest() );
 	}

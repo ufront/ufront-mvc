@@ -11,7 +11,7 @@ import ufront.app.UFMiddleware;
 import ufront.app.HttpApplication;
 import tink.CoreApi;
 import ufront.web.upload.TmpFileUploadSync;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 using haxe.io.Path;
 using DateTools;
 
@@ -74,13 +74,13 @@ class TmpFileUploadMiddleware implements UFMiddleware
 							file = File.write( tmpFilePath );
 						}
 					}
-					return Sync.success();
+					return SurpriseTools.success();
 				}
 				function onData( bytes, pos, len ) {
 					// Write this chunk
 					size += len;
 					file.writeBytes( bytes, pos, len );
-					return Sync.success();
+					return SurpriseTools.success();
 				}
 				function onEndPart() {
 					// Close the file, create our FileUpload object and add it to the request
@@ -91,7 +91,7 @@ class TmpFileUploadMiddleware implements UFMiddleware
 						ctx.request.files.add( postName, tmpFile );
 						files.push( tmpFile );
 					}
-					return Sync.success();
+					return SurpriseTools.success();
 				}
 				return
 					ctx.request.parseMultipart( onPart, onData, onEndPart ).map(function(result) {
@@ -104,7 +104,7 @@ class TmpFileUploadMiddleware implements UFMiddleware
 				return throw "Not implemented";
 			#end
 		}
-		else return Sync.success();
+		else return SurpriseTools.success();
 	}
 
 	/**
@@ -120,8 +120,8 @@ class TmpFileUploadMiddleware implements UFMiddleware
 				}
 			}
 			if ( errors.length>0 )
-				return Sync.httpError( "Failed to delete one or more temporary upload files", errors );
+				return SurpriseTools.asSurpriseError( errors, "Failed to delete one or more temporary upload files" );
 		}
-		return Sync.success();
+		return SurpriseTools.success();
 	}
 }

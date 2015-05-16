@@ -9,7 +9,7 @@ import haxe.ds.StringMap;
 import ufront.web.context.HttpRequest.OnPartCallback;
 import ufront.web.context.HttpRequest.OnDataCallback;
 import ufront.web.context.HttpRequest.OnEndPartCallback;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 import js.Browser.*;
 using tink.CoreApi;
 using thx.Strings;
@@ -50,7 +50,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 		`parseMultipart` is not implemented for ufront-client-mvc, and will always return a success with no action taken.
 	**/
 	override public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error> {
-		return Sync.success();
+		return SurpriseTools.success();
 	}
 
 	override function get_query() {

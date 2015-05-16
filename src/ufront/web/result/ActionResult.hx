@@ -2,7 +2,7 @@ package ufront.web.result;
 
 import tink.CoreApi;
 import ufront.web.context.ActionContext;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 
 /**
 	ActionResult is the base class for all results of actions performed during a MVC request.
@@ -25,7 +25,7 @@ class ActionResult {
 		The ActionResult base class provides a default implementation which has no effect (does not render a result).
 	**/
 	public function executeResult( actionContext:ActionContext ):Surprise<Noise,Error> {
-		return Sync.success();
+		return SurpriseTools.success();
 	}
 
 	/**

@@ -1,7 +1,7 @@
 package ufront.web.result;
 
 import ufront.web.context.*;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 using tink.CoreApi;
 
 /**

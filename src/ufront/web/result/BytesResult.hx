@@ -2,7 +2,7 @@ package ufront.web.result;
 
 import haxe.io.Bytes;
 import ufront.web.context.ActionContext;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 
 /**
 An `ActionResult` that writes `Bytes` (arbitrary binary content) to the client response.
@@ -25,6 +25,6 @@ class BytesResult extends FileResult
 	override function executeResult( actionContext:ActionContext ) {
 		super.executeResult(actionContext);
 		actionContext.httpContext.response.writeBytes(bytes, 0, bytes.length);
-		return Sync.success();
+		return SurpriseTools.success();
 	}
 }

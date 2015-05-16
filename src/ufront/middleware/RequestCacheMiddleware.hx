@@ -3,7 +3,7 @@ package ufront.middleware;
 import ufront.web.context.HttpContext;
 import ufront.web.context.HttpResponse;
 import ufront.app.UFMiddleware;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 import ufront.cache.UFCache;
 import haxe.rtti.Meta;
 using tink.CoreApi;
@@ -54,7 +54,7 @@ class RequestCacheMiddleware implements UFMiddleware
 	public function requestIn( ctx:HttpContext ):Surprise<Noise,Error> {
 		#if debug
 			// Don't cache requests if we're working in debug mode.
-			return Sync.success();
+			return SurpriseTools.success();
 		#end
 		if ( cache==null ) {
 			cache = cacheConnection.getNamespace("ufront.middleware.RequestCache");
@@ -86,7 +86,7 @@ class RequestCacheMiddleware implements UFMiddleware
 				return Success( Noise );
 			});
 		}
-		else return Sync.success();
+		else return SurpriseTools.success();
 	}
 
 	/**
@@ -120,7 +120,7 @@ class RequestCacheMiddleware implements UFMiddleware
 				}
 			}
 		}
-		return Sync.success();
+		return SurpriseTools.success();
 	}
 
 	/**

@@ -4,7 +4,7 @@ package ufront.web.result;
 	import tink.CoreApi;
 	import thx.error.NullArgument;
 	import ufront.web.context.ActionContext;
-	import ufront.core.Sync;
+	import ufront.core.AsyncTools;
 	import ufront.view.TemplateData;
 	import ufront.core.AcceptEither;
 	import dtx.widget.Widget;
@@ -109,7 +109,7 @@ package ufront.web.result;
 			actionContext.httpContext.response.contentType = (contentType!=null) ? contentType : defaultContentType;
 			actionContext.httpContext.response.write( dt + layout.html() );
 
-			return Sync.success();
+			return SurpriseTools.success();
 		}
 	}
 #end

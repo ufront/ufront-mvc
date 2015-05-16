@@ -1,7 +1,6 @@
 package ufront.core;
 
 import utest.Assert;
-import ufront.core.Sync;
 import tink.CoreApi;
 using ufront.core.AsyncTools;
 

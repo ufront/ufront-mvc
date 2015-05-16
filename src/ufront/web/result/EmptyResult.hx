@@ -1,7 +1,7 @@
 package ufront.web.result;
 
 import ufront.web.context.ActionContext;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 
 /**
 Represents a result that takes no further action and writes nothing to the response.
@@ -27,6 +27,6 @@ class EmptyResult extends ActionResult
 
 	override public function executeResult( actionContext:ActionContext ) {
 		if ( preventFlush ) actionContext.httpContext.response.preventFlush();
-		return Sync.success();
+		return SurpriseTools.success();
 	}
 }

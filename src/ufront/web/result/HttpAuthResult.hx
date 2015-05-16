@@ -4,7 +4,7 @@ import ufront.web.result.ActionResult;
 import ufront.web.context.*;
 import ufront.web.HttpError;
 import tink.CoreApi;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 
 
 /**
@@ -53,6 +53,6 @@ class HttpAuthResult extends ActionResult {
 	override public function executeResult( actionContext:ActionContext ) {
 		actionContext.httpContext.response.requireAuthentication( message );
 		actionContext.httpContext.response.write( failureMessage );
-		return Sync.success();
+		return SurpriseTools.success();
 	}
 }

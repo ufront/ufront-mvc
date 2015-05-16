@@ -8,7 +8,7 @@ import ufront.web.context.HttpRequest.OnEndPartCallback;
 import ufront.web.UserAgent;
 import ufront.core.MultiValueMap;
 import haxe.ds.StringMap;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 using tink.CoreApi;
 using thx.Strings;
 using StringTools;
@@ -59,7 +59,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	var _parsed:Bool = false;
 	override public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error> {
 		if ( !isMultipart() )
-			return Sync.success();
+			return SurpriseTools.success();
 
 		if (_parsed)
 			return throw new Error('parseMultipart() can only been called once');

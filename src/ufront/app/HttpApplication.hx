@@ -1,7 +1,7 @@
 package ufront.app;
 
 import ufront.web.url.filter.UFUrlFilter;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 import minject.Injector;
 import ufront.app.UFMiddleware;
 import ufront.web.context.HttpContext;
@@ -455,7 +455,7 @@ class HttpApplication
 					function (n:Noise) {
 						// Mark the handler as complete.  (It will continue on with the Middleware, Logging and Flushing stages)
 						ctx.completion.set( CRequestHandlersComplete );
-						return Sync.success();
+						return SurpriseTools.success();
 					} >>
 					function (n:Noise) return executeModules( resMidModules, ctx, CResponseMiddlewareComplete) >>
 					function (n:Noise) return executeModules( logHandModules, ctx, CLogHandlersComplete ) >>
@@ -487,7 +487,7 @@ class HttpApplication
 			for ( i in 0...messages.length ) {
 				messages.pop();
 			}
-			return Sync.success();
+			return SurpriseTools.success();
 		}
 
 		function flush( ctx:HttpContext ):Noise {

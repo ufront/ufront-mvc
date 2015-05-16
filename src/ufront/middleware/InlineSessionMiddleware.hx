@@ -5,7 +5,7 @@ import ufront.app.UFMiddleware;
 import ufront.app.HttpApplication;
 import tink.CoreApi;
 import ufront.web.HttpError;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 using thx.Types;
 
 /**
@@ -35,7 +35,7 @@ class InlineSessionMiddleware implements UFMiddleware
 				case Failure(f): Failure( HttpError.internalServerError(f) );
 			});
 		}
-		return Sync.success();
+		return SurpriseTools.success();
 	}
 
 	/**
@@ -49,6 +49,6 @@ class InlineSessionMiddleware implements UFMiddleware
 					case Success(s): return Success(s);
 					case Failure(err): return Failure( err );
 				}
-			else Sync.success();
+			else SurpriseTools.success();
 	}
 }

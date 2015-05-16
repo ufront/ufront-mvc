@@ -4,7 +4,6 @@ package ufront.view;
 	import haxe.macro.Context;
 #end
 import ufront.view.TemplatingEngines;
-import ufront.core.Sync;
 import haxe.ds.Option;
 using haxe.io.Path;
 using tink.CoreApi;

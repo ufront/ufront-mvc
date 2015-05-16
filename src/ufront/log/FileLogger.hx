@@ -12,7 +12,7 @@ import ufront.app.*;
 import haxe.PosInfos;
 import ufront.sys.SysUtil;
 import ufront.web.context.HttpContext;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 using tink.CoreApi;
 using haxe.io.Path;
 
@@ -58,13 +58,13 @@ class FileLogger implements UFLogHandler implements UFInitRequired
 
 	/** Initialize the module **/
 	public function init( app:HttpApplication ) {
-		return Sync.success();
+		return SurpriseTools.success();
 	}
 
 	/** Close the log file, dispose of the module **/
 	public function dispose( app:HttpApplication ) {
 		path = null;
-		return Sync.success();
+		return SurpriseTools.success();
 	}
 
 	/** Write any messages from the context or application. **/
@@ -87,7 +87,7 @@ class FileLogger implements UFLogHandler implements UFInitRequired
 			var file = File.append( context.contentDirectory + path );
 			file.writeString( content );
 			file.close();
-			return Sync.success();
+			return SurpriseTools.success();
 		#elseif nodejs
 			return Fs.appendFile.bind( logFile, content ).asVoidSurprise();
 		#else

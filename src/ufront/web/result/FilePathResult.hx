@@ -7,7 +7,7 @@ package ufront.web.result;
 import haxe.io.Bytes;
 import haxe.io.Eof;
 import ufront.web.context.ActionContext;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 using haxe.io.Path;
 
 /**  Sends the contents of a file to the response.  */
@@ -35,13 +35,13 @@ class FilePathResult extends FileResult
 				try {
 					var bytes = File.getBytes( fileName );
 					actionContext.httpContext.response.writeBytes( bytes, 0, bytes.length );
-					return Sync.success();
+					return SurpriseTools.success();
 				}
 				catch (e:Dynamic) {
 					throw HttpError.internalServerError( 'Failed to read file $fileName in FilePathResult: $e', e );
 				}
 			}
-			return Sync.success();
+			return SurpriseTools.success();
 		#else
 			return throw "FilePathResult is only implemented on `sys` platforms.";
 		#end
