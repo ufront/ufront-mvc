@@ -17,16 +17,16 @@ import haxe.rtti.Meta;
 import haxe.EnumFlags;
 
 /**
-	Checks if a request is a remoting request and processes accordingly.
+Execute a Haxe or Ufront remoting API request.
 
-	It looks for the "X-Haxe-Remoting" remoting header to check if this is a remoting call - the path/URL used does not matter.
-	If it is a remoting call, it will process it accordingly and return a remoting result (basically serialized Haxe values).
-	Traces are also serialized and sent to the client.
+This request handler looks for the "X-Haxe-Remoting" and "X-Ufront-Remoting" HTTP headers to check if this is a remoting call - the path/URL used does not matter.
+If it is a Haxe remoting call, it will process it accordingly and return a remoting result (basically serialized Haxe values).
+A Ufront remoting call will contain extra logging and debugging information for the client to display.
 
-	If used with a UfrontApplication, and the `UfrontConfiguration.remotingApi` option was set, that API will be loaded automatically.
-	Further APIs can be loaded through `ufrontApp.remotingHandler.loadApiContext()`.
+If used with a `UfrontApplication`, and the `UfrontConfiguration.remotingApi` option was set, that API will be loaded automatically.
+Further APIs can be loaded through `this.loadApi()`, `this.loadApis()` and `this.loadApiContext()`.
 
-	@author Jason O'Neil
+@author Jason O'Neil
 **/
 class RemotingHandler implements UFRequestHandler
 {
@@ -40,16 +40,16 @@ class RemotingHandler implements UFRequestHandler
 	}
 
 	/**
-		Expose a single UFApi to the request.
-		This will be available through Ufront style remoting, using `UFApi` or `UFAsyncApi` on the client.
+	Expose a single UFApi to the request.
+	This will be available through Ufront style remoting, using `UFApi` or `UFAsyncApi` on the client.
 	**/
 	public inline function loadApi( api:Class<UFApi> ) {
 		apis.push( api );
 	}
 
 	/**
-		Expose a group of UFApis to the request.
-		These will be available through Ufront style remoting, using `UFApi` or `UFAsyncApi` on the client.
+	Expose a group of UFApis to the request.
+	These will be available through Ufront style remoting, using `UFApi` or `UFAsyncApi` on the client.
 	**/
 	public inline function loadApis( newAPIs:Iterable<Class<UFApi>> ) {
 		for ( api in newAPIs )
@@ -57,22 +57,23 @@ class RemotingHandler implements UFRequestHandler
 	}
 
 	/**
-		Expose a UFApiContext to the request.
+	Expose a UFApiContext to the request.
 
-		This will be available through both Ufront style and Haxe style remoting.
+	This will be available through both Ufront style and Haxe style remoting.
 
-		Ufront style remoting uses the `UFApi` and `UFAsyncApi` on the client.
-		Ufront remoting works synchronously for `UFApi`, or returns a surprise for `UFAsyncApi`.
+	Ufront style remoting uses the `UFApi` and `UFAsyncApi` on the client.
+	Ufront remoting works synchronously for `UFApi`, or returns a surprise for `UFAsyncApi`.
 
-		Haxe style remoting creates a context class on the client containing all the API proxies.
-		For example a class `ApiContext` with `var signupApi:SignupApi` would generate `ApiContextClient` with `var signupApi:SignupApiProxy`.
-		Haxe style remoting uses remoting calls using plain async callbacks..
+	Haxe style remoting creates a context class on the client containing all the API proxies.
+	For example a class `ApiContext` with `var signupApi:SignupApi` would generate `ApiContextClient` with `var signupApi:SignupApiProxy`.
+	Haxe style remoting uses remoting calls using plain async callbacks..
 	**/
 	public inline function loadApiContext( apiContext:Class<UFApiContext> ) {
 		apiContexts.push( apiContext );
 		loadApis( UFApiContext.getApisInContext(apiContext) );
 	}
 
+	/** Check for the Haxe/Ufront Remoting HTTP headers and handle the request appropriately. **/
 	public function handleRequest( httpContext:HttpContext ):Surprise<Noise,Error> {
 		var doneTrigger = Future.trigger();
 		if ( httpContext.request.clientHeaders.exists("X-Haxe-Remoting") ) {
@@ -137,7 +138,7 @@ class RemotingHandler implements UFRequestHandler
 		return doneTrigger.asFuture();
 	}
 
-	public function initializeContext( injector:Injector ) {
+	function initializeContext( injector:Injector ) {
 		context = new Context();
 		for ( apiContextClass in apiContexts ) {
 			var apiContext = injector.instantiate( apiContextClass );
@@ -155,7 +156,7 @@ class RemotingHandler implements UFRequestHandler
 	}
 
 	@:access(haxe.remoting.Context)
-	public function executeApiCall( path:Array<String>, args:Array<Dynamic>, remotingContext:Context, actionContext:ActionContext ):Future<Dynamic> {
+	function executeApiCall( path:Array<String>, args:Array<Dynamic>, remotingContext:Context, actionContext:ActionContext ):Future<Dynamic> {
 		// Preliminary check that the path exists.
 		if ( remotingContext.objects.exists(path[0])==false ) {
 			throw 'Invalid path ${path.join(".")}';

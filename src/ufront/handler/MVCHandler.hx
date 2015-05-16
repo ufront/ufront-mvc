@@ -19,18 +19,21 @@ import ufront.web.context.*;
 import ufront.core.*;
 
 /**
-	Uses a `ufront.web.Controller` to execute a controller for the current request.
+Execute an MVC web request.
 
-	@author Jason O'Neil
+- An index `Controller`, and possibly various sub controllers, will be used for routing and performing the current action.
+- The `ActionResult` returned by the given action will also be executed, and written to the response.
+
+@author Jason O'Neil
 **/
 class MVCHandler implements UFRequestHandler
 {
 	/**
-		The index controller which is used to match requests to controllers / actions.
+	The index `Controller` which is used to match requests to controllers / actions.
 
-		This controller may sub-dispatch to other controllers.
+	This controller may sub-dispatch to other controllers.
 
-		The controller will be instantiated using the dependency injector for that request.
+	The controller will be instantiated using the dependency injector for that request.
 	**/
 	public var indexController(default,null):Class<Controller>;
 
@@ -38,7 +41,7 @@ class MVCHandler implements UFRequestHandler
 		this.indexController = indexController;
 	}
 
-	/** Initializes a module and prepares it to handle requests. */
+	/** Execute the current request using `this.indexController` and execute the returned `ActionResult`. */
 	public function handleRequest( ctx:HttpContext ):Surprise<Noise,Error> {
 		return
 			processRequest( ctx ) >>

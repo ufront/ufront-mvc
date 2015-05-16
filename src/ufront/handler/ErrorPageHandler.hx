@@ -6,44 +6,30 @@ import ufront.app.*;
 import ufront.core.AsyncTools;
 import ufront.web.context.HttpContext;
 import haxe.ds.StringMap;
-//using DynamicsT;
 using thx.Strings;
 using thx.Types;
 
 /**
-	A module which adds an error handler to your application.
+A `UFErrorHandler` module which displays an error page for the client when uncaught failures or errors are encountered.
 
-	If an error is of the type `tink.core.Error`, it will display the details of the given error.
+It will display the error message in a simple template, and set the appropriate HTTP response code.
 
-	Otherwise, it will wrap the exception with `ufront.web.HttpError.internalServerError()`.
-
-	It will display the error message in a simple template, and set the appropriate HTTP response code.
+The template can be modified by using your own implementations of `this.renderErrorForContent()` and `this.renderErrorPage()`.
 **/
 class ErrorPageHandler implements UFErrorHandler
 {
 	/**
-		A flag for catching and handling errors.
+	A flag dictating whether errors should be caught and displayed (`true`) or simply passed through unprocessed (`false`).
 
-		The only reason you would disable this is for debugging or unit testing.
+	The only reason you would disable this is for debugging or unit testing.
 
-		`true` by default.
+	The default value is `true`.
 	**/
 	public var catchErrors:Bool = true;
 
 	public function new() {}
 
-	/**
-		Event handler for an error on HttpApplication.
-
-		It will use a HttpError, or wrap a different kind of exception in an InternalServerError, and display an appropriate error message.
-
-		Http Response Codes will be set as per the HttpError, and any existing output will be cleared.
-
-		You can change the output by overriding the
-
-		TODO: give more options for processing different kinds of errors
-		TODO: figure out async support
-	**/
+	/** Process the given error and display an appropriate error page. **/
 	@:access( tink.core.Error )
 	public function handleError( httpError:Error, ctx:HttpContext ) {
 
@@ -70,32 +56,31 @@ class ErrorPageHandler implements UFErrorHandler
 	}
 
 	/**
-		Render the given error message into a String (usually HTML) to be used in `renderErrorPage()`.
+	Render the given error message into a String (usually HTML) to be used in `renderErrorPage()`.
 
-		This method provides HTML for the error message content, to be inserted into your usual site layout.
+	This method provides HTML for the error message content, to be inserted into your usual site layout.
 
-		This function is dynamic, so you can override it if you wish to supply a different error template.
+	This function is dynamic, so you can set it to a custom function if you wish to use a different error template.
 
-		It is recommended that this method have as few dependencies as possible, for example,
-		avoid using templating engines as any errors in displaying the error template will not
-		be displayed correctly.
+	It is recommended that this method have as few dependencies as possible.
+	For example, avoid using templating engines as any errors encountered in the error handler can be difficult to debug.
 
-		It is also expected that this method should be synchronous.  If you require loading
-		something asynchronously it will be easiest to create a new ErrorHandler.
+	It is also expected that this method should be synchronous.
+	If you require loading something asynchronously it will be easiest to create a new `UFErrorHandler`.
 
-		The default template looks like:
+	The default template looks like:
 
-		```
-		<summary class="error-summary">
-			<h1 class="error-message">${error.toString()}</h1>
-		</summary>
-		<details class="error-details">
-			<p class="error-data">${error.data}</p>
-			<p class="error-pos">${error.pos}</p>
-			<p class="error-exception-stack">${exceptionStackFromError}</p>
-			<p class="error-call-stack">${callStackFromError}</p>
-		</details>
-		```
+	```
+	<summary class="error-summary">
+		<h1 class="error-message">${error.toString()}</h1>
+	</summary>
+	<details class="error-details">
+		<p class="error-data">${error.data}</p>
+		<p class="error-pos">${error.pos}</p>
+		<p class="error-exception-stack">${exceptionStackFromError}</p>
+		<p class="error-call-stack">${callStackFromError}</p>
+	</details>
+	```
 	**/
 	@:access( tink.core.TypedError )
 	dynamic public function renderErrorContent( error:Error, ?showStack:Bool=false ):String {
@@ -121,30 +106,30 @@ class ErrorPageHandler implements UFErrorHandler
 	}
 
 	/**
-		Render the given error title and error content (from `renderErrorContent`) into a page to be sent to the browser.
+	Render the given error title and error content (from `renderErrorContent`) into a page to be sent to the browser.
 
-		This method takes two arguments: a window title, and content representing the error page.
-		It then renders a full HTML page with these variables inserted.
+	This method takes two arguments: a window title, and content representing the error page.
+	It then renders a full HTML page with these variables inserted.
 
-		This function is dynamic, so you can override it if you wish to supply a different template.
+	This function is dynamic, so you can set a custom function if you wish to supply a different template.
 
-		It is recommended that this method have as few dependencies as possible, for example,
-		avoid using templating engines as any errors in displaying the error template will not
-		be displayed correctly.
+	It is recommended that this method have as few dependencies as possible.
+	For example, avoid using templating engines as any errors that occur during the error handler can be difficult to debug.
 
-		It is also expected that this method should be synchronous.  If you require loading
-		something asynchronously it will be easiest to create a new ErrorHandler.
+	It is also expected that this method should be synchronous.
+	If you require loading something asynchronously it will be easiest to create a new `UFErrorHandler`.
 
-		The default template uses a CDN-hosted Bootstrap stylesheet, a "jumbotron" component and a giant sad-face.  It took 1000 designers 1000 days to craft this work of art.
+	The default template uses an inline `<style>` element for CSS, a "jumbotron" style component and a giant sad-face.
+	It took 1000 designers 1000 days to craft this work of art.
 	**/
 	dynamic public function renderErrorPage( title:String, content:String ):String {
 		return CompileTime.interpolateFile( "ufront/web/ErrorPage.html" );
 	}
 
 	/**
-		Renders the error content and places it in the error page.
+	Renders the error content and places it in the error page.
 
-		To change the look of your error messages, edit either `renderErrorContent` or `renderErrorPage`.
+	To change the look of your error messages, set a custom function for `this.renderErrorContent()` and `this.renderErrorPage()`.
 	**/
 	public function renderError( error:Error, ?showStack:Bool ):String {
 		var content = renderErrorContent( error, showStack );
