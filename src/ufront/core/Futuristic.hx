@@ -18,7 +18,8 @@ import tink.CoreApi;
 	setValue( getSomeFuture() );
 	```
 
-	Some of the methods of `Future` are mirrored here, inline, for your convenience.  If you need the full Future API you can use `asFuture`, or cast to a `Future<T>`
+	The `Future.handle()`, `Future.map()` and `Future.flatMap()` methods are forwarded for convenience.
+	If you need the full Future API you can use `this.asFuture()`, or use an implicit cast to a `Future<T>`.
 **/
 @:forward( handle, map, flatMap )
 abstract Futuristic<T>( Future<T> ) from Future<T> to Future<T> {
