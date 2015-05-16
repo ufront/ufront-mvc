@@ -7,7 +7,7 @@ import ufront.cache.UFCache;
 import haxe.ds.StringMap;
 import tink.CoreApi;
 using haxe.io.Path;
-using ufront.core.SurpriseTools;
+using ufront.core.AsyncTools;
 
 /**
 	A session implementation using an injected `UFCacheConnection`.

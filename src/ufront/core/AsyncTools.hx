@@ -1,12 +1,106 @@
 package ufront.core;
 
+#if macro
+import haxe.macro.Expr;
+import haxe.macro.Context;
+using haxe.macro.Tools;
+#end
 import haxe.PosInfos;
 import tink.core.Error;
 import ufront.web.HttpError;
 using tink.CoreApi;
 
 /**
-Tools to help transform
+Tools to help create, transform and respond to `Future` values.
+
+This class is designed for use with static extension: `using ufront.core.AsyncTools;`.
+**/
+class FutureTools {
+	/** Wrap a value in `Future.sync(data)` **/
+	public static inline function asFuture<T>( data:T ):Future<T>
+		return Future.sync( data );
+
+	/**
+	This helper macro allows you to wait for many futures, and handle them in a single type safe function.
+
+	This works by creating a `combinedFuture:Future<Dynamic> = Future.ofMany([...])`.
+	It then returns an object with `handle()` and `map()` functions, with the expected callback types being tailored to the types of your promises.
+
+	```
+	var f1 = Future.sync("Jason");
+	var f2 = Future.sync(26);
+	var f3 = Future.sync(Success(Noise));
+
+	FutureTools.when(f1,f2,f3).handle(function(name,age,outcome) {
+		trace('Name: $name');
+		trace('Age next year: ${age+1}');
+		trace('Outcome is success: '+outcome.match(Success(_)));
+	});
+	var sentanceFuture = FutureTools.when(f1,f2,f3).map(function(name,age,outcome) {
+		return '$name is $age years old and is a ${Type.enumConstructor(outcome)}.';
+	});
+	sentanceFuture.handle(function(sentence:String) trace(sentence));
+	```
+
+	You can use as many or as few promises as you like.
+
+	The compiler will ensure all arguments are handled in a type safe manner.
+
+	Note: If at the time this macro is called, Haxe does not know the complete type signiature of each promise, the macro will print a warning asking for more type hints.
+	**/
+	public static macro function when( args:Array<Expr> ) {
+		var arrayOfFutures = macro ($a{args}:Array<Future<Dynamic>>);
+		var arrayOfTypes = [];
+		var arrayOfCallArgs = [];
+		var i = 0;
+		for (arg in args) {
+			arrayOfCallArgs.push( macro values[$v{i}] );
+			switch Context.typeof( arg ).follow() {
+				case TAbstract(_.get() => {name:"Future",pack:["tink","core"]}, params) if (params.length==1):
+					var ct = params[0].follow().toComplexType();
+					// The ComplexType may be null if it was a monomorph (`Unknown<0>` etc). Provide a warning.
+					if ( ct==null ) {
+						var msg = 'The type parameter for "${arg.toString()}" was not known when the macro was called. Please add a type hint.';
+						Context.warning(msg, arg.pos);
+						arrayOfTypes.push( macro :Dynamic );
+					}
+					else arrayOfTypes.push( ct );
+				case otherType:
+					var msg = 'Expected argument "${arg.toString()}" to be of type "tink.core.Future<T>", but was "${otherType.toString()}"';
+					Context.error(msg, arg.pos);
+			}
+			i++;
+		}
+
+		var handleCBType = TFunction(arrayOfTypes,macro :Void);
+		var handleFunction = macro function handle(cb:$handleCBType) {
+			combinedFuture.handle(function(values:Array<Dynamic>) {
+				cb( $a{arrayOfCallArgs} );
+			});
+		}
+
+		var mapCBType = TFunction(arrayOfTypes,macro :T);
+		var mapFunction = macro function map<T>(cb:$mapCBType):Future<T> {
+			return combinedFuture.map(function(values:Array<Dynamic>) {
+				return cb( $a{arrayOfCallArgs} );
+			});
+		}
+
+		var expr = macro {
+			var combinedFuture = tink.core.Future.ofMany( $arrayOfFutures );
+			$handleFunction;
+			$mapFunction;
+			// Return an object with `handle()` and `map()` methods.
+			{ handle: handle, map: map };
+		};
+		return expr;
+	}
+}
+
+/**
+Tools to help create, transform and respond to `Surprise` values.
+
+This class is designed for use with static extension: `using ufront.core.AsyncTools;`.
 **/
 class SurpriseTools {
 	/** Return a `Surprise<Noise,T>` success. **/
@@ -15,10 +109,6 @@ class SurpriseTools {
 		return cast s;
 	}
 	static var s:Surprise<Noise,Dynamic>;
-
-	/** Wrap a value in `Future.sync(data)` **/
-	public static function asFuture<T>( data:T ):Future<T>
-		return Future.sync( data );
 
 	/** Wrap an `Outcome` in `Future.sync(outcome)` **/
 	public static function asSurprise<D,F>( outcome:Outcome<D,F> ):Surprise<D,F>
@@ -79,7 +169,9 @@ class SurpriseTools {
 }
 
 /**
-Tools to help transform callbacks surprises.
+Tools to help transform callbacks into surprises.
+
+This class is designed for use with static extension: `using ufront.core.AsyncTools;`.
 **/
 class CallbackTools {
 

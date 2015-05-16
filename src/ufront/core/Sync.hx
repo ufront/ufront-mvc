@@ -2,6 +2,7 @@ package ufront.core;
 
 import tink.core.Error.Pos;
 import ufront.web.HttpError;
+import ufront.core.AsyncTools;
 using tink.CoreApi;
 
 /**
@@ -32,6 +33,6 @@ class Sync {
 		Alias for `tink.core.Future.sync(v)`
 	**/
 	public static inline function of<T>( v:T ):Future<T> {
-		return SurpriseTools.asFuture( v );
+		return FutureTools.asFuture( v );
 	}
 }
