@@ -165,30 +165,13 @@ class ViewResult extends ActionResult {
 	//
 
 	/**
-		Global values that should be made available to every view result.
+	Global values that should be made available to every view result.
 	**/
 	public static var globalValues:TemplateData = {};
 
 	//
 	// Member Variables
 	//
-
-	/**
-	The path to the view.
-
-	If not specified when `executeResult` is called, it will be inferred from the Http Context.
-	If an extension is not specified, any extensions that match the given templating engines will be used.
-	See `executeResult` for details on this selection process.
-	**/
-	public var viewPath:Null<String>;
-
-	/**
-	A specific templating engine to use for this request.
-	This is helpful if you have views with file extensions shared by more than one view engine (eg: *.html).
-	Specifying an engine explicitly when a viewPath has been set will force that view to be rendered with a specific engine.
-	Specifying an engine when no view path is set, or a view path without an extension, will search for views with an extension matching thos supported by this templating engine.
-	**/
-	public var templatingEngine:Null<TemplatingEngine>;
 
 	/**
 	The data to pass to the template during `executeResult`.
@@ -198,34 +181,19 @@ class ViewResult extends ActionResult {
 	public var data:TemplateData;
 
 	/**
-	The layout to wrap around this view.
-
-	A layout is another `ufront.view.UFTemplate` which takes the parameter "viewContent".
-	The result of the current view will be inserted into the "viewContent" field of the layout.
-
-	All of the same data mappings and helpers will be available to the layout when it renders.
-
-	If no layout is specified, then we will see if there is a default one for the application.
-	(You can set a default layout for a `UfrontApplication` using the `UfrontConfiguration.defaultLayout` configuration property).
-
-	If you call `viewResult.withoutLayout()` then no layout will wrap the current view, even if a default layout is specified.
-	**/
-	public var layout:Null<Option<Pair<String,TemplatingEngine>>>;
-
-	/**
 	Any helpers (dynamic functions) to pass to the template when it is executed.
 	**/
 	public var helpers:TemplateData;
 
-	/** An explicit string to use as the template, rather than loading the template through our UFViewEngine. **/
-	var templateFromString:UFTemplate;
-	/** An explicit string to use as the layout template, rather than loading the layout through our UFViewEngine. **/
-	var layoutFromString:UFTemplate;
-
-	// TODO: refactor execute to use these values instead of a mix of viewPath, templateFromString, layoutFromString, layout etc.
+	/** The source used for loading a view template. Set in the constructor or with `this.usingTemplateString()`, or inferred during `this.executeResult()`. **/
 	public var templateSource(default,null):TemplateSource;
+
+	/** The source used for loading a layout template. Set in `this.withLayout()`, `this.withoutLayout()` `this.usingTemplateString()`, or inferred during `this.executeResult()`. **/
 	public var layoutSource(default,null):TemplateSource;
-	public var finalOutput(default,null):String;
+
+	/** A `Future` that will eventually hold the final compiled output for the `ViewResult`. **/
+	public var finalOutput(default,null):Future<String>;
+	var finalOutputTrigger:FutureTrigger<String>;
 
 	//
 	// Member Functions
@@ -234,35 +202,33 @@ class ViewResult extends ActionResult {
 	/**
 	Create a new ViewResult, with the specified data.
 
-	You can optionally specify a custom `viewPath` or a specific `templatingEngine`.
-
-	If `viewPath` is not specified, the `actionContext` will be used to choose a view during `executeResult`.
-	See the documentation on `executeResult` for details.
+	@param data (optional) Some initial template data to set. If not supplied, an empty {} object will be used.
+	@param viewPath (optional) A specific view path to use. If not supplied, it will be inferred based on the `ActionContext` in `this.executeResult()`.
+	@param templatingEngine (optional) A specific templating engine to use for the view. If not supplied, it will be inferred based on the `viewPath` in `this.executeResult()`.
 	**/
 	public function new( ?data:TemplateData, ?viewPath:String, ?templatingEngine:TemplatingEngine ) {
-		this.viewPath = viewPath;
-		this.templatingEngine = templatingEngine;
 		this.data = (data!=null) ? data : {};
 		this.helpers = {};
-		this.layout = null;
+		this.templateSource = (viewPath!=null) ? FromEngine(viewPath,templatingEngine) : Unknown;
+		this.layoutSource = Unknown;
+		this.finalOutputTrigger = Future.trigger();
+		this.finalOutput = finalOutputTrigger;
 	}
 
 	/**
 	Specify a layout to wrap this view.
 
 	@param layoutPath
-	@param ?templatingEngine A templating engine to use with this layout. If none is specified, the first templating engine matching the layoutPath's extension will be used. (If layoutPath is not specified, this parameter will have no effect).
+	@param templatingEngine (optional) A templating engine to use with this layout. If none is specified, the first templating engine matching the layoutPath's extension will be used.
 	**/
 	public function withLayout( layoutPath:String, ?templatingEngine:TemplatingEngine ):ViewResult {
-		this.layout = Some( new Pair(layoutPath, templatingEngine) );
+		this.layoutSource = FromEngine( layoutPath, templatingEngine );
 		return this;
 	}
 
-	/**
-	Prevent a default layout from wrapping this view - this view will appear unwrapped.
-	**/
+	/** Prevent a default layout from wrapping this view - this view will appear standalone, not wrapped by a layout. **/
 	public function withoutLayout():ViewResult {
-		this.layout = None;
+		this.layoutSource = None;
 		return this;
 	}
 
@@ -271,31 +237,24 @@ class ViewResult extends ActionResult {
 
 	If `template` or `layout` is not supplied or null, the usual rules will apply for loading a view using the UFViewEngine.
 
-	@param template The template string for the main view template.
-	@param layout The template string for the layout.
-	@param templatingEngine The templating engine to render the given templates with.
-	@return ViewResult (to allow method chaining).
+	@param template The template string for the view.
+	@param layout (optional) The template string for the layout. If not supplied, the layout will be unaffected.
+	@param templatingEngine (optional) The templating engine to render the given view and layout with. If not specified, `TemplatingEngine.haxe` will be used.
 	**/
 	public function usingTemplateString( template:String, ?layout:String, ?templatingEngine:TemplatingEngine ):ViewResult {
 		if (templatingEngine==null)
 			templatingEngine = TemplatingEngines.haxe;
 
-			if (template!=null) {
-				this.templateFromString = templatingEngine.factory( template );
-				this.templateSource = FromString( template );
-			}
-			else this.templateFromString = null;
+		if (template!=null)
+			this.templateSource = FromString( template, templatingEngine );
 
-			if (layout!=null) {
-				this.layoutFromString = templatingEngine.factory( layout );
-				this.layoutSource = FromString( layout );
-			}
-			else this.layoutFromString = null;
+		if (layout!=null)
+			this.layoutSource = FromString( layout, templatingEngine );
 
 		return this;
 	}
 
-	/** Add a key=>value pair to our TemplateData **/
+	/** Add a `key=>value` pair to our TemplateData **/
 	public function setVar( key:String, val:Dynamic ):ViewResult {
 		this.data[key] = val;
 		return this;
@@ -303,8 +262,8 @@ class ViewResult extends ActionResult {
 
 	/** Add an object or map with key=>value pairs to our TemplateData **/
 	public function setVars( ?map:Map<String,Dynamic>, ?obj:{} ):ViewResult {
-		if (obj!=null) this.data.setObject( obj );
 		if (map!=null) this.data.setMap( map );
+		if (obj!=null) this.data.setObject( obj );
 		return this;
 	}
 
@@ -321,17 +280,58 @@ class ViewResult extends ActionResult {
 	**/
 	override function executeResult( actionContext:ActionContext ) {
 
-		// Get the viewEngine
-		var viewEngine = try actionContext.httpContext.injector.getInstance( UFViewEngine ) catch (e:Dynamic) null;
-		if (viewEngine==null) return Sync.httpError( "Failed to find a UFViewEngine in ViewResult.executeResult(), please make sure that one is made available in your application's injector" );
+		if ( layoutSource.match(Unknown) )
+			layoutSource = inferLayoutFromContext( actionContext );
+		if ( templateSource.match(Unknown) )
+			templateSource = inferViewPathFromContext( actionContext );
 
-		// Combine the data and the helpers
+		var viewFolder = getViewFolder( actionContext );
+		templateSource = addViewFolderToPath( templateSource, viewFolder );
+		layoutSource = addViewFolderToPath( layoutSource, viewFolder );
+
+		// Get the viewEngine from the injector.
+		var viewEngine = try actionContext.httpContext.injector.getInstance( UFViewEngine ) catch (e:Dynamic) null;
+		if (viewEngine==null)
+			return Sync.httpError( "Failed to find a UFViewEngine in ViewResult.executeResult(), please make sure that one is made available in your application's injector" );
+
+		// Begin to load the templates (as Futures).
+		var templateReady = loadTemplateFromSource( templateSource, viewEngine );
+		var layoutReady = loadTemplateFromSource( layoutSource, viewEngine );
+
+		var combinedData = getCombinedData( actionContext );
+
+		var done =
+			(templateReady && layoutReady) >>
+			function ( pair:Pair<Outcome<UFTemplate,Error>, Outcome<Null<UFTemplate>,Error>> ) {
+				try {
+					// Execute the view, and then the layout (inserting the `viewContent`).
+					var viewOut = executeTemplate( "view", pair.a, combinedData ).sure();
+					var finalOut =
+						if ( pair.b.match(Success(null)) ) viewOut
+						else executeTemplate( "layout", pair.b, combinedData.set('viewContent',viewOut) ).sure();
+
+					// Write to the response
+					actionContext.httpContext.response.contentType = "text/html";
+					actionContext.httpContext.response.write( finalOut );
+					this.finalOutputTrigger.trigger( finalOut );
+
+					return Success( Noise );
+				}
+				catch (e:Error) return Failure( e );
+			}
+
+		return done;
+	}
+
+	function getCombinedData( actionContext:ActionContext ):TemplateData {
 		var combinedData = TemplateData.fromMany( [globalValues, helpers, data] );
 		var controller = Std.instance( actionContext.controller, Controller );
 		if ( controller!=null && combinedData.exists('baseUri')==false )
 			combinedData.set( 'baseUri', controller.baseUri );
+		return combinedData;
+	}
 
-		// Get the view folder, either from @viewFolder("...") meta or from the controller name.
+	static function getViewFolder( actionContext:ActionContext ):String {
 		var controllerCls = Type.getClass( actionContext.controller );
 		var viewFolderMeta = Meta.getType( controllerCls ).viewFolder;
 		var viewFolder:String;
@@ -340,46 +340,50 @@ class ViewResult extends ActionResult {
 			viewFolder = viewFolder.removeTrailingSlashes();
 		}
 		else {
-			// Get the class name
+			// Get the class name without the package, lowercase the first letter, and drop the "Controller" suffix.
 			var controllerName = Type.getClassName( Type.getClass(actionContext.controller) ).split( "." ).pop();
-			// Lowercase the first letter
 			controllerName = controllerName.charAt(0).toLowerCase() + controllerName.substr(1);
-			// Strip off the word Controller
 			if ( controllerName.endsWith("Controller") )
 				controllerName = controllerName.substr( 0, controllerName.length-10 );
 			viewFolder = controllerName;
 		}
+		return viewFolder;
+	}
 
-		// Get the view path
-		if ( viewPath==null ) {
-			// Was the viewPath specified by @template("...") metadata on the action method?
-			var fieldsMeta = Meta.getFields( controllerCls );
-			var actionFieldMeta:Dynamic<Array<Dynamic>> = Reflect.field( fieldsMeta, actionContext.action );
-			if ( actionFieldMeta!=null && actionFieldMeta.template!=null && actionFieldMeta.template.length>0 ) {
-				viewPath = ""+actionFieldMeta.template[0];
-			}
+	static function inferViewPathFromContext( actionContext:ActionContext ):TemplateSource {
+		var viewPath:String;
+
+		// Check for @template("...") metadata that specifies the view path on the action method.
+		var controllerCls = Type.getClass( actionContext.controller );
+		var fieldsMeta = Meta.getFields( controllerCls );
+		var actionFieldMeta:Dynamic<Array<Dynamic>> = Reflect.field( fieldsMeta, actionContext.action );
+		if ( actionFieldMeta!=null && actionFieldMeta.template!=null && actionFieldMeta.template.length>0 ) {
+			viewPath = ""+actionFieldMeta.template[0];
 		}
-		if ( viewPath==null ) {
-			// Otherwise, if viewPath is still null, use the action name to guess a reasonable template.
+ 		else {
+			// If there was no metadata, use the action name to guess a reasonable view path.
 			var action = actionContext.action;
 			var startsWithDo = action.startsWith("do");
-			var thirdCharUpperCase = action.charAt(2)==action.charAt(2).toUpperCase();
+			var thirdCharUpperCase = action.length>2 && action.charAt(2)==action.charAt(2).toUpperCase();
 			if ( startsWithDo && thirdCharUpperCase )
 				action = action.substr(2);
 			viewPath = action.charAt(0).toLowerCase() + action.substr(1);
 		}
 
-		// Figure out which layout to use.
+		return FromEngine( viewPath, null );
+	}
+
+	static function inferLayoutFromContext( actionContext:ActionContext ):TemplateSource {
 		var layoutPath:String = null;
-		if ( layout==null ) {
-			// See if there is a controller-wide defaultLayout set in the controller's @layout("...") metadata.
-			var classMeta = Meta.getType( controllerCls );
-			if ( classMeta.layout!=null && classMeta.layout.length>0 ) {
-				layoutPath = ""+classMeta.layout[0];
-			}
+
+		// Check for @layout("...") metadata that specifies the layout on the controller.
+		var controllerCls = Type.getClass( actionContext.controller );
+		var classMeta = Meta.getType( controllerCls );
+		if ( classMeta.layout!=null && classMeta.layout.length>0 ) {
+			layoutPath = ""+classMeta.layout[0];
 		}
-		if ( layout==null && layoutPath==null ) {
-			// See if there is a site-wide defaultLayout set in the dependency injector.
+		else {
+			// If there was no metadata, see if a "defaultLayout" string was injected by the app configuration.
 			try {
 				layoutPath = actionContext.httpContext.injector.getInstance( String, "defaultLayout" );
 				if ( layoutPath.startsWith("/")==false ) {
@@ -388,102 +392,54 @@ class ViewResult extends ActionResult {
 			} catch (e:Dynamic) {}
 		}
 
-		// If a viewPath (or layoutPath) has a leading slash, it does not go inside our view folder.
-		// So if it is "absolute", drop the leading slash because it's only absolute relative to the view folder.
-		// And if not, append it to the viewFolder.
-		viewPath = viewPath.startsWith("/") ? viewPath.substr(1) : '$viewFolder/$viewPath';
-		if ( layoutPath!=null )
-			layoutPath = (layoutPath.startsWith("/")) ? layoutPath.substr(1) : '$viewFolder/$layoutPath';
-
-		// Get the layout future
-		var layoutReady:Surprise<Null<UFTemplate>,Error>;
-		if ( layoutFromString!=null ) {
-			layoutReady = Future.sync( Success(layoutFromString) );
-		}
-		else {
-			if ( layout==null )
-				layout = (layoutPath!=null) ? Some(new Pair(layoutPath,null)) : None;
-
-			switch layout {
-				case Some( layoutData ):
-					layoutSource = FromEngine( layoutData.a );
-					layoutReady = viewEngine.getTemplate( layoutData.a, layoutData.b );
-				case None, null:
-					layoutSource = None;
-					layoutReady = Future.sync( Success(null) );
-			}
-		}
-
-		// Get the template future
-		var templateReady:Surprise<UFTemplate,Error>;
-		if ( templateFromString!=null ) {
-			templateReady = Future.sync( Success(templateFromString) );
-		}
-		else {
-			templateSource = FromEngine( viewPath );
-			templateReady = viewEngine.getTemplate( viewPath, templatingEngine );
-		}
-
-		// Once both futures have loaded, combine them, and then map them, executing the future templates
-		// and writing them to the output, and then completing the Future once done, or returning a Failure
-		// if there was an error.
-		var done =
-			(templateReady && layoutReady) >>
-			function ( pair:Pair<Outcome<UFTemplate,Error>, Outcome<Null<UFTemplate>,Error>> ) {
-
-				var template:UFTemplate = null;
-				var layout:Null<UFTemplate> = null;
-
-				// Extract template
-				switch pair.a {
-					case Success( tpl ): template = tpl;
-					case Failure( err ): return error( "Unable to load view template", err );
-				}
-
-				// Extract layout, possibly null
-				switch pair.b {
-					case Success( tpl ): layout = tpl;
-					case Failure( err ): return error( "Unable to load layout template", err );
-				}
-
-				// Try execute the template
-				var viewOut:String = null;
-				try
-					viewOut = template.execute( combinedData )
-				catch ( e:Dynamic )
-					return error( "Unable to execute view template", e );
-
-				// Try execute the layout around the view, if there is a layout.  Otherwise just use the view.
-				var finalOut:String = null;
-				if ( layout==null ) {
-					finalOut = viewOut;
-				}
-				else {
-					combinedData.set( "viewContent", viewOut );
-					try
-						finalOut = layout.execute( combinedData )
-					catch
-						( e:Dynamic ) return error( "Unable to execute layout template", e );
-				}
-
-				// Write to the response
-				actionContext.httpContext.response.contentType = "text/html";
-				actionContext.httpContext.response.write( finalOut );
-				this.finalOutput = finalOut;
-
-				return Success( Noise );
-			}
-
-		return done;
+		return (layoutPath!=null) ? FromEngine(layoutPath,null) : None;
 	}
 
-	function error( reason:String, data:Dynamic, ?pos:haxe.PosInfos ) {
+	static function addViewFolderToPath( layoutSource:TemplateSource, viewFolder:String ):TemplateSource {
+		return switch layoutSource {
+			case FromEngine(path,engine):
+				// Usually, a view will go inside a viewFolder - for example all views in HomeController will go inside `/$viewDir/home/`.
+				// If a viewPath begins with a leading slash though, it is treated as "absolute", or at least, relative to the global viewDirectory, not the controller's viewFolder.
+				// So if it is "absolute", drop the leading slash because it's only absolute relative to the viewDirectory.
+				// If it does not begin with a leading slash, prepend the viewFolder.
+				path = path.startsWith("/") ? path.substr(1) : '$viewFolder/$path';
+				FromEngine( path, engine );
+			case _: layoutSource;
+		}
+	}
+
+	static function loadTemplateFromSource( source:TemplateSource, engine:UFViewEngine ):Surprise<Null<UFTemplate>,Error> {
+		return switch source {
+			case FromString(str,templatingEngine):
+				try Future.sync( Success(templatingEngine.factory(str)) )
+				catch (e:Dynamic) {
+					var engine = 'Templating Engine: "${templatingEngine.type}"';
+					var template = 'String template: "${str}"';
+					Future.sync( error('Failed to parse template.','$engine\n$template') );
+				}
+			case FromEngine(path,templatingEngine): engine.getTemplate( path, templatingEngine );
+			case None, Unknown: Future.sync( Success(null) );
+		}
+	}
+
+	static function executeTemplate( section:String, tplOutcome:Outcome<Null<UFTemplate>,Error>, combinedData:TemplateData ):Outcome<String,Error> {
+		switch tplOutcome {
+			case Success( tpl ):
+				try return Success( tpl.execute(combinedData) )
+				catch (e:Dynamic) return error( 'Unable to execute $section template', e );
+			case Failure( err ):
+				return error( 'Unable to load $section template', err );
+		}
+	}
+
+	static function error<T>( reason:String, data:Dynamic, ?pos:haxe.PosInfos ):Outcome<T,Error> {
 		return Failure( HttpError.internalServerError(reason,data,pos) );
 	}
 }
 
 enum TemplateSource {
-	FromString( str:String );
-	FromEngine( path:String );
+	FromString( str:String, ?templatingEngine:TemplatingEngine );
+	FromEngine( path:String, ?templatingEngine:TemplatingEngine );
 	None;
+	Unknown;
 }
