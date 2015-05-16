@@ -5,7 +5,7 @@ import haxe.macro.Expr;
 import minject.InjectorMacro;
 
 /**
-	Some utilities for working with `minject.Injector`.
+Some utilities and shortcuts for working with `minject.Injector`.
 **/
 class InjectionTools {
 	/**

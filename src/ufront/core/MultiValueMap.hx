@@ -4,15 +4,17 @@ import haxe.ds.StringMap;
 using StringTools;
 
 /**
-	A custom map structure that represents Http GET/POST parameters.
+A custom map structure that allows multiple values per key.
 
-	It behaves similarly to `Map<String,T>`, except it can contain multiple values for a given parameter name, which is suitable for HTML inputs that return multiple values.
+This is particularly useful for representing HTTP `GET` or `POST` parameters.
 
-	Notes:
+It behaves similarly to `Map<String,T>`, except it can contain multiple values for a given parameter name, which is suitable for HTML inputs that return multiple values.
 
-	- For PHP, multiple values are only supported if the parameter name ends with `[]`.
-	- Because of the PHP limitation, other platforms (neko etc) ignore a `[]` at the end of a parameter name.
-	- Complex lists, such as the following, are not supported: `<input name="person[1][firstName]" />`, only simple "[]" is supported: `<input name="person[]">`
+Notes:
+
+- For PHP, multiple values in HTTP requests are only supported if the parameter name ends with `[]`.
+- Because of the PHP limitation, other platforms (neko etc) ignore a `[]` at the end of a parameter name.
+- Complex lists, such as the following, are not supported: `<input name="person[1][firstName]" />`, only simple "[]" is supported: `<input name="person[]">`
 **/
 abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> to StringMap<Array<T>> {
 	/** Create a new MultiValueMap **/

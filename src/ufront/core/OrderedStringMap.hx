@@ -3,10 +3,13 @@ package ufront.core;
 import haxe.ds.StringMap;
 
 /**
-	An ordered map implementation.
-	Copied from `thx.collections.HashList` in Franco's old thx library - it doesn't seem to be in the new version.
-	In future we might change this to an abstract or make it compatible with Map<String,T>
-	@author Franco Ponticelli
+An ordered map implementation.
+
+Copied from `thx.collections.HashList` in the old `thx` library - it has not yet been included in the Haxe 3 version of thx.
+
+In future we might change this to an abstract or make it compatible with Map<String,T>
+
+@author Franco Ponticelli
 **/
 @:final
 class OrderedStringMap<T>
