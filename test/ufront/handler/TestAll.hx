@@ -9,6 +9,5 @@ class TestAll
 		runner.addCase( new ErrorPageHandlerTest() );
 		runner.addCase( new RemotingHandlerTest() );
 		runner.addCase( new MVCHandlerTest() );
-		runner.addCase( new DispatchHandlerTest() );
 	}
 }
