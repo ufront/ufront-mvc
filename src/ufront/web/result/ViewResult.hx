@@ -12,7 +12,7 @@ import haxe.ds.Option;
 import ufront.web.HttpError;
 import ufront.web.Controller;
 import ufront.web.context.ActionContext;
-import ufront.core.Sync;
+import ufront.core.AsyncTools;
 import haxe.rtti.Meta;
 using tink.CoreApi;
 using thx.Strings;
@@ -193,7 +193,9 @@ class ViewResult extends ActionResult {
 
 	/** A `Future` that will eventually hold the final compiled output for the `ViewResult`. **/
 	public var finalOutput(default,null):Future<String>;
+
 	var finalOutputTrigger:FutureTrigger<String>;
+	var futureData:Future<TemplateData>;
 
 	//
 	// Member Functions
@@ -203,11 +205,13 @@ class ViewResult extends ActionResult {
 	Create a new ViewResult, with the specified data.
 
 	@param data (optional) Some initial template data to set. If not supplied, an empty {} object will be used.
+	@param futureData (optional) If you have a data collection that will be available in the Future, you can include it here and the final result will include it.
 	@param viewPath (optional) A specific view path to use. If not supplied, it will be inferred based on the `ActionContext` in `this.executeResult()`.
 	@param templatingEngine (optional) A specific templating engine to use for the view. If not supplied, it will be inferred based on the `viewPath` in `this.executeResult()`.
 	**/
-	public function new( ?data:TemplateData, ?viewPath:String, ?templatingEngine:TemplatingEngine ) {
+	public function new( ?data:TemplateData, ?futureData:Future<TemplateData>, ?viewPath:String, ?templatingEngine:TemplatingEngine ) {
 		this.data = (data!=null) ? data : {};
+		this.futureData = (futureData!=null) ? futureData : Future.sync(new TemplateData());
 		this.helpers = {};
 		this.templateSource = (viewPath!=null) ? FromEngine(viewPath,templatingEngine) : Unknown;
 		this.layoutSource = Unknown;
@@ -290,25 +294,28 @@ class ViewResult extends ActionResult {
 		layoutSource = addViewFolderToPath( layoutSource, viewFolder );
 
 		// Get the viewEngine from the injector.
-		var viewEngine = try actionContext.httpContext.injector.getInstance( UFViewEngine ) catch (e:Dynamic) null;
-		if (viewEngine==null)
-			return Sync.httpError( "Failed to find a UFViewEngine in ViewResult.executeResult(), please make sure that one is made available in your application's injector" );
+		var viewEngine =
+			try actionContext.httpContext.injector.getInstance( UFViewEngine )
+			catch (e:Dynamic) {
+				var msg = "Failed to find a UFViewEngine in ViewResult.executeResult(), please make sure that one is made available in your application's injector";
+				return SurpriseTools.asSurpriseError( null, msg );
+			};
 
 		// Begin to load the templates (as Futures).
 		var templateReady = loadTemplateFromSource( templateSource, viewEngine );
 		var layoutReady = loadTemplateFromSource( layoutSource, viewEngine );
 
-		var combinedData = getCombinedData( actionContext );
 
-		var done =
-			(templateReady && layoutReady) >>
-			function ( pair:Pair<Outcome<UFTemplate,Error>, Outcome<Null<UFTemplate>,Error>> ) {
+		return FutureTools
+			.when( templateReady, layoutReady, this.futureData )
+			.map(function( viewTemplate:Outcome<Null<UFTemplate>,Error>, layoutTemplate:Outcome<Null<UFTemplate>,Error>, dataFromFuture:TemplateData ) {
+				var combinedData = getCombinedData( [globalValues,helpers,dataFromFuture,data], actionContext );
 				try {
 					// Execute the view, and then the layout (inserting the `viewContent`).
-					var viewOut = executeTemplate( "view", pair.a, combinedData ).sure();
+					var viewOut = executeTemplate( "view", viewTemplate, combinedData ).sure();
 					var finalOut =
-						if ( pair.b.match(Success(null)) ) viewOut
-						else executeTemplate( "layout", pair.b, combinedData.set('viewContent',viewOut) ).sure();
+						if ( layoutTemplate.match(Success(null)) ) viewOut
+						else executeTemplate( "layout", layoutTemplate, combinedData.set('viewContent',viewOut) ).sure();
 
 					// Write to the response
 					actionContext.httpContext.response.contentType = "text/html";
@@ -318,13 +325,11 @@ class ViewResult extends ActionResult {
 					return Success( Noise );
 				}
 				catch (e:Error) return Failure( e );
-			}
-
-		return done;
+			});
 	}
 
-	function getCombinedData( actionContext:ActionContext ):TemplateData {
-		var combinedData = TemplateData.fromMany( [globalValues, helpers, data] );
+	static function getCombinedData( dataSets:Array<TemplateData>, actionContext:ActionContext ):TemplateData {
+		var combinedData = TemplateData.fromMany( dataSets );
 		var controller = Std.instance( actionContext.controller, Controller );
 		if ( controller!=null && combinedData.exists('baseUri')==false )
 			combinedData.set( 'baseUri', controller.baseUri );
