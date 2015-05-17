@@ -3,9 +3,10 @@ package ufront.remoting;
 import ufront.remoting.RemotingError;
 
 /**
-	An remoting connection that works over synchronous HTTP connections, with some ufront specific extensions.
+A remoting connection that works over synchronous HTTP connections, with some ufront specific extensions.
 
-	This adds an extra HTTP header, "X-Ufront-Remoting=1", so that our Ufront `RemotingHandler` knows it can also send traces, logs, warnings, errors and stack traces with the response.
+This extends `haxe.remoting.HttpConnection` and behaves similarly in most ways.
+This adds an extra HTTP header, "X-Ufront-Remoting=1", so that our Ufront `RemotingHandler` knows it can also send traces, logs, warnings, errors and stack traces with the response.
 **/
 class HttpConnection extends haxe.remoting.HttpConnection {
 

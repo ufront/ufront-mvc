@@ -4,29 +4,29 @@ import ufront.remoting.RemotingError;
 import ufront.log.Message;
 
 /**
-	Helper functions used by both `ufront.remoting.HttpConnection` and `ufront.remoting.HttpAsyncConnection`.
+Helper functions used by both `ufront.remoting.HttpConnection` and `ufront.remoting.HttpAsyncConnection`.
 **/
 class RemotingUtil {
 	/**
-		Process a remoting response from the server.
+	Process a remoting response from the server.
 
-		Lines are interpreted as follows:
+	Lines are interpreted as follows:
 
-		- Lines beginning with **hxr** contain a serialized response to the remoting function call.
-		- Lines beginning with **hxt** contain a trace, log, warning or error message.
-		- Lines beginning with **hxe** contain a server side exception that was encountered during the remoting function call.
-		- Lines beginning with **hxs** contain a stack trace for the exception found in the **hxe** line.
-		- Blank lines are ignored.
-		- Other lines are not recognised and will result in an error.
-		- If no **hxr** line is found, it will result in an error.
+	- Lines beginning with `hxr` contain a serialized response to the remoting function call.
+	- Lines beginning with `hxt` contain a trace, log, warning or error message.
+	- Lines beginning with `hxe` contain a server side exception that was encountered during the remoting function call.
+	- Lines beginning with `hxs` contain a stack trace for the exception found in the `hxe` line.
+	- Blank lines are ignored.
+	- Other lines are not recognised and will result in an error.
+	- If no `hxr` line is found, it will result in an error.
 
-		`onResult` will be called if there is a valid result and no errors.
-		`onError` will be called for each error encountered.
+	If there is a valid result and no errors, `onResult` will be called.
+	If one or more errors occured, `onError` will be called for each error encountered.
 
-		@param response The response received from the HTTP remoting call.
-		@param onResult The function to call once a valid result has been received.
-		@param onError The function to call if an error is encountered.
-		@param remotingCallString A string describing the remoting call, used to help error messages be more descriptive.
+	@param response The response received from the HTTP remoting call.
+	@param onResult The function to call once a valid result has been received.
+	@param onError The function to call if an error is encountered.
+	@param remotingCallString A string describing the remoting call, used to help error messages be more descriptive.
 	**/
 	public static function processResponse( response:String, onResult:Dynamic->Void, errorHandler:RemotingError<Dynamic>->Void, remotingCallString:String ):Void {
 		var ret = null;
@@ -99,8 +99,8 @@ class RemotingUtil {
 	}
 
 	/**
-		Take an error handler function that expects a RemotingError, and return a function that can take any exception.
-		If the exception is not already a RemotingError, it will be wrapped in `RemotingError.UnknownException(e)`.
+	Take an error handler function that expects a RemotingError, and return a function that can take any exception.
+	If the exception is not already a RemotingError, it will be wrapped in `RemotingError.UnknownException(e)`.
 	**/
 	public static function wrapErrorHandler( errorHandler:RemotingError<Dynamic>->Void ):Dynamic->Void {
 		return function( e:Dynamic ) {
@@ -112,7 +112,7 @@ class RemotingUtil {
 	}
 
 	/**
-		A default error handler that traces lots of information.
+	A default error handler that traces lots of information.
 	**/
 	public static function defaultErrorHandler( error:RemotingError<Dynamic> ):Void {
 		switch error {

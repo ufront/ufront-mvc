@@ -1,8 +1,8 @@
 package ufront.remoting;
 
 /**
-	A RemotingError describes different possible reasons that a Haxe/Ufront remoting call may fail.
-	It allows you to provide more fine grained error-recovery or error reporting.
+A RemotingError describes different possible reasons that a Haxe/Ufront remoting call may fail.
+It allows you to provide more fine grained error-recovery or error reporting.
 **/
 enum RemotingError<FailureType> {
 	/** The HttpError gave a response code other than 200. **/

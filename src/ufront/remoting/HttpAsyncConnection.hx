@@ -8,9 +8,10 @@ using StringTools;
 
 
 /**
-	An remoting connection that works over asynchronous HTTP connections, with some ufront specific extensions.
+A remoting connection that works over asynchronous HTTP connections, with some ufront specific extensions.
 
-	This adds an extra HTTP header, "X-Ufront-Remoting=1", so that our Ufront `RemotingHandler` knows it can also send traces, logs, warnings, errors and stack traces with the response.
+This extends `haxe.remoting.HttpAsyncConnection` and behaves similarly in most ways.
+An extra HTTP header is added, "X-Ufront-Remoting=1", so that our Ufront `RemotingHandler` knows it can also send traces, logs, warnings, errors and stack traces with the response.
 **/
 class HttpAsyncConnection extends haxe.remoting.HttpAsyncConnection
 {
