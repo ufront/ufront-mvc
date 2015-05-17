@@ -43,7 +43,7 @@ class ErrorPageHandler implements UFErrorHandler
 
 			// Clear the output, set the response code, and output.
 			ctx.response.clear();
-			ctx.response.status = httpError.code;
+			ctx.response.status = (httpError.code!=null) ? httpError.code : 500;
 			ctx.response.contentType = "text/html";
 			ctx.response.write( renderError(httpError,showStack) );
 			ctx.completion.set( CRequestHandlersComplete );
