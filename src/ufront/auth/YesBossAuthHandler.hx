@@ -1,14 +1,13 @@
 package ufront.auth;
 
-
 /**
-	An AuthHandler which always gives you permission to do anything.
+An AuthHandler which always gives you permission to do anything.
 
-	Useful for command line tools that don't require authentication checks.
+Useful for command line tools that don't require authentication checks.
 
-	*You're the boss*, everyone is afraid to say "no" to you. ;)
+*You're the boss*, everyone is afraid to say "no" to you. ;)
 
-	@author Jason O'Neil
+@author Jason O'Neil
 **/
 class YesBossAuthHandler implements UFAuthHandler<UFAuthUser>
 {
@@ -29,10 +28,6 @@ class YesBossAuthHandler implements UFAuthHandler<UFAuthUser>
 	public function requirePermission( permission:EnumValue ) {}
 
 	public function requirePermissions( permissions:Iterable<EnumValue> ) {}
-
-	public function getUserByID( id:String ):Null<UFAuthUser> return new BossUser();
-
-	public function setCurrentUser( u:Null<UFAuthUser> ) {}
 
 	public function toString() return "YesBossAuthHandler";
 
