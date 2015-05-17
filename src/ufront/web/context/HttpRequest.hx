@@ -9,9 +9,29 @@ using tink.CoreApi;
 using StringTools;
 
 /**
-	A description of the current HttpRequest.
+A description of the current HttpRequest.
 
-	This base class is mostly abstract methods, each platform must implement the key details.
+__Array Parameters__
+
+HTML forms and HTTP requests allow you to have multiple values for the same name.
+`HttpRequest` uses `MultiValueMap` to allow you to access either a single value or a collection of values for a given name easily.
+
+There are some platform differences to take note of:
+
+- For PHP, multiple values in HTTP requests are only supported if the parameter name ends with `[]`.
+- Because of the PHP limitation, other platforms (neko etc) ignore a `[]` at the end of a parameter name.
+- When trying to access the values of an input such as `<select name="people[]">...</select>` you should use `HttpRequest.params["people"]`, not including the trailing `[]` in the parameter name.
+- Complex lists, such as the following, are not supported: `<input name="person[1][firstName]" />`, only simple "[]" is supported: `<input name="person[]">`
+
+__Platform Implementations__
+
+This base class is mostly abstract methods, each platform must implement the key details.
+
+You can use `HttpRequest.create()` to create the appropriate sub-class for most platforms, except NodeJS, where you should use:
+
+```
+new nodejs.ufront.web.HttpRequest(req)
+```
 **/
 class HttpRequest
 {

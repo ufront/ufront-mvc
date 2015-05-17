@@ -2,21 +2,21 @@ package ufront.core;
 
 import tink.CoreApi;
 /**
-	`AcceptEither`, a way to accept either one type or another, without resorting to “Dynamic”, and still have the compiler type-check everything and make sure you correctly handle every situation.
+`AcceptEither`, a way to accept either one type or another, without resorting to “Dynamic”, and still have the compiler type-check everything and make sure you correctly handle every situation.
 
-	The abstract has implicit casts for both A and B, so you can easily receive either value.
-	You can switch on `acceptEither.type` to extract the value depending on the type.
+The abstract has implicit casts for both A and B, so you can easily receive either value.
+You can switch on `acceptEither.type` to extract the value depending on the type.
 
-	Example:
+Example:
 
-	```
-	function divideInHalf( in:AcceptEither<Int,String> ):Float {
-		return switch in {
-			case Left(i): i / 2;
-			case Right(str): Std.parseFloat(str) / 2;
-		}
+```
+function divideInHalf( in:AcceptEither<Int,String> ):Float {
+	return switch in {
+		case Left(i): i / 2;
+		case Right(str): Std.parseFloat(str) / 2;
 	}
-	```
+}
+```
 **/
 abstract AcceptEither<A,B> (Either<A,B>) {
 

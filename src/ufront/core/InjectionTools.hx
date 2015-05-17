@@ -96,16 +96,16 @@ class InjectionTools {
 	}
 
 	/**
-		Get a list of strings describing all the current mappings on this injector and it's parents.
+	Get a list of strings describing all the current mappings on this injector and it's parents.
 
-		This is useful for debugging / logging purposes.
+	This is useful for debugging / logging purposes.
 
-		This is only works when compiled with `-debug`, as minject does not include `toString()` functions for results unless compiled in debug mode.
+	This is only works when compiled with `-debug`, as minject does not include `toString()` functions for results unless compiled in debug mode.
 
-		@param injector The current injector
-		@param arr Optional, used for recursively checking parent injectors, should not be set manually.
-		@param prefix Optional, used for recursively checking parent injectors, should not be set manually.
-		@return An array containing a list of strings describing the current injecctor.
+	@param injector The current injector
+	@param arr Optional, used for recursively checking parent injectors, should not be set manually.
+	@param prefix Optional, used for recursively checking parent injectors, should not be set manually.
+	@return An array containing a list of strings describing the current injector.
 	**/
 	public static function listMappings( injector:Injector, ?arr:Array<String>, ?prefix="" ):Array<String> {
 		#if debug

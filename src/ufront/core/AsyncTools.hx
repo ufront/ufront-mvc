@@ -176,13 +176,13 @@ This class is designed for use with static extension: `using ufront.core.AsyncTo
 class CallbackTools {
 
 	/**
-		Transform a NodeJS style async call with no returned values into a surprise.
+	Transform a NodeJS style async call with no returned values into a surprise.
 
-		This expects an async call which has a callback with a single `error` argument.
+	This expects an async call which has a callback with a single `error` argument.
 
-		If the error argument is not null, it will return a Failure, with a `tink.core.Error` with the error message and the position of the call that failed.
+	If the error argument is not null, it will return a Failure, with a `tink.core.Error` with the error message and the position of the call that failed.
 
-		If the error argument is null, then the call is a `Success( Noise )`.
+	If the error argument is null, then the call is a `Success( Noise )`.
 	**/
 	static public function asVoidSurprise<T>( cb:(Null<String>->Void)->Void, ?pos:PosInfos ):Surprise<Noise,Error> {
 		var t = Future.trigger();
@@ -199,15 +199,15 @@ class CallbackTools {
 	}
 
 	/**
-		Transform a NodeJS style async call with one returned value into a surprise.
+	Transform a NodeJS style async call with one returned value into a surprise.
 
-		This expects an async call which has a callback with a first `error` argument (a string) and a second `data` argument of any type.
+	This expects an async call which has a callback with a first `error` argument (a string) and a second `data` argument of any type.
 
-		If the error argument is not null, it will return a Failure, with a `tink.core.Error` with the error message and the position of the call that failed.
+	If the error argument is not null, it will return a Failure, with a `tink.core.Error` with the error message and the position of the call that failed.
 
-		If the error argument is null, then the call is assumed to be a success, and the value of the data is returned.
+	If the error argument is null, then the call is assumed to be a success, and the value of the data is returned.
 
-		Please note if both the `error` and `data` arguments are null, then a `Success(null)` will be returned.
+	Please note if both the `error` and `data` arguments are null, then a `Success(null)` will be returned.
 	**/
 	static public function asSurprise<T>( cb:(Null<String>->Null<T>->Void)->Void, ?pos:PosInfos ):Surprise<T,Error> {
 		var t = Future.trigger();
@@ -224,15 +224,15 @@ class CallbackTools {
 	}
 
 	/**
-		Transform a NodeJS style async call with 2 returned values into a surprise.
+	Transform a NodeJS style async call with 2 returned values into a surprise.
 
-		This expects an async call which has a callback with a first `error` argument (a string) and second and third `data` arguments of any type.
+	This expects an async call which has a callback with a first `error` argument (a string) and second and third `data` arguments of any type.
 
-		If the error argument is not null, it will return a Failure, with a `tink.core.Error` with the error message and the position of the call that failed.
+	If the error argument is not null, it will return a Failure, with a `tink.core.Error` with the error message and the position of the call that failed.
 
-		If the error argument is null, then the call is assumed to be a success, and a pair containing the data values is returned.
+	If the error argument is null, then the call is assumed to be a success, and a pair containing the data values is returned.
 
-		Please note if both the `error` and `data` arguments are null, then a `Success(Pair(null,null))` will be returned.
+	Please note if both the `error` and `data` arguments are null, then a `Success(Pair(null,null))` will be returned.
 	**/
 	static public function asSurprisePair<T1,T2>( cb:(Null<String>->Null<T1>->Null<T2>->Void)->Void, ?pos:PosInfos ):Surprise<Pair<T1,T2>,Error> {
 		var t = Future.trigger();

@@ -10,11 +10,8 @@ This is particularly useful for representing HTTP `GET` or `POST` parameters.
 
 It behaves similarly to `Map<String,T>`, except it can contain multiple values for a given parameter name, which is suitable for HTML inputs that return multiple values.
 
-Notes:
-
-- For PHP, multiple values in HTTP requests are only supported if the parameter name ends with `[]`.
-- Because of the PHP limitation, other platforms (neko etc) ignore a `[]` at the end of a parameter name.
-- Complex lists, such as the following, are not supported: `<input name="person[1][firstName]" />`, only simple "[]" is supported: `<input name="person[]">`
+Please note, due to the platform considerations mentioned in the `ufront.web.context.HttpRequest` documentation, keys ending in `[]` will be ignored.
+For example, calling `add("children[]", "Jason")` is the same as calling `add("children", "Jason")`.
 **/
 abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> to StringMap<Array<T>> {
 	/** Create a new MultiValueMap **/
@@ -23,41 +20,43 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> to Str
 	// MEMBER METHODS
 
 	/**
-		Return an iterator containing the names of all parameters in this MultiValueMap
+	Return an iterator containing the names of all parameters in this MultiValueMap
 	**/
 	public inline function keys() return this.keys();
 
 	/**
-		Check if a parameter with the given name exists.
+	Check if a parameter with the given name exists.
 
-		If the `name` is null, the result is unspecified.
+	If the `name` is null, the result is unspecified.
 	**/
 	public inline function exists( name:String ) return this.exists( name );
 
 	/**
-		Return an iterator containing the values of each parameter in this MultiValueMap.
-		If multiple parameters have the same name, all values will be included.
+	Return an iterator containing the values of each parameter in this MultiValueMap.
+
+	If multiple parameters have the same name, all values will be included.
 	**/
 	public function iterator() {
 		return allValues().iterator();
 	}
 
 	/**
-		Return an array containing the values of each parameter in this MultiValueMap.
-		If multiple parameters have the same name, all values will be included.
+	Return an array containing the values of each parameter in this MultiValueMap.
+
+	If multiple parameters have the same name, all values will be included.
 	**/
 	public function allValues() {
 		return [ for (arr in this) for (v in arr) v ];
 	}
 
 	/**
-		Get the value for a parameter with this name.
+	Get the value for a parameter with this name.
 
-		If this name has more than one parameter, the final value (in the order they were set) will be used.
-		If there is no parameter with this name, it returns null.
-		If `name` is null, the result is unspecified.
+	If this name has more than one parameter, the final value (in the order they were set) will be used.
+	If there is no parameter with this name, it returns null.
+	If `name` is null, the result is unspecified.
 
-		Array access is provided on this method: `trace ( myMultiValueMap['emailAddress'] )`
+	Array access is provided on this method: `trace ( myMultiValueMap['emailAddress'] )`
 	**/
 	@:arrayAccess public function get( name:String ):Null<T> {
 		if ( this.exists(name) ) {
@@ -68,15 +67,15 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> to Str
 	}
 
 	/**
-		Get an array of values for the given parameter name.
+	Get an array of values for the given parameter name.
 
-		Multiple values will be returned in the order they were set.
-		If there is only a single value, the array will have a length of `1`.
-		If there is no parameter with this name, the array will have a length of `0`.
-		If `name` is null, the result is unspecified.
+	Multiple values will be returned in the order they were set.
+	If there is only a single value, the array will have a length of `1`.
+	If there is no parameter with this name, the array will have a length of `0`.
+	If `name` is null, the result is unspecified.
 
-		If the field name in your HTML input ended with "[]", you do not need to include that here.
-		For example, the values of `<input name='phone[]' /><input name='phone[]' />` could be accessed with `MultiValueMap.get('phone')`.
+	If the field name in your HTML input ended with "[]", you do not include that here.
+	For example, the values of `<input name='phone[]' /><input name='phone[]' />` should be accessed with `MultiValueMap.getAll('phone')`.
 	**/
 	public function getAll( name:String ):Array<T> {
 		if ( this.exists(name) ) return this.get( name );
@@ -84,16 +83,16 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> to Str
 	}
 
 	/**
-		Set a value in our MultiValueMap.
+	Set a value in our MultiValueMap.
 
-		If one or more parameters already existed for this name, they will be replaced.
-		If the value is null, this method will have no effect.
-		If name is null, the result is unspecified.
+	If one or more parameters already existed for this name, they will be replaced.
+	If the value is null, this method will have no effect.
+	If name is null, the result is unspecified.
 
-		If the name ends with "[]", the "[]" will be stripped from the name before setting the value.
-		Names such as this are required for PHP to have multiple values with the same name.
+	If the name ends with "[]", the "[]" will be stripped from the name before setting the value.
+	Names such as this are required for PHP to have multiple values with the same name.
 
-		Array access is provided on this method: `trace ( myMultiValueMap['emailAddress'] = 'jason@ufront.net'; )`
+	Array access is provided on this method: `trace ( myMultiValueMap['emailAddress'] = 'jason@ufront.net'; )`
 	**/
 	@:arrayAccess public function set( name:String, value:T ) {
 		if ( value!=null ) {
@@ -103,14 +102,14 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> to Str
 	}
 
 	/**
-		Add a value to our MultiValueMap.
+	Add a value to our MultiValueMap.
 
-		If the value already exists, this value will be added after it.
-		If the value is null, this will have no effect.
-		If `name` is null, the result is unspecified.
+	If the value already exists, this value will be added after it.
+	If the value is null, this will have no effect.
+	If `name` is null, the result is unspecified.
 
-		If the name ends with "[]", the "[]" will be stripped from the name before setting the value.
-		Names such as this are required for PHP to have multiple values with the same name.
+	If the name ends with "[]", the "[]" will be stripped from the name before setting the value.
+	Names such as this are required for PHP to have multiple values with the same name.
 	**/
 	public function add( name:String, value:T ) {
 		if ( value!=null ) {
@@ -123,18 +122,18 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> to Str
 	}
 
 	/**
-		Remove all values for a given key
+	Remove all values for a given key
 
-		If the `key` is null, the result is unspecified.
+	If the `key` is null, the result is unspecified.
 	**/
 	public inline function remove( key:String ) return this.remove( key );
 
 	/**
-		Create a clone of the current MultiValueMap.
+	Create a clone of the current MultiValueMap.
 
-		The clone is a shallow copy - the values point to the same objects in memory as the original map values.
+	The clone is a shallow copy - the values point to the same objects in memory as the original map values.
 
-		However the array for storing multiple values is a new array, meaning adding a new value on the cloned array will not cause the new value to appear on the original array.
+	However the array for storing multiple values is a new array, meaning adding a new value on the cloned array will not cause the new value to appear on the original array.
 	**/
 	public function clone():MultiValueMap<T> {
 		var newMap = new MultiValueMap();
@@ -147,7 +146,7 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> to Str
 	}
 
 	/**
-		Create a string representation of the current map.
+	Create a string representation of the current map.
 	**/
 	public function toString():String {
 		var sb = new StringBuf();
@@ -179,24 +178,20 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> to Str
 		return cast map;
 	}
 
-	/**
-		Convert a `MultiValueMap` into a `StringMap<T>`
-	**/
+	/** Convert a `MultiValueMap` into a `StringMap<T>` **/
 	@:to public function toStringMap():StringMap<T> {
 		var sm = new StringMap();
 		for ( key in this.keys() ) sm.set( key, get(key) );
 		return sm;
 	}
 
-	/**
-		Convert a `MultiValueMap` into a `Map<String,T>`
-	**/
+	/** Convert a `MultiValueMap` into a `Map<String,T>` **/
 	@:to inline public function toMap():Map<String,T> return toStringMap();
 
 	/**
-		Convert a `StringMap<T>` into a `MultiValueMap`
+	Convert a `StringMap<T>` into a `MultiValueMap`
 
-		If `map` is null, this will return an empty `MultiValueMap`.
+	If `stringMap` is null, this will return an empty `MultiValueMap`.
 	**/
 	@:from public static function fromStringMap<T>( stringMap:StringMap<T> ):MultiValueMap<T> {
 		var qm = new MultiValueMap();
@@ -207,9 +202,9 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> to Str
 	}
 
 	/**
-		Convert a `Map<String,T>` into a `MultiValueMap`
+	Convert a `Map<String,T>` into a `MultiValueMap`
 
-		If `map` is null, this will return an empty `MultiValueMap`
+	If `map` is null, this will return an empty `MultiValueMap`
 	**/
 	@:from inline public static function fromMap<T>( map:Map<String,T> ):MultiValueMap<T> return fromStringMap( map );
 

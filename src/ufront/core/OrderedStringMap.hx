@@ -7,7 +7,7 @@ An ordered map implementation.
 
 Copied from `thx.collections.HashList` in the old `thx` library - it has not yet been included in the Haxe 3 version of thx.
 
-In future we might change this to an abstract or make it compatible with Map<String,T>
+If this is re-implemented in the new `thx` library, we will likely use that and leave a typedef at this location.
 
 @author Franco Ponticelli
 **/
