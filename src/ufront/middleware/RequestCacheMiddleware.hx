@@ -9,18 +9,21 @@ import haxe.rtti.Meta;
 using tink.CoreApi;
 
 /**
-	A very simple request caching middleware.
+A very simple request caching middleware.
 
-	At the end of a request, if a the controller / action had the `@cacheRequest` metadata, the response will be cached.
+At the end of a request, if a the controller / action had the `@cacheRequest` metadata, the response will be cached.
 
-	At the start of a request, if the URI matches an already matched request, the response from the cache will be used and no further processing is required.
+At the start of a request, if the URI matches an already matched request, the response from the cache will be used and no further processing is required.
 
-	@author Jason O'Neil
+Please note this middleware currently does not provide an easy way to expire a cache on certain pages - please be aware of this and handle cache expiration in a way that suits you.
+
+@author Jason O'Neil
 **/
 class RequestCacheMiddleware implements UFMiddleware
 {
 	public static inline var namespace = "ufront.middleware.RequestCache";
-	
+	static var metaName = "cacheRequest";
+
 	public static var contentTypesToCache:Array<String> = [
 		"text/plain",
 		"text/html",
@@ -38,9 +41,9 @@ class RequestCacheMiddleware implements UFMiddleware
 		"application/xml-dtd"
 	];
 	/**
-		The cache system to use.
+	The cache system to use.
 
-		Will be injected by the `ufront.app.HttpApplication` when the middleware is added.
+	Will be injected by the `ufront.app.HttpApplication` when the middleware is added.
 	**/
 	@inject public var cacheConnection:UFCacheConnection;
 
@@ -50,8 +53,10 @@ class RequestCacheMiddleware implements UFMiddleware
 	}
 
 	/**
-		See if a cache exists for this URI.
-		If it does, mirror the cached request and mark the request as complete.
+	See if a cache exists for this URI.
+	If it does, mirror the cached request and mark the request as complete.
+
+	If compiled with `-debug`, it will behave as if there is no cache.
 	**/
 	public function requestIn( ctx:HttpContext ):Surprise<Noise,Error> {
 		#if debug
@@ -92,7 +97,7 @@ class RequestCacheMiddleware implements UFMiddleware
 	}
 
 	/**
-		Check if the request was cacheable.  If it was, attempt to cache it.
+	Check if the request was cacheable.  If it was, attempt to cache it.
 	**/
 	public function responseOut( ctx:HttpContext ):Surprise<Noise,Error> {
 		// If it's a get request and we have data about the controller/action used
@@ -126,13 +131,12 @@ class RequestCacheMiddleware implements UFMiddleware
 	}
 
 	/**
-		Clear all cached pages.
+	Clear all cached pages.
 	**/
 	public function invalidate():Surprise<Noise,CacheError> {
 		return cache.clear();
 	}
 
-	static var metaName = "cacheRequest";
 	static function hasCacheMeta( meta:Dynamic<Array<Dynamic>> ) {
 		return Reflect.hasField(meta,metaName);
 	}
