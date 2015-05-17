@@ -8,15 +8,15 @@ import ufront.core.AsyncTools;
 using thx.Types;
 
 /**
-	Trace module that prints to the server console where it makes sense to do so.
+Trace module that prints to the server console where it makes sense to do so.
 
-	This will use a different method on each platform where it makes sense:
+This will use a different method on each platform where it makes sense:
 
-	- `neko.Web.logMessage()` on Neko.
-	- `error_log()` on PHP.
-	- `console.log()`, `console.info()`, `console.warn()`, and `console.error()` on JS.
+- `neko.Web.logMessage()` on Neko and Tora.
+- `error_log()` on PHP.
+- `console.log()`, `console.info()`, `console.warn()`, and `console.error()` on JS.
 
-	This will flush the messages (traces, logs, warnings and errors) from the current context to the appropriate server log.
+This will flush the messages (traces, logs, warnings and errors) from the current context to the appropriate server log.
 **/
 class ServerConsoleLogger implements UFLogHandler
 {
@@ -45,14 +45,14 @@ class ServerConsoleLogger implements UFLogHandler
 		return SurpriseTools.success();
 	}
 
-	public static function formatMsg( m:Message ):String {
+	static function formatMsg( m:Message ):String {
 		var extras =
 			if ( m.pos!=null && m.pos.customParams!=null ) ", "+m.pos.customParams.join(", ")
 			else "";
 		return '${m.type}: ${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';
 	}
 
-	public static function writeLog( message:String, ?type:MessageType=null ):Void {
+	static function writeLog( message:String, ?type:MessageType=null ):Void {
 		#if neko
 			neko.Web.logMessage( message );
 		#elseif php

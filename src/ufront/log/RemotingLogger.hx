@@ -7,16 +7,15 @@ import ufront.core.AsyncTools;
 using thx.Types;
 
 /**
-	Trace module that adds a "hxt" line to haxe remoting call, that can work with `ufront.api.HttpAsyncConnectionWithTraces`
+Trace module that adds a `hxt` line to haxe remoting call, that can be interpreted by either `ufront.remoting.HttpAsyncConnection` or `ufront.remoting.HttpConnection`.
 
-	When `log` is fired, this will flush the messages (traces, logs, warnings and errors) from the current context to the remoting response.
+When `log` is fired, this will flush the messages (traces, logs, warnings and errors) from the current context to the remoting response.
 
-	If `-debug` is defined, any application level messages (those from "trace" rather than "ufTrace", which may not necessarily be associated with this request) will also be sent to the remoting response.
+If `-debug` is defined, any application level messages (those from "trace" rather than "ufTrace", which may not necessarily be associated with this request) will also be sent to the remoting response.
 
-	If the `HttpResponse` output type is not "application/x-haxe-remoting", the traces will not be displayed.
+If the `HttpRequest` does not contain the `X-Ufront-Remoting` header, or the `HttpResponse.contentType` is not "application/x-haxe-remoting", the traces will not be displayed.
 **/
-class RemotingLogger implements UFLogHandler
-{
+class RemotingLogger implements UFLogHandler {
 	public function new() {}
 
 	public function log( httpContext:HttpContext, appMessages:Array<Message> ) {
@@ -41,7 +40,7 @@ class RemotingLogger implements UFLogHandler
 		return SurpriseTools.success();
 	}
 
-	public static function formatMessage( m:Message ):String {
+	static function formatMessage( m:Message ):String {
 		// Make sure everything is converted to a String before we serialize it.
 		m.msg = ''+m.msg;
 		if ( m.pos.customParams != null) {
