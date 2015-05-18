@@ -5,44 +5,59 @@ import Map;
 using StringTools;
 
 /**
-	A trampoline type for TemplateData, accepting, in order:
+`TemplateData` is a collection of named data to be used in a template.
 
-	- {}
-	- Map<String,Dynamic>
-	- Iterable<TemplateData>
+It is an `abstract`, allowing implicit casts from:
 
-	These methods are provided to access or modify the contents of the template data:
+- {}
+- Map<String,Dynamic>
+- Iterable<TemplateData>
 
-	- `get()`
-	- `set()`
-	- `setObject()`
-	- `setMap()`
+This means you can use it in a versatile way:
 
-	Array access is also provided for getting / setting data.
+```
+var td1:TemplateData1 = { name: "Jason", location: "Perth" };
+var td2:TemplateData2 = [ name=>"O'Neil", age=>27 ];
+var td3:TemplateData3 = [ td1, td2 ]; // Merge the 2 sets.
+```
 
-	No string conversion or escaping happens at this level, that is up to the templating engine.
+These methods are provided to access or modify the contents of the template data:
+
+- `get()`
+- `set()`
+- `setObject()`
+- `setMap()`
+
+Array access is also provided for getting / setting data:
+
+```
+templateData["name"] = "Jason";
+trace(templateData["location"]);
+```
+
+No string conversion or escaping happens at this level, that is up to the templating engine.
 **/
 abstract TemplateData({}) to {} {
 
 	/**
-		Create a template data object.
+	Create a template data object.
 
-		@param obj The object to use.  If null a new TemplateData object with no values will be used.
+	@param obj The object to use.  If null a new TemplateData object with no values will be used.
 	**/
 	public inline function new( ?obj:{} )
 		this = (obj!=null) ? obj : {};
 
 	/**
-		Convert into a `Dynamic<Dynamic>` anonymous object.
-		Please note this is not an implicit `@:to` cast, because the resulting type would match too many false positives.
-		To use this cast call `templateData.toObject()` explicitly.
+	Convert into a `Dynamic<Dynamic>` anonymous object.
+	Please note this is not an implicit `@:to` cast, because the resulting type would match too many false positives.
+	To use this cast call `templateData.toObject()` explicitly.
 	**/
 	public inline function toObject():Dynamic<Dynamic>
 		return this;
 
 	/**
-		Convert into a `Map<String,Dynamic>`.
-		This is also available as an implicit `@:to` cast.
+	Convert into a `Map<String,Dynamic>`.
+	This is also available as an implicit `@:to` cast.
 	**/
 	@:to public function toMap():Map<String,Dynamic> {
 		var ret = new Map<String,Dynamic>();
@@ -51,37 +66,38 @@ abstract TemplateData({}) to {} {
 	}
 
 	/**
-		Convert into a `StringMap<Dynamic>`.
-		This is also available as an implicit `@:to` cast.
+	Convert into a `StringMap<Dynamic>`.
+	This is also available as an implicit `@:to` cast.
 	**/
 	@:to public inline function toStringMap():StringMap<Dynamic> {
 		return toMap();
 	}
 
 	/**
-		Get a value from the template data.
-		This is also used for array access: `templateData['name']` is the same as `templateData.get('name')`.
+	Get a value from the template data.
 
-		@param key The name of the value to retrieve.
-		@return The value, or null if it was not available.
+	This is also used for array access: `templateData['name']` is the same as `templateData.get('name')`.
+
+	@param key The name of the value to retrieve.
+	@return The value, or null if it was not available.
 	**/
 	@:arrayAccess public inline function get( key:String ):Null<Dynamic> return Reflect.field( this, key );
-	
+
 	/**
-		See if a specific field exists in the template data.
+	See if a specific field exists in the template data.
 	**/
 	public function exists( key:String ):Bool {
 		return Reflect.hasField( this, key );
 	}
 
 	/**
-		Set a value on the template data.
+	Set a value on the template data.
 
-		Please note array setters are also available, but they use the private `array_set` method which returns the value, rather than the TemplateData object.
+	Please note array setters are also available, but they use the private `array_set` method which returns the value, rather than the TemplateData object.
 
-		@param key The name of the key to set.
-		@param val The value to set.
-		@return The same TemplateData so that method chaining is enabled.
+	@param key The name of the key to set.
+	@param val The value to set.
+	@return The same TemplateData so that method chaining is enabled.
 	**/
 	public function set( key:String, val:Dynamic ):TemplateData {
 		Reflect.setField( this, key, val );
@@ -95,12 +111,12 @@ abstract TemplateData({}) to {} {
 	}
 
 	/**
-		Set many values from a `Map<String,Dynamic>`
+	Set many values from a `Map<String,Dynamic>`
 
-		`templateData.set(key,map[key])` will be called for each pair in the map.
+	`templateData.set(key,map[key])` will be called for each pair in the map.
 
-		@param map The map data to set.
-		@return The same TemplateData so that method chaining is enabled.
+	@param map The map data to set.
+	@return The same TemplateData so that method chaining is enabled.
 	**/
 	public function setMap<T>( map:Map<String,T> ):TemplateData {
 		for ( k in map.keys() ) {
@@ -110,14 +126,14 @@ abstract TemplateData({}) to {} {
 	}
 
 	/**
-		Set many values from a `Map<String,Dynamic>`
+	Set many values from a `Map<String,Dynamic>`
 
-		`templateData.set(fieldName,fieldValue)` will be called for each field on the object.
+	`templateData.set(fieldName,fieldValue)` will be called for each field on the object.
 
-		Reflect is used with `fields` and `field` to read the value of every field.
+	Reflect is used with `fields` and `field` to read the value of every field.
 
-		@param map The data object to set.
-		@return The same TemplateData so that method chaining is enabled.
+	@param map The data object to set.
+	@return The same TemplateData so that method chaining is enabled.
 	**/
 	public function setObject( d:{} ):TemplateData {
 		for ( k in Reflect.fields(d) ) set( k, Reflect.field(d,k) );
@@ -127,7 +143,7 @@ abstract TemplateData({}) to {} {
 	/** from casts **/
 
 	/**
-		Automatically cast from a `Map<String,Dynamic>` into a TemplateData.
+	Automatically cast from a `Map<String,Dynamic>` into a TemplateData.
 	**/
 	@:from public static function fromMap<T>( d:Map<String,T> ):TemplateData {
 		var m:TemplateData = new TemplateData( {} );
@@ -136,20 +152,23 @@ abstract TemplateData({}) to {} {
 	}
 
 	/**
-		Automatically cast from a `StringMap<Dynamic>` into a TemplateData.
+	Automatically cast from a `StringMap<Dynamic>` into a TemplateData.
 	**/
 	@:from public static inline function fromStringMap<T>( d:StringMap<T> ):TemplateData {
 		return fromMap( d );
 	}
 
 	/**
-		Automatically cast from a `Iterable<TemplateData>` into a combined `TemplateData.
-		Values will be added in order, and later values with the same name as an earlier value will override the earlier value.
-		If the iterable is empty, the resulting TemplateData will contain no properties.
-		If an individual item is a StringMap, it will be added with `setMap`, otherwise it will be added with `setObject`.
+	Automatically cast from a `Iterable<TemplateData>` into a combined `TemplateData.
 
-		@param dataSets The collection of TemplateData objects to iterate over.
-		@return The same TemplateData so that method chaining is enabled.
+	Values will be added in order, and later values with the same name as an earlier value will override the earlier value.
+
+	If the iterable is empty, the resulting TemplateData will contain no properties.
+
+	If an individual item is a StringMap, it will be added with `setMap`, otherwise it will be added with `setObject`.
+
+	@param dataSets The collection of TemplateData objects to iterate over.
+	@return The same TemplateData so that method chaining is enabled.
 	**/
 	@:from public static function fromMany( dataSets:Iterable<TemplateData> ):TemplateData {
 		var combined:TemplateData = new TemplateData( {} );
@@ -167,9 +186,11 @@ abstract TemplateData({}) to {} {
 	}
 
 	/**
-		Automatically cast from an object to a TemplateData.
-		This is a no-op - the object will be used as is.
-		This cast comes last in the code so it should be used only if none of the other casts were utilised.
+	Automatically cast from an object to a TemplateData.
+
+	This is a no-op - the object will be used as is.
+
+	This cast comes last in the code so it should be used only if none of the other casts were utilised.
 	**/
 	@:from public static inline function fromObject( d:{} ):TemplateData {
 		return new TemplateData( d );

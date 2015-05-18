@@ -10,27 +10,24 @@ using tink.CoreApi;
 using Lambda;
 
 /**
-	The base class for view engines.
+A `UFViewEngine` is responsible for providing a ready-to-execute `UFTemplate` for a given template path.
 
-	Each view engine is responsible for getting access to the raw templates, and, using a pluggable system, preparing templates so they are ready to execute.
+This is a base class, and does not actually fetch any templates.
+Please use a sub-class, such as `FileViewEngine` or `HttpViewEngine` instead.
 
-	In detail:
+Details:
 
-	- adding support for different templating engines.
-	  The UFViewEngine never parses or executes the template, we leave this to the templating engine.
-	  But we can plug different templating engines in with `addTemplatingEngine()`.
+- Each sub-class provides a different implementation of `this.getTemplateString()`.
+  For example, fetching it from the file system (as in `FileViewEngine`) or over the network (as in `HttpViewEngine`).
+- `UFViewEngine` can optionally cache the `UFTemplate` objects, keeping them ready to execute quickly for future requests.
+- `this.addTemplatingEngine()` can be used to add a list of templating engines that you support.
+  If you are using a `UfrontApplication`, the templating engines defined in your `UfrontConfiguration.templatingEngines` will be used.
+  By default, this means all engines available in `TemplatingEngines.all`.
+- When you call `this.getTemplate()`, you specify the path of the template you want, and optionally, the templating engine.
+  The path can include the file extension of the template, but it will also work without it - using the extensions available in each templating engine instead.
+  The full process for finding a template based on the path and the templating engines is described in the documentation for `this.getTemplate()`.
 
-	- given a view path, finding the correct template, feeding it to the correct templating engine, and returning a ready to execute `ufront.view.UFTemplate`
-
-	- any caching, such as keeping the templates loaded, parsed and ready to execute between multiple requests etc.
-
-	The `UFViewEngine` base class does not provide the `getTemplateString()` implementation.
-	Each View Engine implementation must provide this.
-	Example implementations may be `ufront.view.FileViewEngine` (load from files on hard drive), "DatabaseViewEngine" (load templates from DB) or "MacroViewEngine" (import views at macro time so we have them ready to go in our code.
-	This `UFViewEngine` base class does provide a `getTemplate()` which will wrap each implementations `getTemplateString()` method and provide appropriate searching, caching and instantiating of templates.
-	See the documentation on the `getTemplate` method for more details.
-
-	TODO: refactor to use an injected UFCache, rather than a map.
+@TODO: refactor to use an injected UFCache, rather than a map.
 **/
 class UFViewEngine {
 
@@ -50,40 +47,35 @@ class UFViewEngine {
 	}
 
 	/**
-		Fetch a template for the given path.
+	Fetch a template for the given path.
 
-		Behaviour:
+	Behaviour:
 
-		- **If caching is enabled, and a cache for this request exists, use it**
+	- **If caching is enabled, and a cache for this request exists, return the cached `UFTemplate` immediately.**
 
-		- **If a templating engine is specified, and the path has an extension:**
-		  The exact path will used, with the given templating engine, regardless of whether the extensions match or not.
+	- **If a templating engine is specified, and the path has an extension:**
+	  The exact path will used, with the given templating engine, regardless of whether the extensions match or not.
 
-		- **If a templating engine is specified, and the path does not have an extension:**
-		  For each extension that this templating engine supports, look for an available template.
-		  The first match will be used.
+	- **If a templating engine is specified, and the path does not have an extension:**
+	  For each extension that this templating engine supports, look for an available template.
+	  The first match will be used.
 
-		- **If no templating engine is specified, and the path has an extension:**
-		  Go through the available templating engines, in the order they were added.
-		  If the engine supports our extension, check for a matching template.
-		  The first match will be used.
+	- **If no templating engine is specified, and the path has an extension:**
+	  Go through the available templating engines, in the order they were added.
+	  If the engine supports our extension, check for a matching template.
+	  The first match will be used.
 
-		- **If no templating engine is specified, and the path does not have an extension:**
-		  Go through the available templating engines, in the order they were added.
-		  For each extension that the engine supports, check for a matching template.
-		  The first match will be used.
+	- **If no templating engine is specified, and the path does not have an extension:**
+	  Go through the available templating engines, in the order they were added.
+	  For each extension that the engine supports, check for a matching template.
+	  The first match will be used.
 
-		In each case, if no match is found, this will fail with the appropriate error.
+	- In each case, if no match is found, this will fail with the appropriate error.
+	- Once the template is found, the appropriate engine will be used to generate a `UFTemplate`, ready to execute.
+	- If there is an error parsing or initializing a template, this will return a failure.
+	- If a template was initialized successfully, and caching is being used, it will be added to the cache.
 
-		Once the template is found, the appropriate engine will be used to generate a UFTemplate (ready to execute) from that template.
-
-		If there is an error parsing or initializing a template, this will return a failure.
-
-		If a template was initialized successfully, it will be added to the cache.
-
-		Please note, `ufront.view.UFViewEngine` is an abstract implementation that never checks for templates, it always fails.  Please use the appropriate implementation class if you want your templates to work.
-
-		This operation is asynchronous (a `tink.core.Surprise`), and should return a Failure if the view is not found or could not be parsed.
+	This operation is asynchronous (returing a `Surprise`), and should result in a `Failure` if the view is not found or could not be parsed.
 	**/
 	public function getTemplate( path:String, ?templatingEngine:TemplatingEngine ):Surprise<UFTemplate,Error> {
 
@@ -182,7 +174,7 @@ class UFViewEngine {
 		// Once the tplStrReady is loaded, transform a successfully loaded template string
 		// into a ready to execute template using the factory.  If there's an error parsing
 		// the template, return the failure.
-		// Return this mapped future
+		// Return this future
 		return
 			tplStrReady.asFuture() >>
 			function (tplStr) {
@@ -198,34 +190,35 @@ class UFViewEngine {
 	}
 
 	/**
-		Abstract method to fetch the template string for an exact path.
+	Fetch the template string for an exact path.
 
-		This must be overridden by a subclass to be useful, in `UFViewEngine` it will always return a Failure.
+	Each sub-class must provide it's own implementation.
+	For example, `HttpViewEngine` will fetch the template string from the network using `haxe.Http`.
+	Alternatively, `FileViewEngine` will fetch the template string from the filesystem using `sys.io.File`.
+	The default implementation in `UFViewEngine.getTemplateString()` will always return a failure - you must use a subclass.
 
-		The return type is:
+	The return type is a `Surprise<Option<String>,Error>`.
 
-		```
-		- A Future (so async platforms are supported)
-		- An Outcome (success or failure)
-			- Failure means an error occured while checking if the file exists, or while trying to read it.
-			- Success returns an Option, letting you know:
-				- Some - the template exists, and here are it's contents as a String, or
-				- None - no file existed at that path..
-		```
+	- This allows a `UFViewEngine` implementation to work asynchronously.
+	- A `Success(Some(s:String))` means that a template was found, and the given template string is supplied.
+	- A `Success(None)` means that no template with the specified path was found.
+	- A `Failure(e:Error)` will describe an error that occured (for example, if network connectivity failed).
 	**/
 	public function getTemplateString( path:String ):Surprise<Option<String>,Error> {
 		return Future.sync( Failure(new Error('Attempting to fetch template $path with UFViewEngine.  This is an abstract class, you must use one of the ViewEngine implementations.')) );
 	}
 
 	/**
-		Add support for a templating engine.
+	Add support for a templating engine.
 
-		A supplied `ufront.view.TemplatingEngine` which given a template string, will prepare a ready-to-execute UFTemplate.
-		See `ufront.view.TemplatingEngines` for a list of templating engines that are available and ready to use.
+	A supplied `TemplatingEngine` will transform a template `String` into a ready-to-execute `UFTemplate`.
+	See `TemplatingEngines` for a list of templating engines that are available and ready to use.
 
-		If the engine specifies one or more file extensions, any views found with those extension will use this templating engine.
-		If multiple templating engines use the same extension, the first templating engine added will be the used to process the template.
-		If no extension is specified for this engine, then the engine will be used for any view regardless of the extension.
+	Notes:
+
+	- If the engine specifies one or more file extensions, any views found with those extension will use this templating engine.
+	- If multiple templating engines use the same extension, the first templating engine added will be the used to process the template.
+	- If no extension is specified for this engine, then the engine will be used for any view regardless of the extension.
 	**/
 	public inline function addTemplatingEngine( engine:TemplatingEngine ) {
 		engines.push( engine );

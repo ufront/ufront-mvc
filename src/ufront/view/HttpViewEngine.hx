@@ -6,7 +6,9 @@ using tink.CoreApi;
 using haxe.io.Path;
 using StringTools;
 /**
-	A UFViewEngine that loads views over HTTP.
+A `UFViewEngine` that loads views over HTTP.
+
+This is especially useful when running applications client-side, as it allows you to share a view directory with the server and access it via HTTP rather than the filesystem.
 **/
 class HttpViewEngine extends UFViewEngine {
 
@@ -14,16 +16,23 @@ class HttpViewEngine extends UFViewEngine {
 		super();
 	}
 
-	/** The path to your views as an absolute HTTP URI. eg `http://ufront.net/views/` **/
+	/**
+	The path to your views as an absolute HTTP URI.
+	eg `http://ufront.net/views/`
+
+	This value should be provided by dependency injection (a String named `viewPath`).
+	**/
 	@inject("viewPath") public var viewPath:String;
 
 	/**
-		Attempt to load the view via a HTTP call.
+	Attempt to load the view via a HTTP call.
 
-		If a valid result is returned (status 200)
+	The `relativeViewPath` is relative to the URL specified in `viewPath`.
+	A leading "/" will be ignored.
 
-		@param relativeViewPath The relative path to the view. Please note this path is not checked for "../" or similar path hacks, so be wary of using user inputted data here. A leading "/" will be ignored.
-		@return A future containing details on if the template existed at the given path or not, or a failure if there was an unexpected error.
+	- If a status code of `200` is returned, then the content of the HTTP response is used as the template.
+	- If a status code of 404 is returned, then a `Success(None)` is triggered - meaning no error was encountered, but the template did not exist.
+	- If a different status code is returned, it is considered an error and a `Failure(err)` is returned.
 	**/
 	override public function getTemplateString( relativeViewPath:String ):Surprise<Option<String>,Error> {
 		if ( relativeViewPath.startsWith("/") )
