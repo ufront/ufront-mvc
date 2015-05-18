@@ -1,4 +1,4 @@
-package ufront.middleware;
+package ufront.web.session;
 
 import ufront.web.context.HttpContext;
 import ufront.app.UFMiddleware;

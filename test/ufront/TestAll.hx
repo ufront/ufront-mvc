@@ -11,7 +11,6 @@ class TestAll
 		ufront.handler.TestAll.addTests( runner );
 		ufront.log.TestAll.addTests( runner );
 		ufront.web.TestAll.addTests( runner );
-		ufront.middleware.TestAll.addTests( runner );
 		ufront.view.TestAll.addTests( runner );
 		ufront.api.TestAll.addTests( runner );
 		ufront.cache.TestAll.addTests( runner );

@@ -1,10 +1,10 @@
-package ufront.middleware;
+package ufront.web.session;
 
 import utest.Assert;
-import ufront.middleware.RequestCacheMiddleware;
+import ufront.web.session.InlineSessionMiddleware;
 
-class RequestCacheMiddlewareTest {
-	var instance:RequestCacheMiddleware;
+class InlineSessionMiddlewareTest {
+	var instance:InlineSessionMiddleware;
 
 	public function new() {}
 

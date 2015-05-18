@@ -9,5 +9,6 @@ class TestAll
 		runner.addCase( new VoidSessionTest() );
 		runner.addCase( new CacheSessionTest() );
 		runner.addCase( new FileSessionTest() );
+		runner.addCase( new InlineSessionMiddlewareTest() );
 	}
 }

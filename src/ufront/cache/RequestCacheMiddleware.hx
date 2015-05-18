@@ -1,4 +1,4 @@
-package ufront.middleware;
+package ufront.cache;
 
 import ufront.web.context.HttpContext;
 import ufront.web.context.HttpResponse;

@@ -7,5 +7,6 @@ class TestAll
 {
 	public static function addTests( runner:Runner ) {
 		runner.addCase( new MemoryCacheTest() );
+		runner.addCase( new RequestCacheMiddlewareTest() );
 	}
 }
