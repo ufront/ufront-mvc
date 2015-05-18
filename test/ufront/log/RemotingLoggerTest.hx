@@ -33,6 +33,7 @@ class RemotingLoggerTest {
 		customParams: [1,2],
 	}];
 
+	@:access(ufront.log.RemotingLogger)
 	public function testFormatMessage():Void {
 		var msg1 = { msg:null, type:Trace, pos:fakePosInfos[0] };
 		var msg2 = { msg:"Hello", type:Log, pos:fakePosInfos[1] };

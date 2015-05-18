@@ -29,7 +29,7 @@ Caveats:
 
 - Some platforms do not keep static variables initialised between requests. For example PHP will never keep cached items between requests.
 - Neko must be using `neko.Web.cacheModule()` to keep the cache alive between requests.
-- This does not use the memory sharing tools in `mod_tora`. As such a different cache may be kept for each thread handling requests.
+- This does not currently use the memory sharing tools in `mod_tora`. As such a different cache may be kept for each thread handling requests.
 - This may lead to high memory usage if the data is not cleared occasionally. Use with care.
 **/
 class MemoryCache implements UFCache implements UFCacheSync {

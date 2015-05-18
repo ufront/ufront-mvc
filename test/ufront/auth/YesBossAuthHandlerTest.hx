@@ -31,7 +31,6 @@ class YesBossAuthHandlerTest
 		Assert.isTrue( yb.hasPermissions( [ HaveCake, EatCake ] ) );
 		yb.requirePermission( EatCake );
 		yb.requirePermissions( [ HaveCake, EatCake ] );
-		Assert.equals( "The Boss", yb.getUserByID("anything").userID );
 		Assert.equals( "The Boss", yb.currentUser.userID );
 	}
 

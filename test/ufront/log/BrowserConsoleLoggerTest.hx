@@ -31,6 +31,7 @@ class BrowserConsoleLoggerTest {
 		customParams: ["so","good"],
 	}];
 
+	@:access(ufront.log.BrowserConsoleLogger)
 	public function testFormatMessage():Void {
 		var msg1 = { msg:"Haxe", type:Trace, pos:fakePosInfos[0] };
 		var msg2 = { msg:"Has", type:Log, pos:fakePosInfos[0] };

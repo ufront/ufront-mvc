@@ -63,7 +63,6 @@ class NobodyAuthHandlerTest
 		catch (e:AuthError) Assert.same( e, NoPermission(HaveCake) )
 		catch (e:Dynamic) Assert.fail( 'Wrong error type' );
 
-		Assert.equals( null, nobodyAuth.getUserByID("anything") );
 		Assert.equals( null, nobodyAuth.currentUser );
 	}
 }

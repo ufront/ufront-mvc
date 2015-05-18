@@ -5,12 +5,9 @@ package ufront.web;
 
 	This class is fairly outdated, so usefulness may vary.  For example, iOS is listed as a known OS, but Android isn't.
 
-	You can access a pre-filled version for the current request using:
+	You can access a pre-filled version for the current request using `HttpRequest.userAgent`.
 
-	`myHttpContext.request.userAgent`
-
-	TODO: update the usefulness
-	TODO: document further
+	TODO: Update this for modern user agents, and document it further.
 
 	@author Franco Ponticelli
 **/

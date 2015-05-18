@@ -571,9 +571,6 @@ class ApiMacros {
 			case TInst(t, _):
 				var cls = t.get();
 
-				// TODO: consider checking for an existing, manually defined version of this class.
-				// `cls.meta.has("callbackApi")` would tell us if one had been built already, but that will depend on build order, so we may end up building it twice anyway.
-
 				var suffix = "Proxy";
 				var fullName = t.toString()+suffix;
 				var className = cls.name+suffix;

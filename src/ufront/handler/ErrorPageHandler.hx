@@ -43,7 +43,7 @@ class ErrorPageHandler implements UFErrorHandler
 
 			// Clear the output, set the response code, and output.
 			ctx.response.clear();
-			ctx.response.status = (httpError.code!=null) ? httpError.code : 500;
+			ctx.response.status = httpError.code;
 			ctx.response.contentType = "text/html";
 			ctx.response.write( renderError(httpError,showStack) );
 			ctx.completion.set( CRequestHandlersComplete );
@@ -137,7 +137,7 @@ class ErrorPageHandler implements UFErrorHandler
 	}
 
 	/**
-		Turns an `Array<StackItem>` into an `Array<String>`, ready to print.
+	Turns an `Array<StackItem>` into an `Array<String>`, ready to print.
 	**/
 	@:access( haxe.CallStack )
 	public static function errorStackItems( stack:Array<StackItem> ):Array<String> {
