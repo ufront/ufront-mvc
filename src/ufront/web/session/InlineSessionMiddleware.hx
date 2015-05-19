@@ -32,6 +32,7 @@ class InlineSessionMiddleware implements UFMiddleware
 {
 	/**
 	Should we start a session for every request, or only if one already exists?
+
 	If false, one will only be started if init() is called specifically on one request.
 	(For example, when they log in).
 	From there onwards it will initialize with each request.

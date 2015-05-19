@@ -10,39 +10,50 @@ using haxe.io.Path;
 using ufront.core.AsyncTools;
 
 /**
-	A session implementation using an injected `UFCacheConnection`.
+A session implementation that works with any `UFCache` implementation.
 
-	A `UFCache`
-	Each session has a unique ID, which is randomly generated and used as the file.
+A `UFCache` can store data in memory, a database, a cache mechanism such as Redis, flat-files, or anything.
+So `CacheSession` is a versatile way for you to have a session implementation with any cache engine.
 
-	The contents of the file are a serialized StringMap representing the current session.  The serialization is done using `haxe.Serializer` and `haxe.Unserializer`.
+A `UFCacheConnection` is injected, and we use the `this.savePath` variable as the cache namespace.
+The session ID is used as the cache item ID.
 
-	The session ID is sent to the client as a Cookie.  When reading the SessionID, Cookies are checked first, followed by GET/POST parameters.
+The contents of the session are saved to the cache, and restored from the cache, for each request.
+This will change depending on the `UFCache` implementation used.
+For example, `MemoryCache` will merely store the session data in a `Map` in memory, and access it directly.
+A `DBCache` on the other hand will save the session data to a database table using `SData` type, and so the data must serialize easily.
 
-	When searching the parameters or cookies for the Session ID, the name to search for is defined by the `sessionName` property.
+The session ID is sent to the client as a `HttpCookie`.
+When reading the session ID, `HttpRequest.cookies` is checked first, followed by `HttpRequest.params`.
+
+When searching the parameters or cookies for the Session ID, the name to search for is defined by the `this.sessionName` property.
 **/
 class CacheSession implements UFHttpSession
 {
 	// Statics
 
 	/**
-		The default session name to use if none is provided by the injector.
-		The default value is "UfrontSessionID".
-		You can change this static variable to set a new default.
+	The default session name to use if none is provided by the injector.
+
+	The default value is `UfrontSessionID`.
+	You can change this static variable to set a new default.
 	**/
 	public static var defaultSessionName:String = "UfrontSessionID";
 
 	/**
-		The default savePath to use if none is provided by theinjector.
-		This should be relative to the `HttpContext.contentDirectory`, or absolute.
-		The default value is "sessions/".  You can change this static value to set a new default.
+	The default savePath to use if none is provided by the injector.
+
+	This name will be used as the namespace for the `UFCacheConnection`.
+	The default value is "sessions".
+	You can change this static value to set a new default.
 	**/
 	public static var defaultSavePath:String = "sessions";
 
 	/**
-		The default expiry value.
-		The default value is 0 (expire when window is closed).
-		You can change the default by changing this static variable.
+	The default expiry value.
+
+	The default value is 0 (meaning the session will expire when the window is closed).
+	You can change the default by changing this static variable.
 	**/
 	public static var defaultExpiry:Int = 0;
 
@@ -67,8 +78,9 @@ class CacheSession implements UFHttpSession
 
 	/**
 	The current session ID.
+
 	If not set, it will be read from the cookies, or failing that, the request parameters.
-	This cannot be set manually, please see `regenerateID` for a way to change the session ID.
+	This cannot be set manually, please see `this.regenerateID()` for a way to change the session ID.
 	**/
 	public var id(get,never):Null<String>;
 
@@ -89,18 +101,18 @@ class CacheSession implements UFHttpSession
 	/**
 	The name of the cookie (or request parameter) that holds the session ID.
 
-	This is set by injecting a String named "sessionName", otherwise the default `defaultSessionName` value is used.
+	This is set by injecting a `String` named `sessionName`, otherwise the default `CacheSession.defaultSessionName` value is used.
 	**/
 	public var sessionName(default,null):String;
 
 	/**
-	The lifetime/expiry of the cookie, in seconds.
+	The lifetime / expiry of the cookie, in seconds.
 
 	- A positive value sets the cookie to expire that many seconds from the current time.
 	- A value of 0 represents expiry when the browser window is closed.
 	- A negative value expires the cookie immediately.
 
-	This is set by injecting an `Int` named "sessionExpiry", otherwise the default `defaultExpiry` value is used.
+	This is set by injecting an `Int` named `sessionExpiry`, otherwise the default `CacheSession.defaultExpiry` value is used.
 	**/
 	public var expiry(default,null):Null<Int>;
 
@@ -109,7 +121,7 @@ class CacheSession implements UFHttpSession
 
 	This is used with `UFCacheConnection.getNamespace()` to retrieve the appropriate cache.
 
-	This is set by injecting a String named "sessionSavePath", otherwise the default `defaultSavePath` value is used.
+	This is set by injecting a `String` named `sessionSavePath`, otherwise the default `CacheSession.defaultSavePath` value is used.
 	**/
 	public var savePath(default,null):String;
 
@@ -119,7 +131,7 @@ class CacheSession implements UFHttpSession
 	Construct a new session object.
 
 	This does not initialize the cache or read any data.
-	Data is read during `init()` and written during `commit()`, both of which require asynchronous handling.
+	Data is read during `this.init()` and written during `this.commit()`, both of which require asynchronous handling.
 
 	A new session object should be created for each request, and it will then associate itself with the correct session entry for the given client.
 
@@ -137,12 +149,13 @@ class CacheSession implements UFHttpSession
 	}
 
 	/**
-	Use the current injector to check for configuration for this session: `sessionName`, `expiry` and `savePath`.
+	Use the current injector to check for configuration for this session: `this.sessionName`, `this.expiry` and `this.savePath`.
+
 	If no values are available in the injector, the defaults will be used.
 	This also initialises a cache from our `this.cacheConnection` using `this.savePath` as the namespace.
-	This will be called automatically after dependency injection has finished.
+	This will be called automatically as part of dependency injection.
 	**/
-	@post public function injectConfig() {
+	@inject public function injectConfig( context:HttpContext ) {
 		// Manually check for these injections, because if they're not provided we have defaults - we don't want minject to throw an error.
 		this.sessionName =
 			if ( context.injector.hasRule(String,"sessionName") )
@@ -160,22 +173,25 @@ class CacheSession implements UFHttpSession
 	}
 
 	/**
-	Set the number of seconds the session should last
+	Set the number of seconds the session should last.
 
-	Note in this implementation only the cookie expiry is affected - the user could manually override this or send the session variable in the request parameters, and the session would still work.
+	Note in this implementation only the cookie expiry is affected.
+	The session is not currently deleted / expired from the cache.
+	The user could manually override this or send the session variable in the request parameters, and the session would still work.
 	**/
 	public function setExpiry( e:Int ) {
 		expiry = e;
 	}
 
 	/**
-		Initiate the session.
+	Initiate the session.
 
-		This will check for an existing session ID.  If one exists, it will read and fetch the session data from that session's cache item.
+	This will check for an existing session ID.
+	If one exists, it will read and fetch the session data from that session's cache item.
 
-		If a session does not exist, one will be created, including generating and reserving a new session ID.
+	If a session does not exist, one will be created, including generating and reserving a new session ID.
 
-		This must be called before any other operations which require access to the current session.
+	This must be called before any other operations which require access to the current session.
 	**/
 	public function init():Surprise<Noise,Error> {
 		function startFreshSession() {
@@ -219,9 +235,9 @@ class CacheSession implements UFHttpSession
 	}
 
 	/**
-		Commit if required.
+	Commit if required.
 
-		Returns an Outcome, which is a Failure if the commit failed, usually because of not having permission to write to disk.
+	Returns an Outcome, which is a Failure if the commit failed, usually because of not having permission to write to disk.
 	**/
 	public function commit():Surprise<Noise,Error> {
 
@@ -301,7 +317,8 @@ class CacheSession implements UFHttpSession
 
 	/**
 	Retrieve an item from the session data.
-	This will throw an error if `init()` has not already been called.
+
+	This will throw an error if `this.init()` has not already been called.
 	**/
 	public inline function get( name:String ):Dynamic {
 		checkStarted();
@@ -310,8 +327,10 @@ class CacheSession implements UFHttpSession
 
 	/**
 	Set an item in the session data.
-	Note this will not commit the value to our cache until `commit()` is called.
-	This will throw an error if `init()` has not already been called.
+
+	Note this will not commit the value to our cache until `this.commit()` is called.
+
+	This will throw an error if `this.init()` has not already been called.
 	**/
 	public inline function set( name:String, value:Dynamic ):Void {
 		checkStarted();
@@ -323,7 +342,8 @@ class CacheSession implements UFHttpSession
 
 	/**
 	Check if a session has the specified item.
-	This will throw an error if `init()` has not already been called.
+
+	This will throw an error if `this.init()` has not already been called.
 	**/
 	public inline function exists( name:String ):Bool {
 		checkStarted();
@@ -332,7 +352,8 @@ class CacheSession implements UFHttpSession
 
 	/**
 	Remove an item from the session.
-	This will throw an error if `init()` has not already been called.
+
+	This will throw an error if `this.init()` has not already been called.
 	**/
 	public inline function remove( name:String ):Void {
 		checkStarted();
@@ -360,7 +381,7 @@ class CacheSession implements UFHttpSession
 	}
 
 	/**
-	Trigger a regeneration of the session ID when `commit` is called.
+	Trigger a regeneration of the session ID when `this.commit` is called.
 	**/
 	public function regenerateID():Void {
 		regenerateFlag = true;
@@ -374,7 +395,7 @@ class CacheSession implements UFHttpSession
 	}
 
 	/**
-	Return the current ID, either one that has been set during `init()`, or one found in either `HttpRequest.cookies` or `HttpRequest.params`.
+	Return the current ID, either one that has been set during `this.init()`, or one found in either `HttpRequest.cookies` or `HttpRequest.params`.
 	**/
 	function get_id():String {
 		if ( sessionID==null ) sessionID = context.request.cookies[sessionName];
@@ -385,7 +406,7 @@ class CacheSession implements UFHttpSession
 	/**
 	Close the session.
 
-	The sessionData and sessionID will be set to null, and the session will be flagged for deletion (when `commit` is called)
+	The sessionData and sessionID will be set to null, and the session will be flagged for deletion (when `this.commit` is called)
 	**/
 	public function close():Void {
 		checkStarted();

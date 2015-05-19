@@ -18,40 +18,47 @@ using StringTools;
 using haxe.io.Path;
 
 /**
-	A session implementation using flat files.
+A session implementation using flat files.
 
-	Files are saved to the folder `savePath`, with one file per session.  The folder must be writeable by the web server.
+Files are saved to the folder `savePath`, with one file per session.
+The folder must be writeable by the web server.
 
-	Each session has a unique ID, which is randomly generated and used as the file.
+Each session has a unique ID, which is randomly generated and used as the file name.
 
-	The contents of the file are a serialized StringMap representing the current session.  The serialization is done using `haxe.Serializer` and `haxe.Unserializer`.
+The contents of the file are a serialized `StringMap` representing the current session.
+The serialization is done using `haxe.Serializer` and `haxe.Unserializer`.
 
-	The session ID is sent to the client as a Cookie.  When reading the SessionID, Cookies are checked first, followed by GET/POST parameters.
+The session ID is sent to the client as a `HttpCookie`.
+When reading the session ID, `HttpRequest.cookies` is checked first, followed by `HttpRequest.params`.
 
-	When searching the parameters or cookies for the Session ID, the name to search for is defined by the `sessionName` property.
+When searching the parameters or cookies for the session ID, the name to search for is defined by the `this.sessionName` property.
 **/
 class FileSession implements UFHttpSession
 {
 	// Statics
 
 	/**
-		The default session name to use if none is provided.
-		The default value is "UfrontSessionID".
-		You can change this static variable to set a new default.
+	The default session name to use if none is provided.
+
+	The default value is `UfrontSessionID`.
+	You can change this static variable to set a new default.
 	**/
 	public static var defaultSessionName:String = "UfrontSessionID";
 
 	/**
-		The default savePath.
-		This should be relative to the `HttpContext.contentDirectory`, or absolute.
-		The default value is "sessions/".  You can change this static value to set a new default.
+	The default savePath.
+
+	This should be relative to the `HttpContext.contentDirectory`, or absolute.
+	The default value is `sessions/`.
+	You can change this static value to set a new default.
 	**/
 	public static var defaultSavePath:String = "sessions/";
 
 	/**
-		The default expiry value.
-		The default value is 0 (expire when window is closed).
-		You can change the default by changing this static variable.
+	The default expiry value.
+
+	The default value is 0 (expire when window is closed).
+	You can change the default by changing this static variable.
 	**/
 	public static var defaultExpiry:Int = 0;
 
@@ -78,15 +85,15 @@ class FileSession implements UFHttpSession
 	@inject public var context:HttpContext;
 
 	/**
-		Construct a new session object.
+	Construct a new session object.
 
-		This does not create the session file or commit any data, rather, it sets up the object so that read or writes can then happen.
+	This does not create the session file or commit any data, rather, it sets up the object so that read or writes can then happen.
 
-		Data is read during `init` and written during `commit`.
+	Data is read during `this.init()` and written during `this.commit()`.
 
-		A new session object should be created for each request, and it will then associate itself with the correct session file for the given user.
+	A new session object should be created for each request, and it will then associate itself with the correct session file for the given user.
 
-		In general you should create your object using `injector.instantiate( FileSession )`, so that the HttpContext is made available and various the `injectConfig` initializations take place.
+	In general you should create your object using dependency injections, so that everything is initialized correctly.
 	**/
 	public function new() {
 		started = false;
@@ -99,12 +106,10 @@ class FileSession implements UFHttpSession
 	}
 
 	/**
-		Use the current injector to check for configuration for this session: sessionName, expiry and savePath.
-		If no values are available in the injector, the defaults will be used.
-		This will be called automatically after `context` has been injected.
+	Use the current injector to check for configuration for this session: `this.sessionName`, `this.expiry` and `this.savePath`.
+	If no values are available in the injector, the defaults will be used.
 	**/
-	@post public function injectConfig() {
-		// Manually check for these injections, because if they're not provided we have defaults - we don't want minject to throw an error.
+	@inject public function injectConfig( context:HttpContext ) {
 		this.sessionName =
 			if ( context.injector.hasRule(String,"sessionName") )
 				context.injector.getInstance( String, "sessionName" )
@@ -125,54 +130,56 @@ class FileSession implements UFHttpSession
 	}
 
 	/**
-		The variable name to reference the session ID.
+	The variable name to reference the session ID.
 
-		This will be the name set in the Cookie sent to the client, or the name to search for in the parameters or cookies.
+	This will be the name set in the cookie sent to the client, or the name to search for in the parameters or cookies.
 
-		This is set by injecting a String named "sessionName", otherwise the default `defaultSessionName` value is used.
+	This is set by injecting a String named `sessionName`, otherwise the default `FileSession.defaultSessionName` value is used.
 	**/
 	public var sessionName(default,null):String;
 
 	/**
-		The lifetime/expiry of the cookie, in seconds.
+	The lifetime/expiry of the cookie, in seconds.
 
-		- A positive value sets the cookie to expire that many seconds from the current time.
-		- A value of 0 represents expiry when the browser window is closed.
-		- A negative value expires the cookie immediately.
+	- A positive value sets the cookie to expire that many seconds from the current time.
+	- A value of 0 represents expiry when the browser window is closed.
+	- A negative value expires the cookie immediately.
 
-		This is set by injecting an `Int named "sessionExpiry", otherwise the default `defaultExpiry` value is used.
+	This is set by injecting an `Int` named `sessionExpiry`, otherwise the default `FileSession.defaultExpiry` value is used.
 	**/
 	public var expiry(default,null):Null<Int>;
 
 	/**
-		The save path for the session files.
+	The save path for the session files.
 
-		This should be absolute, or relative to the `HttpContext.contentDirectory`
+	This should be absolute, or relative to the `HttpContext.contentDirectory`
 
-		Relative paths should not have a leading slash.
-		If a trailing slash is not included, it will be added.
+	Relative paths should not have a leading slash.
+	If a trailing slash is not included, it will be added.
 
-		This is set by injecting a String named "sessionSavePath", otherwise the default `defaultSavePath` value is used.
+	This is set by injecting a `String` named `sessionSavePath`, otherwise the default `FileSession.defaultSavePath` value is used.
 	**/
 	public var savePath(default,null):String;
 
 	/**
-		Set the number of seconds the session should last
+	Set the number of seconds the session should last before expiring.
 
-		Note in this implementation only the cookie expiry is affected - the user could manually override this or send the session variable in the request parameters, and the session would still work.
+	Note in this implementation only the cookie expiry is affected - the file is not deleted from the server.
+	The user could manually override this or send the session variable in the request parameters, and the session would still work.
 	**/
 	public function setExpiry( e:Int ) {
 		expiry = e;
 	}
 
 	/**
-		Initiate the session.
+	Initiate the session.
 
-		This will check for an existing session ID.  If one exists, it will read and unserialize the session data from that session's file.
+	This will check for an existing session ID.
+	If one exists, it will read and unserialize the session data from that session's file.
 
-		If a session does not exist, one will be created, including generating and reserving a new session ID.
+	If a session does not exist, one will be created, including generating and reserving a new session ID.
 
-		This must be called before any other operations which require access to the current session.
+	This must be called before any other operations which require access to the current session.
 	**/
 	public function init():Surprise<Noise,Error> {
 		var t = Future.trigger();
@@ -240,9 +247,9 @@ class FileSession implements UFHttpSession
 	}
 
 	/**
-		Commit if required.
+	Commit if required.
 
-		Returns an Outcome, which is a Failure if the commit failed, usually because of not having permission to write to disk.
+	Returns a `Surprise`, which is a Failure if the commit failed, usually because of not having permission to write to disk.
 	**/
 	public function commit():Surprise<Noise,Error> {
 		var t = Future.trigger();
@@ -290,7 +297,9 @@ class FileSession implements UFHttpSession
 	#end
 
 	/**
-		Retrieve an item from the session data
+	Retrieve an item from the session data.
+
+	This will throw an error if `this.init()` has not already been called.
 	**/
 	public inline function get( name:String ):Dynamic {
 		checkStarted();
@@ -298,9 +307,11 @@ class FileSession implements UFHttpSession
 	}
 
 	/**
-		Set an item in the session data.
-		Note this will not commit the value to a file until `this.commit()` is called (generally at the end of a request).
-		This will throw an error if `init()` has not already been called.
+	Set an item in the session data.
+
+	Note this will not commit the value to a file until `this.commit()` is called (generally at the end of a request).
+
+	This will throw an error if `this.init()` has not already been called.
 	**/
 	public inline function set( name:String, value:Dynamic ):Void {
 		checkStarted();
@@ -311,8 +322,9 @@ class FileSession implements UFHttpSession
 	}
 
 	/**
-		Check if a session has the specified item.
-		This will throw an error if `init()` has not already been called.
+	Check if a session has the specified item.
+
+	This will throw an error if `this.init()` has not already been called.
 	**/
 	public inline function exists( name:String ):Bool {
 		checkStarted();
@@ -320,9 +332,11 @@ class FileSession implements UFHttpSession
 	}
 
 	/**
-		Remove an item from the session.
-		Note this will not commit the value to a file until `this.commit()` is called (generally at the end of a request).
-		This will throw an error if `init()` has not already been called.
+	Remove an item from the session.
+
+	Note this will not commit the value to a file until `this.commit()` is called (generally at the end of a request).
+
+	This will throw an error if `this.init()` has not already been called.
 	**/
 	public inline function remove( name:String ):Void {
 		checkStarted();
@@ -333,7 +347,7 @@ class FileSession implements UFHttpSession
 	}
 
 	/**
-		Empty all items from the current session data without closing the session.
+	Empty all items from the current session data without closing the session.
 	**/
 	public inline function clear():Void {
 		if ( sessionData!=null && isActive() ) {
@@ -343,14 +357,14 @@ class FileSession implements UFHttpSession
 	}
 
 	/**
-		Force the session to be committed at the end of this request
+	Force the session to be committed at the end of this request
 	**/
 	public inline function triggerCommit():Void {
 		commitFlag = true;
 	}
 
 	/**
-		Trigger a regeneration of the session ID when `commit` is called.
+	Trigger a regeneration of the session ID when `this.commit()` is called.
 	**/
 	public function regenerateID():Void {
 		regenerateFlag = true;
@@ -364,7 +378,7 @@ class FileSession implements UFHttpSession
 	}
 
 	/**
-	Return the current ID, either one that has been set during `init()`, or one found in either `HttpRequest.cookies` or `HttpRequest.params`.
+	Return the current ID, either one that has been set during `this.init()`, or one found in either `HttpRequest.cookies` or `HttpRequest.params`.
 	**/
 	function get_id():String {
 		if ( sessionID==null ) sessionID = context.request.cookies[sessionName];
@@ -373,9 +387,9 @@ class FileSession implements UFHttpSession
 	}
 
 	/**
-		Close the session.
+	Close the session.
 
-		The sessionData and sessionID will be set to null, and the session will be flagged for deletion (when `commit` is called)
+	The sessionData and sessionID will be set to null, and the session will be flagged for deletion (when `this.commit()` is called)
 	**/
 	public function close():Void {
 		checkStarted();
