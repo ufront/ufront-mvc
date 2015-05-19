@@ -10,8 +10,15 @@ An `ActionResult` that sends a JSON response to the client.
 
 The response content type will be set to `application/json`, and `Json.stringify` will be used to generate the JSON representation of the data.
 **/
-class JsonResult<T> extends ActionResult
-{
+class JsonResult<T> extends ActionResult {
+
+	/**
+	A shortcut to create a Json Result.
+
+	This is useful when you are waiting for a Future: `return getFutureData() >> JsonResult.create;`.
+	**/
+	public static function create<T>( data:T ):JsonResult<T> return new JsonResult( data );
+
 	/** The content to be serialized. **/
 	public var content:T;
 

@@ -11,6 +11,21 @@ An `ActionResult` that redirects the client to a new location.
 This works using `HttpResponse.redirect(url)` or `HttpResponse.permanentRedirect(url)`.
 **/
 class RedirectResult extends ActionResult {
+
+	/**
+	A shortcut to create a temporary redirect.
+
+	This is useful when you are waiting for a Future: `return getFutureUrl() >> RedirectResult.create;`
+	**/
+	public static function create( url:String ):RedirectResult return new RedirectResult( url, false );
+
+	/**
+	A shortcut to create a permanent redirect.
+
+	This is useful when you are waiting for a Future: `return getFutureUrl() >> RedirectResult.createPermanent;`
+	**/
+	public static function createPermanent( url:String ):RedirectResult return new RedirectResult( url, true );
+
 	/** The target URL. */
 	public var url:String;
 

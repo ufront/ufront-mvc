@@ -11,6 +11,14 @@ An `ActionResult` that prints specific `String` content to the client, optionall
 This works using `HttpResponse.write(content)` and `HttpResponse.contentType`.
 **/
 class ContentResult extends ActionResult {
+
+	/**
+	A shortcut to create a new ContentResult.
+
+	This is useful when you are waiting for a Future: `return getFutureContent() >> ContentResult.create;`
+	**/
+	public static function create( content:String ):ContentResult return new ContentResult( content, null );
+
 	public var content:String;
 	public var contentType:String;
 

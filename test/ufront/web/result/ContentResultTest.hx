@@ -2,7 +2,9 @@ package ufront.web.result;
 
 import utest.Assert;
 import ufront.web.result.ContentResult;
+import ufront.test.TestUtils.NaturalLanguageTests.*;
 using ufront.test.TestUtils;
+using tink.CoreApi;
 
 class ContentResultTest {
 	public function new() {}
@@ -32,5 +34,18 @@ class ContentResultTest {
 			Assert.equals( "text/plain", ctx.response.contentType );
 			done2();
 		});
+
+		whenIVisit("/")
+		.onTheController( ContentResultTestController )
+		.itShouldLoad()
+		.responseShouldBe( "<html><body>Hello!</body></html>" );
+	}
+}
+
+class ContentResultTestController extends ufront.web.Controller {
+	@:route("/")
+	function getContent() {
+		var futureContent = Future.sync( "<html><body>Hello!</body></html>" );
+		return futureContent >> ContentResult.create;
 	}
 }

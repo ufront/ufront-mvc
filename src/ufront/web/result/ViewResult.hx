@@ -165,6 +165,13 @@ class ViewResult extends ActionResult {
 	//
 
 	/**
+	A shortcut to create a new ViewResult.
+
+	This is useful when you are waiting for a Future: `return getFutureContent() >> ViewResult.create;`
+	**/
+	public static function create( data:{} ):ViewResult return new ViewResult( data );
+
+	/**
 	Global values that should be made available to every view result.
 	**/
 	public static var globalValues:TemplateData = {};
@@ -195,7 +202,6 @@ class ViewResult extends ActionResult {
 	public var finalOutput(default,null):Future<String>;
 
 	var finalOutputTrigger:FutureTrigger<String>;
-	var futureData:Future<TemplateData>;
 
 	//
 	// Member Functions
@@ -205,13 +211,11 @@ class ViewResult extends ActionResult {
 	Create a new ViewResult, with the specified data.
 
 	@param data (optional) Some initial template data to set. If not supplied, an empty {} object will be used.
-	@param futureData (optional) If you have a data collection that will be available in the Future, you can include it here and the final result will include it.
 	@param viewPath (optional) A specific view path to use. If not supplied, it will be inferred based on the `ActionContext` in `this.executeResult()`.
 	@param templatingEngine (optional) A specific templating engine to use for the view. If not supplied, it will be inferred based on the `viewPath` in `this.executeResult()`.
 	**/
-	public function new( ?data:TemplateData, ?futureData:Future<TemplateData>, ?viewPath:String, ?templatingEngine:TemplatingEngine ) {
+	public function new( ?data:TemplateData, ?viewPath:String, ?templatingEngine:TemplatingEngine ) {
 		this.data = (data!=null) ? data : {};
-		this.futureData = (futureData!=null) ? futureData : Future.sync(new TemplateData());
 		this.helpers = {};
 		this.templateSource = (viewPath!=null) ? FromEngine(viewPath,templatingEngine) : Unknown;
 		this.layoutSource = Unknown;
@@ -307,9 +311,9 @@ class ViewResult extends ActionResult {
 
 
 		return FutureTools
-			.when( templateReady, layoutReady, this.futureData )
-			.map(function( viewTemplate:Outcome<Null<UFTemplate>,Error>, layoutTemplate:Outcome<Null<UFTemplate>,Error>, dataFromFuture:TemplateData ) {
-				var combinedData = getCombinedData( [globalValues,helpers,dataFromFuture,data], actionContext );
+			.when( templateReady, layoutReady )
+			.map(function( viewTemplate:Outcome<Null<UFTemplate>,Error>, layoutTemplate:Outcome<Null<UFTemplate>,Error> ) {
+				var combinedData = getCombinedData( [globalValues,helpers,data], actionContext );
 				try {
 					// Execute the view, and then the layout (inserting the `viewContent`).
 					var viewOut = executeTemplate( "view", viewTemplate, combinedData ).sure();
