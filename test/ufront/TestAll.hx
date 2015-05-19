@@ -14,7 +14,6 @@ class TestAll
 		ufront.view.TestAll.addTests( runner );
 		ufront.api.TestAll.addTests( runner );
 		ufront.cache.TestAll.addTests( runner );
-		ufront.sys.TestAll.addTests( runner );
 		ufront.test.TestAll.addTests( runner );
 		ufront.auth.TestAll.addTests( runner );
 		ufront.remoting.TestAll.addTests( runner );

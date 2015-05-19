@@ -10,7 +10,6 @@ package ufront.log;
 #end
 import ufront.app.*;
 import haxe.PosInfos;
-import ufront.sys.SysUtil;
 import ufront.web.context.HttpContext;
 import ufront.core.AsyncTools;
 using tink.CoreApi;
@@ -78,7 +77,7 @@ class FileLogger implements UFLogHandler implements UFInitRequired {
 			content += '\t${format(msg)}\n';
 
 		#if sys
-			SysUtil.mkdir( logFile.directory() );
+			FileSystem.createDirectory( logFile.directory() );
 			var file = File.append( context.contentDirectory + path );
 			file.writeString( content );
 			file.close();

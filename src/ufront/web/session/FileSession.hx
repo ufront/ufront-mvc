@@ -13,7 +13,6 @@ import tink.CoreApi;
 #if sys
 	import sys.FileSystem;
 	import sys.io.File;
-	import ufront.sys.SysUtil;
 #end
 using StringTools;
 using haxe.io.Path;
@@ -180,7 +179,7 @@ class FileSession implements UFHttpSession
 		#if sys
 			if ( !started ) {
 				try {
-					SysUtil.mkdir( savePath.removeTrailingSlashes() );
+					FileSystem.createDirectory( savePath.removeTrailingSlashes() );
 
 					var file : String;
 					var fileData : String;
