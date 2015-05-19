@@ -134,16 +134,13 @@ class TestUtils
 				app = new UfrontApplication( ufrontConf );
 			}
 			@:privateAccess context.injector.parent = app.injector;
-			var doneCallback = Assert.createAsync();
-			var resultSurprise = app.execute( context ).map( function(outcome) return switch outcome {
-				case Success(_): return Success(Noise);
-				case Failure(httpError): return Failure( httpError );
-			});
+			var resultSurprise = app.execute( context );
+			// Make sure our test suite waits for the test to complete.
+			resultSurprise.handle( Assert.createAsync() );
 			return {
 				result: resultSurprise,
 				app: app,
-				context: context,
-				doneCallback: doneCallback
+				context: context
 			};
 		}
 
@@ -175,7 +172,7 @@ class TestUtils
 		@return The same `testContext` that was passed in.
 		**/
 		public static function assertSuccess( testContext:RequestTestContext, ?controller:Class<Dynamic>, ?action:String, ?args:Array<Dynamic>, ?p:PosInfos ):RequestTestContext {
-			var doneCallback = Assert.createAsync( function() {} );
+			var doneCallback = Assert.createAsync();
 			testContext.result.handle(function (outcome) switch outcome {
 				case Success( _ ):
 					var ctx = testContext.context.actionContext;
@@ -235,7 +232,7 @@ class TestUtils
 		@return The same `testContext` that was passed in.
 		**/
 		public static function assertFailure( testContext:RequestTestContext, ?code:Null<Int>, ?message:Null<String>, ?innerData:Null<Dynamic>, ?p:PosInfos ):RequestTestContext {
-			var doneCallback = Assert.createAsync(function() {});
+			var doneCallback = Assert.createAsync();
 			testContext.result.handle(function processOutcome(outcome) {
 				switch outcome {
 					case Success( _ ):
@@ -268,8 +265,10 @@ class TestUtils
 		@return The same `testContext` that was passed in.
 		**/
 		public static function responseShouldBe( testContext:RequestTestContext, expectedResponse:String, ?p:PosInfos ):RequestTestContext {
+			var doneCallback = Assert.createAsync();
 			testContext.result.handle( function(outcome) {
 				Assert.equals( expectedResponse, testContext.context.response.getBuffer() );
+				doneCallback();
 			});
 			return testContext;
 		}
@@ -307,6 +306,7 @@ class TestUtils
 		@return The same `testContext` that was passed in.
 		**/
 		public static function checkResult<T:ActionResult>( testContext:RequestTestContext, expectedResultType:Class<T>, ?check:T->Void, ?p:PosInfos ):RequestTestContext {
+			var doneCallback = Assert.createAsync();
 			testContext.result.handle( function(outcome) switch outcome {
 				case Success(_):
 					var res = testContext.context.actionContext.actionResult;
@@ -314,39 +314,32 @@ class TestUtils
 					if ( check!=null && Std.is(res,expectedResultType) ) {
 						check( cast res );
 					}
+					doneCallback();
 				case Failure(_):
-					// We do not assert a failure here, as `TestUtils.assertFailure()` will already check that case, without blocking this test.
+					// We do not assert a failure here, as `TestUtils.assertSuccess()` will already check that case, without blocking this test.
+					doneCallback();
 			});
 			return testContext;
 		}
 
 
 		/**
-		Perform an arbitrary check after the request has been executed.
+		Call a callback function after the test request has finished executing.
+
+		This can be useful to either:
+
+		- Run more tests and checks against the current request.
+		- Call a `done()` method or similar to allow your test environment to know this test has finished.
 
 		@param testContext The outcome from a call to `this.testRoute()`.
-		@param check A function to execute with additional tests. The function should be `RequestTestContext->Void` or `Void->Void`.
+		@param callback A callback function to execute. The function should be `RequestTestContext->Void` or `Void->Void`.
 		@return The same `testContext` that was passed in.
 		**/
-		public static function check( testContext:RequestTestContext, check:Callback<RequestTestContext> ):RequestTestContext {
+		public static function onComplete( testContext:RequestTestContext, callback:Callback<RequestTestContext> ):RequestTestContext {
+			var doneCallback = Assert.createAsync();
 			testContext.result.handle(function(_) {
-				check.invoke( testContext );
-			});
-			return testContext;
-		}
-
-		/**
-		As mentioned, in `TestUtils.testRoute` we call `Assert.createAsync`, which allows our test environment to wait for us to finish each test.
-		As such, we must call the designated callback method when we have finished our tests.
-
-		@param testContext The `RequestTestContext` returned by `testRoute`, which has the callback method we must call.
-		@param otherCallback (optional) If there is another callback you must call, you can also include that here and we will trigger that also.
-		**/
-		public static function finishAsyncTest( testContext:RequestTestContext, ?otherCallback:Callback<Dynamic> ) {
-			testContext.result.handle(function(_){
-				if ( otherCallback!=null )
-					otherCallback.invoke( testContext );
-				testContext.doneCallback();
+				callback.invoke( testContext );
+				doneCallback();
 			});
 			return testContext;
 		}
@@ -363,7 +356,7 @@ It is located in the same module as `TestUtils`, and so is included in static ex
 It also helps to do an import wildcard on the statics:
 
 ```haxe
-import ufront.test.TestUtils.*;
+import ufront.test.TestUtils.NaturalLanguageTests.*;
 using ufront.test.TestUtils;
 ```
 
@@ -374,8 +367,7 @@ using ufront.test.TestUtils;
 whenIVisit("/home")
 .onTheController( HomeController )
 .itShouldLoad( HomeController, "homepage" )
-.itShouldReturn( ViewResult )
-.endTest();
+.itShouldReturn( ViewResult );
 
 // Or a bit more complex:
 whenIVisit("/blog/2015-03-02/23-pictures-of-my-cat")
@@ -387,8 +379,7 @@ whenIVisit("/blog/2015-03-02/23-pictures-of-my-cat")
   // Or using `Buddy` style tests:
   viewResult.data["date"].should.be( "2nd April 2015" );
   viewResult.layoutSource.should.be( FromEngine("/layout.html")  );
-})
-.pleaseWork(); // Yes, we have a novelty alias for `endTest()`.
+});
 
 // Test submitting a form (POST request):
 var testMailer = new TestMailer();
@@ -418,8 +409,7 @@ whenIVisit("/search")
 .itShouldLoad( SearchController, "searchFor", [{q:"Ufront"}] )
 .itShouldReturn( ViewResult, function(vr) {
   vr.templateSource.should.be( FromEngine("search/searchFor.html") );
-})
-.endTest();
+});
 
 // Kitchen sink example 2:
 whenISubmit([ "username"=>"admin", "password"=>"wrongpassword" ])
@@ -431,8 +421,7 @@ whenISubmit([ "username"=>"admin", "password"=>"wrongpassword" ])
 .theResponseShouldBe( "<html><body>Bad password</body></html>" );
 .andAlsoCheck(function(testContext) {
   testContext.app.messages.length.should.be(0);
-})
-.pleaseWork();
+});
 ```
 **/
 class NaturalLanguageTests {
@@ -554,17 +543,13 @@ class NaturalLanguageTests {
 		public static inline function theResponseShouldBe( testContext:RequestTestContext, expectedResponse:String, ?p:PosInfos ):RequestTestContext
 			return TestUtils.responseShouldBe( testContext, expectedResponse, p );
 
-		/** Perform some more arbitrary checks once the request has completed. This is an alias for `TestUtils.check` **/
+		/** Perform some more arbitrary checks once the request has completed. This is an alias for `TestUtils.onComplete` **/
 		public static inline function andAlsoCheck( testContext:RequestTestContext, check:Callback<RequestTestContext>, ?p:PosInfos ):RequestTestContext
-			return TestUtils.check( testContext, check );
+			return TestUtils.onComplete( testContext, check );
 
-		/** Alert our async test runner that the testing is complete. This is an alias for `TestUtils.finishAsyncTest` **/
-		public static inline function endTest( testContext:RequestTestContext, ?otherCallback:Callback<Dynamic> ):RequestTestContext
-			return TestUtils.finishAsyncTest( testContext, otherCallback );
-
-		/** Alert our async test runner that the testing is complete, but with polite manners. A novelty alias for `TestUtils.finishAsyncTest` **/
-		public static inline function pleaseWork( testContext:RequestTestContext, ?otherCallback:Callback<Dynamic> ):RequestTestContext
-			return TestUtils.finishAsyncTest( testContext, otherCallback );
+		/** Alert our async test runner that the testing is complete. This is an alias for `TestUtils.onComplete` **/
+		public static inline function andFinishWith( testContext:RequestTestContext, ?callback:Callback<RequestTestContext> ):RequestTestContext
+			return TestUtils.onComplete( testContext, callback );
 	#end
 }
 
@@ -583,6 +568,4 @@ typedef RequestTestContext = {
 	public var app:UfrontApplication;
 	/** The `HttpContext` of the current test request. **/
 	public var context:HttpContext;
-	/** A callback to be called once the test has completed, so our testing environment knows it can move on to the next test. **/
-	public var doneCallback:Void->Void;
 }
