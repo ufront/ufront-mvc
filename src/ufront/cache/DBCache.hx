@@ -1,6 +1,6 @@
 package ufront.cache;
 
-#if ufront_orm
+#if (ufront_orm && server)
 import ufront.cache.UFCache;
 import ufront.db.Object;
 import ufront.api.UFApi;
