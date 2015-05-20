@@ -6,7 +6,7 @@ import tink.CoreApi;
 An interface describing a mechanism for authenticating a user.
 
 It is important to note that this does not specify how the user is authenticated - either in terms of technology or user experience.
-For example, a username and password may be required, or you may use another method involving social logons, certificates, cookies or something else entirely.
+For example, a username and password may be required, or you may use another method involving social logons, certificates, cookies, removal of swords from rocks, or something else entirely.
 
 However the adapter instance is set up, when `this.authenticate()` is called, it should check the authentication and return either a valid user, or an auth error.
 **/

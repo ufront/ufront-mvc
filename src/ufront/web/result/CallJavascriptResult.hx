@@ -13,10 +13,10 @@ It is easiest to use this through static extension:
 using ufront.web.result.CallJavascriptResult;
 
 public function showHomepage() {
-	return
-		new ViewResult({ title: "Home" })
-		.addInlineJsToResult( "console.log('arbitrary JS')" )
-		.addJsScriptToResult( "datepicker.jquery.js" );
+  return
+  new ViewResult({ title: "Home" })
+    .addInlineJsToResult( "console.log('arbitrary JS')" )
+    .addJsScriptToResult( "datepicker.jquery.js" );
 }
 ```
 **/
@@ -59,7 +59,9 @@ class CallJavascriptResult<T:ActionResult> extends ActionResult {
 
 	/**
 	Execute the result.
+
 	This will execute the original result, and then attempt to add the script just before the body tag.
+
 	If the content type is not "text/html", this will have no effect - it will just execute the original result and ignore the scripts.
 	**/
 	override public function executeResult( actionContext:ActionContext ):Surprise<Noise,Error> {
@@ -76,6 +78,7 @@ class CallJavascriptResult<T:ActionResult> extends ActionResult {
 
 	/**
 	This helper function will take a HTML string, and insert the given scripts before the `</body>` tag.
+
 	If there is no `</body>` substring, then the scripts will be inserted at the end of the content.
 	**/
 	public static function insertScriptsBeforeBodyTag( content:String, scripts:Array<String> ) {

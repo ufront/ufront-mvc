@@ -15,9 +15,9 @@ Recommended usage:
 ```haxe
 @:route("/admin/")
 public function adminArea() {
-	return HttpAuthResult.requireAuth( context, "admin", "its-a-secret", "Please Log In", "Bad Username or Password", function() {
-		executeSubController( AdminController );
-	});
+  return HttpAuthResult.requireAuth( context, "admin", "its-a-secret", "Please Log In", "Bad Username or Password", function() {
+    executeSubController( AdminController );
+  });
 };
 ```
 **/

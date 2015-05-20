@@ -1,9 +1,9 @@
 package ufront.auth;
 
 /**
-An interface describing a logged in user.
+A user who has been logged in using a `UFAuthHandler`.
 
-This is extremely basic, providing the bare minimum to test permissions, log events and work with `UFAuthHandler` classes.
+This interface is extremely basic, providing the bare minimum to test permissions, check ID, log events and work with a `UFAuthHandler`.
 
 @author Jason O'Neil
 **/

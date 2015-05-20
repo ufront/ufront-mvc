@@ -3,10 +3,11 @@ package ufront.auth;
 import ufront.auth.UFAuthUser;
 
 /**
-An interface describing an authentication handler.
+An authentication handler that can be used with Ufront applications.
 
-This allows you to write code where the underlying authentication layer could be changed.
+By using this `UFAuthHandler` interface, you are able to write code where the underlying authentication layer could be changed.
 For example, you may switch from EasyAuth (a mysql DB form of authentication) to a solution using social logins, an OAuth provider or LDAP.
+Or you may use a combination of these.
 
 Writing your code against the `UFAuthHandler` interface, rather than a specific implementation, allows you to write your login checks, identity checks, and permission checks in a way that is usable with different (or even multiple) login mechanisms.
 

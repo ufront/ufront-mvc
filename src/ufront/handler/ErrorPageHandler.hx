@@ -72,13 +72,13 @@ class ErrorPageHandler implements UFErrorHandler
 
 	```
 	<summary class="error-summary">
-		<h1 class="error-message">${error.toString()}</h1>
+	  <h1 class="error-message">${error.toString()}</h1>
 	</summary>
 	<details class="error-details">
-		<p class="error-data">${error.data}</p>
-		<p class="error-pos">${error.pos}</p>
-		<p class="error-exception-stack">${exceptionStackFromError}</p>
-		<p class="error-call-stack">${callStackFromError}</p>
+	  <p class="error-data">${error.data}</p>
+	  <p class="error-pos">${error.pos}</p>
+	  <p class="error-exception-stack">${exceptionStackFromError}</p>
+	  <p class="error-call-stack">${callStackFromError}</p>
 	</details>
 	```
 	**/

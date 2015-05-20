@@ -30,15 +30,15 @@ __Let's look at an example:__
 
 ```haxe
 class AdminController extends Controller {
-	@:route("/dashboard/")
-	function doDashboard() {
-		return new ViewResult();
-	}
+  @:route("/dashboard/")
+  function doDashboard() {
+    return new ViewResult();
+  }
 
-	@:route("/camera/")
-	function takePhoto() {
-		return new ViewResult();
-	}
+  @:route("/camera/")
+  function takePhoto() {
+    return new ViewResult();
+  }
 }
 ```
 
@@ -60,7 +60,7 @@ To change the default folder that views in this controller are found in, use the
 ```haxe
 @viewFolder("/admin-templates/")
 class AdminController extends Controller {
-	...
+  // ...
 }
 ```
 
@@ -71,7 +71,7 @@ You can also set a default layout for every action on the controller:
 @layout("layout.html") // Will look in `view/admin-templates/layout.html`
 // By contrast, `@layout("/layout.html")` will look in "/view/layout.html" - notice the leading slash.
 class AdminController extends Controller {
-	...
+ // ...
 }
 ```
 
@@ -81,7 +81,7 @@ If you want to change the template used for one of our actions, you can use the 
 @:route("/camera/")
 @template("camera.html") // Will look in `view/admin-templates/camera.html`
 function takePhoto() {
-	return new ViewResult();
+  return new ViewResult();
 }
 ```
 

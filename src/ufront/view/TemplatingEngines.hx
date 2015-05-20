@@ -4,7 +4,7 @@ package ufront.view;
 using tink.CoreApi;
 
 /**
-This class provides some shortcut definitions to TemplatingEngines.
+This class provides some shortcut definitions to common templating engines in the Haxe eco-system.
 
 These shortcuts are added for your convenience.
 They don't include the actual template libraries, rather, they return a typedef that let's our UFViewEngine know how to use the templating library so you can add it easily.
@@ -143,7 +143,7 @@ class TemplatingEngines {
 }
 
 /**
-A `TemplatingEngine` is a simple typedef defining how to use a given templating engine.
+A TemplatingEngine is a simple typedef defining how to use a given templating engine.
 
 It smooths over the differences in various runtime templating systems, requiring the bare minimum to get a template to render.
 

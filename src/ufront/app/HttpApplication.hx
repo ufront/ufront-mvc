@@ -109,7 +109,7 @@ class HttpApplication
 		/**
 		UrlFilters for the current application.
 
-		These will be used in the HttpContext for `getRequestUri` and `generateUri`.
+		These will be used for `HttpContext.getRequestUri()` and `HttpContext.generateUri()`.
 
 		Modifying this list will only have an effect on future requests - modifications after a request has started will not affect that request.
 
@@ -499,42 +499,42 @@ class HttpApplication
 		}
 
 		#if (php || neko || (js && !nodejs))
-			/**
-			Create a `HttpContext` for the current request and execute it.
+		/**
+		Create a `HttpContext` for the current request and execute it.
 
-			Available on PHP, Neko and Client JS.
-			**/
-			public function executeRequest() {
-				var context =
-					if ( pathToContentDir!=null ) HttpContext.createContext( this.injector, urlFilters, pathToContentDir )
-					else HttpContext.createContext( this.injector, urlFilters );
-				this.execute( context );
-			}
+		Available on PHP, Neko and Client JS.
+		**/
+		public function executeRequest() {
+			var context =
+				if ( pathToContentDir!=null ) HttpContext.createContext( this.injector, urlFilters, pathToContentDir )
+				else HttpContext.createContext( this.injector, urlFilters );
+			this.execute( context );
+		}
 		#elseif nodejs
-			/**
-			Start a HTTP server using `js.npm.Express`, listening on the specified port.
-			Includes the `js.npm.connect.Static` and `js.npm.connect.BodyParser` middleware.
-			Will create a HttpContext and execute each request.
+		/**
+		Start a HTTP server using `js.npm.Express`, listening on the specified port.
+		Includes the `js.npm.connect.Static` and `js.npm.connect.BodyParser` middleware.
+		Will create a HttpContext and execute each request.
 
-			Available on NodeJS only.
+		Available on NodeJS only.
 
-			@param port The port to listen on (default 2987).
-			**/
-			public function listen( ?port:Int=2987 ):Void {
-				var app = new js.npm.Express();
-				app.use( new js.npm.connect.Static('.') );
-				app.use( new js.npm.connect.BodyParser() );
-				app.use( function(req:js.npm.express.Request,res:js.npm.express.Response,next:?String->Void) {
-					var context:HttpContext =
-						if ( pathToContentDir!=null ) HttpContext.createNodeJSContext( req, res, urlFilters, pathToContentDir )
-						else HttpContext.createNodeJSContext( req, res, urlFilters );
-					this.execute( context ).handle( function(result) switch result {
-						case Failure( err ): next( err.toString() );
-						default: next();
-					});
+		@param port The port to listen on (default 2987).
+		**/
+		public function listen( ?port:Int=2987 ):Void {
+			var app = new js.npm.Express();
+			app.use( new js.npm.connect.Static('.') );
+			app.use( new js.npm.connect.BodyParser() );
+			app.use( function(req:js.npm.express.Request,res:js.npm.express.Response,next:?String->Void) {
+				var context:HttpContext =
+					if ( pathToContentDir!=null ) HttpContext.createNodeJSContext( req, res, urlFilters, pathToContentDir )
+					else HttpContext.createNodeJSContext( req, res, urlFilters );
+				this.execute( context ).handle( function(result) switch result {
+					case Failure( err ): next( err.toString() );
+					default: next();
 				});
-				app.listen( port );
-			}
+			});
+			app.listen( port );
+		}
 		#end
 
 		/**

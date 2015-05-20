@@ -51,11 +51,11 @@ class ActionResult {
 	}
 }
 
-/** A typedef shortcut for an action return type that either gives a valid result or a Error **/
+/** A typedef shortcut for an action return type that either gives a valid `ActionResult` or an `Error` **/
 typedef ActionOutcome = Outcome<ActionResult,Error>;
 
-/** A typedef shortcut for a Future that will contain an ActionResult **/
+/** A typedef shortcut for a `Future` that will contain an `ActionResult` **/
 typedef FutureActionResult = Future<ActionResult>;
 
-/** A typedef shortcut for a Future that will contain either an ActionResult or a Error **/
+/** A typedef shortcut for a `Future` that will contain either an `ActionResult` or an `Error` **/
 typedef FutureActionOutcome = Future<ActionOutcome>;

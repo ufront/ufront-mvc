@@ -68,9 +68,9 @@ The easiest way to do this is to create a `UFApiContext` class with each of the 
 
 The following injections are required for a `UFApi` class to function correctly:
 
-- **(Server)** `auth`: A `UFAuthHandler` that the API can use to check permissions for certain actions.
-- **(Server)** `messages`: A `MessageList` used to track `ufTrace`, `ufLog`, `ufWarn` and `uferror` calls and send them to the appropriate output.
-- **(Client)** `cnx`: A `haxe.remoting.Connection` used to send synchronous HTTP remoting calls.
+- `auth`: A `UFAuthHandler` that the API can use to check permissions for certain actions. (Server only).
+- `messages`: A `MessageList` used to track `ufTrace`, `ufLog`, `ufWarn` and `uferror` calls and send them to the appropriate output. (Server only).
+- `cnx`: A `haxe.remoting.Connection` used to send synchronous HTTP remoting calls. (Client only).
 
 Because APIs are usually created through dependency injection, you can also add other injections to your APIs:
 

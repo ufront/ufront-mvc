@@ -77,8 +77,9 @@ class UFAsyncApi<SyncApi:UFApi> {
 	var className:String;
 	#if server
 		/**
-			Because of limitations between minject and generics, we cannot simply use `@inject public var api:T` based on a type paremeter.
-			Instead, we get the build macro to create a `@inject public function injectApi( injector:Injector )` method, specifying the class of our sync Api as a constant.
+		The `api` is provided by dependency injection.
+		However, because of limitations between minject and generics, we cannot simply use `@inject public var api:T` based on a type paremeter.
+		Instead, we get the build macro to create a `@inject public function injectApi( injector:Injector )` method, specifying the class of our sync Api as a constant.
 		**/
 		public var api:SyncApi;
 	#elseif client

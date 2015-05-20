@@ -5,7 +5,7 @@ import Map;
 using StringTools;
 
 /**
-`TemplateData` is a collection of named data to be used in a template.
+TemplateData is a collection of named data to be used in a template.
 
 It is an `abstract`, allowing implicit casts from:
 
@@ -23,10 +23,10 @@ var td3:TemplateData3 = [ td1, td2 ]; // Merge the 2 sets.
 
 These methods are provided to access or modify the contents of the template data:
 
-- `get()`
-- `set()`
-- `setObject()`
-- `setMap()`
+- `this.get()`
+- `this.set()`
+- `this.setObject()`
+- `this.setMap()`
 
 Array access is also provided for getting / setting data:
 

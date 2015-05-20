@@ -7,7 +7,9 @@ import ufront.core.AsyncTools;
 using thx.Types;
 
 /**
-Trace module that adds a `hxt` line to haxe remoting call, that can be interpreted by either `ufront.remoting.HttpAsyncConnection` or `ufront.remoting.HttpConnection`.
+A `UFLogHandler` that sends traces from a server to the client's browser console during a Ufront remoting API call.
+
+This will add a `hxt` line to haxe remoting call, that can be interpreted by either `ufront.remoting.HttpAsyncConnection` or `ufront.remoting.HttpConnection`.
 
 When `log` is fired, this will flush the messages (traces, logs, warnings and errors) from the current context to the remoting response.
 
