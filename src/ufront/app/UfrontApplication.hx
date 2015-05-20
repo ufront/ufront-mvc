@@ -10,7 +10,6 @@ import ufront.handler.*;
 import ufront.view.TemplatingEngines;
 import ufront.view.UFViewEngine;
 import ufront.web.context.HttpContext;
-import ufront.web.Dispatch;
 import ufront.web.session.*;
 import ufront.web.url.filter.*;
 import ufront.web.Controller;
