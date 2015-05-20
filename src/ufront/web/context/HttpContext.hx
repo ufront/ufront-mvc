@@ -9,7 +9,6 @@ import ufront.auth.UFAuthUser;
 import ufront.log.Message;
 import ufront.log.MessageList;
 import ufront.web.session.VoidSession;
-import ufront.web.url.UrlDirection;
 import thx.error.NullArgument;
 import ufront.web.url.filter.UFUrlFilter;
 import thx.error.AbstractMethod;
@@ -185,7 +184,7 @@ class HttpContext {
 	public var completion:EnumFlags<RequestCompletion>;
 
 	/** The URL filters to be used for `getRequestUri()` and `generateUri()` **/
-	public var urlFilters(default,null):Iterable<UFUrlFilter>;
+	public var urlFilters(default,null):Array<UFUrlFilter>;
 
 	var _requestUri:String;
 
@@ -199,7 +198,7 @@ class HttpContext {
 		if( null==_requestUri ) {
 			var url = PartialUrl.parse( request.uri );
 			for( filter in urlFilters )
-				filter.filterIn( url, request );
+				filter.filterIn( url );
 			_requestUri = url.toString();
 		}
 		return _requestUri;
@@ -211,12 +210,11 @@ class HttpContext {
 		For example, if you use `PathInfoUrlFilter` this could turn `/home/` into `index.n?path=/home/`.
 		This is useful so your code contains the simple URIs, but at runtime they are transformed into the correct form depending on the environment.
 	**/
-	public function generateUri( uri:String ):String {
-		var uriOut = VirtualUrl.parse( uri );
-		var filters:Array<UFUrlFilter> = cast urlFilters;
-		var i = filters.length - 1;
+	public function generateUri( uri:String, ?isPhysical:Bool=false ):String {
+		var uriOut = VirtualUrl.parse( uri, isPhysical );
+		var i = urlFilters.length - 1;
 		while( i>=0 )
-			filters[i--].filterOut( uriOut, request );
+			urlFilters[i--].filterOut( uriOut );
 		return uriOut.toString();
 	}
 
