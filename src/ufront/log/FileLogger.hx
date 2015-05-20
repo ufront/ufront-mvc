@@ -90,7 +90,7 @@ class FileLogger implements UFLogHandler implements UFInitRequired {
 	}
 
 	/** Format a message in a suitable way for a text-only log file. **/
-	static function format( msg:Message ) {
+	public static function format( msg:Message ):String {
 		var msgStr = Std.string( msg.msg );
 		var text = REMOVENL.replace( msgStr, '\\n' );
 		var type = Type.enumConstructor( msg.type );
