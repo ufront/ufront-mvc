@@ -6,17 +6,19 @@ import haxe.io.Eof;
 	import sys.FileSystem;
 	import sys.io.File;
 #end
-import ufront.web.upload.FileUpload;
+import ufront.web.upload.UFFileUpload;
 using ufront.core.AsyncTools;
 using tink.CoreApi;
 using haxe.io.Path;
 
 /**
-	A FileUpload implementation that works on `SYS` platforms (Neko, PHP etc).
+A `FileUpload` implementation that allows you to operate on an upload that has been saved to a temporary file.
 
-	All methods are performed synchronously, but work with the async interface.
+`TmpFileUpload` is designed to work with `TmpFileUploadMiddleware`.
+
+It is currently only implemented on `sys` platforms.
 **/
-class TmpFileUploadSync implements FileUpload {
+class TmpFileUpload implements UFFileUpload {
 
 	/** The name of the POST argument (that is, the name of the file input) that this file was uploaded with. **/
 	public var postName:String;
@@ -28,9 +30,9 @@ class TmpFileUploadSync implements FileUpload {
 	public var size:Int;
 
 	/**
-		The contentType of the upload.
+	The contentType of the upload.
 
-		Please note this is not verified, so do not rely on this for security.
+	Please note this is not verified, so do not rely on this for security.
 	**/
 	// Commenting out for now until I find a way to get this information on neko
 	// public var contentType:String;
@@ -39,9 +41,11 @@ class TmpFileUploadSync implements FileUpload {
 	var tmpFileName:String;
 
 	/**
-		Create a new TempFileUploadSync
+	Create a new `TempFileUploadSync`.
 
-		Please note that "originalFileName" will be sanitised using `haxe.io.Path.withoutDirectory()`.
+	It should already be saved to a temporary file by `TmpFileUploadMiddleware` when this object is created.
+
+	Please note that `originalFileName` will be sanitised using `haxe.io.Path.withoutDirectory()`.
 	**/
 	public function new( tmpFileName:String, postName:String, originalFileName:String, size:Int ) {
 		this.postName = postName;
@@ -51,41 +55,35 @@ class TmpFileUploadSync implements FileUpload {
 	}
 
 	/**
-		Get the current upload as a `haxe.io.Bytes`
-
-		Uses `sys.io.File.getBytes(tmpFileName)` behind the scenes.
+	Get the current upload as a `haxe.io.Bytes`.
 	**/
 	public function getBytes():Surprise<Bytes,Error> {
 		#if sys
 			try {
 				return Success(File.getBytes(tmpFileName)).asFuture();
 			}
-			catch ( e:Dynamic ) return Failure(Error.withData("Error during SyncFileUpload.getBytes()",e)).asFuture();
+			catch ( e:Dynamic ) return Failure(Error.withData("Error during TmpFileUpload.getBytes()",e)).asFuture();
 		#else
 			return throw "Not implemented";
 		#end
 	}
 
 	/**
-		Get the current upload as a `String`
-
-		Uses `sys.io.File.getContent(tmpFileName)` behind the scenes.
+	Get the current upload as a `String`.
 	**/
 	public function getString():Surprise<String,Error> {
 		#if sys
 			try {
 				return Success(File.getContent(tmpFileName)).asFuture();
 			}
-			catch ( e:Dynamic ) return Failure(Error.withData("Error during SyncFileUpload.getString()",e)).asFuture();
+			catch ( e:Dynamic ) return Failure(Error.withData("Error during TmpFileUpload.getString()",e)).asFuture();
 		#else
 			return throw "Not implemented";
 		#end
 	}
 
 	/**
-		Write the current upload to a file on the filesystem.
-
-		Uses `sys.io.File.copy( tmpFileName, newFilePath )` behind the scenes.
+	Write the current upload to a file on the filesystem.
 	**/
 	public function writeToFile( newFilePath:String ):Surprise<Noise,Error> {
 		#if sys
@@ -93,22 +91,22 @@ class TmpFileUploadSync implements FileUpload {
 				File.copy(tmpFileName, newFilePath);
 				return SurpriseTools.success();
 			}
-			catch ( e:Dynamic ) return Failure(Error.withData("Error during SyncFileUpload.writeToFile()",e)).asFuture();
+			catch ( e:Dynamic ) return Failure(Error.withData("Error during TmpFileUpload.writeToFile()",e)).asFuture();
 		#else
 			return throw "Not implemented";
 		#end
 	}
 
 	/**
-		A method for streaming data to a specified method.
+	A method for streaming data to a specified method.
 
-		Will read the temporary file from the disk, one part at a time.
-		Each part that is read will be passed to the "onData" function.
-		Once `onData`'s future is resolved, the next part will be written.
+	Will read the temporary file from the disk, one part at a time.
+	Each part that is read will be passed to the "onData" function.
+	Once `onData`'s future is resolved, the next part will be written.
 
-		@param onData - method to execute for each set, eg. `function onData(data:Bytes, pos:Int, length:Int):Surprise<Noise,Error>`
-		@param partSize - the maximum amount of data to stream in each part.  Default is 8KB for PHP, 16KB for other targets.
-		@return a future to notify you once all the data has been processed, or if an error occured at any point.
+	@param onData - method to execute for each set, eg. `function onData(data:Bytes, pos:Int, length:Int):Surprise<Noise,Error>`
+	@param partSize - the maximum amount of data to stream in each part.  Default is 8KB for PHP, 16KB for other targets.
+	@return a future to notify you once all the data has been processed, or if an error occured at any point.
 	**/
 	public function process( onData:Bytes->Int->Int->Surprise<Noise,Error>, ?partSize:Null<Int> ):Surprise<Noise,Error> {
 		#if sys
@@ -146,16 +144,16 @@ class TmpFileUploadSync implements FileUpload {
 
 				return doneTrigger.asFuture();
 			}
-			catch ( e:Dynamic ) return Failure(Error.withData("Error during SyncFileUpload.process()",e)).asFuture();
+			catch ( e:Dynamic ) return Failure(Error.withData("Error during TmpFileUpload.process()",e)).asFuture();
 		#else
 			return throw "Not implemented";
 		#end
 	}
 
 	/**
-		Delete the temporary file.
+	Delete the temporary file.
 
-		After doing this, other functions that rely on the temporary file will no longer work.
+	After doing this, other functions that rely on the temporary file will no longer work.
 	**/
 	public function deleteTemporaryFile():Outcome<Noise,Error> {
 		#if sys
@@ -163,7 +161,7 @@ class TmpFileUploadSync implements FileUpload {
 				FileSystem.deleteFile(tmpFileName);
 				return Success( Noise );
 			}
-			catch ( e:Dynamic ) return Failure( Error.withData("Error during SyncFileUpload.deleteTmpFile()",e) );
+			catch ( e:Dynamic ) return Failure( Error.withData("Error during TmpFileUpload.deleteTmpFile()",e) );
 		#else
 			throw "Not implemented";
 		#end

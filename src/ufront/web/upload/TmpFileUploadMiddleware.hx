@@ -9,44 +9,44 @@ import ufront.web.context.HttpContext;
 import ufront.app.UFMiddleware;
 import ufront.app.HttpApplication;
 import tink.CoreApi;
-import ufront.web.upload.TmpFileUploadSync;
+import ufront.web.upload.TmpFileUpload;
 import ufront.core.AsyncTools;
 using haxe.io.Path;
 using DateTools;
 
 /**
-	If the HttpRequest is multipart, parse it, and store any uploads in a temporary file, adding them to `httpRequest.files`
+A middleware to take any file uploads, save them to a temporary file, and make them available to the `HttpRequest`.
 
-	Any post variables encountered in the multipart will be added to `httpRequest.post`.
+If the `HttpRequest` is multipart, this will parse the multipart data and store any uploads in a temporary file, adding them to `HttpRequest.files`.
 
-	This middleware will need to be called before `httpRequest.post` or `httpRequest.params` is ever accessed.
-	It is probably wise to run this as your very first middleware.
+This middleware will need to be called before `HttpRequest.post` or `HttpRequest.params` are ever accessed.
+It is probably wise to run this as your very first middleware.
 
-	The response middleware will delete the temporary file at the end of the request.
+The response middleware will delete the temporary file at the end of the request.
 
-	@author Jason O'Neil
+This is only available on `sys` platforms currently.
+
+@author Jason O'Neil
 **/
-class TmpFileUploadMiddleware implements UFMiddleware
-{
+class TmpFileUploadMiddleware implements UFMiddleware {
 	/**
-		Sub-directory to save temporary uploads to.
+	Sub-directory to save temporary uploads to.
 
-		This should represent a path, relative to `context.contentDirectory`.
+	This should represent a path, relative to `context.contentDirectory`.
+	If the chosen `subDir` does not exist, the middleware will attempt to create it during `this.requestIn`.
 
-		Default is "uf-upload-tmp"
+	Default is "uf-upload-tmp"
 	**/
 	public static var subDir:String = "uf-upload-tmp";
 
-	var files:Array<TmpFileUploadSync>;
+	var files:Array<TmpFileUpload>;
 
 	public function new() {
 		files = [];
 	}
 
 	/**
-		Start the session if a SessionID exists in the request, or if `alwaysStart` is true.
-
-		If the chosen `subDir` does not exist, it will attempt to create it, but only one level deep - it will not recursively create directories for you.
+	If the request is a multipart POST request, use `HttpRequest.parseMultipart()` to save the uploads to temporary files.
 	**/
 	public function requestIn( ctx:HttpContext ):Surprise<Noise,Error> {
 
@@ -82,11 +82,11 @@ class TmpFileUploadMiddleware implements UFMiddleware
 					return SurpriseTools.success();
 				}
 				function onEndPart() {
-					// Close the file, create our FileUpload object and add it to the request
+					// Close the file, create our UFFileUpload object and add it to the request
 					if ( file!=null ) {
 						file.close();
 						file = null;
-						var tmpFile = new TmpFileUploadSync( tmpFilePath, postName, origFileName, size );
+						var tmpFile = new TmpFileUpload( tmpFilePath, postName, origFileName, size );
 						ctx.request.files.add( postName, tmpFile );
 						files.push( tmpFile );
 					}
@@ -107,7 +107,7 @@ class TmpFileUploadMiddleware implements UFMiddleware
 	}
 
 	/**
-		Delete the temporary file at the end of the request
+	Delete the temporary file at the end of the request.
 	**/
 	public function responseOut( ctx:HttpContext ):Surprise<Noise,Error> {
 		if ( ctx.request.httpMethod.toLowerCase()=="post" && ctx.request.isMultipart() ) {

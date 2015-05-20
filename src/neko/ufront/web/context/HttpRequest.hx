@@ -160,7 +160,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 			);
 		}
 		catch ( e:Dynamic ) {
-			var err = 'Failed to run _parse_multipart: $e';
+			var err = 'Failed to parse multipart data: $e';
 			errors.push( err );
 		}
 

@@ -6,7 +6,7 @@ import utest.Runner;
 class TestAll
 {
 	public static function addTests( runner:Runner ) {
-		runner.addCase( new TmpFileUploadSyncTest() );
+		runner.addCase( new TmpFileUploadTest() );
 		runner.addCase( new TmpFileUploadMiddlewareTest() );
 	}
 }

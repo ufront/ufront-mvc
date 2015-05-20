@@ -1,10 +1,10 @@
 package ufront.web.upload;
 
 import utest.Assert;
-import ufront.web.upload.TmpFileUploadSync;
+import ufront.web.upload.TmpFileUpload;
 
-class TmpFileUploadSyncTest {
-	var instance:TmpFileUploadSync;
+class TmpFileUploadTest {
+	var instance:TmpFileUpload;
 
 	public function new() {}
 

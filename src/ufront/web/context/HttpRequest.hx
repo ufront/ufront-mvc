@@ -3,7 +3,7 @@ import thx.error.AbstractMethod;
 import haxe.io.Bytes;
 import haxe.ds.StringMap;
 import thx.error.NotImplemented;
-import ufront.web.upload.FileUpload;
+import ufront.web.upload.UFFileUpload;
 import ufront.core.MultiValueMap;
 using tink.CoreApi;
 using StringTools;
@@ -115,10 +115,10 @@ class HttpRequest
 	/**
 		File uploads that were part of a POST / multipart request.
 
-		Please note this is not populated automatically, you must use some request middleware to process the multipart data and populate the `files` with appropriate FileUploads.
+		Please note this is not populated automatically, you must use some request middleware to process the multipart data and populate the `files` with appropriate UFFileUploads.
 	**/
-	public var files(get, null):MultiValueMap<FileUpload>;
-	function get_files():MultiValueMap<FileUpload> {
+	public var files(get, null):MultiValueMap<UFFileUpload>;
+	function get_files():MultiValueMap<UFFileUpload> {
 		if ( null==files ) {
 			files = new MultiValueMap();
 		}
