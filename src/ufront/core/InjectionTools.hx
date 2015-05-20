@@ -23,7 +23,7 @@ class InjectionTools {
 	**/
 	#if !macro macro #end public static function injectValue<T>( injector:ExprOf<Injector>, whenAskedFor:Expr, val:Expr, ?named:ExprOf<String> ):ExprOf<Injector> {
 		InjectorMacro.keep( whenAskedFor );
-		var className = InjectorMacro.getType( whenAskedFor );
+		var className = InjectorMacro.getTypeName( whenAskedFor );
 		return macro @:privateAccess ufront.core.InjectionTools._injectValue( $injector, $className, $val, $named );
 	}
 
