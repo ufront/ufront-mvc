@@ -12,11 +12,9 @@ class TestAll
 		ufront.web.url.TestAll.addTests( runner );
 		ufront.web.upload.TestAll.addTests( runner );
 		runner.addCase( new HttpErrorTest() );
-		runner.addCase( new DispatchControllerTest() );
 		runner.addCase( new HttpCookieTest() );
 		runner.addCase( new ControllerMacrosTest() );
 		runner.addCase( new UserAgentTest() );
 		runner.addCase( new ControllerTest() );
-		runner.addCase( new DispatchTest() );
 	}
 }
