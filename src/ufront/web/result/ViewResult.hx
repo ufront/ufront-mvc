@@ -20,11 +20,16 @@ using haxe.io.Path;
 using StringTools;
 
 /**
-A ViewResult loads a view from a `TemplatingEngine`, optionally wraps it in a layout, and writes the result to the `HttpResponse` with a `text/html` content type.
+A ViewResult loads a view from a `UFViewEngine`, executes it with the correcct `TemplatingEngine`, optionally wraps it in a layout, and writes the result to the `HttpResponse`.
+
+It is designed to work with different templating engines, to be intelligent with guessing the correct view, and to work seamlessly on asynchronous platforms.
+
+It writes the final output to the client `HttpResponse` with a `text/html` content type.
 
 ### Choosing a view
 
-There's a fair bit of magic to how ufront chooses a template for the ViewResult.
+A ViewResult will attempt to guess which view to use, based on the current `ActionContext`, that is, based on which controller you are in and which method was executed for the request.
+It feels a bit like magic, but it's not: let's step through how it works.
 
 __Let's look at an example:__
 
@@ -42,8 +47,8 @@ class AdminController extends Controller {
 }
 ```
 
-If you visit `/dashboard/`, it is going to use a template at `/view/admin/dashboard.html` by default.
-If you visit `/camera/`, it is going to use a template at `/view/admin/takePhoto.html` by default.
+- If you visit `/dashboard/`, it is going to use a template at `/view/admin/dashboard.html` by default.
+- If you visit `/camera/`, it is going to use a template at `/view/admin/takePhoto.html` by default.
 
 __How does it know to look there?__
 
@@ -65,7 +70,7 @@ To change the default folder that views in this controller are found in, use the
 ```haxe
 @viewFolder("/admin-templates/")
 class AdminController extends Controller {
-  // ...
+  // Views will be in the `view/admin-templates/` folder.
 }
 ```
 
@@ -74,10 +79,19 @@ You can also set a default layout for every action on the controller:
 ```haxe
 @viewFolder("/admin-templates/")
 @layout("layout.html") // Will look in `view/admin-templates/layout.html`
-// By contrast, `@layout("/layout.html")` will look in "/view/layout.html" - notice the leading slash.
 class AdminController extends Controller {
- // ...
+  // Views will be in the `view/admin-templates/` folder.
+  // Layout will be "layout.html".
 }
+
+// If you would prefer to use a layout that isn't inside the controller's `viewFolder`, add a leading slash to `@layout`:
+@viewFolder("/admin-templates/")
+@layout("/layout.html")
+class AdminController extends Controller {
+  // Views will be in the `view/admin-templates/` folder.
+  // Layout will be `view/layout.html`.
+}
+
 ```
 
 If you want to change the template used for one of our actions, you can use the `@template` metadata:

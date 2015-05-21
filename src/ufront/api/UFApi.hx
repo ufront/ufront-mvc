@@ -8,7 +8,13 @@ import haxe.PosInfos;
 #end
 
 /**
-An API that can be used in Ufront controllers, tasks, other APIs, or via remoting.
+An API that can be used in Ufront controllers, tasks, other APIs, or remoting requests.
+
+You should place all of you file system, database or network access, in a UFApi.
+This makes it easier to interact with your app (and your server) from a `Controller` or `UFTaskSet`, on both the server and the client.
+
+You should also perform the bulk of your application logic, and especially authentication checks, in a UFApi.
+This ensures that, if your app API is available (through Haxe remoting, or a REST API for example), that an attacker can't bypass any logic checks or authentication checks by modifying the client.
 
 #### Server and Client
 
