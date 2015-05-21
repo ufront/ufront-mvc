@@ -16,9 +16,24 @@ using thx.Strings;
 using StringTools;
 
 /**
-	An implementation of HttpRequest for Client Side JS.
+An implementation of `ufront.web.context.HttpRequest` for client-side JS.
 
-	@author Jason O'Neil
+A browser side `HttpRequest` reads the current state from `Browser.document` and `Browser.window`.
+
+It works with the `PushState` library to be able to emulate multiple requests without reloading the page.
+The `PushState` library also allows us to fake a `POST` request.
+
+Platform quirks with `HttpRequest` and client-side JS:
+
+- `this.httpMethod`, `this.post` and `this.postString` - Implemented using `PushState` and faking a post request.
+- `this.clientHeaders` - Not implemented: Not accessible in a browser environment. Will always be an empty Map.
+- `this.authorization` - Not implemented: HTTP Headers not accessible in a browser environment.
+- `this.userAgent` - Not implemented: HTTP Headers not accessible in a browser environment. This could be worked-around if there is demand.
+- `this.clientIP` - Not implemented: Not accessible from in a browser environment. Will always return "127.0.0.1".
+- `this.scriptDirectory` - Not implemented: It does not make sense in a browser environment.
+- `this.parseMultipart()` - Not implemented: This is not implemented, though may be possible using the HTML5 File Api.
+
+@author Franco Ponticelli, Jason O'Neil
 **/
 class HttpRequest extends ufront.web.context.HttpRequest {
 
@@ -47,7 +62,8 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 	}
 
 	/**
-		`parseMultipart` is not implemented for ufront-client-mvc, and will always return a success with no action taken.
+	Not implemented for `ufront-client-mvc`.
+	This will always return a success with no action taken.
 	**/
 	override public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error> {
 		return SurpriseTools.success();
@@ -87,7 +103,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 	}
 
 	/**
-		Client IP address isn't available in pure JS, we would need to read the result from the server.
+	Client IP address isn't available in pure JS, we would need to read the result from the server.
 	**/
 	override function get_clientIP() {
 		if ( clientIP==null )

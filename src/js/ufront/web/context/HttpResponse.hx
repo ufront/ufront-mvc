@@ -5,11 +5,29 @@ using Detox;
 using StringTools;
 
 /**
-	An implementation of HttpResponse for Client Side JS.
+An implementation of `ufront.web.context.HttpResponse` for client-side JS.
 
-	It sets cookies, ignores headers, and, if the response type is text/html, attempts to replace the elements on the page with the new content.
+This fairly crudely tries to recreate a server side style response while staying on the same page in JS:
 
-	@author Jason O'Neil
+- Cookies are set using `Document.cookie`.
+- HTTP Headers are mostly ignore.
+- Redirects on the current domain are handled by calling `PushState.push()`.
+- Redirects to a different domain are handled by setting `Document.location.href`.
+- If the response content-type is `text/html`, then we attempt to parse the response, and:
+  - Replace the current head tag's innerHTML with the new header's innerHTML.
+  - Replace the current body tag's innerHTML with the new body's innerHTML.
+
+Limitations:
+
+- Currently the client does not defer to the server if it cannot handle a request. We should support this.
+- Relative redirects (on the same domain) are always handled using PushState, which may not be desirable.
+- Our method for replacing DOM nodes is incredibly crude, and can result in a FOUC (Flash of Unstyled Content).
+  A DOM diffing algorithm would be preferable.
+
+Given these limitations, it may be better to have a custom `ActionResult`, which on the client has more intelligent logic for replacing the current view smoothly.
+Such an action result could call `HttpContext.completion.set(CFlushComplete)` to prevent this crude `HttpResponse.flush()` from taking place.
+
+@author Jason O'Neil
 **/
 class HttpResponse extends ufront.web.context.HttpResponse {
 	public function new() {

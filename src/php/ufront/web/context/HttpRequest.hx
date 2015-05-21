@@ -15,12 +15,11 @@ using thx.Strings;
 using StringTools;
 
 /**
-	An implementation of HttpRequest for PHP.
+An implementation of `ufront.web.context.HttpRequest` for PHP.
 
-	@author Franco Ponticelli, Jason O'Neil
+@author Franco Ponticelli, Jason O'Neil
 **/
-class HttpRequest extends ufront.web.context.HttpRequest
-{
+class HttpRequest extends ufront.web.context.HttpRequest {
 	public function new() {
 		_parsed = false;
 	}
@@ -34,10 +33,8 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	override function get_postString() {
 		if ( httpMethod=="GET" )
 			return "";
-		if ( postString==null )
-		{
-			if (untyped __call__("isset", __var__('GLOBALS', 'HTTP_RAW_POST_DATA')))
-			{
+		if ( postString==null ) {
+			if (untyped __call__("isset", __var__('GLOBALS', 'HTTP_RAW_POST_DATA'))) {
 				postString = untyped __var__('GLOBALS', 'HTTP_RAW_POST_DATA');
 			} else {
 				postString = untyped __call__("file_get_contents", "php://input");

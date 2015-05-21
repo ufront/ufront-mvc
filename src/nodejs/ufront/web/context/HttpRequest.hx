@@ -14,16 +14,15 @@ using thx.Strings;
 using StringTools;
 
 /**
-	An implementation of HttpRequest for NodeJS, based on `js.npm.express.Request`.
+An implementation of `ufront.web.context.HttpRequest` for NodeJS, based on `js.npm.express.Request`.
 
-	Platform peculiarities:
+Platform quirks with `HttpRequest` and NodeJS:
 
-	- `clientHeaders` will have all keys in lower case.
-	- `query`, `post` and `cookies` only support one value per name.
-	- When you have a parameter  named `user.email`, Express JS tries to convert it into a "user" object with a field "email". We undo that, and expose it as "user.email".
-	-
+- `clientHeaders` will have all keys in lower case.
+- `query`, `post` and `cookies` only support one value per name.
+- When you have a parameter  named `user.email`, Express JS tries to convert it into a "user" object with a field "email". We undo that, and expose it as "user.email".
 
-	@author Franco Ponticelli, Jason O'Neil
+@author Franco Ponticelli, Jason O'Neil
 **/
 class HttpRequest extends ufront.web.context.HttpRequest
 {

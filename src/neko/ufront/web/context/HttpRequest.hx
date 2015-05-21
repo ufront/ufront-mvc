@@ -16,42 +16,50 @@ using thx.Strings;
 using StringTools;
 
 /**
-	An implementation of HttpRequest for mod_neko and mod_tora.
+	An implementation of `ufront.web.context.HttpRequest` for neko.
+
+	Supported servers:
+
+	- `mod_neko` on Apache.
+	- `mod_tora` on Apache.
+	- `mod_tora` with FastCGI support (for Nginx etc).
+	- `nekotools server`
+
+	Platform quirks with NodeJS and HttpRequest:
+
+	- `HttpRequest.parseMultipart` completely fails on `nekotools server`.
+	  If you are using uploads in your app, it is recomended to have a development environment using a more thoroughly tested server.
+	- `HttpRequest.parseMultipart` callbacks **must** function synchronously, despite the fact they are supposed to return a `Future`.
 
 	@author Franco Ponticelli, Jason O'Neil
 **/
-class HttpRequest extends ufront.web.context.HttpRequest
-{
-	public static function encodeName(s:String)
-	{
-		return s.urlEncode().replace('.', '%2E');
+class HttpRequest extends ufront.web.context.HttpRequest {
+	static function encodeName( s:String ) {
+		return s.urlEncode().replace( '.', '%2E' );
 	}
 
-	public function new()
-	{
+	public function new() {
 		_init();
 		_parsed = false;
 	}
 
-	override function get_queryString()
-	{
-		if (null == queryString) {
+	override function get_queryString() {
+		if ( queryString==null ) {
 			var v = _get_params_string();
 			queryString = (v!=null) ? new String(v).urlDecode() : "";
 
 			var indexOfHash = queryString.indexOf("#");
-			if (indexOfHash>-1) {
+			if ( indexOfHash>-1 ) {
 				queryString = queryString.substring( 0, indexOfHash );
 			}
 		}
 		return queryString;
 	}
 
-	override function get_postString()
-	{
-		if (httpMethod == "GET")
+	override function get_postString() {
+		if ( httpMethod=="GET" )
 			return "";
-		if (null == postString) {
+		if ( null==postString ) {
 			var v = _get_post_data();
 			postString = (v!=null) ? new String(v).urlDecode() : "";
 		}
@@ -61,7 +69,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	var _parsed:Bool;
 
 	/**
-		parseMultipart implementation method for mod_neko.
+		`HttpRequest.parseMultipart()` implementation method for mod_neko.
 
 		Please see documentation on `ufront.web.context.HttpRequest.parseMultipart` for general information.
 
@@ -71,10 +79,8 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		- Because of this, `onPart` and `onData` will run synchronously - the moment the callback finishes, the next callback will continue.
 		- We suggest on neko you only use callbacks which can run synchronously.
 		- `onEndPart` will not be called until all `onPart` and `onData` functions have finished firing.
-		-
 	**/
-	override public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error>
-	{
+	override public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error> {
 		if ( !isMultipart() )
 			return SurpriseTools.success();
 
@@ -150,7 +156,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 			_parse_multipart(
 				function(p,f) {
 					var partName = new String(p);
-					var fileName = if( f == null ) null else new String(f);
+					var fileName = if( f==null ) null else new String(f);
 					doPart( partName, fileName );
 				},
 				function(buf,pos,len) {
@@ -176,16 +182,14 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		else return Success(Noise).asFuture();
 	}
 
-	override function get_query()
-	{
-		if (null == query)
+	override function get_query() {
+		if ( query==null )
 			query = getMultiValueMapFromString(queryString);
 		return query;
 	}
 
-	override function get_post()
-	{
-		if (httpMethod == "GET")
+	override function get_post() {
+		if ( httpMethod=="GET" )
 			return new MultiValueMap();
 		if ( null==post ) {
 			if ( isMultipart() ) {
@@ -198,14 +202,12 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		return post;
 	}
 
-	override function get_cookies()
-	{
-		if (null == cookies)
-		{
+	override function get_cookies() {
+		if ( cookies==null ) {
 			var p = _get_cookies();
 			cookies = new MultiValueMap();
 			var k = "";
-			while( p != null ) {
+			while( p!=null ) {
 				untyped k.__s = p[0];
 				cookies.add(k,new String(p[1]));
 				p = untyped p[2];
@@ -214,16 +216,14 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		return cookies;
 	}
 
-	override function get_hostName()
-	{
-		if (null == hostName)
+	override function get_hostName() {
+		if ( hostName==null )
 			hostName = new String(_get_host_name());
 		return hostName;
 	}
 
-	override function get_clientIP()
-	{
-		if (null == clientIP)
+	override function get_clientIP() {
+		if ( clientIP==null )
 			clientIP = new String(_get_client_ip());
 		return clientIP;
 	}
@@ -231,9 +231,8 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	/**
 	 *  @todo the page processor removal is quite hackish
 	 */
-	override function get_uri()
-	{
-		if (null == uri) {
+	override function get_uri() {
+		if ( uri==null ) {
 			uri = new String(_get_uri());
 			if(uri.endsWith(".n")) {
 				var p = uri.split("/");
@@ -244,10 +243,8 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		return uri;
 	}
 
-	override function get_clientHeaders()
-	{
-		if (null == clientHeaders)
-		{
+	override function get_clientHeaders() {
+		if ( clientHeaders==null ) {
 			clientHeaders = new StringMap();
 			var v = _get_client_headers();
 			while( v != null ) {
@@ -262,20 +259,16 @@ class HttpRequest extends ufront.web.context.HttpRequest
 		return clientHeaders;
 	}
 
-	override function get_httpMethod()
-	{
-		if (null == httpMethod)
-		{
+	override function get_httpMethod() {
+		if ( httpMethod==null ) {
 			httpMethod = new String(_get_http_method());
-			if (null == httpMethod) httpMethod = "";
+			if ( httpMethod==null ) httpMethod = "";
 		}
 		return httpMethod;
 	}
 
-	override function get_scriptDirectory()
-	{
-		if (null == scriptDirectory)
-		{
+	override function get_scriptDirectory() {
+		if ( scriptDirectory==null ) {
 			scriptDirectory = new String(_get_cwd());
 		}
 		return scriptDirectory;
@@ -324,14 +317,13 @@ class HttpRequest extends ufront.web.context.HttpRequest
 	static var _parse_multipart:Dynamic;
 	static var _base_decode = Lib.load("std","base_decode",2);
 	static var _inited = false;
-	static function _init()
-	{
+	static function _init() {
 		if(_inited)
 			return;
 		_inited = true;
 		var get_env = Lib.load("std", "get_env", 1);
 		var ver = untyped get_env("MOD_NEKO".__s);
-		var lib = "mod_neko" + if ( ver == untyped "1".__s ) "" else ver;
+		var lib = "mod_neko" + if ( ver==untyped "1".__s ) "" else ver;
 		_get_params_string = Lib.load(lib, "get_params_string", 0);
 		_get_post_data = Lib.load(lib, "get_post_data", 0);
 		_get_cookies = Lib.load(lib, "get_cookies", 0);

@@ -1,13 +1,13 @@
-/**
- * ...
- * @author Franco Ponticelli
- */
-
 package neko.ufront.web.context;
 
 import neko.Web;
 using StringTools;
 
+/**
+An implementation of `ufront.web.context.HttpResponse` for Neko.
+
+@author Franco Ponticelli, Jason O'Neil
+**/
 class HttpResponse extends ufront.web.context.HttpResponse {
 	public function new() {
 		super();
@@ -18,7 +18,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 			return;
 
 		_flushed = true;
-		
+
 		// Set HTTP status code
 		Web.setReturnCode( status );
 

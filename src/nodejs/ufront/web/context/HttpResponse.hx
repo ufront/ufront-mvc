@@ -1,12 +1,12 @@
-/**
- * ...
- * @author Franco Ponticelli
- */
-
 package nodejs.ufront.web.context;
 import js.Node;
 using StringTools;
 
+/**
+An implementation of `ufront.web.context.HttpRequest` for NodeJS, based on `js.npm.express.Response`.
+
+@author Franco Ponticelli, Jason O'Neil
+**/
 class HttpResponse extends ufront.web.context.HttpResponse {
 
 	var res:js.node.http.ServerResponse;

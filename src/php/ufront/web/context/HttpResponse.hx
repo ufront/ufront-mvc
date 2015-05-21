@@ -1,17 +1,16 @@
-/**
- * ...
- * @author Franco Ponticelli
- */
-
 package php.ufront.web.context;
 
 using StringTools;
 
-class HttpResponse extends ufront.web.context.HttpResponse
-{
-	override function flush()
-	{
-		if (_flushed) return;
+/**
+An implementation of `ufront.web.context.HttpResponse` for PHP.
+
+@author Franco Ponticelli, Jason O'Neil
+**/
+class HttpResponse extends ufront.web.context.HttpResponse {
+	override function flush() {
+		if (_flushed)
+			return;
 		_flushed = true;
 		var k = null, v = null;
 
@@ -20,38 +19,33 @@ class HttpResponse extends ufront.web.context.HttpResponse
 		untyped __call__('header', "HTTP/1.1 " + statusDescription(status), true, status);
 
 		try {
-			for (cookie in _cookies)
-			{
+			for ( cookie in _cookies ) {
 				var expire = cookie.expires == null ? 0 : cookie.expires.getTime() / 1000;
 				untyped __call__("setcookie", cookie.name, cookie.value, expire, cookie.path, cookie.domain, cookie.secure);
 			}
-		} catch (e : Dynamic)
-		{
+		} catch (e:Dynamic) {
 			throw 'Failed to set the cookie, output already sent';
 		}
 
 		try {
 			// write headers
-			for (key in _headers.keys())
-			{
+			for ( key in _headers.keys() ) {
 				k = key;
 				v = _headers.get(key);
-				if (k == "Content-type" && null != charset && v.startsWith('text/'))
-				{
+				if ( k=="Content-type" && null!=charset && v.startsWith('text/') ) {
 					v += "; charset=" + charset;
 				}
 				untyped __call__("header", v == null ? key : key + ": " + v, true);
 			}
-		} catch (e : Dynamic) {
+		} catch (e:Dynamic) {
 			throw 'Invalid header: "$k: $v", or output already sent';
 		}
 		// write content
-		Sys.print(_buff.toString());
+		Sys.print( _buff.toString() );
 	}
 
-	public static function statusDescription( r : Int )
-	{
-		switch(r) {
+	public static function statusDescription( r:Int ) {
+		switch r {
 			case 100: return "100 Continue";
 			case 101: return "101 Switching Protocols";
 			case 200: return "200 Continue";
@@ -92,7 +86,7 @@ class HttpResponse extends ufront.web.context.HttpResponse
 			case 503: return "503 Service Unavailable";
 			case 504: return "504 Gateway Timeout";
 			case 505: return "505 HTTP Version Not Supported";
-			default: return Std.string(r);
+			default: return Std.string( r );
 		}
 	}
 }
