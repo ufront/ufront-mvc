@@ -9,7 +9,29 @@ using tink.CoreApi;
 using StringTools;
 
 /**
-A description of the current HttpRequest.
+A description of the current HTTP request coming from the client.
+
+A HttpRequest object holds all the information about the current request coming from the client.
+
+This includes:
+
+- The URI of this request. See `this.uri`.
+- The HTTP method of the current request . See `this.httpMethod`.
+- The IP address of the client making the request . See `this.clientIP`.
+- The host name of the current server . See `this.hostName`.
+- The directory on the web server that the script is running from. See `this.scriptDirectory`.
+- The username and password included in this request . See `this.authorization`.
+- The query (or "GET") parameters included in the current request. See `this.query`.
+- The raw string of query parameters. See `this.queryString`.
+- The post parameters included in the current request. See `this.post`.
+- The raw string of post parameters. See `this.postString`.
+- The cookies included in this request. See `this.cookies`.
+- A map of all parameters in the request, whether they are from `query`, `post` or `cookies`. See `this.params`.
+- The HTTP headers sent as aprt of the client's request. See `this.clientHeaders`.
+- A user agent object that attempts to make sense of the user agent string. See `this.userAgent`.
+- The file uploads included in this request. See `this.files`.
+- Is the current request a multipart request (form upload)? See `this.isMultipart()`.
+- Attempt to process the upload data included in this request. See `this.parseMultipart()`.
 
 __Array Parameters__
 
@@ -27,47 +49,49 @@ __Platform Implementations__
 
 This base class is mostly abstract methods, each platform must implement the key details.
 
-You can use `HttpRequest.create()` to create the appropriate sub-class for most platforms, except NodeJS, where you should use:
+You can use `HttpRequest.create()` to create the appropriate sub-class for most platforms.
+With NodeJS however, where you should use:
 
 ```
-new nodejs.ufront.web.HttpRequest(req)
+new nodejs.ufront.web.HttpRequest(req); // A js.npm.express.Request object.
 ```
+
+Please see the docs for each platform implementation for any specific details:
+
+- `neko.ufront.web.context.HttpRequest`
+- `php.ufront.web.context.HttpRequest`
+- `js.ufront.web.context.HttpRequest`
+- `nodejs.ufront.web.context.HttpRequest`
 **/
-class HttpRequest
-{
+class HttpRequest {
 	/**
-		Create a `HttpRequest` using the platform specific implementation.
+	Create a `HttpRequest` using the platform specific implementation.
 
-		Currently supports PHP and Neko only.
+	Currently supports PHP, Neko and client JS.
 	**/
-	public static function create():HttpRequest
-	{
+	public static function create():HttpRequest {
 		return
-			#if php
-				new php.ufront.web.context.HttpRequest();
-			#elseif neko
-				new neko.ufront.web.context.HttpRequest();
-			#elseif (js && !nodejs)
-				new js.ufront.web.context.HttpRequest();
-			#elseif (js && nodejs)
-				throw "Please use `new nodejs.ufront.web.HttpRequest(req)` instead";
-			#else
-				throw new NotImplemented();
+			#if php new php.ufront.web.context.HttpRequest();
+			#elseif neko new neko.ufront.web.context.HttpRequest();
+			#elseif (js && !nodejs) new js.ufront.web.context.HttpRequest();
+			#elseif (js && nodejs) throw "Please use `new nodejs.ufront.web.HttpRequest(req)` instead";
+			#else throw new NotImplemented();
 			#end
 	}
 
 	/**
-		A simple hash of all the parameters supplied in this request.
+	A `MultiValueMap` of all the parameters supplied in this request.
 
-		The parameters are collected in the following order:
+	The parameters are collected in the following order:
 
-		- cookies
-		- query-string parameters
-		- post values
+	- cookies
+	- query-string parameters
+	- post values
 
-		with the latter taking precedence over the former.
-		For example, if both a cookie and a post variable define a parameter `name`, calling `request.params["name"]` will show the POST value.
-		In that example, if you would like to access all the various values of `name`, you can use `request.params.getAll("name")` or separately access `request.cookies` or `request.post`.
+	with the latter taking precedence over the former.
+
+	For example, if both a cookie and a post variable define a parameter `name`, calling `request.params["name"]` will show the POST value.
+	In that example, if you would like to access all the various values of `name`, you can use `request.params.getAll("name")` or separately access `request.cookies["name"]` or `request.post["name"]`.
 	**/
 	@:isVar public var params(get, null):MultiValueMap<String>;
 	function get_params():MultiValueMap<String> {
@@ -78,44 +102,51 @@ class HttpRequest
 	}
 
 	/**
-		The GET query parameters.
+	The raw query string in a GET request.
 
-		Will return an empty String if there are no GET parameters.
+	This is the part of the URL following a `?` character.
+
+	Will return an empty String if there are no GET parameters.
 	**/
 	public var queryString(get, null):String;
 	function get_queryString():String return throw new AbstractMethod();
 
 	/**
-		The POST query parameters.
+	The raw post string in a POST request.
 
-		Will return an empty String if there are no GET parameters.
+	Will return an empty String if there are no POST parameters.
 	**/
 	public var postString(get, null):String;
 	function get_postString():String return throw new AbstractMethod();
 
 	/**
-		The GET query parameters for this request.
+	The query parameters included in this request for this request.
+
+	These are the parameters supplied in the URL, following the `?` character.
 	**/
 	public var query(get, null):MultiValueMap<String>;
 	function get_query():MultiValueMap<String> return throw new AbstractMethod();
 
 	/**
-		The POST parameters for this request.
+	The POST parameters for this request.
 
-		Please note that if the request is a multipart request, and `parseMultipart` has not been called, it will be called to fetch all the post data from the various parts.
-		Because `parseMultipart` can only be called once, this will prevent you from being able to process any file uploads.
-		If you need access to file uploads, please ensure `parseMultipart` is called before `post` is accessed.
-		This can be achieved using upload middleware.
+	If there are no POST parameters, or this is a GET request, this will return an empty map.
 
-		If any files were uploaded, they will appear in the "post" values with their parameter name, and the value will contain the original filename of the upload.
+	> **Note:** If the request is a multipart request, and `parseMultipart` has not been called, it will be called to fetch all the post data from the various parts.
+	> Because `parseMultipart` can only be called once, this will prevent you from being able to process any file uploads.
+	>
+	> If you need access to file uploads, please ensure `parseMultipart` is called before `post` is accessed.
+	> This can be achieved easily by using upload middleware at the start of your request to check for any uploads.
+	>
+	> If any files were uploaded, they will appear in the "post" values with their parameter name, and the value will contain the original filename of the upload.
 	**/
 	public var post(get, null):MultiValueMap<String>;
 	function get_post():MultiValueMap<String> return throw new AbstractMethod();
 
 	/**
-		File uploads that were part of a POST / multipart request.
+	File uploads that were part of a POST / multipart request.
 
-		Please note this is not populated automatically, you must use some request middleware to process the multipart data and populate the `files` with appropriate UFFileUploads.
+	Please note this is not populated automatically, you must use some request middleware to process the multipart data and populate the `files` field with appropriate `UFFileUpload` objects.
 	**/
 	public var files(get, null):MultiValueMap<UFFileUpload>;
 	function get_files():MultiValueMap<UFFileUpload> {
@@ -126,39 +157,43 @@ class HttpRequest
 	}
 
 	/**
-		The Cookie parameters for this request.
+	The Cookies that were included with this request.
 	**/
 	public var cookies(get, null):MultiValueMap<String>;
 	function get_cookies():MultiValueMap<String> return throw new AbstractMethod();
 
 	/**
-		The host name of the current server
+	The host name of the current server.
 	**/
 	public var hostName(get, null):String;
 	function get_hostName():String return throw new AbstractMethod();
 
 	/**
-		The Client's IP address
+	The Client's IP address.
 	**/
 	public var clientIP(get, null):String;
 	function get_clientIP():String return throw new AbstractMethod();
 
 	/**
-		The Uri requested in this HTTP request.
+	The Uri requested in this HTTP request.
 
-		This is the URI before any filters have been applied.
+	This is the URI before any filters have been applied.
+
+	See `HttpContext.getRequestUri()` for a filtered version of the URI.
 	**/
 	public var uri(get, null):String;
 	function get_uri():String return throw new AbstractMethod();
 
 	/**
-		The client headers supplied in the request.
+	The HTTP headers supplied by the client in this request.
 	**/
 	public var clientHeaders(get, null):MultiValueMap<String>;
 	function get_clientHeaders():MultiValueMap<String> return throw new AbstractMethod();
 
 	/**
-		Information about the user agent that made the request.
+	Information about the User-Agent that made this request, based on the "User-Agent" HTTP header.
+
+	Please see `UserAgent` for more information.
 	**/
 	public var userAgent(get, null):UserAgent;
 	function get_userAgent():UserAgent {
@@ -168,115 +203,122 @@ class HttpRequest
 	}
 
 	/**
-		The HTTP method used for the request.
+	The HTTP method used for the request.
 
-		Usually "get" or "post", but can be other things.
+	Usually "get" or "post", but can be other things.
 
-		Case sensitivity depends on the environement.
+	Case sensitivity depends on the environement.
 	**/
 	public var httpMethod(get, null):String;
 	function get_httpMethod():String return throw new AbstractMethod();
 
 	/**
-		The path of the currently executing script.
+	The path of the currently executing script.
 
-		This is the path to your `index` file, not to the current class or controller.
+	This is the path to your `index` file, not to the current class or controller.
 
-		It will usually be an absolute path, but depending on the environment it may be relative.
+	It will usually be an absolute path, but depending on the environment it may be relative.
 
-		@todo confirm this always has a traling slash.  It appears to...
+	This path will always include a trailing slash.
 	**/
 	public var scriptDirectory(get, null):String;
 	function get_scriptDirectory():String return throw new AbstractMethod();
 
 	/**
-		Gives the username and password supplied by the "Authorization" client header.
+	Gives the username and password supplied by the `Authorization` client header.
 
-		If no "Authorization" header was specified, it will return null.
+	If no `Authorization` header was specified, it will return null.
 
-		If "Authorization" header was specified, but it did not have exactly two parameters, it will throw an exception.
+	If `Authorization` header was specified, but it did not have exactly two parameters, it will throw an exception.
 
-		To trigger the login box to open on the browser, use `context.response.requireAuthentication("Please login")`.
+	To trigger the login box to open on the browser, use `HttpResponse.requireAuthentication("Please login")`.
 	**/
 	public var authorization(get, null):{ user:String, pass:String };
 	function get_authorization():{ user:String, pass:String } return throw new AbstractMethod();
 
 	/**
-		Check if the current request is a multipart/form-data request.
+	Check if the current request is a `multipart/form-data` request.
 
-		This is a shortcut for: `clientHeaders["Content-Type"].startsWith("multipart/form-data")`
+	This is a shortcut for: `clientHeaders["Content-Type"].startsWith("multipart/form-data")`.
 	**/
 	public function isMultipart():Bool {
 		return clientHeaders.exists("Content-Type") && clientHeaders["Content-Type"].startsWith("multipart/form-data");
 	}
 
 	/**
-		Parse the multipart data of this request.
+	Parse the multipart data of this request.
 
-		> Please note, if you merely wish to access file uploads, it is probably better to use an existing `ufront.app.RequestMiddleware` that parses multipart data and gives access to the uploads through `request.files`.
-		> Calling parseMultipart() manually is mostly intended for people developing new file-upload middleware.
+	> **Note:** If you merely wish to access file uploads, it is probably better to use an existing `RequestMiddleware` that parses multipart data and gives access to the uploads through `HttpRequest.files`.
+	> Calling `parseMultipart()` manually is mostly intended for people developing new file-upload middleware.
 
-		If a POST request contains multipart data, `parseMultipart` must be called in order to have access to both the POST parameters and to uploaded files.
+	If a POST request contains multipart data, `parseMultipart` must be called in order to have access to both the POST parameters and to uploaded files.
 
-		Accessing `httpRequest.post` on a multipart request will call `parseMultipart()` but not process any file uploads.
-		Because of this, it is recommended that you use a `ufront.app.RequestMiddleware` very early in your request, before `request.post` is ever called, so that you can parse your file uploads, even if you do not handle them until later.
+	Accessing `HttpRequest.post` on a multipart request will call `parseMultipart()` but not process any file uploads.
+	Because of this, it is recommended that you use a `RequestMiddleware` very early in your request, before `HttpRequest.post` is ever called, so that you can parse your file uploads, even if you do not handle them until later.
 
-		In each platform's implementation of `parseMultipart()`, it should take care of parsing post variables to `request.post`, and then call the `onPart`, `onData` and `onEndPart` for each file upload.
+	In each platform's implementation of `parseMultipart()`, it will take care of parsing post variables to `HttpRequest.post`, and then call the `onPart`, `onData` (multiple times) and `onEndPart` for each file upload.
 
-		You should only call `parseMultipart()` a maximum of once per request, and an exception will be thrown if you attempt to call it more than once.
+	You should only call `parseMultipart()` a maximum of once per request, and an exception will be thrown if you attempt to call it more than once.
 
-		If this method is called on a request which was not multipart encoded, the result is unspecified.
+	If this method is called on a request which was not multipart encoded, the result is unspecified.
 
-		@param onPart (optional) - called once at the start of each new file: `onPart( paramName:String, origFileName:String )`
-		@param onData (optional) - called multiple times (in order) for each file: `onData( bytes:haxe.io.Bytes, pos:Int, length:Int )`
-		@param onEndPart (optional) - called after all data for a part has been received.
+	It is safe to assume that only one of the callbacks will be running at a time, and that they will run in order for each file.
 
-		It is safe to assume that only one of the callbacks will be running at a time, and that they will run in order for each file.
+	Even though the method signiatures here require returning a `Future`, these will be ignored on some platforms, such as neko.
+	Check the documentation on the specific `HttpRequest` implementation for details.
 
-		Even though the method signiatures here require returning a `tink.core.Future`, these will be ignored on some platforms, such as neko.  Check the documentation on the specific HttpRequest implementation for details.
+	@param onPart (optional) - called once at the start of each new file. See `OnPartCallback`.
+	@param onData (optional) - called multiple times (in order) for each file. See `OnDataCallback`.
+	@param onEndPart (optional) - called after all data for a part has been received. See `OnEndPartCallback`.
 	**/
 	public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error> return throw new AbstractMethod();
-
-	/**
-		Things not implemented yet but which would be handy:
-	**/
-
-	/**
-	 * never has trailing slash. If the application is in the server root the path will be empty ""
-	 */
-	//public var applicationPath(get, null):String;
-	//public var broswer(get, setBrowser):HttpBrowserCapabilities;
-	//public var encoding(get, setEncoding):String;
-	//public var contentLength(get, null):Int;
-	//public var contentType(get, null):String;
-	//public var mimeType(get, setMimeType):String;
-	//public var files(get, null):List<HttpPostedFile>;
-	//public var httpMethod(get, null):String;
-	//public var isAuthenticated(get, null):String;
-	/**
-	 * evaluates to true if the IP address is 127.0.0.1 or the same as the client ip address
-	 */
-	//public var isLocal(get, null):String;
-	//public var isSecure(get, null):String;
-	//public var environment(get, null):String; // mod_neko, mod_tora, mod_php, browserjs, nodejs etc
-
-	//public var userAgent(get, null):String;
-	//public var userHostAddress(get, null):String;
-	//public var userHostName(get, null):String;
-	//public var userLanguages(get, null):Array<String>;
 }
 
 /**
-	`function onPart(paramName:String, origFileName:String):Surprise<Noise,Error>`
+A callback to process the start of a new file upload.
+
+This will always be followed by one or more `OnDataCallback` calls.
+
+```
+function onPart(paramName:String, origFileName:String):Surprise<Noise,Error> {
+  // ...
+}
+```
+
+Please note, not all platforms will support asynchronous operations in these callbacks.
+Please see the documentation on each platforms implementation of `HttpRequest` for details.
 **/
 typedef OnPartCallback = String->String->Surprise<Noise,Error>;
 
 /**
-	`function onData(bytes:Bytes, pos:Int, length:Int):Surprise<Noise,Error>`
+A callback to process a chunk of data for a file upload.
+
+This will follow an `OnPartCallback` call, and may be called multiple times for each file.
+Once all the data has been processed, the `OnEndPartCallback` will be called.
+
+```
+function onData(bytes:Bytes, pos:Int, length:Int):Surprise<Noise,Error> {
+  // ...
+}
+```
+
+Please note, not all platforms will support asynchronous operations in these callbacks.
+Please see the documentation on each platforms implementation of `HttpRequest` for details.
 **/
 typedef OnDataCallback = Bytes->Int->Int->Surprise<Noise,Error>;
 
 /**
-	`function onEnd():Surprise<Noise,Error>`
+A callback to process the end of a file upload.
+
+This will be called once all the data has been processed and all `OnDataCallback` calls are complete.
+
+```
+function onEnd():Surprise<Noise,Error> {
+  // ...
+}
+```
+
+Please note, not all platforms will support asynchronous operations in these callbacks.
+Please see the documentation on each platforms implementation of `HttpRequest` for details.
 **/
 typedef OnEndPartCallback = Void->Surprise<Noise,Error>;

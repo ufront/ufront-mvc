@@ -1,49 +1,81 @@
 package ufront.web.context;
 
 import ufront.web.result.ActionResult;
+import ufront.app.UFRequestHandler;
 import thx.error.NullArgument;
 
 /**
-	A context describing the result returned by an action.
+A context holding information about which action was taken during the request, and what the result was.
 
-	Contains the `HttpContext`, as well as the utilised UFRequestHandler, controller, action, arguments and result.
+An `ActionContext` keeps track of:
 
-	It is useful for helping know how to present a response to the client, and is used in the `ufront.web.result.ActionResult` classes.
+- Which `UFRequestHandler` handled the request.
+- Which `Controller` (or API or other object) did the main request processing.
+- Which "action" was executed on the above controller.
+- Which arguments were passed to the above action.
+- What the result of the given action was.
 
-	It is also helpful for logging and for unit testing - so we can be sure our requests are being acted upon in the way we expect.
+One of the main uses is in the `ActionResult` classes.
+These take an `ActionContext` and use it to write a response to the client, based on the information in this context.
+
+It is also helpful for logging and for unit testing - so we can be sure our requests are going to the right places, and being handled in the way we expect.
 **/
-class ActionContext
-{
-	/** A link to the full `HttpContext` **/
+class ActionContext {
+	/** A link to the full `HttpContext` this ActionContext is associated with. **/
 	public var httpContext(default, null):HttpContext;
 
-	/** The UFRequestHandler that was used in this request.  Will be null until the request is handled. **/
-	public var handler:Null<{}>;
+	/**
+	The `UFRequestHandler` that was used in this request.
 
-	/** The controller that was used in this request.  Will be null until the request is handled. **/
+	This will be `null` until the request is handled.
+	**/
+	public var handler:Null<UFRequestHandler>;
+
+	/**
+	The controller that was used in this request.
+
+	Please note this will not always be a `Controller` object.
+	For example, a `RemotingHandler` would insert the `UFApi` that was acted upon as the controller here.
+
+	This will be `null` until the request is handled.
+	**/
 	public var controller:Null<{}>;
 
-	/** The name of the action / method that was used in this request.  Will be null until the request is handled. **/
+	/**
+	The name of the action or method that was used in this request.
+
+	This will be `null` until the request is handled.
+	**/
 	public var action:Null<String>;
 
-	/** The array of arguments used for the current action / method in this request.  Will be null until the request is handled. **/
+	/**
+	The array of arguments used for the current action or method in this request.
+
+	This will be `null` until the request is handled.
+	**/
 	public var args:Null<Array<Dynamic>>;
 
-	/** The `ActionResult` that came from processing the request. Will be null until the action has been executed. **/
+	/**
+	The `ActionResult` that came from processing the request.
+
+	This will be `null` until the request is handled.
+	**/
 	public var actionResult:ActionResult;
 
 	/**
-		An array containing all the "parts" of the current Uri, split by "/".
+	An array containing all the "parts" of the current Uri, split by "/".
 
-		The first time you access this, it will load it from `httpContext.getRequestUri().split("/")`.
+	The first time you access this, it will load it from `httpContext.getRequestUri().split("/")`.
 
-		Note: this array may be modified as the request is handled.
-		For example, if dispatching to a sub-controller, the controller may remove certain parts and leave only parts relevant to the sub controller.
-		If you need access to the original `uriParts`, you should split the `httpContext.getRequestUri()` yourself to be sure.
+	Note: this array may be modified as the request is handled.
+	For example, if dispatching to a sub-controller, the controller may remove certain parts and leave only parts relevant to the sub controller.
+	If you need access to the original `uriParts`, you should split the `httpContext.getRequestUri()` yourself to be sure.
 	**/
 	public var uriParts(get, null):Array<String>;
 
-	/** Create a new ActionContext.  HttpContext is required. **/
+	/**
+	Create a new ActionContext, to be associated with the given `HttpContext`.
+	**/
 	public function new( httpContext:HttpContext ) {
 		NullArgument.throwIfNull( httpContext );
 		this.httpContext = httpContext;
