@@ -8,13 +8,9 @@ import ufront.auth.AuthError;
 import ufront.auth.*;
 using ufront.test.TestUtils;
 
-class NobodyAuthHandlerTest
-{
+class NobodyAuthHandlerTest {
 
-	public function new()
-	{
-
-	}
+	public function new() { }
 
 	public function beforeClass():Void {}
 

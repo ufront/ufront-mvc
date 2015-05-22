@@ -18,9 +18,8 @@ class ViewResultTest {
 
 	public function teardown():Void {}
 
-	public function testViewResult():Void {
-	}
-	
+	// public function testViewResult():Void {}
+
 	public function testViewResultWithFuture():Void {
 		// Test that our `ViewResult.create` shortcut works with futures.
 		var futureData = Future.sync({ name: "Jason" });

@@ -4,8 +4,7 @@ import haxe.ds.StringMap;
 import utest.Assert;
 import ufront.core.MultiValueMap;
 
-class MultiValueMapTest
-{
+class MultiValueMapTest {
 	var emptyMap:MultiValueMap<Int>;
 	var stringMap:MultiValueMap<String>;
 
@@ -202,8 +201,5 @@ class MultiValueMapTest
 		Assert.equals( 20, emptyMap.get("value") );
 		Assert.equals( 2, emptyMap.getAll("value").length );
 		Assert.equals( 0, emptyMap.getAll("value")[0] );
-	}
-
-	public function testToString():Void {
 	}
 }

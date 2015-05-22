@@ -3,8 +3,7 @@ package ufront.web;
 import utest.Assert;
 import utest.Runner;
 
-class TestAll
-{
+class TestAll {
 	public static function addTests( runner:Runner ) {
 		ufront.web.context.TestAll.addTests( runner );
 		ufront.web.session.TestAll.addTests( runner );

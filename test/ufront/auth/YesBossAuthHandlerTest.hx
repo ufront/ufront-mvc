@@ -5,13 +5,9 @@ import ufront.auth.YesBossAuthHandler;
 import ufront.auth.*;
 using ufront.test.TestUtils;
 
-class YesBossAuthHandlerTest
-{
+class YesBossAuthHandlerTest {
 
-	public function new()
-	{
-
-	}
+	public function new() {}
 
 	public function beforeClass():Void {}
 

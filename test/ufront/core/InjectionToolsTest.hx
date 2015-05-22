@@ -15,6 +15,5 @@ class InjectionToolsTest {
 
 	public function teardown():Void {}
 
-	public function testInject():Void {
-	}
+	// public function testInject():Void {}
 }

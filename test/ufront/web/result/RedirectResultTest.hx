@@ -51,7 +51,6 @@ class RedirectResultTest {
 			Assert.equals( "/tomorrow/", r.url );
 			Assert.isTrue( r.permanentRedirect );
 		});
-
 	}
 }
 

@@ -6,8 +6,7 @@ import tink.CoreApi;
 import mockatoo.Mockatoo.*;
 using mockatoo.Mockatoo;
 
-class FuturisticTest
-{
+class FuturisticTest {
     public var trigger:FutureTrigger<Int>;
     public var future:Future<Int>;
 

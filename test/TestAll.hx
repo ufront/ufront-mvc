@@ -4,8 +4,7 @@ import utest.Assert;
 import utest.Runner;
 import utest.ui.Report;
 
-class TestAll
-{
+class TestAll {
 	static function main(){
 		var runner = new Runner();
 		addTests( runner );

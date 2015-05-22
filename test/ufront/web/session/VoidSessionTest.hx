@@ -16,6 +16,5 @@ class VoidSessionTest {
 
 	public function teardown():Void {}
 
-	public function testExample():Void {
-	}
+	// public function testExample():Void {}
 }

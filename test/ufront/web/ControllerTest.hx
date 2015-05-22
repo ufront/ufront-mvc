@@ -18,9 +18,6 @@ class ControllerTest {
 
 	public function teardown():Void {}
 
-	public function testExample():Void {
-	}
-
 	public function testInjection():Void {
 		var context = '/'.mockHttpContext();
 		var controller:Controller = context.injector.instantiate( TopController );

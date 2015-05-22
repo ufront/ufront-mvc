@@ -30,6 +30,7 @@ class QueryStringUrlFilterTest {
 		f1.filterIn( u2 );
 		Assert.equals( "/hello/world/index.html?source=google#content", u2.toString() );
 	}
+
 	public function testFilterOut():Void {
 		// Basic case
 		var f1 = new QueryStringUrlFilter( "q", "index.n", true );

@@ -35,6 +35,7 @@ class DirectoryUrlFilterTest {
 		f3.filterIn( u3 );
 		Assert.equals( "/blog/2015/March/34/Hello.html", u3.toString() );
 	}
+
 	public function testFilterOut():Void {
 
 		// Basic case

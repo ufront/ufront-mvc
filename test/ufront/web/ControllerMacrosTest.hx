@@ -1,11 +1,8 @@
 package ufront.web;
 
 import utest.Assert;
-//import ufront.web.ControllerMacros;
 
-class ControllerMacrosTest
-{
-//	var instance:ControllerMacros;
+class ControllerMacrosTest {
 
 	public function new() {}
 
@@ -17,6 +14,5 @@ class ControllerMacrosTest
 
 	public function teardown():Void {}
 
-	public function testExample():Void {
-	}
+	// public function testExample():Void {}
 }
