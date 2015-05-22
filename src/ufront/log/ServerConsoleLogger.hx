@@ -18,8 +18,7 @@ This will use a different method on each platform where it makes sense:
 
 This will flush the messages (traces, logs, warnings and errors) from the current context to the appropriate server log.
 **/
-class ServerConsoleLogger implements UFLogHandler
-{
+class ServerConsoleLogger implements UFLogHandler {
 	public function new() {}
 
 	public function log( ctx:HttpContext, appMessages:Array<Message> ) {

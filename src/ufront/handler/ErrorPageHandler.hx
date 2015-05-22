@@ -16,8 +16,7 @@ It will display the error message in a simple template, and set the appropriate 
 
 The template can be modified by using your own implementations of `this.renderErrorForContent()` and `this.renderErrorPage()`.
 **/
-class ErrorPageHandler implements UFErrorHandler
-{
+class ErrorPageHandler implements UFErrorHandler {
 	/**
 	A flag dictating whether errors should be caught and displayed (`true`) or simply passed through unprocessed (`false`).
 

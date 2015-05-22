@@ -28,8 +28,7 @@ When reading the session ID, `HttpRequest.cookies` is checked first, followed by
 
 When searching the parameters or cookies for the Session ID, the name to search for is defined by the `this.sessionName` property.
 **/
-class CacheSession implements UFHttpSession
-{
+class CacheSession implements UFHttpSession {
 	// Statics
 
 	/**

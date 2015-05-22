@@ -17,8 +17,7 @@ Please see the docs for each platform implementation for any specific details:
 - `js.ufront.web.context.HttpResponse`
 - `nodejs.ufront.web.context.HttpResponse`
 **/
-class HttpResponse
-{
+class HttpResponse {
 	/**
 	Create a `HttpResponse` using the platform specific implementation.
 

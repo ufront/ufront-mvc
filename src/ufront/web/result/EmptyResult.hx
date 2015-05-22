@@ -10,8 +10,7 @@ This is useful if your controller action has written to the response directly, f
 
 @author Andreas Soderlund
 **/
-class EmptyResult extends ActionResult
-{
+class EmptyResult extends ActionResult {
 	/**
 	Should we prevent the application from "flushing" the response?
 	This will prevent content, headers, cookies, status codes, or any other part of the `HttpResponse`, from being returned to the client.

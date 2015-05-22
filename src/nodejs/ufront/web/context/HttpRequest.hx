@@ -19,8 +19,11 @@ An implementation of `ufront.web.context.HttpRequest` for NodeJS, based on `js.n
 Platform quirks with `HttpRequest` and NodeJS:
 
 - `clientHeaders` will have all keys in lower case.
-- `query`, `post` and `cookies` only support one value per name.
+- `query`, `post` and `cookies` currently only support one value per name.
 - When you have a parameter  named `user.email`, Express JS tries to convert it into a "user" object with a field "email". We undo that, and expose it as "user.email".
+- `postString` has not been implemented yet.
+- `parseMultipart` has not been implemented yet.
+
 
 @author Franco Ponticelli, Jason O'Neil
 **/
@@ -40,7 +43,6 @@ class HttpRequest extends ufront.web.context.HttpRequest
 			var hashIndex = queryString.indexOf("#");
 			if ( hashIndex>-1 )
 				queryString = queryString.substr( 0,hashIndex+1 );
-
 		}
 		return queryString;
 	}

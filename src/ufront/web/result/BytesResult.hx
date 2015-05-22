@@ -7,8 +7,7 @@ import ufront.core.AsyncTools;
 /**
 An `ActionResult` that writes `Bytes` (arbitrary binary content) to the client response.
 **/
-class BytesResult extends FileResult
-{
+class BytesResult extends FileResult {
 	/** The bytes of the file to be written to the response **/
 	public var bytes:Bytes;
 

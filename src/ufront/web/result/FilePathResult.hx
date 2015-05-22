@@ -11,8 +11,7 @@ import ufront.core.AsyncTools;
 using haxe.io.Path;
 
 /**  Sends the contents of a file to the response.  */
-class FilePathResult extends FileResult
-{
+class FilePathResult extends FileResult {
 	/** Gets or sets the path of the file that is sent to the response. */
 	public var fileName:String;
 

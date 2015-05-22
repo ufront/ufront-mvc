@@ -13,8 +13,7 @@ Writing your code against the `UFAuthHandler` interface, rather than a specific 
 
 @author Jason O'Neil
 **/
-interface UFAuthHandler<T:UFAuthUser>
-{
+interface UFAuthHandler<T:UFAuthUser> {
 	/**
 	Is a session currently open and authenticated - is the user logged in?
 	**/

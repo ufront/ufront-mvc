@@ -26,8 +26,7 @@ Execute an MVC web request.
 
 @author Jason O'Neil
 **/
-class MVCHandler implements UFRequestHandler
-{
+class MVCHandler implements UFRequestHandler {
 	/**
 	The index `Controller` which is used to match requests to controllers / actions.
 

@@ -13,8 +13,7 @@ A remoting connection that works over asynchronous HTTP connections, with some u
 This extends `haxe.remoting.HttpAsyncConnection` and behaves similarly in most ways.
 An extra HTTP header is added, "X-Ufront-Remoting=1", so that our Ufront `RemotingHandler` knows it can also send traces, logs, warnings, errors and stack traces with the response.
 **/
-class HttpAsyncConnection extends haxe.remoting.HttpAsyncConnection
-{
+class HttpAsyncConnection extends haxe.remoting.HttpAsyncConnection {
 	override public function resolve( name ):AsyncConnection {
 		var dataCopy = { url:__data.url, error:__data.error };
 		var c = new HttpAsyncConnection(dataCopy,__path.copy());

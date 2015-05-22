@@ -29,8 +29,7 @@ Every `mock` function uses `Mockatoo` for mocking, see the [Github Readme](https
 
 Please note both `utest` and `mockatoo` libraries must be included for these methods to be available.
 **/
-class TestUtils
-{
+class TestUtils {
 	#if (utest && mockatoo)
 		/**
 		Mock a HttpContext.
@@ -332,13 +331,13 @@ class TestUtils
 		- Call a `done()` method or similar to allow your test environment to know this test has finished.
 
 		@param testContext The outcome from a call to `this.testRoute()`.
-		@param callback A callback function to execute. The function should be `RequestTestContext->Void` or `Void->Void`.
+		@param callback A callback function to execute. The function should be `Void->Void` or `?Dynamic->Void`.
 		@return The same `testContext` that was passed in.
 		**/
-		public static function onComplete( testContext:RequestTestContext, callback:Callback<RequestTestContext> ):RequestTestContext {
+		public static function onComplete( testContext:RequestTestContext, callback:Callback<Dynamic> ):RequestTestContext {
 			var doneCallback = Assert.createAsync();
 			testContext.result.handle(function(_) {
-				callback.invoke( testContext );
+				callback.invoke( null );
 				doneCallback();
 			});
 			return testContext;
@@ -548,15 +547,17 @@ class NaturalLanguageTests {
 			return TestUtils.onComplete( testContext, check );
 
 		/** Alert our async test runner that the testing is complete. This is an alias for `TestUtils.onComplete` **/
-		public static inline function andFinishWith( testContext:RequestTestContext, ?callback:Callback<RequestTestContext> ):RequestTestContext
+		public static inline function andFinishWith( testContext:RequestTestContext, ?callback:Callback<Dynamic> ):RequestTestContext
 			return TestUtils.onComplete( testContext, callback );
 	#end
 }
 
+#if mockatoo
 /**
 A shortcut to `Mockatoo` so that `using ufront.test.TestUtils;` implies `using mockatoo.Mockatoo` as well.
 **/
 typedef TMockatoo = mockatoo.Mockatoo;
+#end
 
 /**
 A collection of objects which describes the context for the current test, and is passed through each of the functions in `TestUtils`.

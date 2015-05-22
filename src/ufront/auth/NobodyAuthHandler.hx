@@ -11,8 +11,7 @@ Who would trust you anyway? *You're a nobody.* ;)
 
 @author Jason O'Neil
 **/
-class NobodyAuthHandler implements UFAuthHandler<UFAuthUser>
-{
+class NobodyAuthHandler implements UFAuthHandler<UFAuthUser> {
 	public function new() {}
 
 	public function isLoggedIn() return false;

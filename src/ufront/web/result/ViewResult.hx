@@ -460,7 +460,7 @@ class ViewResult extends ActionResult {
 		}
 	}
 
-	static function error<T>( reason:String, data:Dynamic, ?pos:haxe.PosInfos ):Outcome<T,Error> {
+	static function error<T>( reason:String, data:Dynamic, ?pos ):Outcome<T,Error> {
 		return Failure( HttpError.internalServerError(reason,data,pos) );
 	}
 }

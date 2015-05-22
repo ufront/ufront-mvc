@@ -11,8 +11,7 @@ A base `ActionResult` that is used to send binary file content to the client res
 
 This is an abstract class, please see `BytesResult` and `FilePathResult` for implementations you can use.
 **/
-class FileResult extends ActionResult
-{
+class FileResult extends ActionResult {
 	/**
 	A mapping of common file extensions to mime content types.
 	**/

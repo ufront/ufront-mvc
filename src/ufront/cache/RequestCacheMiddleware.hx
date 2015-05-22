@@ -19,8 +19,7 @@ Please note this middleware currently does not provide an easy way to expire a c
 
 @author Jason O'Neil
 **/
-class RequestCacheMiddleware implements UFMiddleware
-{
+class RequestCacheMiddleware implements UFMiddleware {
 	public static inline var namespace = "ufront.middleware.RequestCache";
 	static var metaName = "cacheRequest";
 

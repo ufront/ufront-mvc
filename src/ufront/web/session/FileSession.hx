@@ -33,8 +33,7 @@ When reading the session ID, `HttpRequest.cookies` is checked first, followed by
 
 When searching the parameters or cookies for the session ID, the name to search for is defined by the `this.sessionName` property.
 **/
-class FileSession implements UFHttpSession
-{
+class FileSession implements UFHttpSession {
 	// Statics
 
 	/**

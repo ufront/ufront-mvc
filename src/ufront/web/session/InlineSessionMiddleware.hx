@@ -28,8 +28,7 @@ If `alwaysStart` is true, then a session will be initiated even on the first vis
 
 @author Jason O'Neil
 **/
-class InlineSessionMiddleware implements UFMiddleware
-{
+class InlineSessionMiddleware implements UFMiddleware {
 	/**
 	Should we start a session for every request, or only if one already exists?
 

@@ -19,8 +19,7 @@ Given a path to a file on the local system, pass onto the client either:
 - A redirect to the HTTP location of the file, if the file path is inside the `scriptDirectory` (and therefore accessible from the web), or
 - A FilePathResult, streaming the file's contents to the client.
 **/
-class DirectFilePathResult extends ActionResult
-{
+class DirectFilePathResult extends ActionResult {
 	/**
 	The path to the file that is to be sent to the client.
 	If the file is inside the script directory, and therefore visible to the world, the result will be a redirect to the path's direct file.

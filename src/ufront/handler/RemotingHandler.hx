@@ -28,8 +28,7 @@ Further APIs can be loaded through `this.loadApi()`, `this.loadApis()` and `this
 
 @author Jason O'Neil
 **/
-class RemotingHandler implements UFRequestHandler
-{
+class RemotingHandler implements UFRequestHandler {
 	var apiContexts:List<Class<UFApiContext>>;
 	var apis:List<Class<UFApi>>;
 	var context:Context;
