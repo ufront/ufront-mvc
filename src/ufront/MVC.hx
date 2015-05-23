@@ -124,7 +124,7 @@ class MVC {}
 @:noDoc @:noUsing typedef BytesResult = ufront.web.result.BytesResult;
 @:noDoc @:noUsing typedef ContentResult = ufront.web.result.ContentResult;
 #if detox
-	@:noDoc @:noUsing typedef DetoxResult = ufront.web.result.DetoxResult;
+	@:noDoc @:noUsing typedef DetoxResult<T:dtx.widget.Widget> = ufront.web.result.DetoxResult<T>;
 #end
 @:noDoc @:noUsing typedef DirectFilePathResult = ufront.web.result.DirectFilePathResult;
 @:noDoc @:noUsing typedef EmptyResult = ufront.web.result.EmptyResult;
