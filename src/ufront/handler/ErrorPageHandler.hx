@@ -132,7 +132,7 @@ class ErrorPageHandler implements UFErrorHandler {
 	**/
 	public function renderError( error:Error, ?showStack:Bool ):String {
 		var content = renderErrorContent( error, showStack );
-		return renderErrorPage( error.toString(), content );
+		return renderErrorPage( error.message, content );
 	}
 
 	/**
