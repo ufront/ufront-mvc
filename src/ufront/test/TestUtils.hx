@@ -321,6 +321,21 @@ class TestUtils {
 			return testContext;
 		}
 
+		/**
+		Run a function to perform further tests, passing the `testContext` to the given function.
+
+		@param testContext The outcome from a call to `this.testRoute()`.
+		@param check A function to execute with additional tests, so you can analyze the response in more detail.
+		@return The same `testContext` that was passed in.
+		**/
+		public static function check( testContext:RequestTestContext, check:Callback<RequestTestContext> ):RequestTestContext {
+			var doneCallback = Assert.createAsync();
+			testContext.result.handle(function(_) {
+				check.invoke( testContext );
+				doneCallback();
+			});
+			return testContext;
+		}
 
 		/**
 		Call a callback function after the test request has finished executing.
@@ -544,7 +559,7 @@ class NaturalLanguageTests {
 
 		/** Perform some more arbitrary checks once the request has completed. This is an alias for `TestUtils.onComplete` **/
 		public static inline function andAlsoCheck( testContext:RequestTestContext, check:Callback<RequestTestContext>, ?p:PosInfos ):RequestTestContext
-			return TestUtils.onComplete( testContext, check );
+			return TestUtils.check( testContext, check );
 
 		/** Alert our async test runner that the testing is complete. This is an alias for `TestUtils.onComplete` **/
 		public static inline function andFinishWith( testContext:RequestTestContext, ?callback:Callback<Dynamic> ):RequestTestContext
