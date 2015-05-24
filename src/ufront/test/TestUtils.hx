@@ -557,8 +557,8 @@ class NaturalLanguageTests {
 		public static inline function theResponseShouldBe( testContext:RequestTestContext, expectedResponse:String, ?p:PosInfos ):RequestTestContext
 			return TestUtils.responseShouldBe( testContext, expectedResponse, p );
 
-		/** Perform some more arbitrary checks once the request has completed. This is an alias for `TestUtils.onComplete` **/
-		public static inline function andAlsoCheck( testContext:RequestTestContext, check:Callback<RequestTestContext>, ?p:PosInfos ):RequestTestContext
+		/** Perform some more arbitrary checks once the request has completed. This is an alias for `TestUtils.check` **/
+		public static inline function andThenCheck( testContext:RequestTestContext, check:Callback<RequestTestContext>, ?p:PosInfos ):RequestTestContext
 			return TestUtils.check( testContext, check );
 
 		/** Alert our async test runner that the testing is complete. This is an alias for `TestUtils.onComplete` **/

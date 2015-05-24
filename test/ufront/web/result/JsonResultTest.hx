@@ -25,7 +25,7 @@ class JsonResultTest {
 			Assert.equals( "Jason", jr.content.name );
 			Assert.equals( "Drop bears", jr.content.irrationalFear );
 		})
-		.andAlsoCheck(function(testContext) {
+		.andThenCheck(function(testContext) {
 			var res = testContext.context.response;
 			Assert.equals( 200, res.status );
 			Assert.equals( "application/json", res.contentType );
@@ -39,7 +39,7 @@ class JsonResultTest {
 		whenIVisit("/test-class/5/21/")
 		.onTheController( JsonResultTestController )
 		.itShouldLoad()
-		.andAlsoCheck(function(testContext) {
+		.andThenCheck(function(testContext) {
 			var res = testContext.context.response;
 			var jsonObj = haxe.Json.parse( res.getBuffer() );
 			Assert.equals( 5, jsonObj.x );
