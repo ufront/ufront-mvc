@@ -189,7 +189,7 @@ class UfrontApplication extends HttpApplication {
 		if ( configuration.viewEngine!=null ) {
 			try {
 				injector.injectClass( configuration.viewEngine );
-				viewEngine = injector.getInstance( UFViewEngine );
+				viewEngine = injector.getResponse( UFViewEngine );
 				for ( te in appTemplatingEngines ) {
 					viewEngine.addTemplatingEngine( te );
 				}

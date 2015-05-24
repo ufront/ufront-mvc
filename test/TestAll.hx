@@ -14,5 +14,6 @@ class TestAll {
 
 	public static function addTests( runner:Runner ) {
 		ufront.TestAll.addTests( runner );
+		issues.TestAll.addTests( runner );
 	}
 }

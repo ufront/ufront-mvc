@@ -136,7 +136,7 @@ package ufront.app;
 			if ( configuration.viewEngine!=null ) {
 				try {
 					injector.injectClass( configuration.viewEngine );
-					viewEngine = injector.getInstance( UFViewEngine );
+					viewEngine = injector.getResponse( UFViewEngine );
 					for ( te in configuration.templatingEngines ) {
 						viewEngine.addTemplatingEngine( te );
 					}

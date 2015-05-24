@@ -234,14 +234,14 @@ class HttpContext {
 
 			if ( session!=null ) this.session = session;
 			if ( this.session==null )
-				try this.session = injector.getInstance( UFHttpSession )
+				try this.session = injector.getResponse( UFHttpSession )
 				catch(e:Dynamic) ufLog('Failed to load UFHttpSession: $e. Using VoidSession instead.'+haxe.CallStack.toString(haxe.CallStack.exceptionStack()));
 			if ( this.session==null ) this.session = new VoidSession();
 			injector.injectValue( UFHttpSession, this.session );
 
 			if ( auth!=null ) this.auth = auth;
 			if ( this.auth==null )
-				try this.auth = injector.getInstance( UFAuthHandler )
+				try this.auth = injector.getResponse( UFAuthHandler )
 				catch(e:Dynamic) ufLog('Failed to load UFAuthHandler: $e. Using NobodyAuthHandler instead.'+haxe.CallStack.toString(haxe.CallStack.exceptionStack()));
 			if ( this.auth==null ) this.auth = new NobodyAuthHandler();
 			injector.injectValue( UFAuthHandler, this.auth );
