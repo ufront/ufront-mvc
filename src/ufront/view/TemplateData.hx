@@ -16,9 +16,9 @@ It is an `abstract`, allowing implicit casts from:
 This means you can use it in a versatile way:
 
 ```
-var td1:TemplateData1 = { name: "Jason", location: "Perth" };
-var td2:TemplateData2 = [ name=>"O'Neil", age=>27 ];
-var td3:TemplateData3 = [ td1, td2 ]; // Merge the 2 sets.
+var td1:TemplateData = { name: "Jason", location: "Perth" };
+var td2:TemplateData = [ name=>"O'Neil", age=>27 ];
+var td3:TemplateData = [ td1, td2 ]; // Merge the 2 sets.
 ```
 
 These methods are provided to access or modify the contents of the template data:
@@ -173,13 +173,15 @@ abstract TemplateData({}) to {} {
 	@:from public static function fromMany( dataSets:Iterable<TemplateData> ):TemplateData {
 		var combined:TemplateData = new TemplateData( {} );
 		for ( d in dataSets ) {
-			if ( Std.is(d,StringMap) ) {
-				var map:StringMap<Dynamic> = cast d;
-				combined.setMap( (map:StringMap<Dynamic>) );
-			}
-			else {
-				var obj:Dynamic = d;
-				combined.setObject( obj );
+			if ( d!=null ) {
+				if ( Std.is(d,StringMap) ) {
+					var map:StringMap<Dynamic> = cast d;
+					combined.setMap( (map:StringMap<Dynamic>) );
+				}
+				else {
+					var obj:Dynamic = d;
+					combined.setObject( obj );
+				}
 			}
 		}
 		return combined;
