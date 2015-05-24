@@ -414,7 +414,7 @@ class ViewResult extends ActionResult {
 			// If there was no metadata, see if a "defaultLayout" string was injected by the app configuration.
 			try {
 				layoutPath = actionContext.httpContext.injector.getResponse( String, "defaultLayout" );
-				if ( layoutPath.startsWith("/")==false ) {
+				if ( layoutPath!=null && layoutPath.startsWith("/")==false ) {
 					layoutPath = '/$layoutPath';
 				}
 			} catch (e:Dynamic) {}
