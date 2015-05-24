@@ -1,5 +1,6 @@
 package ufront.test;
 
+#if !macro
 import ufront.web.context.*;
 import ufront.web.session.UFHttpSession;
 import ufront.auth.*;
@@ -16,6 +17,7 @@ import minject.Injector;
 #if mockatoo using mockatoo.Mockatoo; #end
 using tink.CoreApi;
 using ufront.core.InjectionTools;
+#end
 
 /**
 A set of functions to make it easier to mock and test various ufront classes and interfaces.
@@ -30,7 +32,7 @@ Every `mock` function uses `Mockatoo` for mocking, see the [Github Readme](https
 Please note both `utest` and `mockatoo` libraries must be included for these methods to be available.
 **/
 class TestUtils {
-	#if (utest && mockatoo)
+	#if (utest && mockatoo && !macro)
 		/**
 		Mock a HttpContext.
 
@@ -439,7 +441,29 @@ whenISubmit([ "username"=>"admin", "password"=>"wrongpassword" ])
 ```
 **/
 class NaturalLanguageTests {
-	#if (utest && mockatoo)
+
+
+	/** Inject a value into the `HttpContext.injector`. This is an alias for `InjectionTools.injectValue()`. **/
+	public static macro function andInjectAValue<T>( context:haxe.macro.Expr.ExprOf<HttpContext>, cl, val, ?named ):haxe.macro.Expr.ExprOf<HttpContext> {
+		var injectorExpr = macro $context.injector;
+		var injectExpr = ufront.core.InjectionTools.injectValue( injectorExpr, cl, val, named );
+		return macro {
+			$injectExpr;
+			$context;
+		};
+	}
+
+	/** Inject a class into the `HttpContext.injector`. This is an alias for `InjectionTools.injectClass()`. **/
+	public static macro function andInjectAClass<T>( context:haxe.macro.Expr.ExprOf<HttpContext>, cl, ?cl2, ?singleton, ?named ):haxe.macro.Expr.ExprOf<HttpContext> {
+		var injectorExpr = macro $context.injector;
+		var injectExpr = ufront.core.InjectionTools.injectClass( injectorExpr, cl, cl2, singleton, named );
+		return macro {
+			$injectExpr;
+			$context;
+		};
+	}
+
+	#if (utest && mockatoo && !macro)
 
 		/**
 		Begin a test sentance for a page visit:
@@ -509,26 +533,6 @@ class NaturalLanguageTests {
 			return context;
 		}
 
-		/** Inject a value into the `HttpContext.injector`. This is an alias for `InjectionTools.injectValue()`. **/
-		public static macro function andInjectAValue<T>( context:haxe.macro.Expr.ExprOf<HttpContext>, cl, val, named ):haxe.macro.Expr.ExprOf<HttpContext> {
-			var injectorExpr = macro $context.injector;
-			var injectExpr = ufront.core.InjectionTools.injectValue( injectorExpr, cl, val, named );
-			return macro {
-				$injectExpr;
-				$context;
-			};
-		}
-
-		/** Inject a class into the `HttpContext.injector`. This is an alias for `InjectionTools.injectClass()`. **/
-		public static macro function andInjectAClass<T>( context:haxe.macro.Expr.ExprOf<HttpContext>, cl, ?cl2, ?singleton, ?named ):haxe.macro.Expr.ExprOf<HttpContext> {
-			var injectorExpr = macro $context.injector;
-			var injectExpr = ufront.core.InjectionTools.injectValue( injectorExpr, cl, cl2, singleton, named );
-			return macro {
-				$injectExpr;
-				$context;
-			};
-		}
-
 		/** Test the given `HttpContext` on a given app. This is an alias for `TestUtils.testRoute` **/
 		public static inline function onTheApp( context:HttpContext, app:UfrontApplication, ?p:PosInfos ):RequestTestContext
 			return TestUtils.testRoute( context, app, p );
@@ -567,21 +571,23 @@ class NaturalLanguageTests {
 	#end
 }
 
-#if mockatoo
-/**
-A shortcut to `Mockatoo` so that `using ufront.test.TestUtils;` implies `using mockatoo.Mockatoo` as well.
-**/
-typedef TMockatoo = mockatoo.Mockatoo;
-#end
+#if !macro
+	#if mockatoo
+	/**
+	A shortcut to `Mockatoo` so that `using ufront.test.TestUtils;` implies `using mockatoo.Mockatoo` as well.
+	**/
+	typedef TMockatoo = mockatoo.Mockatoo;
+	#end
 
-/**
-A collection of objects which describes the context for the current test, and is passed through each of the functions in `TestUtils`.
-**/
-typedef RequestTestContext = {
-	/** The asynchronous result of the `app.execute()` call. Wait for this to complete before testing the results. **/
-	public var result:Surprise<Noise,Error>;
-	/** The `UfrontApplication` that the test was executed on. **/
-	public var app:UfrontApplication;
-	/** The `HttpContext` of the current test request. **/
-	public var context:HttpContext;
-}
+	/**
+	A collection of objects which describes the context for the current test, and is passed through each of the functions in `TestUtils`.
+	**/
+	typedef RequestTestContext = {
+		/** The asynchronous result of the `app.execute()` call. Wait for this to complete before testing the results. **/
+		public var result:Surprise<Noise,Error>;
+		/** The `UfrontApplication` that the test was executed on. **/
+		public var app:UfrontApplication;
+		/** The `HttpContext` of the current test request. **/
+		public var context:HttpContext;
+	}
+#end
