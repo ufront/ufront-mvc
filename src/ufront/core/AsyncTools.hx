@@ -49,7 +49,7 @@ class FutureTools {
 	Note: If at the time this macro is called, Haxe does not know the complete type signiature of each promise, the macro will print a warning asking for more type hints.
 	**/
 	public static macro function when( args:Array<Expr> ) {
-		var arrayOfFutures = macro ($a{args}:Array<Future<Dynamic>>);
+		var arrayOfFutures = macro ($a{args}:Array<tink.core.Future<Dynamic>>);
 		var arrayOfTypes = [];
 		var arrayOfCallArgs = [];
 		var i = 0;
@@ -80,7 +80,7 @@ class FutureTools {
 		}
 
 		var mapCBType = TFunction(arrayOfTypes,macro :T);
-		var mapFunction = macro function map<T>(cb:$mapCBType):Future<T> {
+		var mapFunction = macro function map<T>(cb:$mapCBType):tink.core.Future<T> {
 			return combinedFuture.map(function(values:Array<Dynamic>) {
 				return cb( $a{arrayOfCallArgs} );
 			});
