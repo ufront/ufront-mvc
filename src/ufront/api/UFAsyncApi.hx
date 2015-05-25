@@ -96,7 +96,7 @@ class UFAsyncApi<SyncApi:UFApi> {
 			}
 			function returnError( e:Dynamic ) {
 				var stack = CallStack.toString( CallStack.exceptionStack() );
-				return Future.sync( Failure(ServerSideException(remotingCallString,e,stack)) );
+				return Future.sync( Failure(RServerSideException(remotingCallString,e,stack)) );
 			}
 
 			if ( flags.has(ARTVoid) ) {
@@ -111,7 +111,7 @@ class UFAsyncApi<SyncApi:UFApi> {
 					var surprise:Surprise<A,B> = callApi();
 					return surprise.map(function(result) return switch result {
 						case Success(data): Success(data);
-						case Failure(err): Failure(ApiFailure(remotingCallString,err));
+						case Failure(err): Failure(RApiFailure(remotingCallString,err));
 					});
 				}
 				catch ( e:Dynamic ) return returnError(e);
@@ -130,7 +130,7 @@ class UFAsyncApi<SyncApi:UFApi> {
 					var outcome:Outcome<A,B> = callApi();
 					return switch outcome {
 						case Success(data): Future.sync( Success(data) );
-						case Failure(err): Future.sync( Failure(ApiFailure(remotingCallString,err)) );
+						case Failure(err): Future.sync( Failure(RApiFailure(remotingCallString,err)) );
 					}
 				}
 				catch ( e:Dynamic ) return returnError(e);
@@ -157,7 +157,7 @@ class UFAsyncApi<SyncApi:UFApi> {
 					var outcome:Outcome<A,B> = result;
 					wrappedOutcome = switch outcome {
 						case Success(data): Success(data);
-						case Failure(err): Failure(ApiFailure(remotingCallString,err));
+						case Failure(err): Failure(RApiFailure(remotingCallString,err));
 					}
 				}
 				else {

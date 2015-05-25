@@ -41,14 +41,14 @@ class RemotingUtil {
 					var s = new haxe.Unserializer(line.substr(3));
 					ret =
 						try s.unserialize()
-						catch(e:Dynamic) throw UnserializeFailed( remotingCallString, line.substr(3), '$e' )
+						catch(e:Dynamic) throw RUnserializeFailed( remotingCallString, line.substr(3), '$e' )
 					;
 					hxrFound = true;
 				case "hxt":
 					var s = new haxe.Unserializer(line.substr(3));
 					var m:Message =
 						try s.unserialize()
-						catch(e:Dynamic) throw UnserializeFailed( remotingCallString, line.substr(3), '$e' )
+						catch(e:Dynamic) throw RUnserializeFailed( remotingCallString, line.substr(3), '$e' )
 					;
 					#if js
 						var extras =
@@ -70,16 +70,16 @@ class RemotingUtil {
 					var s = new haxe.Unserializer(line.substr(3));
 					stack =
 						try s.unserialize()
-						catch(e:Dynamic) throw UnserializeFailed( remotingCallString, line.substr(3), '$e' )
+						catch(e:Dynamic) throw RUnserializeFailed( remotingCallString, line.substr(3), '$e' )
 					;
 				case "hxe":
 					var s = new haxe.Unserializer(line.substr(3));
 					ret =
 						try s.unserialize()
-						catch(e:Dynamic) throw ServerSideException( remotingCallString, e, stack )
+						catch(e:Dynamic) throw RServerSideException( remotingCallString, e, stack )
 					;
 				default:
-					throw UnserializeFailed( remotingCallString, line, "Invalid line in response" );
+					throw RUnserializeFailed( remotingCallString, line, "Invalid line in response" );
 			}
 			catch( err:Dynamic ) errors.push( err );
 		}
@@ -90,10 +90,10 @@ class RemotingUtil {
 				#if debug
 					onResult( ret );
 				#else
-					try onResult( ret ) catch (e:Dynamic) onError( ClientCallbackException(remotingCallString, e) );
+					try onResult( ret ) catch (e:Dynamic) onError( RClientCallbackException(remotingCallString, e) );
 				#end
 			}
-			else onError( NoRemotingResult(remotingCallString,response) );
+			else onError( RNoRemotingResult(remotingCallString,response) );
 		}
 		else for ( err in errors ) onError( err );
 	}
@@ -107,7 +107,7 @@ class RemotingUtil {
 			if ( Std.is(e,RemotingError) )
 				errorHandler(e);
 			else
-				errorHandler( UnknownException(e) );
+				errorHandler( RUnknownException(e) );
 		}
 	}
 
@@ -116,27 +116,27 @@ class RemotingUtil {
 	**/
 	public static function defaultErrorHandler( error:RemotingError<Dynamic> ):Void {
 		switch error {
-			case HttpError( remotingCallString, responseCode, responseData ):
+			case RHttpError( remotingCallString, responseCode, responseData ):
 				trace( 'Error during remoting call $remotingCallString: The HTTP Request returned status [$responseCode].' );
 				trace( 'Returned data: $responseData' );
-			case ApiNotFound( remotingCallString, err ):
+			case RApiNotFound( remotingCallString, err ):
 				trace( 'Error during remoting call $remotingCallString: API or Method is not found or not available in the remoting context.' );
 				trace( 'Error message: $err' );
-			case ServerSideException( remotingCallString, e, stack ):
+			case RServerSideException( remotingCallString, e, stack ):
 				trace( 'Error during remoting call $remotingCallString: The server threw an error "$e".' );
 				trace( stack );
-			case ClientCallbackException( remotingCallString, e ):
+			case RClientCallbackException( remotingCallString, e ):
 				trace( 'Error during remoting call $remotingCallString: The client throw an error "$e" during the remoting callback.' );
 				trace( 'Compiling with "-debug" will prevent this error being caught, so you can use your browser\'s debugger to collect more information.' );
-			case UnserializeFailed( remotingCallString, troubleLine, err ):
+			case RUnserializeFailed( remotingCallString, troubleLine, err ):
 				trace( 'Error during remoting call $remotingCallString: Failed to unserialize this line in the response: "$err"' );
 				trace( 'The line that failed: "$err"' );
-			case NoRemotingResult( remotingCallString, responseData ):
+			case RNoRemotingResult( remotingCallString, responseData ):
 				trace( 'Error during remoting call $remotingCallString: No remoting result in data.' );
 				trace( 'Returned data: $responseData' );
-			case ApiFailure( remotingCallString, data ):
+			case RApiFailure( remotingCallString, data ):
 				trace( 'The remoting call $remotingCallString functioned correctly, but the API returned a failure: $data' );
-			case UnknownException( e ):
+			case RUnknownException( e ):
 				trace( 'Unknown error encountered during remoting call: $e' );
 		}
 	}

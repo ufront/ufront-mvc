@@ -56,7 +56,7 @@ class HttpConnection extends haxe.remoting.HttpConnection {
 			else {
 				// We got an error HTTP response code, and it was not a 500, so is not from our remoting handler.
 				// This may be due to a server being inaccessible etc.
-				onError( HttpError(remotingCallString, responseCode, h.responseData) );
+				onError( RHttpError(remotingCallString, responseCode, h.responseData) );
 			}
 		}
 

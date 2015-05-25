@@ -113,7 +113,7 @@ class UFCallbackApi<SyncApi:UFApi> {
 			}
 			function processError( e:Dynamic ) {
 				var stack = CallStack.toString( CallStack.exceptionStack() );
-				onError.invoke( ServerSideException(remotingCallString,e,stack) );
+				onError.invoke( RServerSideException(remotingCallString,e,stack) );
 			}
 			if ( onError==null ) {
 				onError = function(err) {};
@@ -131,7 +131,7 @@ class UFCallbackApi<SyncApi:UFApi> {
 					var surprise:Surprise<A,B> = callApi();
 					surprise.handle(function(result) switch result {
 						case Success(data): onResult.invoke( data );
-						case Failure(err): onError.invoke( ApiFailure(remotingCallString,err) );
+						case Failure(err): onError.invoke( RApiFailure(remotingCallString,err) );
 					});
 				}
 				catch ( e:Dynamic ) processError(e);
@@ -150,7 +150,7 @@ class UFCallbackApi<SyncApi:UFApi> {
 					var outcome:Outcome<A,B> = callApi();
 					switch outcome {
 						case Success(data): onResult.invoke( data );
-						case Failure(err): onError.invoke( ApiFailure(remotingCallString,err) );
+						case Failure(err): onError.invoke( RApiFailure(remotingCallString,err) );
 					}
 				}
 				catch ( e:Dynamic ) processError(e);
@@ -177,7 +177,7 @@ class UFCallbackApi<SyncApi:UFApi> {
 					var outcome:Outcome<A,B> = result;
 					switch outcome {
 						case Success(data): onResult.invoke( data );
-						case Failure(err): onError.invoke( ApiFailure(remotingCallString,err) );
+						case Failure(err): onError.invoke( RApiFailure(remotingCallString,err) );
 					}
 				}
 				else {

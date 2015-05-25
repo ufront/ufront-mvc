@@ -55,13 +55,13 @@ class HttpAsyncConnection extends haxe.remoting.HttpAsyncConnection {
 			}
 			else if ( 404==responseCode ) {
 				var errorHandler = __data.error;
-				errorHandler( ApiNotFound(remotingCallString, h.responseData) );
+				errorHandler( RApiNotFound(remotingCallString, h.responseData) );
 			}
 			else {
 				// We got an error HTTP response code, and it was not a 500 or a 404, so is not from our remoting handler.
 				// This may be due to a server being inaccessible etc.
 				var errorHandler = __data.error;
-				errorHandler( HttpError(remotingCallString, responseCode, h.responseData) );
+				errorHandler( RHttpError(remotingCallString, responseCode, h.responseData) );
 			}
 		}
 
