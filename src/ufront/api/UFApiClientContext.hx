@@ -50,7 +50,7 @@ class UFApiClientContext<ServerContext:UFApiContext> {
 
 	public var cnx:AsyncConnection;
 
-	function new( url:String, ?errorHandler:RemotingError<Dynamic>->Void ) {
+	public function new( url:String, ?errorHandler:RemotingError<Dynamic>->Void ) {
 		this.cnx = HttpAsyncConnection.urlConnect( url, errorHandler );
 	}
 }
