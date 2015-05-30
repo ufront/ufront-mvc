@@ -99,6 +99,7 @@ If you want to change the template used for one of our actions, you can use the 
 ```haxe
 @:route("/camera/")
 @template("camera.html") // Will look in `view/admin-templates/camera.html`
+@layout("cameraLayout.html") // Will look in `view/admin-templates/cameraLayout.html`
 function takePhoto() {
   return new ViewResult();
 }
@@ -118,7 +119,7 @@ This gives you a fair amount of flexibility:
 2. Be more specific, and use metadata, which is still nice and clean.
 3. Be very specific and flexible, specifying it in your code.
 
-__What about file extensions__
+__What about file extensions?__
 
 I've used ".html" views in all these examples, but you could leave this out.
 
@@ -407,7 +408,12 @@ class ViewResult extends ActionResult {
 		// Check for @layout("...") metadata that specifies the layout on the controller.
 		var controllerCls = Type.getClass( actionContext.controller );
 		var classMeta = Meta.getType( controllerCls );
-		if ( classMeta.layout!=null && classMeta.layout.length>0 ) {
+		var fieldsMeta = Meta.getFields( controllerCls );
+		var actionFieldMeta:Dynamic<Array<Dynamic>> = Reflect.field( fieldsMeta, actionContext.action );
+		if ( actionFieldMeta!=null && actionFieldMeta.layout!=null && actionFieldMeta.layout.length>0 ) {
+			layoutPath = ""+actionFieldMeta.layout[0];
+		}
+		else if ( classMeta.layout!=null && classMeta.layout.length>0 ) {
 			layoutPath = ""+classMeta.layout[0];
 		}
 		else {
