@@ -80,6 +80,20 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 			// On the other hand, we could leave it up to the ActionResult classes to be more clever with templating etc, and this is just a crude fallback.
 			newDoc.find( "head" ).children(false).appendTo( document.head.empty() );
 			newDoc.find( "body" ).children(false).appendTo( document.body.empty() );
+			
+			// find out all <script> tags and (re)execute them
+			document.find("script").each(function(node) {
+				var script = document.createElement('script');
+				script.setAttr("type", 'text/javascript');
+				if(node.attr("src") != "")
+					script.setAttr("src", node.attr("src"));
+				if (node.text() != "")
+					untyped script.text = node.text();
+				document.body.appendChild(script);
+				
+				// remove from the DOM
+				document.body.removeChild(document.body.lastChild);
+			});
 		}
 		else if ( this.isRedirect() ) {
 			#if pushstate
