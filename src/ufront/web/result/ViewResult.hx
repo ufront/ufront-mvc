@@ -341,15 +341,17 @@ class ViewResult extends ActionResult {
 						if ( layoutTemplate.match(Success(null)) ) viewOut
 						else executeTemplate( "layout", layoutTemplate, combinedData.set('viewContent',viewOut) ).sure();
 
-					// Write to the response
-					actionContext.httpContext.response.contentType = "text/html";
-					actionContext.httpContext.response.write( finalOut );
+					writeResponse( finalOut, combinedData, actionContext );
 					this.finalOutputTrigger.trigger( finalOut );
-
 					return Success( Noise );
 				}
 				catch (e:Error) return Failure( e );
 			});
+	}
+
+	function writeResponse( response:String, combinedData:TemplateData, actionContext:ActionContext ) {
+		actionContext.httpContext.response.contentType = "text/html";
+		actionContext.httpContext.response.write( response );
 	}
 
 	static function getCombinedData( dataSets:Array<TemplateData>, actionContext:ActionContext ):TemplateData {
