@@ -62,6 +62,7 @@ class MVC {}
 
 // `ufront.core` package
 @:noDoc @:noUsing typedef AcceptEither<A,B> = ufront.core.AcceptEither<A,B>;
+@:noDoc @:noUsing typedef InjectionTools = ufront.core.InjectionTools;
 @:noDoc @:noUsing typedef FutureTools = ufront.core.AsyncTools.FutureTools;
 @:noDoc @:noUsing typedef SurpriseTools = ufront.core.AsyncTools.SurpriseTools;
 @:noDoc @:noUsing typedef CallbackTools = ufront.core.AsyncTools.CallbackTools;
