@@ -132,7 +132,7 @@ Different namespaces are differentiated via the `namespace` column.
 class DBCacheItem extends Object {
 	public var namespace:SString<255>;
 	public var cacheID:SString<255>;
-	public var data:SData<Dynamic>;
+	public var data:Null<SData<Dynamic>>;
 }
 
 /**
