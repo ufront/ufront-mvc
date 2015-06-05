@@ -111,15 +111,14 @@ class TmpFileUploadMiddleware implements UFMiddleware {
 	**/
 	public function responseOut( ctx:HttpContext ):Surprise<Noise,Error> {
 		if ( ctx.request.httpMethod.toLowerCase()=="post" && ctx.request.isMultipart() ) {
-			var errors = [];
 			for ( f in files ) {
 				switch f.deleteTemporaryFile() {
-					case Failure( e ): errors.push( e );
+					case Failure( e ):
+						// Just log the error, do not break the request.
+						ctx.ufError( e );
 					default:
 				}
 			}
-			if ( errors.length>0 )
-				return SurpriseTools.asSurpriseError( errors, "Failed to delete one or more temporary upload files" );
 		}
 		return SurpriseTools.success();
 	}
