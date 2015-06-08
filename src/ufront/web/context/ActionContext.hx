@@ -1,8 +1,8 @@
 package ufront.web.context;
 
 import ufront.web.result.ActionResult;
+import ufront.web.HttpError;
 import ufront.app.UFRequestHandler;
-import thx.error.NullArgument;
 
 /**
 A context holding information about which action was taken during the request, and what the result was.
@@ -77,7 +77,7 @@ class ActionContext {
 	Create a new ActionContext, to be associated with the given `HttpContext`.
 	**/
 	public function new( httpContext:HttpContext ) {
-		NullArgument.throwIfNull( httpContext );
+		HttpError.throwIfNull( httpContext, "httpContext" );
 		this.httpContext = httpContext;
 	}
 

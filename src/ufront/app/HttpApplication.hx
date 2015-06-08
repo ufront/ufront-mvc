@@ -8,7 +8,6 @@ import ufront.web.context.HttpContext;
 import ufront.web.HttpError;
 import ufront.auth.*;
 import ufront.log.Message;
-import thx.error.NullArgument;
 import haxe.PosInfos;
 import tink.core.Error.Pos;
 using tink.CoreApi;
@@ -564,7 +563,7 @@ class HttpApplication
 		This will take effect from the next request to execute, it will not affect a currently executing request.
 		**/
 		public function addUrlFilter( filter:UFUrlFilter ):Void {
-			NullArgument.throwIfNull( filter );
+			HttpError.throwIfNull( filter, "filter" );
 			urlFilters.push( filter );
 		}
 

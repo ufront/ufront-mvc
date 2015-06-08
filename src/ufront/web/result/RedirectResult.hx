@@ -1,8 +1,8 @@
 package ufront.web.result;
 
-import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
 import ufront.core.AsyncTools;
+import ufront.web.HttpError;
 using tink.CoreApi;
 
 /**
@@ -33,14 +33,13 @@ class RedirectResult extends ActionResult {
 	public var permanentRedirect:Bool;
 
 	public function new( url:String, ?permanentRedirect=false ) {
-		NullArgument.throwIfNull(url);
+		HttpError.throwIfNull( url, "url" );
 		this.url = url;
 		this.permanentRedirect = permanentRedirect;
 	}
 
 	override function executeResult( actionContext:ActionContext ) {
-		NullArgument.throwIfNull(actionContext);
-		NullArgument.throwIfNull(url);
+		HttpError.throwIfNull( actionContext, "actionContext" );
 
 		// Clear content and headers, but not cookies.
 		actionContext.httpContext.response.clearContent();

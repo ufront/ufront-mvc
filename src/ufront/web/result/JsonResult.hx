@@ -1,6 +1,6 @@
 package ufront.web.result;
 import haxe.Json;
-import thx.error.NullArgument;
+import ufront.web.HttpError;
 import ufront.web.context.ActionContext;
 import ufront.core.AsyncTools;
 import tink.CoreApi;
@@ -23,12 +23,12 @@ class JsonResult<T> extends ActionResult {
 	public var content:T;
 
 	public function new( content:T ) {
+		HttpError.throwIfNull( content, "content" );
 		this.content = content;
 	}
 
 	override function executeResult( actionContext:ActionContext ) {
-		NullArgument.throwIfNull(actionContext);
-		NullArgument.throwIfNull(content);
+		HttpError.throwIfNull(actionContext, "actionContext" );
 		var serialized = Json.stringify( content );
 		actionContext.httpContext.response.write( serialized );
 		actionContext.httpContext.response.contentType = "application/json";

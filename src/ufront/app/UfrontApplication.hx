@@ -1,6 +1,5 @@
 package ufront.app;
 
-import thx.error.NullArgument;
 import ufront.app.HttpApplication;
 import haxe.ds.StringMap;
 import minject.Injector;
@@ -13,13 +12,13 @@ import ufront.web.context.HttpContext;
 import ufront.web.session.*;
 import ufront.web.url.filter.*;
 import ufront.web.Controller;
+import ufront.web.HttpError;
 import ufront.app.UfrontConfiguration;
 import ufront.web.session.UFHttpSession;
 import ufront.auth.*;
-import thx.Strings;
 using tink.CoreApi;
-using thx.Objects;
 using ufront.core.InjectionTools;
+using StringTools;
 
 /**
 A standard Ufront Application for executing requests on the server.
@@ -129,7 +128,9 @@ class UfrontApplication extends HttpApplication {
 		}
 
 		// Add URL filter for basePath, if it is not "/"
-		var path = Strings.trimChars( configuration.basePath, "/" );
+		var path = configuration.basePath;
+		if (path.endsWith("/")) path = path.substr(0, path.length-1);
+		if (path.startsWith("/")) path = path.substr(1);
 		if ( path.length>0 )
 			super.addUrlFilter( new DirectoryUrlFilter(path) );
 
@@ -170,7 +171,7 @@ class UfrontApplication extends HttpApplication {
 	The first time this runs, `this.initOnFirstExecute()` will be called, which runs some more initialization that requires the HttpContext to be ready before running.
 	**/
 	override public function execute( httpContext:HttpContext ):Surprise<Noise,Error> {
-		NullArgument.throwIfNull( httpContext );
+		HttpError.throwIfNull( httpContext, "httpContext" );
 
 		if ( firstRun )
 			initOnFirstExecute( httpContext );

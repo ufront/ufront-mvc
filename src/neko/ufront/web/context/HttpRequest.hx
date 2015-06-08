@@ -1,7 +1,6 @@
 package neko.ufront.web.context;
 
 import haxe.io.Bytes;
-import thx.Error;
 import neko.Lib;
 import ufront.web.upload.*;
 import ufront.web.UserAgent;
@@ -12,7 +11,6 @@ import ufront.web.context.HttpRequest.OnDataCallback;
 import ufront.web.context.HttpRequest.OnEndPartCallback;
 using ufront.core.AsyncTools;
 using tink.CoreApi;
-using thx.Strings;
 using StringTools;
 
 /**

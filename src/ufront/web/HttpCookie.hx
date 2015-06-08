@@ -1,7 +1,5 @@
 package ufront.web;
 
-import thx.error.NullArgument;
-
 /**
 A class to build and configure a HTTP Cookie to be sent to the client.
 

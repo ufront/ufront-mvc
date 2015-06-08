@@ -1,6 +1,5 @@
 package ufront.web.result;
 
-import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
 import ufront.core.AsyncTools;
 using tink.CoreApi;

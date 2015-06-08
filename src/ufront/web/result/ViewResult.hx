@@ -15,7 +15,6 @@ import ufront.web.context.ActionContext;
 import ufront.core.AsyncTools;
 import haxe.rtti.Meta;
 using tink.CoreApi;
-using thx.Strings;
 using haxe.io.Path;
 using StringTools;
 

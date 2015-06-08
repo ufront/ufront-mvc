@@ -6,7 +6,6 @@ import ufront.app.HttpApplication;
 import tink.CoreApi;
 import ufront.web.HttpError;
 import ufront.core.AsyncTools;
-using thx.Types;
 
 /**
 The `InlineSessionMiddleware` makes sure we `init()` a session before a request starts, and `commit()` it before the request ends.

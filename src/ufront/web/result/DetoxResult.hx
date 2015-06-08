@@ -2,7 +2,6 @@ package ufront.web.result;
 
 #if detox
 	import tink.CoreApi;
-	import thx.error.NullArgument;
 	import ufront.web.context.ActionContext;
 	import ufront.core.AsyncTools;
 	import ufront.view.TemplateData;

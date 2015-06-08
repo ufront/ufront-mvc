@@ -1,10 +1,10 @@
 package ufront.web.context;
+
 import haxe.io.Bytes;
 import haxe.io.BytesOutput;
 import haxe.io.Output;
 import ufront.core.OrderedStringMap;
-import thx.error.NullArgument;
-import thx.error.NotImplemented;
+import ufront.web.HttpError;
 import haxe.ds.StringMap;
 
 /**
@@ -117,7 +117,7 @@ class HttpResponse {
 	This is an abstract method, it is implemented differently on each platform.
 	It will throw a `NotImplemented` error if you are not using a platform-specific implementation.
 	**/
-	public function flush():Void { throw new NotImplemented(); }
+	public function flush():Void { throw HttpError.notImplemented(); }
 
 	/**
 	Reset the HttpResponse to a blank state.
@@ -180,8 +180,8 @@ class HttpResponse {
 	Set a HTTP header on the response.
 	**/
 	public function setHeader( name:String, value:String ):Void {
-		NullArgument.throwIfNull( name );
-		NullArgument.throwIfNull( value );
+		HttpError.throwIfNull( name );
+		HttpError.throwIfNull( value );
 		_headers.set( name, value );
 	}
 

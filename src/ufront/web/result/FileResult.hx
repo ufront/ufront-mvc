@@ -1,7 +1,6 @@
 package ufront.web.result;
 
 import haxe.io.Bytes;
-import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
 import ufront.core.AsyncTools;
 using haxe.io.Path;
@@ -77,7 +76,7 @@ class FileResult extends ActionResult {
 	}
 
 	override function executeResult( actionContext:ActionContext ) {
-		NullArgument.throwIfNull( actionContext );
+		HttpError.throwIfNull( actionContext, "actionContext" );
 
 		if( null!=contentType )
 			actionContext.httpContext.response.contentType = contentType;

@@ -2,10 +2,9 @@ package ufront.test;
 
 #if !macro
 import ufront.web.context.*;
+import ufront.web.HttpError;
 import ufront.web.session.UFHttpSession;
 import ufront.auth.*;
-import thx.error.*;
-import thx.collection.*;
 import haxe.PosInfos;
 import ufront.web.Controller;
 import ufront.app.UfrontApplication;
@@ -66,7 +65,7 @@ class TestUtils {
 		@return A mock `HttpContext`, using the requested values.
 		**/
 		public static function mockHttpContext( uri:String, ?method:String, ?params:MultiValueMap<String>, ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser> ):HttpContext {
-			NullArgument.throwIfNull( uri );
+			HttpError.throwIfNull( uri, "uri" );
 			if ( injector==null ) {
 				injector = new Injector();
 			}

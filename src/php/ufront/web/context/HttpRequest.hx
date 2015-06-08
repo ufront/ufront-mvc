@@ -11,7 +11,6 @@ import ufront.core.MultiValueMap;
 import haxe.ds.StringMap;
 using ufront.core.AsyncTools;
 using tink.CoreApi;
-using thx.Strings;
 using StringTools;
 
 /**
@@ -234,12 +233,19 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 	}
 
 	override function get_clientHeaders() {
+
+		function upperFirst(str:String) {
+			return str.charAt( 0 ).toUpperCase() + str.substr( 1 );
+		}
+
 		if ( clientHeaders==null ) {
 			clientHeaders = new MultiValueMap();
 			var h = Lib.hashOfAssociativeArray(untyped __php__("$_SERVER"));
 			for(k in h.keys()) {
 				if(k.substr(0,5) == "HTTP_") {
-					var headerName:String = k.substr(5).toLowerCase().replace("_", "-").capitalizeWords();
+					var headerName:String = k;
+					headerName = headerName.substr(5).toLowerCase();
+					headerName.split( "_" ).map( upperFirst ).join( "-" );
 					var headerValues:String = h.get(k);
 					for ( val in headerValues.split(",") ) {
 						clientHeaders.add(headerName, val.trim());

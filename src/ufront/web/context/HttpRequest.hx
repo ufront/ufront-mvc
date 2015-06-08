@@ -1,8 +1,6 @@
 package ufront.web.context;
-import thx.error.AbstractMethod;
 import haxe.io.Bytes;
 import haxe.ds.StringMap;
-import thx.error.NotImplemented;
 import ufront.web.upload.UFFileUpload;
 import ufront.core.MultiValueMap;
 using tink.CoreApi;
@@ -109,7 +107,7 @@ class HttpRequest {
 	Will return an empty String if there are no GET parameters.
 	**/
 	public var queryString(get, null):String;
-	function get_queryString():String return throw new AbstractMethod();
+	function get_queryString():String return throw HttpError.abstractMethod();
 
 	/**
 	The raw post string in a POST request.
@@ -117,7 +115,7 @@ class HttpRequest {
 	Will return an empty String if there are no POST parameters.
 	**/
 	public var postString(get, null):String;
-	function get_postString():String return throw new AbstractMethod();
+	function get_postString():String return throw HttpError.abstractMethod();
 
 	/**
 	The query parameters included in this request for this request.
@@ -125,7 +123,7 @@ class HttpRequest {
 	These are the parameters supplied in the URL, following the `?` character.
 	**/
 	public var query(get, null):MultiValueMap<String>;
-	function get_query():MultiValueMap<String> return throw new AbstractMethod();
+	function get_query():MultiValueMap<String> return throw HttpError.abstractMethod();
 
 	/**
 	The POST parameters for this request.
@@ -141,7 +139,7 @@ class HttpRequest {
 	> If any files were uploaded, they will appear in the "post" values with their parameter name, and the value will contain the original filename of the upload.
 	**/
 	public var post(get, null):MultiValueMap<String>;
-	function get_post():MultiValueMap<String> return throw new AbstractMethod();
+	function get_post():MultiValueMap<String> return throw HttpError.abstractMethod();
 
 	/**
 	File uploads that were part of a POST / multipart request.
@@ -160,19 +158,19 @@ class HttpRequest {
 	The Cookies that were included with this request.
 	**/
 	public var cookies(get, null):MultiValueMap<String>;
-	function get_cookies():MultiValueMap<String> return throw new AbstractMethod();
+	function get_cookies():MultiValueMap<String> return throw HttpError.abstractMethod();
 
 	/**
 	The host name of the current server.
 	**/
 	public var hostName(get, null):String;
-	function get_hostName():String return throw new AbstractMethod();
+	function get_hostName():String return throw HttpError.abstractMethod();
 
 	/**
 	The Client's IP address.
 	**/
 	public var clientIP(get, null):String;
-	function get_clientIP():String return throw new AbstractMethod();
+	function get_clientIP():String return throw HttpError.abstractMethod();
 
 	/**
 	The Uri requested in this HTTP request.
@@ -182,13 +180,13 @@ class HttpRequest {
 	See `HttpContext.getRequestUri()` for a filtered version of the URI.
 	**/
 	public var uri(get, null):String;
-	function get_uri():String return throw new AbstractMethod();
+	function get_uri():String return throw HttpError.abstractMethod();
 
 	/**
 	The HTTP headers supplied by the client in this request.
 	**/
 	public var clientHeaders(get, null):MultiValueMap<String>;
-	function get_clientHeaders():MultiValueMap<String> return throw new AbstractMethod();
+	function get_clientHeaders():MultiValueMap<String> return throw HttpError.abstractMethod();
 
 	/**
 	Information about the User-Agent that made this request, based on the "User-Agent" HTTP header.
@@ -210,7 +208,7 @@ class HttpRequest {
 	Case sensitivity depends on the environement.
 	**/
 	public var httpMethod(get, null):String;
-	function get_httpMethod():String return throw new AbstractMethod();
+	function get_httpMethod():String return throw HttpError.abstractMethod();
 
 	/**
 	The path of the currently executing script.
@@ -222,7 +220,7 @@ class HttpRequest {
 	This path will always include a trailing slash.
 	**/
 	public var scriptDirectory(get, null):String;
-	function get_scriptDirectory():String return throw new AbstractMethod();
+	function get_scriptDirectory():String return throw HttpError.abstractMethod();
 
 	/**
 	Gives the username and password supplied by the `Authorization` client header.
@@ -234,7 +232,7 @@ class HttpRequest {
 	To trigger the login box to open on the browser, use `HttpResponse.requireAuthentication("Please login")`.
 	**/
 	public var authorization(get, null):{ user:String, pass:String };
-	function get_authorization():{ user:String, pass:String } return throw new AbstractMethod();
+	function get_authorization():{ user:String, pass:String } return throw HttpError.abstractMethod();
 
 	/**
 	Check if the current request is a `multipart/form-data` request.
@@ -271,7 +269,7 @@ class HttpRequest {
 	@param onData (optional) - called multiple times (in order) for each file. See `OnDataCallback`.
 	@param onEndPart (optional) - called after all data for a part has been received. See `OnEndPartCallback`.
 	**/
-	public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error> return throw new AbstractMethod();
+	public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error> return throw HttpError.abstractMethod();
 }
 
 /**

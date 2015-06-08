@@ -6,8 +6,6 @@ import ufront.app.*;
 import ufront.core.AsyncTools;
 import ufront.web.context.HttpContext;
 import haxe.ds.StringMap;
-using thx.Strings;
-using thx.Types;
 
 /**
 A `UFErrorHandler` module which displays an error page for the client when uncaught failures or errors are encountered.

@@ -4,7 +4,6 @@ import ufront.web.context.HttpContext;
 import ufront.app.*;
 import haxe.PosInfos;
 import ufront.core.AsyncTools;
-using thx.Types;
 
 /**
 A `UFLogHandler` that sends traces from a server to the client's browser console during a Ufront remoting API call.

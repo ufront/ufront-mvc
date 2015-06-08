@@ -14,9 +14,9 @@ package ufront.app;
 	import haxe.remoting.AsyncConnection;
 	import ufront.api.*;
 	import pushstate.PushState;
-	import thx.Strings;
 	import ufront.web.url.filter.*;
 	using ufront.core.InjectionTools;
+	using StringTools;
 
 	/**
 	A standard Ufront Client-Side Application for executing requests in the browser.
@@ -112,7 +112,9 @@ package ufront.app;
 			}
 
 			// Add URL filter for basePath, if it is not "/"
-			var path = Strings.trimChars( configuration.basePath, "/" );
+			var path = configuration.basePath;
+			if (path.endsWith("/")) path = path.substr(0, path.length-1);
+			if (path.startsWith("/")) path = path.substr(1);
 			if ( path.length>0 )
 				super.addUrlFilter( new DirectoryUrlFilter(path) );
 

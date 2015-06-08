@@ -1,7 +1,6 @@
 package ufront.web.url.filter;
-import ufront.web.context.HttpRequest;
-import thx.Error;
 
+import ufront.web.context.HttpRequest;
 using StringTools;
 
 /**

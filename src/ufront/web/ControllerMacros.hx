@@ -660,8 +660,10 @@ class ControllerMacros {
 
 		This returns a correctly typed expression to use with `result:Surprise<ActionResult,Error> = $expr`
 		This will also add extra expressions to a `lines` array, meaning they will be added before the `result=` line above.
+
+		@return `ExprOf<Surprise<ActionResult,Error>>`
 	**/
-	static function wrapReturnExpression( returnExpr:Expr, routeName:String, voidReturn:Bool, lines:Array<Expr> ):ExprOf<Surprise<ActionResult,Error>> {
+	static function wrapReturnExpression( returnExpr:Expr, routeName:String, voidReturn:Bool, lines:Array<Expr> ):Expr {
 		if ( voidReturn ) {
 			lines.push( returnExpr );
 			return macro wrapResult(null, haxe.EnumFlags.ofInt(0));

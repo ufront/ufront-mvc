@@ -1,7 +1,6 @@
 package ufront.web.result;
 
 import haxe.io.Bytes;
-import thx.error.NullArgument;
 import ufront.web.context.ActionContext;
 import ufront.core.AsyncTools;
 import ufront.web.HttpError;
@@ -33,7 +32,7 @@ class DirectFilePathResult extends ActionResult {
 	}
 
 	override function executeResult( actionContext:ActionContext ) {
-		NullArgument.throwIfNull( actionContext );
+		HttpError.throwIfNull( actionContext );
 		#if sys
 			filePath = filePath.normalize();
 			if ( !FileSystem.exists(filePath) ) {
@@ -50,7 +49,7 @@ class DirectFilePathResult extends ActionResult {
 				return result.executeResult( actionContext );
 			}
 		#else
-			return throw "DirectFilePathResult is only implemented on `sys` platforms.";
+			return throw HttpError.notImplemented();
 		#end
 	}
 }

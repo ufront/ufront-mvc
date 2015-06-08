@@ -5,9 +5,7 @@ import haxe.ds.StringMap;
 /**
 An ordered map implementation.
 
-Copied from `thx.collections.HashList` in the old `thx` library - it has not yet been included in the Haxe 3 version of thx.
-
-If this is re-implemented in the new `thx` library, we will likely use that and leave a typedef at this location.
+Copied from `thx.collections.HashList` in the old `thx` library.
 
 @author Franco Ponticelli
 **/

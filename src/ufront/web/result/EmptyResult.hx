@@ -18,7 +18,7 @@ class EmptyResult extends ActionResult {
 	public var preventFlush:Bool;
 
 	/**
-		@param preventFlush
+		@param preventFlush See `this.preventFlush`. Default is false.
 	**/
 	public function new( ?preventFlush=false ){
 		this.preventFlush = preventFlush;
