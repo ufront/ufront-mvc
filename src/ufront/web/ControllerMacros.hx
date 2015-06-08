@@ -7,8 +7,7 @@ import haxe.macro.Type;
 import tink.core.Error.Pos;
 import tink.macro.ClassBuilder;
 import tink.macro.Member;
-import ufront.web.Controller;
-import ufront.web.result.ActionResult;
+import ufront.web.result.ResultWrapRequired;
 using tink.CoreApi;
 using tink.MacroApi;
 using haxe.macro.Tools;
@@ -721,8 +720,8 @@ class ControllerMacros {
 		- If it is `Dynamic`, require wrapping in Future, Outcome and ActionResult/Error
 		- If it is void, leave it, our other macros will pass "null" to the `wrapResult` method of the controller and an EmptyResult will be generated, appropriately wrapped.
 	**/
-	static function getResultWrapFlagsForReturnType( returnType:Type ):EnumFlags<WrapRequired> {
-		var flags = new EnumFlags<WrapRequired>();
+	static function getResultWrapFlagsForReturnType( returnType:Type ):EnumFlags<ResultWrapRequired> {
+		var flags = new EnumFlags<ResultWrapRequired>();
 		if ( returnType.unify((macro :StdTypes.Void).toType()) ) {
 			flags.set(WRFuture);
 			flags.set(WROutcome);

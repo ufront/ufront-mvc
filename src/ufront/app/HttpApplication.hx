@@ -1,5 +1,6 @@
 package ufront.app;
 
+#if !macro
 import ufront.web.url.filter.UFUrlFilter;
 import ufront.core.AsyncTools;
 import minject.Injector;
@@ -11,6 +12,7 @@ import ufront.log.Message;
 import haxe.PosInfos;
 import tink.core.Error.Pos;
 using tink.CoreApi;
+#end
 
 /**
 A HttpApplication responds to each request by generating a `HttpContext` and passing it through each stage of the request.

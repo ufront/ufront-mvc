@@ -5,6 +5,7 @@ import haxe.PosInfos;
 import ufront.web.context.HttpContext;
 import ufront.web.result.ActionResult;
 import ufront.web.result.EmptyResult;
+import ufront.web.result.ResultWrapRequired;
 using tink.CoreApi;
 using haxe.io.Path;
 
@@ -209,11 +210,7 @@ class Controller {
 	Instantiate and execute a sub controller.
 	**/
 	public function executeSubController( controller:Class<Controller> ):FutureActionOutcome {
-		#if !macro
-			return context.injector.instantiate( controller ).execute();
-		#else
-			return null;
-		#end
+		return context.injector.instantiate( controller ).execute();
 	}
 
 	/**
@@ -271,7 +268,7 @@ class Controller {
 	}
 
 	/** Based on a set of enum flags, wrap as required.  If null, return an appropriately wrapped EmptyResult() **/
-	function wrapResult( result:Dynamic, wrappingRequired:EnumFlags<WrapRequired> ):Surprise<ActionResult,Error> {
+	function wrapResult( result:Dynamic, wrappingRequired:EnumFlags<ResultWrapRequired> ):Surprise<ActionResult,Error> {
 		if ( result==null ) {
 			var actionResult:ActionResult = new EmptyResult( true );
 			return Future.sync( Success(actionResult) );
@@ -313,22 +310,4 @@ class Controller {
 			case _:
 		});
 	}
-
-}
-
-/**
-A collection of flags describing operations that are required to wrap any return type into a `FutureActionOutcome`.
-
-In our `Controller.execute()` methods, we return a consistent `Future<Outcome<ActionResult,tink.core.Error>>` type, despite the return type of the method/action executed.
-**/
-enum WrapRequired {
-	/** The return type was synchronous, and must be wrapped in a `Future`. **/
-	WRFuture;
-	/** The return type was not an `Outcome`, and must be wrapped in either `Outcome.Success` or `Outcome.Failure`. **/
-	WROutcome;
-	/**
-	The return type was not an `ActionResult` (or on the failure case, a `tink.core.Error`).
-	It must be wrapped into the appropriate object.
-	**/
-	WRResultOrError;
 }

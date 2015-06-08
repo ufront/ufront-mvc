@@ -20,7 +20,7 @@ class HttpError {
 	@param pos (optional) The position of the error. Can be supplied, otherwise the call site of this function is used.
 	@return A wrapped `Error` object, with the error code 500.
 	**/
-	static public function wrap( e:Dynamic, ?msg="Internal Server Error", ?pos ):Error {
+	static public function wrap( e:Dynamic, ?msg="Internal Server Error", ?pos:PosInfos ):Error {
 		if ( Std.is(e, Error) ) return cast e;
 		else return Error.withData( ErrorCode.InternalError, msg, e, pos );
 	}
@@ -32,7 +32,7 @@ class HttpError {
 	@param pos (optional) The position of the error. Can be supplied, otherwise the call site of this function is used.
 	@return A wrapped `Error` object, with the error code 400.
 	**/
-	static public inline function badRequest( ?reason:String, ?pos ):Error {
+	static public inline function badRequest( ?reason:String, ?pos:PosInfos ):Error {
 		var message = "Bad Request";
 		if ( reason!=null )
 			message += ': $reason';
@@ -47,7 +47,7 @@ class HttpError {
 	@param pos (optional) The position of the error. Can be supplied, otherwise the call site of this function is used.
 	@return A wrapped `Error` object, with the error code 500.
 	**/
-	static public function internalServerError( ?msg="Internal Server Error", ?inner:Dynamic, ?pos ):Error {
+	static public function internalServerError( ?msg="Internal Server Error", ?inner:Dynamic, ?pos:PosInfos ):Error {
 		return Error.withData( 500, msg, inner, pos );
 	}
 
@@ -57,7 +57,7 @@ class HttpError {
 	@param pos (optional) The position of the error. Can be supplied, otherwise the call site of this function is used.
 	@return A wrapped `Error` object, with the error code 405.
 	**/
-	static public function methodNotAllowed( ?pos ):Error {
+	static public function methodNotAllowed( ?pos:PosInfos ):Error {
 		return new Error( 405, "Method Not Allowed", pos );
 	}
 
@@ -67,7 +67,7 @@ class HttpError {
 	@param pos (optional) The position of the error. Can be supplied, otherwise the call site of this function is used.
 	@return A wrapped `Error` object, with the error code 404.
 	**/
-	static public function pageNotFound( ?pos ):Error {
+	static public function pageNotFound( ?pos:PosInfos ):Error {
 		return new Error( 404, "Page Not Found", pos );
 	}
 
@@ -77,7 +77,7 @@ class HttpError {
 	@param pos (optional) The position of the error. Can be supplied, otherwise the call site of this function is used.
 	@return A wrapped `Error` object, with the error code 401.
 	**/
-	static public function unauthorized( ?pos ):Error {
+	static public function unauthorized( ?pos:PosInfos ):Error {
 		return new Error( 401, "Unauthorized Access", pos );
 	}
 
@@ -87,7 +87,7 @@ class HttpError {
 	@param pos (optional) The position of the error. Can be supplied, otherwise the call site of this function is used.
 	@return A wrapped `Error` object, with the error code 422.
 	**/
-	static public function unprocessableEntity( ?pos ):Error {
+	static public function unprocessableEntity( ?pos:PosInfos ):Error {
 		return new Error( 422, "Unprocessable Entity", pos );
 	}
 
@@ -97,7 +97,7 @@ class HttpError {
 	@param pos (optional) The position of the error. Can be supplied, otherwise the call site of this function is used.
 	@return A wrapped `Error` object, with the error code 500.
 	**/
-	static public function notImplemented( ?pos ):Error {
+	static public function notImplemented( ?pos:PosInfos ):Error {
 		var methodName = pos.className + "." + pos.methodName;
 		return new Error( 500, 'Internal Server Error: $methodName is not implemented on this platform', pos );
 	}
@@ -108,7 +108,7 @@ class HttpError {
 	@param pos (optional) The position of the error. Can be supplied, otherwise the call site of this function is used.
 	@return A wrapped `Error` object, with the error code 500.
 	**/
-	static public function abstractMethod( ?pos ):Error {
+	static public function abstractMethod( ?pos:PosInfos ):Error {
 		var methodName = pos.className + "." + pos.methodName;
 		return new Error( 500, 'Internal Server Error: $methodName is an abstract method and should be overridden by a subclass', pos );
 	}
@@ -121,7 +121,7 @@ class HttpError {
 	@param pos (optional) The position of the error. Can be supplied, otherwise the call site of this function is used.
 	@throws A wrapped `Error` object, with the error code 500, if `val` was null.
 	**/
-	static public function throwIfNull( val:Dynamic, ?name:String="argument", ?pos ):Void {
+	static public function throwIfNull( val:Dynamic, ?name:String="argument", ?pos:PosInfos ):Void {
 		if ( val==null )
 			throw new Error( 500, '$name should not be null', pos );
 	}
@@ -148,4 +148,3 @@ class HttpError {
 		};
 	}
 }
-#end
