@@ -8,6 +8,7 @@ import haxe.ds.StringMap;
 import haxe.Serializer;
 import haxe.Unserializer;
 import tink.CoreApi;
+import ufront.core.Uuid;
 #if sys
 	import sys.FileSystem;
 	import sys.io.File;
@@ -405,7 +406,7 @@ class FileSession implements UFHttpSession {
 	}
 
 	inline function generateSessionID() {
-		return Random.string(40);
+		return Uuid.create();
 	}
 
 	inline function checkStarted() {

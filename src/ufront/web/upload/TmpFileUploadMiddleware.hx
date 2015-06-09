@@ -7,6 +7,7 @@ package ufront.web.upload;
 #end
 import ufront.web.context.HttpContext;
 import ufront.app.UFMiddleware;
+import ufront.core.Uuid;
 import ufront.app.HttpApplication;
 import tink.CoreApi;
 import ufront.web.upload.TmpFileUpload;
@@ -68,7 +69,7 @@ class TmpFileUploadMiddleware implements UFMiddleware {
 					origFileName = fName;
 					size = 0;
 					while ( file==null ) {
-						tmpFilePath = dir+dateStr+"-"+Random.string(10)+".tmp";
+						tmpFilePath = dir+dateStr+"-"+Uuid.create()+".tmp";
 						if ( !FileSystem.exists(tmpFilePath) ) {
 							file = File.write( tmpFilePath );
 						}

@@ -4,7 +4,6 @@
 
 # Things needed for ufront-mvc
 
--lib random
 -lib compiletime
 -lib minject
 -lib tink_core

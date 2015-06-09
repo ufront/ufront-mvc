@@ -4,6 +4,7 @@ import ufront.web.context.HttpContext;
 import ufront.web.HttpCookie;
 import ufront.web.session.UFHttpSession;
 import ufront.cache.UFCache;
+import ufront.core.Uuid;
 import haxe.ds.StringMap;
 import tink.CoreApi;
 using haxe.io.Path;
@@ -420,7 +421,7 @@ class CacheSession implements UFHttpSession {
 	// Private methods
 
 	inline function generateSessionID() {
-		return Random.string(40);
+		return Uuid.create();
 	}
 
 	inline function checkStarted() {
