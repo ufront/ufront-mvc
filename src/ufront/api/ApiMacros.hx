@@ -258,7 +258,7 @@ class ApiMacros {
 				@inject public function injectApi( injector:minject.Injector ) {
 					#if server
 						this.api =
-							try injector.getResponse( $syncApiReference )
+							try injector.getValue( $syncApiReference )
 							catch (e:Dynamic) throw 'Failed to inject '+Type.getClassName($syncApiReference)+' into '+Type.getClassName(Type.getClass(this));
 					#end
 					this.className = $v{syncApiName};

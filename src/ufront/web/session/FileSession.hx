@@ -109,16 +109,16 @@ class FileSession implements UFHttpSession {
 	**/
 	@inject public function injectConfig( context:HttpContext ) {
 		this.sessionName =
-			if ( context.injector.hasRule(String,"sessionName") )
-				context.injector.getResponse( String, "sessionName" )
+			if ( context.injector.hasMapping(String,"sessionName") )
+				context.injector.getValue( String, "sessionName" )
 			else defaultSessionName;
 		this.expiry =
-			if ( context.injector.hasRule(Int,"sessionExpiry") )
-				context.injector.getResponse(context.injector);
+			if ( context.injector.hasMapping(Int,"sessionExpiry") )
+				context.injector.getValue( Int, "sessionExpiry" );
 			else defaultExpiry;
 		this.savePath =
-			if ( context.injector.hasRule(String,"sessionSavePath") )
-				context.injector.getResponse( String, "sessionSavePath" )
+			if ( context.injector.hasMapping(String,"sessionSavePath") )
+				context.injector.getValue( String, "sessionSavePath" )
 			else defaultSavePath;
 
 		// Sanitize the savePath, make it absolute if it was specified relative to the content directory.

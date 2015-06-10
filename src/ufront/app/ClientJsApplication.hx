@@ -83,21 +83,21 @@ package ufront.app;
 
 			// Map some default injector rules
 			for ( controller in configuration.controllers ) {
-				injector.injectClass( controller );
+				injector.mapRuntimeTypeOf( controller ).toClass( controller );
 			}
 			for ( api in configuration.apis ) {
-				injector.injectClass( api );
+				injector.mapRuntimeTypeOf( api ).asSingleton();
 				var asyncApi = UFAsyncApi.getAsyncApi( api );
 				if ( asyncApi!=null )
-					injector.injectClass( asyncApi );
+					injector.mapRuntimeTypeOf( asyncApi ).asSingleton();
 			}
 
 			// Add the remoting connections.
 			if ( configuration.remotingPath!=null ) {
 				var syncRemotingConnection = HttpConnection.urlConnect( "/" );
 				var asyncRemotingConnection = HttpAsyncConnection.urlConnect( "/" );
-				injector.injectValue( Connection, syncRemotingConnection );
-				injector.injectValue( AsyncConnection, asyncRemotingConnection );
+				injector.map( Connection ).toValue( syncRemotingConnection );
+				injector.map( AsyncConnection ).toValue( asyncRemotingConnection );
 			}
 
 			// Set up handlers and middleware
@@ -123,22 +123,26 @@ package ufront.app;
 				super.addUrlFilter( new PathInfoUrlFilter() );
 
 			// Save the session / auth factories for later, when we're building requests
-			if (configuration.sessionImplementation!=null) injector.injectClass( UFHttpSession, configuration.sessionImplementation );
-			if (configuration.authImplementation!=null) injector.injectClass( UFAuthHandler, configuration.authImplementation );
-
-			// Inject some settings for the view engine.
-			if ( configuration.viewEngine!=null ) {
-				injector.injectValue( String, configuration.viewPath, "viewPath" );
-				injector.injectClass( UFViewEngine, configuration.viewEngine, true );
+			if (configuration.sessionImplementation!=null) {
+				injector.map( UFHttpSession ).toClass( configuration.sessionImplementation );
+				injector.mapRuntimeTypeOf( configuration.sessionImplementation ).toClass( configuration.sessionImplementation );
+			}
+			if (configuration.authImplementation!=null) {
+				injector.map( "UFAuthHandler<UFAuthUser>" ).toClass( configuration.authImplementation );
+				injector.mapRuntimeTypeOf( configuration.authImplementation ).toClass( configuration.authImplementation );
 			}
 
 			if ( configuration.defaultLayout!=null )
-				injector.injectValue( String, configuration.defaultLayout, "defaultLayout" );
+				injector.map( String, "defaultLayout" ).toValue( configuration.defaultLayout );
 
 			if ( configuration.viewEngine!=null ) {
+				// Set up the view engine, add it to the injector as a singleton, under both "UFViewEngine" and the implementation type.
+				injector.map( String, "viewPath" ).toValue( configuration.viewPath );
+				injector.map( UFViewEngine ).toSingleton( configuration.viewEngine );
+				injector.mapRuntimeTypeOf( configuration.viewEngine ).toValue( injector.getValue(UFViewEngine) );
+
 				try {
-					injector.injectClass( configuration.viewEngine );
-					viewEngine = injector.getResponse( UFViewEngine );
+					viewEngine = injector.getValue( UFViewEngine );
 					for ( te in configuration.templatingEngines ) {
 						viewEngine.addTemplatingEngine( te );
 					}

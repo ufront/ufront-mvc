@@ -100,13 +100,13 @@ class UfrontApplication extends HttpApplication {
 
 		// Map some default injector rules
 		for ( controller in configuration.controllers ) {
-			injector.injectClass( controller );
+			injector.mapRuntimeTypeOf( controller ).toClass( controller );
 		}
 		for ( api in configuration.apis ) {
-			injector.injectClass( api );
+			injector.mapRuntimeTypeOf( api ).toClass( api );
 			var asyncApi = UFAsyncApi.getAsyncApi( api );
 			if ( asyncApi!=null )
-				injector.injectClass( asyncApi );
+				injector.mapRuntimeTypeOf( asyncApi ).toClass( asyncApi );
 		}
 
 		// Set up handlers and middleware
@@ -139,20 +139,27 @@ class UfrontApplication extends HttpApplication {
 			super.addUrlFilter( new PathInfoUrlFilter() );
 
 		// Save the session / auth factories for later, when we're building requests
-		if (configuration.sessionImplementation!=null) injector.injectClass( UFHttpSession, configuration.sessionImplementation );
-		if (configuration.authImplementation!=null) injector.injectClass( UFAuthHandler, configuration.authImplementation );
+		if (configuration.sessionImplementation!=null) {
+			injector.map( UFHttpSession ).toClass( configuration.sessionImplementation );
+			injector.mapRuntimeTypeOf( configuration.sessionImplementation ).toClass( configuration.sessionImplementation );
+		}
+		if (configuration.authImplementation!=null) {
+			injector.map( "UFAuthHandler<UFAuthUser>" ).toClass( configuration.authImplementation );
+			injector.mapRuntimeTypeOf( configuration.authImplementation ).toClass( configuration.authImplementation );
+		}
 
-		// Inject some settings for the view engine.
+		// Set up the view engine, add it to the injector as a singleton, under both "UFViewEngine" and the implementation type.
 		if ( configuration.viewEngine!=null ) {
-			injector.injectValue( String, configuration.viewPath, "viewPath" );
-			injector.injectClass( UFViewEngine, configuration.viewEngine, true );
+			injector.map( String, "viewPath" ).toValue( configuration.viewPath );
+			injector.map( UFViewEngine ).toSingleton( configuration.viewEngine );
+			injector.mapRuntimeTypeOf( configuration.viewEngine ).toSingleton( injector.getValue(UFViewEngine) );
 		}
 
 		if ( configuration.contentDirectory!=null )
 			setContentDirectory( configuration.contentDirectory );
 
 		if ( configuration.defaultLayout!=null )
-			injector.injectValue( String, configuration.defaultLayout, "defaultLayout" );
+			injector.map( String, "defaultLayout" ).toValue( configuration.defaultLayout );
 
 		#if ufront_ufadmin
 			CompileTime.importPackage( "ufront.ufadmin.modules" ); // Ensure all ufront admin controllers are loaded.
@@ -183,14 +190,13 @@ class UfrontApplication extends HttpApplication {
 	var firstRun = true;
 	function initOnFirstExecute( httpContext:HttpContext ):Void {
 		firstRun = false;
-		injector.injectValue( String, httpContext.request.scriptDirectory, "scriptDirectory" );
-		injector.injectValue( String, httpContext.contentDirectory, "contentDirectory" );
+		injector.map( String, "scriptDirectory" ).toValue( httpContext.request.scriptDirectory );
+		injector.map( String, "contentDirectory" ).toValue( httpContext.contentDirectory );
 
-		// Make the UFViewEngine available (and inject into it, in case it needs anything)
+		// Add our templating engines to the UFViewEngine
 		if ( configuration.viewEngine!=null ) {
 			try {
-				injector.injectClass( configuration.viewEngine );
-				viewEngine = injector.getResponse( UFViewEngine );
+				this.viewEngine = injector.getValue( UFViewEngine );
 				for ( te in appTemplatingEngines ) {
 					viewEngine.addTemplatingEngine( te );
 				}

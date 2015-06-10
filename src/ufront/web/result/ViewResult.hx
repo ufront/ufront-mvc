@@ -318,7 +318,7 @@ class ViewResult extends ActionResult {
 
 		// Get the viewEngine from the injector.
 		var viewEngine =
-			try actionContext.httpContext.injector.getResponse( UFViewEngine )
+			try actionContext.httpContext.injector.getValue( UFViewEngine )
 			catch (e:Dynamic) {
 				var msg = "Failed to find a UFViewEngine in ViewResult.executeResult(), please make sure that one is made available in your application's injector";
 				return SurpriseTools.asSurpriseError( null, msg );
@@ -420,7 +420,7 @@ class ViewResult extends ActionResult {
 		else {
 			// If there was no metadata, see if a "defaultLayout" string was injected by the app configuration.
 			try {
-				layoutPath = actionContext.httpContext.injector.getResponse( String, "defaultLayout" );
+				layoutPath = actionContext.httpContext.injector.getValue( String, "defaultLayout" );
 				if ( layoutPath!=null && layoutPath.startsWith("/")==false ) {
 					layoutPath = '/$layoutPath';
 				}
