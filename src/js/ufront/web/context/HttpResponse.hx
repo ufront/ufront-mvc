@@ -1,7 +1,7 @@
 package js.ufront.web.context;
 
 import js.Browser.*;
-using Detox;
+import js.html.*;
 using StringTools;
 
 /**
@@ -78,8 +78,18 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 			// A DOM diffing algorithm could be better.
 			// Apparently react does diffs level by level in the DOM heirarchy, which would be less complicated to resolve.
 			// On the other hand, we could leave it up to the ActionResult classes to be more clever with templating etc, and this is just a crude fallback.
-			newDoc.find( "head" ).children(false).appendTo( document.head.empty() );
-			newDoc.find( "body" ).children(false).appendTo( document.body.empty() );
+			function emptyElement( parent:Element ) {
+				while ( parent.firstChild!=null )
+					parent.removeChild( parent.firstChild );
+			}
+			function moveChildNodes( fromParent:Element, toParent:Element ) {
+				for ( i in 0...fromParent.children.length )
+					toParent.appendChild( fromParent.children[i] );
+			}
+			emptyElement( document.head );
+			moveChildNodes( newDoc.head, document.head );
+			emptyElement( document.body );
+			moveChildNodes( newDoc.body, document.body );
 		}
 		else if ( this.isRedirect() ) {
 			#if pushstate
@@ -98,6 +108,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 		}
 		else {
 			// TODO: Figure out if there is a sensible way to fall back to the server.
+			// Perhaps setting document.location to trigger a server load?
 			throw 'Cannot use ufront-client-mvc to render content type "$contentType". Only "text/html" is supported.';
 		}
 	}
