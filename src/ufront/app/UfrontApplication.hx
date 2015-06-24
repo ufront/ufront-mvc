@@ -152,7 +152,6 @@ class UfrontApplication extends HttpApplication {
 		if ( configuration.viewEngine!=null ) {
 			injector.map( String, "viewPath" ).toValue( configuration.viewPath );
 			injector.map( UFViewEngine ).toSingleton( configuration.viewEngine );
-			injector.mapRuntimeTypeOf( configuration.viewEngine ).toSingleton( injector.getValue(UFViewEngine) );
 		}
 
 		if ( configuration.contentDirectory!=null )
