@@ -164,7 +164,7 @@ class UfrontApplication extends HttpApplication {
 		#if ufront_ufadmin
 			CompileTime.importPackage( "ufront.ufadmin.modules" ); // Ensure all ufront admin controllers are loaded.
 			if ( configuration.adminModules!=null ) {
-				injector.injectValue( List, Lambda.list(configuration.adminModules), "adminModules" );
+				injector.map( "List<Class<ufront.ufadmin.UFAdminModule>>", "adminModules" ).toValue( Lambda.list(configuration.adminModules) );
 			}
 		#end
 
