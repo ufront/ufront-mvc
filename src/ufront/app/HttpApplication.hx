@@ -231,8 +231,17 @@ class HttpApplication
 	/**
 	Add one or more `UFRequestMiddleware` modules to this HttpApplication. This method is chainable.
 	**/
-	inline public function addResponseMiddleware( ?middlewareItem:UFResponseMiddleware, ?middleware:Iterable<UFResponseMiddleware>, ?first:Bool=false ):HttpApplication
-		return addModule( responseMiddleware, middlewareItem, middleware, first );
+	inline public function addResponseMiddleware( ?middlewareItem:UFResponseMiddleware, ?middleware:Iterable<UFResponseMiddleware>, ?last:Bool=false ):HttpApplication
+		return addModule( responseMiddleware, middlewareItem, middleware, !last );
+
+	/**
+	Add one or more `UFMiddleware` modules to this HttpApplication. This method is chainable.
+	**/
+	public function addMiddleware( ?middlewareItem:UFMiddleware, ?middleware:Iterable<UFMiddleware>, ?firstInLastOut:Bool=false ):HttpApplication {
+		addRequestMiddleware( middlewareItem, middleware, firstInLastOut );
+		addResponseMiddleware( middlewareItem, middleware, firstInLastOut );
+		return this;
+	}
 
 	/**
 	Add one or more `UFLogHandler` modules to this HttpApplication. This method is chainable.
