@@ -22,15 +22,22 @@ class InjectionTools {
 	**/
 	public static function listMappings( injector:Injector, ?arr:Array<String>, ?prefix="" ):Array<String> {
 		#if debug
-			if ( arr==null ) arr = [];
-			if ( injector.parent!=null )
-				listMappings( injector.parent, arr, "(parent)"+prefix );
-			for ( r in @:privateAccess injector.rules ) {
-				arr.push( prefix+r.toString() );
-			}
+			var arr = [];
+			listMappingsRecursive( injector, arr, "" );
 			return arr;
 		#else
 			return ["Injector mappings not available unless compiled with -debug."];
 		#end
 	}
+
+	#if debug
+		static function listMappingsRecursive( injector:Injector, arr:Array<String>, prefix:String ):Void {
+			if ( injector.parent!=null ) {
+				listMappingsRecursive( injector.parent, arr, "(parent)"+prefix );
+			}
+			for ( r in @:privateAccess injector.mappings ) {
+				arr.push( prefix+r.toString() );
+			}
+		}
+	#end
 }
