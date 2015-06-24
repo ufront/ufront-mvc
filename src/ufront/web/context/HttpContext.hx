@@ -37,7 +37,7 @@ class HttpContext {
 
 		On NodeJS please use `HttpContext.createNodeJsContext()` instead.
 		**/
-		public static function createContext( ?request:HttpRequest, ?response:HttpResponse, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
+		public static function createContext( ?request:HttpRequest, ?response:HttpResponse, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
 			if( null==request ) request = HttpRequest.create();
 			if( null==response ) response = HttpResponse.create();
 			return new HttpContext( request, response, appInjector, session, auth, urlFilters, relativeContentDir );
@@ -52,7 +52,7 @@ class HttpContext {
 
 		[1]: https://github.com/clemos/haxe-js-kit
 		**/
-		public static function createNodeJsContext( req:js.npm.express.Request, res:js.node.http.ServerResponse, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
+		public static function createNodeJsContext( req:js.npm.express.Request, res:js.node.http.ServerResponse, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
 			var request:HttpRequest = new nodejs.ufront.web.context.HttpRequest( req );
 			var response:HttpResponse = new nodejs.ufront.web.context.HttpResponse( res );
 			return new HttpContext( request, response, appInjector, session, auth, urlFilters, relativeContentDir );
@@ -104,7 +104,7 @@ class HttpContext {
 	If this is not set during the constructor, then a `UFAuthHandler` will be injected.
 	If that fails, a `NobodyAuthHandler` will be used.
 	**/
-	public var auth(default,null):UFAuthHandler<UFAuthUser>;
+	public var auth(default,null):UFAuthHandler;
 
 	/**
 	The current user.
@@ -211,7 +211,7 @@ class HttpContext {
 	@param urlFilters (optional) The URL Filters to use on the current request. If null, no filters will be used.
 	@param relativeContentDir (optional) The path to the content directory, relative to the script directory. The default is "uf-content".
 	**/
-	public function new( request:HttpRequest, response:HttpResponse, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser>, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
+	public function new( request:HttpRequest, response:HttpResponse, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
 		HttpError.throwIfNull( response );
 		HttpError.throwIfNull( request );
 
@@ -244,7 +244,7 @@ class HttpContext {
 			catch(e:Dynamic) ufLog('Failed to load UFAuthHandler: $e. Using NobodyAuthHandler instead.'+haxe.CallStack.toString(haxe.CallStack.exceptionStack()));
 		if ( this.auth==null ) this.auth = new NobodyAuthHandler();
 		// TODO: make sure minject can support types like this, either with or without parameters, but not as a String.
-		injector.map( "UFAuthHandler<UFAuthUser>" ).toValue( this.auth );
+		injector.map( UFAuthHandler ).toValue( this.auth );
 	}
 
 	/**

@@ -18,7 +18,7 @@ class YesBossAuthHandlerTest {
 	public function teardown():Void {}
 
 	public function testYesBoss():Void {
-		var yb:UFAuthHandler<UFAuthUser> = new YesBossAuthHandler();
+		var yb:UFAuthHandler = new YesBossAuthHandler();
 		Assert.isTrue( yb.isLoggedIn() );
 		yb.requireLogin();
 		Assert.isTrue( yb.isLoggedInAs( new BossUser() ) );

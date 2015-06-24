@@ -205,7 +205,7 @@ typedef UfrontConfiguration = {
 	If you are using the `ufront-easyauth` library (and not on NodeJS), the default value is `EasyAuth`.
 	Otherwise, the default value is `YesBossAuthHandler`.
 	**/
-	@:optional public var authImplementation:Class<UFAuthHandler<UFAuthUser>>;
+	@:optional public var authImplementation:Class<UFAuthHandler>;
 
 	#if ufront_ufadmin
 		/**

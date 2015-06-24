@@ -9,7 +9,7 @@ Useful for command line tools that don't require authentication checks.
 
 @author Jason O'Neil
 **/
-class YesBossAuthHandler implements UFAuthHandler<UFAuthUser> {
+class YesBossAuthHandler implements UFAuthHandler {
 	public function new() {}
 
 	public function isLoggedIn() return true;
@@ -29,8 +29,6 @@ class YesBossAuthHandler implements UFAuthHandler<UFAuthUser> {
 	public function requirePermissions( permissions:Iterable<EnumValue> ) {}
 
 	public function toString() return "YesBossAuthHandler";
-
-	public function asAuthHandler() return this;
 
 	public var currentUser(get,never):Null<UFAuthUser>;
 	function get_currentUser() return new BossUser();

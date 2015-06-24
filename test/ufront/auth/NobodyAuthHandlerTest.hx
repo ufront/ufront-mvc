@@ -21,7 +21,7 @@ class NobodyAuthHandlerTest {
 	public function teardown():Void {}
 
 	public function testNobody():Void {
-		var nobodyAuth:UFAuthHandler<UFAuthUser> = new NobodyAuthHandler();
+		var nobodyAuth:UFAuthHandler = new NobodyAuthHandler();
 		Assert.isFalse( nobodyAuth.isLoggedIn() );
 
 		try {

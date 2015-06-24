@@ -37,7 +37,7 @@ class MVC {}
 @:noDoc @:noUsing typedef NobodyAuthHandler = ufront.auth.NobodyAuthHandler;
 @:noDoc @:noUsing typedef UFAuthAdapter<T:UFAuthUser> = ufront.auth.UFAuthAdapter.UFAuthAdapter<T>;
 @:noDoc @:noUsing typedef UFAuthAdapterSync<T:UFAuthUser> = ufront.auth.UFAuthAdapter.UFAuthAdapterSync<T>;
-@:noDoc @:noUsing typedef UFAuthHandler<T:UFAuthUser> = ufront.auth.UFAuthHandler<T>;
+@:noDoc @:noUsing typedef UFAuthHandler = ufront.auth.UFAuthHandler;
 @:noDoc @:noUsing typedef UFAuthUser = ufront.auth.UFAuthUser;
 @:noDoc @:noUsing typedef YesBossAuthHandler = ufront.auth.YesBossAuthHandler;
 

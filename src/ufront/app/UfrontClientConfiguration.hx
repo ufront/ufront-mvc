@@ -165,7 +165,7 @@ typedef UfrontClientConfiguration = {
 	If not supplied, the default value will be `YesBossAuthHandler`.
 	This may change in future once `EasyAuth` has better client-side support.
 	**/
-	@:optional public var authImplementation:Class<UFAuthHandler<UFAuthUser>>;
+	@:optional public var authImplementation:Class<UFAuthHandler>;
 }
 
 class DefaultUfrontClientConfiguration {

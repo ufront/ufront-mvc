@@ -13,7 +13,7 @@ Writing your code against the `UFAuthHandler` interface, rather than a specific 
 
 @author Jason O'Neil
 **/
-interface UFAuthHandler<T:UFAuthUser> {
+interface UFAuthHandler {
 	/**
 	Is a session currently open and authenticated - is the user logged in?
 	**/
@@ -64,11 +64,8 @@ interface UFAuthHandler<T:UFAuthUser> {
 	/** A String representation, usually just the name of the AuthHandler class, and possibly the current user. **/
 	function toString():String;
 
-	/** Type this handler as `UFAuthHandler<UFAuthUser>` to avoid variance issues. **/
-	function asAuthHandler():UFAuthHandler<UFAuthUser>;
-
 	/**
 	The currently logged in user.  Will be null if no user is logged in.
 	**/
-	var currentUser(get,never):Null<T>;
+	var currentUser(get,never):Null<UFAuthUser>;
 }

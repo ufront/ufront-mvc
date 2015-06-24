@@ -136,7 +136,7 @@ class UFApi {
 
 		This property only exists when compiled with `-D server`.
 		**/
-		@inject public var auth:ufront.auth.UFAuthHandler<ufront.auth.UFAuthUser>;
+		@inject public var auth:ufront.auth.UFAuthHandler;
 
 		/**
 		The messages list.

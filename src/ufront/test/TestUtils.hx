@@ -64,7 +64,7 @@ class TestUtils {
 		@param auth (optional) A custom `UFAuthHandler` to use. Default is `YesBossAuthHandler`.
 		@return A mock `HttpContext`, using the requested values.
 		**/
-		public static function mockHttpContext( uri:String, ?method:String, ?params:MultiValueMap<String>, ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser> ):HttpContext {
+		public static function mockHttpContext( uri:String, ?method:String, ?params:MultiValueMap<String>, ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSession, ?auth:UFAuthHandler ):HttpContext {
 			HttpError.throwIfNull( uri, "uri" );
 			if ( injector==null ) {
 				injector = new Injector();
@@ -473,7 +473,7 @@ class NaturalLanguageTests {
 
 		This is an alias for `TestUtils.mockHttpContext`.
 		**/
-		public static inline function whenIVisit( uri:String, ?method:String, ?params:MultiValueMap<String>, ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSession, ?auth:UFAuthHandler<UFAuthUser> ):HttpContext
+		public static inline function whenIVisit( uri:String, ?method:String, ?params:MultiValueMap<String>, ?injector:Injector, ?request:HttpRequest, ?response:HttpResponse, ?session:UFHttpSession, ?auth:UFAuthHandler ):HttpContext
 			return TestUtils.mockHttpContext( uri, method, params, injector, request, response, session, auth );
 
 
@@ -527,7 +527,7 @@ class NaturalLanguageTests {
 		}
 
 		/** Use this `UFAuthHandler` for this `HttpContext.auth`. **/
-		public static inline function withTheAuthHandler( context:HttpContext, auth:UFAuthHandler<UFAuthUser> ):HttpContext {
+		public static inline function withTheAuthHandler( context:HttpContext, auth:UFAuthHandler ):HttpContext {
 			@:privateAccess context.auth = auth;
 			return context;
 		}

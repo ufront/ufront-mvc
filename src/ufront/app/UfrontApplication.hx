@@ -144,7 +144,7 @@ class UfrontApplication extends HttpApplication {
 			injector.mapRuntimeTypeOf( configuration.sessionImplementation ).toClass( configuration.sessionImplementation );
 		}
 		if (configuration.authImplementation!=null) {
-			injector.map( "UFAuthHandler<UFAuthUser>" ).toClass( configuration.authImplementation );
+			injector.map( UFAuthHandler ).toClass( configuration.authImplementation );
 			injector.mapRuntimeTypeOf( configuration.authImplementation ).toClass( configuration.authImplementation );
 		}
 

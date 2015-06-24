@@ -11,7 +11,7 @@ Who would trust you anyway? *You're a nobody.* ;)
 
 @author Jason O'Neil
 **/
-class NobodyAuthHandler implements UFAuthHandler<UFAuthUser> {
+class NobodyAuthHandler implements UFAuthHandler {
 	public function new() {}
 
 	public function isLoggedIn() return false;
@@ -31,8 +31,6 @@ class NobodyAuthHandler implements UFAuthHandler<UFAuthUser> {
 	public function requirePermissions( permissions:Iterable<EnumValue> ) for (p in permissions) throw NoPermission( p );
 
 	public function toString() return "NobodyAuthHandler";
-
-	public function asAuthHandler() return this;
 
 	public var currentUser(get,never):Null<UFAuthUser>;
 	function get_currentUser() return null;
