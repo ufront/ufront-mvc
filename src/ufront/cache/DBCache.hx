@@ -128,7 +128,7 @@ class DBCache implements UFCache implements UFCacheSync {
 Different namespaces are differentiated via the `namespace` column.
 **/
 @:index( namespace )
-@:index( namespace, id, unique )
+@:index( namespace, cacheID, unique )
 class DBCacheItem extends Object {
 	public var namespace:SString<255>;
 	public var cacheID:SString<255>;
