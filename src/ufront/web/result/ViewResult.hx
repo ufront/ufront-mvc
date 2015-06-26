@@ -461,7 +461,12 @@ class ViewResult extends ActionResult {
 		switch tplOutcome {
 			case Success( tpl ):
 				try return Success( tpl.execute(combinedData) )
-				catch (e:Dynamic) return error( 'Unable to execute $section template', e );
+				catch (e:Dynamic) {
+					#if debug
+						trace( haxe.CallStack.toString(haxe.CallStack.exceptionStack()) );
+					#end
+					return error( 'Unable to execute $section template', e );
+				}
 			case Failure( err ):
 				return error( 'Unable to load $section template', err );
 		}
