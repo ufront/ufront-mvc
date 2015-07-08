@@ -83,8 +83,8 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 					parent.removeChild( parent.firstChild );
 			}
 			function moveChildNodes( fromParent:Element, toParent:Element ) {
-				for ( i in 0...fromParent.children.length )
-					toParent.appendChild( fromParent.children[i] );
+				while ( fromParent.firstChild!=null )
+					toParent.appendChild( fromParent.firstChild );
 			}
 			emptyElement( document.head );
 			moveChildNodes( newDoc.head, document.head );
