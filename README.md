@@ -10,11 +10,11 @@ It provides:
 	- Interact with APIs, Sessions, Authentication and more via dependency injection.
 - [Views](http://api.ufront.net/ufront/web/result/ViewResult.html)
 	- A flexible view engine that can work with any runtime templating system, including:
-		- [haxe.Template]()
-		- [erazor]()
-		- [hxtemplo]()
-		- [hxdtl]()
-		- [mustache]()
+		- [haxe.Template](http://haxe.org/manual/std-template.html)
+		- [erazor](https://github.com/ufront/erazor)
+		- [hxtemplo](https://github.com/Simn/hxtemplo)
+		- [hxdtl](https://github.com/ajukraine/hxdtl)
+		- [mustache](https://github.com/TomahawX/Mustache.hx)
 	- Easy to support compile-time templates like erazor, detox, tink and more.
 - [APIs](http://api.ufront.net/ufront/api/UFApi.html)
 	- Easy to set up APIs that interact easily with the rest of your app.
