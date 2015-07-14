@@ -66,7 +66,7 @@ class MVCHandler implements UFRequestHandler {
 				context.actionContext.actionResult.executeResult( context.actionContext )
 			catch ( e:Dynamic ) {
 				var p = HttpError.fakePosition( context.actionContext, "executeResult", ["actionContext"] );
-				#if debug context.ufError( 'Caught error in DispatchHandler.executeAction while executing ${p.className}.${p.methodName}(${p.customParams.join(",")})' ); #end
+				#if debug context.ufError( 'Caught error in MVCHandler.executeResult while executing ${p.className}.${p.methodName}(${p.customParams.join(",")})' ); #end
 				Future.sync( Failure(HttpError.wrap(e)) );
 			}
 	}
