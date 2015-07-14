@@ -140,6 +140,18 @@ class SurpriseTools {
 			return Future.sync( Failure(cast HttpError.wrap(err,msg,p)) );
 		}
 
+		/**
+		Attempt to execute a function that returns a synchronous value.
+		If the function succeeds, the returned value is used as a Success.
+		If an exception is thrown, the exception value is used as a Failure.
+		**/
+		public static function tryCatchSurprise<D>( fn:Void->D, ?msg:String, ?p:Pos ):Surprise<D,Error> {
+			return try
+				asGoodSurprise( fn() )
+			catch ( e:Dynamic )
+				asSurpriseError( e, msg, p );
+		}
+
 		/** If a surprise returns a Success, transform the Success data to _____. **/
 		public static function changeSuccessTo<D1,D2,F>( s:Surprise<D1,F>, newSuccessData:D2 ):Surprise<D2,F> {
 			return s.map(function(outcome) return switch outcome {
@@ -168,6 +180,14 @@ class SurpriseTools {
 					if ( msg==null )
 						msg = 'Failure: $inner';
 					Failure( HttpError.wrap(inner, msg, p) );
+			});
+		}
+
+		/** If a surprise returns a Failure, use a fallback value instead. This results in a Future rather than a Surprise. **/
+		public static function useFallback<D,F>( s:Surprise<D,F>, fallback:D ):Future<D> {
+			return s.map(function(outcome) return switch outcome {
+				case Failure(_): fallback;
+				case Success(data): data;
 			});
 		}
 	#end
