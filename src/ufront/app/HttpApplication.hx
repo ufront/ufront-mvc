@@ -495,8 +495,8 @@ class HttpApplication
 	}
 	#elseif nodejs
 	/**
-	Start a HTTP server using `js.npm.Express`, listening on the specified port.
-	Includes the `js.npm.connect.Static` and `js.npm.connect.BodyParser` middleware.
+	Start a HTTP server using `express.Express`, listening on the specified port.
+	Includes the `Express.serveStatic()` middleware.
 	Will create a HttpContext and execute each request.
 
 	Available on NodeJS only.
@@ -504,18 +504,19 @@ class HttpApplication
 	@param port The port to listen on (default 2987).
 	**/
 	public function listen( ?port:Int=2987 ):Void {
-		var app = new js.npm.Express();
-		app.use( new js.npm.connect.Static('.') );
-		app.use( new js.npm.connect.BodyParser() );
-		app.use( function(req:js.npm.express.Request,res:js.npm.express.Response,next:?String->Void) {
+		var app = new express.Express();
+		app.use( express.Express.serveStatic(".") );
+		// TODO: check if we need to use a mw.BodyParser() middleware here.
+		var ufAppMiddleware:express.Middleware = function(req:express.Request,res:express.Response,next:express.Error->Void) {
 			var context:HttpContext =
-				if ( pathToContentDir!=null ) HttpContext.createNodeJSContext( req, res, urlFilters, pathToContentDir )
-				else HttpContext.createNodeJSContext( req, res, urlFilters );
+				if ( pathToContentDir!=null ) HttpContext.createNodeJsContext( req, res, injector, urlFilters, pathToContentDir )
+				else HttpContext.createNodeJsContext( req, res, urlFilters );
 			this.execute( context ).handle( function(result) switch result {
-				case Failure( err ): next( err.toString() );
-				default: next();
+				case Failure( err ): next( new express.Error(err.toString()) );
+				default: next( null );
 			});
-		});
+		};
+		app.use( ufAppMiddleware );
 		app.listen( port );
 	}
 	#end

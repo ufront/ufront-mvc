@@ -6,7 +6,7 @@ package ufront.log;
 	import sys.io.FileOutput;
 #elseif nodejs
 	import js.node.Fs;
-	using ufront.core.SurpriseTools;
+	using ufront.core.AsyncTools;
 #end
 import ufront.app.*;
 import haxe.PosInfos;
@@ -83,7 +83,7 @@ class FileLogger implements UFLogHandler implements UFInitRequired {
 			file.close();
 			return SurpriseTools.success();
 		#elseif nodejs
-			return Fs.appendFile.bind( logFile, content ).asVoidSurprise();
+			return Fs.appendFile.bind( logFile, content, null ).asVoidSurprise();
 		#else
 			return throw "Not implemented";
 		#end

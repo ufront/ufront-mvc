@@ -51,7 +51,7 @@ You can use `HttpRequest.create()` to create the appropriate sub-class for most 
 With NodeJS however, where you should use:
 
 ```
-new nodejs.ufront.web.HttpRequest(req); // A js.npm.express.Request object.
+new nodejs.ufront.web.HttpRequest(req); // An express.Request object.
 ```
 
 Please see the docs for each platform implementation for any specific details:

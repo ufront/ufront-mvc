@@ -44,15 +44,15 @@ class HttpContext {
 		}
 	#elseif (js && nodejs && !macro)
 		/**
-		Create a HttpContext for the NodeJS environment, using the [js-kit][1] haxelib.
+		Create a HttpContext for the NodeJS environment, using the [express][1] haxelib.
 
 		The native express-js request and response objects must be supplied.
 
 		The rest of the parameters are passed directly to the `HttpContext` constructor.
 
-		[1]: https://github.com/clemos/haxe-js-kit
+		[1]: https://github.com/abedev/hxexpress
 		**/
-		public static function createNodeJsContext( req:js.npm.express.Request, res:js.node.http.ServerResponse, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
+		public static function createNodeJsContext( req:express.Request, res:express.Response, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
 			var request:HttpRequest = new nodejs.ufront.web.context.HttpRequest( req );
 			var response:HttpResponse = new nodejs.ufront.web.context.HttpResponse( res );
 			return new HttpContext( request, response, appInjector, session, auth, urlFilters, relativeContentDir );

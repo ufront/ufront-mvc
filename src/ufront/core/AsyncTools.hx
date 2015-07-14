@@ -189,11 +189,11 @@ class CallbackTools {
 
 		If the error argument is null, then the call is a `Success( Noise )`.
 		**/
-		static public function asVoidSurprise<T>( cb:(Null<String>->Void)->Void, ?pos:PosInfos ):Surprise<Noise,Error> {
+		static public function asVoidSurprise<TError>( cb:(Null<TError>->Void)->Void, ?pos:PosInfos ):Surprise<Noise,Error> {
 			var t = Future.trigger();
-			cb( function(errorMsg:Null<String>) {
-				if ( errorMsg!=null ) {
-					var e = Error.withData( InternalError, errorMsg, pos );
+			cb( function(error:Null<TError>) {
+				if ( error!=null ) {
+					var e = Error.withData( InternalError, '$error', pos );
 					t.trigger( Failure(e) );
 				}
 				else {
@@ -214,11 +214,11 @@ class CallbackTools {
 
 		Please note if both the `error` and `data` arguments are null, then a `Success(null)` will be returned.
 		**/
-		static public function asSurprise<T>( cb:(Null<String>->Null<T>->Void)->Void, ?pos:PosInfos ):Surprise<T,Error> {
+		static public function asSurprise<TError,TData>( cb:(Null<TError>->Null<TData>->Void)->Void, ?pos:PosInfos ):Surprise<TData,Error> {
 			var t = Future.trigger();
-			cb( function(errorMsg:Null<String>,val:Null<T>) {
-				if ( errorMsg!=null ) {
-					var e = Error.withData( InternalError, errorMsg, pos );
+			cb( function(error:Null<TError>,val:Null<TData>) {
+				if ( error!=null ) {
+					var e = Error.withData( InternalError, '$error', pos );
 					t.trigger( Failure(e) );
 				}
 				else {
@@ -239,11 +239,11 @@ class CallbackTools {
 
 		Please note if both the `error` and `data` arguments are null, then a `Success(Pair(null,null))` will be returned.
 		**/
-		static public function asSurprisePair<T1,T2>( cb:(Null<String>->Null<T1>->Null<T2>->Void)->Void, ?pos:PosInfos ):Surprise<Pair<T1,T2>,Error> {
+		static public function asSurprisePair<TError,TData1,TData2>( cb:(Null<TError>->Null<TData1>->Null<TData2>->Void)->Void, ?pos:PosInfos ):Surprise<Pair<TData1,TData2>,Error> {
 			var t = Future.trigger();
-			cb( function(errorMsg:Null<String>,val1:Null<T1>,val2:Null<T2>) {
-				if ( errorMsg!=null ) {
-					var e = Error.withData( InternalError, errorMsg, pos );
+			cb( function(error:Null<TError>,val1:Null<TData1>,val2:Null<TData2>) {
+				if ( error!=null ) {
+					var e = Error.withData( InternalError, '$error', pos );
 					t.trigger( Failure(e) );
 				}
 				else {

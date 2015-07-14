@@ -26,7 +26,7 @@ class HttpResponse {
 	For NodeJS, please use:
 
 	```
-	new nodejs.ufront.web.HttpResponse(res); // A js.npm.express.Response object.
+	new nodejs.ufront.web.HttpResponse(res); // An express.Response object.
 	```
 
 	Other platforms will get the default implementation, which will mostly work, except for `this.flush()`, which is what actually writes the HTTP response output.

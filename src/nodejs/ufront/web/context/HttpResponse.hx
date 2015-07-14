@@ -3,15 +3,15 @@ import js.Node;
 using StringTools;
 
 /**
-An implementation of `ufront.web.context.HttpRequest` for NodeJS, based on `js.npm.express.Response`.
+An implementation of `ufront.web.context.HttpRequest` for NodeJS, based on `express.ServerResponse`.
 
 @author Franco Ponticelli, Jason O'Neil
 **/
 class HttpResponse extends ufront.web.context.HttpResponse {
 
-	var res:js.node.http.ServerResponse;
+	var res:express.Response;
 
-	public function new( res:js.node.http.ServerResponse ) {
+	public function new( res:express.Response ) {
 		super();
 		this.res = res;
 	}

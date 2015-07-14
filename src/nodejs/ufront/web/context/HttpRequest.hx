@@ -10,11 +10,10 @@ import ufront.core.MultiValueMap;
 import haxe.ds.StringMap;
 import ufront.core.AsyncTools;
 using tink.CoreApi;
-using thx.Strings;
 using StringTools;
 
 /**
-An implementation of `ufront.web.context.HttpRequest` for NodeJS, based on `js.npm.express.Request`.
+An implementation of `ufront.web.context.HttpRequest` for NodeJS, based on `express.Request`.
 
 Platform quirks with `HttpRequest` and NodeJS:
 
@@ -27,13 +26,12 @@ Platform quirks with `HttpRequest` and NodeJS:
 
 @author Franco Ponticelli, Jason O'Neil
 **/
-class HttpRequest extends ufront.web.context.HttpRequest
-{
+class HttpRequest extends ufront.web.context.HttpRequest {
 	#if !macro
 
-	var req:js.npm.express.Request;
+	var req:express.Request;
 
-	public function new( req:js.npm.express.Request ) {
+	public function new( req:express.Request ) {
 		this.req = req;
 	}
 
@@ -91,7 +89,7 @@ class HttpRequest extends ufront.web.context.HttpRequest
 
 	override function get_hostName() {
 		if ( hostName==null )
-			hostName = req.host;
+			hostName = req.hostname;
 		return hostName;
 	}
 
