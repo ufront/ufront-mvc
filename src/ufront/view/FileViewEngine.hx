@@ -3,6 +3,8 @@ package ufront.view;
 #if sys
 	import sys.FileSystem;
 	import sys.io.File;
+#elseif nodejs
+	import js.node.Fs;
 #end
 import haxe.ds.Option;
 using ufront.core.AsyncTools;
@@ -46,15 +48,27 @@ class FileViewEngine extends UFViewEngine {
 	**/
 	override public function getTemplateString( viewRelativePath:String ):Surprise<Option<String>,Error> {
 		var fullPath = viewDirectory+viewRelativePath;
-		try {
-			#if sys
+		#if sys
+			try {
 				if ( FileSystem.exists(fullPath) ) return Future.sync( Success(Some(File.getContent(fullPath))) );
 				else return Future.sync( Success(None) );
-			#else
-				var msg = "No implementation for non-sys platforms in FileViewEngine.getTemplateString().";
-				return msg.asSurpriseError();
-			#end
-		}
-		catch ( e:Dynamic ) return Future.sync( Failure(Error.withData('Failed to load template $viewRelativePath', e)) );
+			}
+			catch ( e:Dynamic ) return e.asSurpriseError( 'Failed to load template $viewRelativePath' );
+		#elseif nodejs
+			function attemptRead( cb:js.Error->Option<String>->Void ) {
+				Fs.readFile( fullPath, { encoding: 'utf-8' }, function(err,data) {
+					if ( err!=null && (untyped err.code:String)=="ENOENT" )
+						cb( null, None ); // File not found.
+					else if ( err!=null )
+						cb( err, null ); // System error.
+					else
+						cb( null, Some(data) ); // The template.
+				});
+			}
+			return attemptRead.asSurprise();
+		#else
+			var msg = "No implementation for non-sys platforms in FileViewEngine.getTemplateString().";
+			return msg.asSurpriseError();
+		#end
 	}
 }
