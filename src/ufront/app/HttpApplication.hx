@@ -506,6 +506,8 @@ class HttpApplication
 	public function listen( ?port:Int=2987 ):Void {
 		var app = new express.Express();
 		app.use( express.Express.serveStatic(".") );
+		app.use( mw.BodyParser.json() );
+		app.use( mw.BodyParser.urlencoded({ extended: true }) );
 		// TODO: check if we need to use a mw.BodyParser() middleware here.
 		var ufAppMiddleware:express.Middleware = function(req:express.Request,res:express.Response,next:express.Error->Void) {
 			var context:HttpContext =

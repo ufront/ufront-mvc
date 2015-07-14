@@ -21,7 +21,7 @@ Platform quirks with `HttpRequest` and NodeJS:
 - `query`, `post` and `cookies` currently only support one value per name.
 - When you have a parameter  named `user.email`, Express JS tries to convert it into a "user" object with a field "email". We undo that, and expose it as "user.email".
 - `postString` has not been implemented yet.
-- `parseMultipart` has not been implemented yet.
+- `parseMultipart` has not been implemented yet. Pull requests using https://www.npmjs.com/package/multer are welcome.
 
 
 @author Franco Ponticelli, Jason O'Neil
@@ -50,12 +50,13 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 			if ( httpMethod=="GET" )
 				postString = "";
 			else
-				throw "Not implemented... how to get this in NodeJS?";
+				throw "Not implemented for NodeJS yet...";
 		}
 		return postString;
 	}
 
 	var _parsed:Bool = false;
+	// TODO: implement using https://www.npmjs.com/package/multer
 	override public function parseMultipart( ?onPart:OnPartCallback, ?onData:OnDataCallback, ?onEndPart:OnEndPartCallback ):Surprise<Noise,Error> {
 		if ( !isMultipart() )
 			return SurpriseTools.success();
@@ -77,7 +78,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 
 	override function get_post() {
 		if ( post==null )
-			post = getMapFromObject( untyped req.body );
+			post = getMapFromObject( req.body );
 		return post;
 	}
 
@@ -101,7 +102,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 
 	override function get_uri() {
 		if ( uri==null )
-			uri = req.path;
+			uri = StringTools.urlDecode( req.path );
 		return uri;
 	}
 
@@ -151,8 +152,10 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 			switch Type.typeof( val ) {
 				// TODO: if we have q[]=1&q[]=2, how do we get both values?
 				// Perhaps using obj.forEach(), not sure how to do that from Haxe.
-				case TObject: getMapFromObject( val, fieldName+".", m );
-				default: m.add( fieldName, ''+val );
+				case TObject:
+					getMapFromObject( val, fieldName+".", m );
+				default:
+					m.add( fieldName, StringTools.urlDecode(''+val) );
 			}
 		}
 
