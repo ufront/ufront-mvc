@@ -43,13 +43,9 @@ class InlineSessionMiddleware implements UFMiddleware {
 	Start the session if a SessionID exists in the request, or if `alwaysStart` is true.
 	**/
 	public function requestIn( ctx:HttpContext ):Surprise<Noise,Error> {
-		if ( alwaysStart || ctx.session.id!=null ) {
-			return ctx.session.init().map(function (outcome) return switch (outcome) {
-				case Success(s): Success(s);
-				case Failure(f): Failure( HttpError.internalServerError(f) );
-			});
-		}
-		return SurpriseTools.success();
+		return
+			if ( alwaysStart || ctx.session.id!=null ) ctx.session.init();
+			else SurpriseTools.success();
 	}
 
 	/**
@@ -57,12 +53,7 @@ class InlineSessionMiddleware implements UFMiddleware {
 	**/
 	public function responseOut( ctx:HttpContext ):Surprise<Noise,Error> {
 		return
-			if ( ctx.session!=null )
-				ctx.session.commit() >>
-				function (outcome) switch (outcome) {
-					case Success(s): return Success(s);
-					case Failure(err): return Failure( err );
-				}
+			if ( ctx.session!=null ) ctx.session.commit();
 			else SurpriseTools.success();
 	}
 }

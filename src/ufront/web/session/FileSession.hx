@@ -12,7 +12,10 @@ import ufront.core.Uuid;
 #if sys
 	import sys.FileSystem;
 	import sys.io.File;
+#elseif nodejs
+	import js.node.Fs;
 #end
+using ufront.core.AsyncTools;
 using StringTools;
 using haxe.io.Path;
 
@@ -180,56 +183,70 @@ class FileSession implements UFHttpSession {
 	This must be called before any other operations which require access to the current session.
 	**/
 	public function init():Surprise<Noise,Error> {
-		var t = Future.trigger();
+		if ( !started ) {
+			get_id();
+			this.sessionData = new StringMap();
+
+			return
+				doCreateSessionDirectory() >>
+				doReadSessionFile >>
+				doUnserializeSessionData;
+		}
+		else return SurpriseTools.success();
+	}
+
+	function doCreateSessionDirectory():Surprise<Noise,Error> {
+		var dir = savePath.removeTrailingSlashes();
 		#if sys
-			if ( !started ) {
-				try {
-					FileSystem.createDirectory( savePath.removeTrailingSlashes() );
-
-					var file : String;
-					var fileData : String;
-
-					// Try to restore an existing session.
-					get_id();
-					if ( this.sessionID!=null ) {
-						testValidId( this.sessionID );
-						file = getSessionFilePath( this.sessionID );
-						if ( !FileSystem.exists(file) ) {
-							this.sessionID = null;
-						}
-						else {
-							fileData = try File.getContent( file ) catch ( e:Dynamic ) null;
-							if ( fileData!=null ) {
-								try
-									sessionData = cast( Unserializer.run(fileData), StringMap<Dynamic> )
-								catch ( e:Dynamic ) {
-									context.ufWarn('Failed to unserialize session data, resetting session: $e');
-									fileData = null; // invalid data
-								}
-							}
-							if ( fileData==null ) {
-								// delete file and start new session
-								this.sessionID = null;
-								try FileSystem.deleteFile( file ) catch( e:Dynamic ) {};
-							}
-						}
-					}
-
-					// No session existed, or it was invalid - start a new one
-					if( this.sessionID==null ) {
-						this.sessionData = new StringMap<Dynamic>();
-					}
-					this.started = true;
+			return SurpriseTools.tryCatchSurprise(function() {
+				FileSystem.createDirectory( dir );
+				return Noise;
+			}, 'Failed to create directory $dir');
+		#elseif nodejs
+			var t = Future.trigger();
+			Fs.mkdir( savePath.removeTrailingSlashes(), function(err) {
+				if ( err==null || (untyped err.code:String)=='EEXIST' ) {
 					t.trigger( Success(Noise) );
 				}
-				catch( e:Dynamic ) t.trigger( Failure(new Error('Unable to save session: $e')) );
-			}
-			else t.trigger( Success(Noise) );
-
+				else t.trigger( Failure(HttpError.internalServerError('Failed to create directory $dir',err)) );
+			});
+			return t.asFuture();
 		#else
-			t.trigger( Failure(new Error('FileSession not implemented on this platform.')) );
+			return notImplemented();
 		#end
-		return t.asFuture();
+	}
+
+	function doReadSessionFile(_):Future<Null<String>> {
+		if ( testValidId(sessionID) ) {
+			var filename = getSessionFilePath( this.sessionID );
+			#if sys
+				return
+					try File.getContent( filename ).asFuture()
+					catch ( e:Dynamic ) null.asFuture();
+			#elseif nodejs
+				return Fs.readFile.bind( filename, { encoding: "utf-8" } ).asSurprise().useFallback( null );
+			#else
+				return notImplemented();
+			#end
+		}
+		else {
+			context.ufWarn('Session ID $sessionID was invalid, resetting session.');
+			sessionID = null;
+			return null;
+		}
+	}
+
+	function doUnserializeSessionData( content:Null<String> ):Noise {
+		if ( content!=null ) {
+			try {
+				sessionData = cast( Unserializer.run(content), StringMap<Dynamic> );
+			} catch ( e:Dynamic ) {
+				// If this fails, we'll give a warning but not trigger a failure.
+				// This might happen if the session was from a previous compilation and one of the types serializes differently, etc.
+				context.ufWarn('Failed to unserialize session data: $e');
+			}
+		}
+		return Noise;
 	}
 
 	function setCookie( id:String, expiryLength:Int ) {
@@ -250,49 +267,107 @@ class FileSession implements UFHttpSession {
 	Returns a `Surprise`, which is a Failure if the commit failed, usually because of not having permission to write to disk.
 	**/
 	public function commit():Surprise<Noise,Error> {
-		var t = Future.trigger();
-		#if sys
-			try {
-				if ( regenerateFlag ) {
-					var oldSessionID = sessionID;
-					sessionID = reserveNewSessionID();
-					FileSystem.rename( getSessionFilePath(oldSessionID), getSessionFilePath(sessionID) );
-				}
-				if ( commitFlag && sessionData!=null ) {
-					var filePath = getSessionFilePath(sessionID);
-					var content = Serializer.run(sessionData);
-					File.saveContent(filePath, content);
-				}
-				if ( expiryFlag ) {
-					setCookie( sessionID, expiry );
-				}
-				if ( closeFlag ) {
-					setCookie( "", -1 );
-					FileSystem.deleteFile( getSessionFilePath(sessionID) );
-				}
-				t.trigger( Success(Noise) );
-			}
-			catch( e:Dynamic ) t.trigger( Failure(new Error('Unable to save session: $e')) );
-		#else
-			t.trigger( Failure(new Error('FileSession not implemented on this platform.')) );
-		#end
-		return t.asFuture();
+		// If no session ID has been set yet, make sure we set one during the process.
+		if ( sessionID==null && commitFlag && sessionData==null )
+			this.regenerateID();
+
+		return
+			doRegenerateID() >>
+			doSaveSessionContent >>
+			doSetExpiry >>
+			doCloseSession;
 	}
 
-	#if sys
-		function reserveNewSessionID():String {
-			var tryID = null;
-			var file:String;
-			do {
-				tryID = generateSessionID();
-				file = savePath + tryID + ".sess";
-			} while( FileSystem.exists(file) );
-			// Create the file so no one else takes it
-			File.saveContent( file, "" );
-			setCookie( this.sessionID, this.expiry );
-			return tryID;
+	function doRegenerateID():Surprise<Noise,Error> {
+		if ( regenerateFlag ) {
+			var oldSessionID = sessionID;
+			#if sys
+				return SurpriseTools.tryCatchSurprise(function () {
+					var file:String;
+					do {
+						sessionID = generateSessionID();
+						file = getSessionFilePath( sessionID );
+					} while( FileSystem.exists(file) );
+
+					// Either rename the old file, or create a blank file, to make sure we reserve our name.
+					setCookie( sessionID, expiry );
+					if ( oldSessionID!=null )
+						FileSystem.rename( getSessionFilePath(oldSessionID), file );
+					else
+						File.saveContent( file, "" );
+					return Noise;
+				});
+			#elseif nodejs
+				function tryNewID( cb:js.Error->Void ) {
+					sessionID = generateSessionID();
+					var file = getSessionFilePath( sessionID );
+					Fs.exists( file, function(exists) {
+						if ( exists==false ) {
+							// Either rename the old file, or create a blank file, to make sure we reserve our name.
+							if ( oldSessionID!=null )
+								Fs.rename( getSessionFilePath(oldSessionID), file, cb );
+							else
+								Fs.writeFile( file, "", cb );
+						}
+						else tryNewID( cb );
+					});
+				}
+				return tryNewID.asVoidSurprise();
+			#else
+				return notImplemented();
+			#end
 		}
-	#end
+		else return SurpriseTools.success();
+	}
+
+	function doSaveSessionContent(_:Noise):Surprise<Noise,Error> {
+		if ( commitFlag && sessionData!=null ) {
+			var filePath = getSessionFilePath( sessionID );
+			var content:String;
+
+			try
+				content = Serializer.run(sessionData)
+			catch ( e:Dynamic )
+				return e.asSurpriseError( 'Failed to serialize session content' );
+
+			#if sys
+				return SurpriseTools.tryCatchSurprise(function() {
+					File.saveContent( filePath, content );
+					return Noise;
+				});
+			#elseif nodejs
+				return Fs.writeFile.bind( filePath, content, {} ).asVoidSurprise();
+			#else
+				return notImplemented();
+			#end
+		}
+		else return SurpriseTools.success();
+	}
+
+	function doSetExpiry(_:Noise):Surprise<Noise,Error> {
+		if ( expiryFlag ) {
+			setCookie( sessionID, expiry );
+		}
+		return SurpriseTools.success();
+	}
+
+	function doCloseSession(_:Noise):Surprise<Noise,Error> {
+		if ( closeFlag ) {
+			setCookie( "", -1 );
+			var filename = getSessionFilePath( sessionID );
+			#if sys
+				return SurpriseTools.tryCatchSurprise(function() {
+					FileSystem.deleteFile( filename );
+					return Noise;
+				});
+			#elseif nodejs
+				return Fs.unlink.bind( filename ).asVoidSurprise();
+			#else
+				return notImplemented();
+			#end
+		}
+		else return SurpriseTools.success();
+	}
 
 	/**
 	Retrieve an item from the session data.
@@ -414,10 +489,12 @@ class FileSession implements UFHttpSession {
 			throw "Trying to access session data before init() has been run";
 	}
 
-	static var validID = ~/^[a-zA-Z0-9]+$/;
-	static inline function testValidId( id:String ):Void {
-		if( id!=null )
-			if(!validID.match(id))
-				throw "Invalid session ID.";
+	static inline function testValidId( id:String ):Bool {
+		var validID = ~/^[a-zA-Z0-9]+$/;
+		return ( id!=null && validID.match(id) );
+	}
+
+	static inline function notImplemented( ?p:haxe.PosInfos ) {
+		return 'FileSession is not implemented on this platform'.asSurpriseError( p );
 	}
 }
