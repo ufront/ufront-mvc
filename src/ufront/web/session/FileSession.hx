@@ -216,15 +216,21 @@ class FileSession implements UFHttpSession {
 		#end
 	}
 
-	function doReadSessionFile(_):Future<Null<String>> {
+	function doReadSessionFile(_):Surprise<Null<String>,Error> {
 		if ( testValidId(sessionID) ) {
 			var filename = getSessionFilePath( this.sessionID );
 			#if sys
 				return
-					try File.getContent( filename ).asFuture()
-					catch ( e:Dynamic ) null.asFuture();
+					try File.getContent( filename ).asGoodSurprise()
+					catch ( e:Dynamic ) null.asGoodSurprise();
 			#elseif nodejs
-				return Fs.readFile.bind( filename, { encoding: "utf-8" } ).asSurprise().useFallback( null );
+				return
+					Fs.readFile.bind( filename, { encoding: "utf-8" } ).asSurprise().map(function(o) {
+						return switch o {
+							case Failure(_): Success(null);
+							default: o;
+						}
+					});
 			#else
 				return notImplemented();
 			#end
@@ -232,7 +238,7 @@ class FileSession implements UFHttpSession {
 		else {
 			context.ufWarn('Session ID $sessionID was invalid, resetting session.');
 			sessionID = null;
-			return null;
+			return null.asGoodSurprise();
 		}
 	}
 
@@ -494,7 +500,7 @@ class FileSession implements UFHttpSession {
 		return ( id!=null && validID.match(id) );
 	}
 
-	static inline function notImplemented( ?p:haxe.PosInfos ) {
+	static inline function notImplemented<T>( ?p:haxe.PosInfos ):Surprise<T,Error> {
 		return 'FileSession is not implemented on this platform'.asSurpriseError( p );
 	}
 }
