@@ -496,8 +496,7 @@ class FileSession implements UFHttpSession {
 	}
 
 	static inline function testValidId( id:String ):Bool {
-		var validID = ~/^[a-zA-Z0-9]+$/;
-		return ( id!=null && validID.match(id) );
+		return ( id!=null && Uuid.isValid(id) );
 	}
 
 	static inline function notImplemented<T>( ?p:haxe.PosInfos ):Surprise<T,Error> {

@@ -57,9 +57,8 @@ class CacheSession implements UFHttpSession {
 	**/
 	public static var defaultExpiry:Int = 0;
 
-	static var validID = ~/^[a-zA-Z0-9]+$/;
 	static inline function isValidID( id:String ):Bool {
-		return ( id!=null && validID.match(id) );
+		return ( id!=null && Uuid.isValid(id) );
 	}
 
 	// Private variables
