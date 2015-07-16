@@ -10,5 +10,6 @@ class TestAll {
 		runner.addCase( new MultiValueMapTest() );
 		runner.addCase( new AsyncToolsTest() );
 		runner.addCase( new InjectionToolsTest() );
+		runner.addCase( new UuidTest() );
 	}
 }
