@@ -22,6 +22,8 @@ class ControllerTest {
 		var context = '/'.mockHttpContext();
 		var controller:Controller = context.injector.instantiate( TopController );
 		Assert.equals( context, controller.context );
+
+		'/sub/testpostinject/'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "true" );
 	}
 
 	public function testBaseUri():Void {
@@ -46,7 +48,19 @@ class TopController extends Controller {
 }
 
 class SubController extends Controller {
+
+	var postRanCorrectly = false;
+
+	@post(1) public function runPost() {
+		if ( context!=null )
+			postRanCorrectly = true;
+	}
+
 	@:route('/baseurl/') function testBaseUrl() {
 		return this.baseUri;
+	}
+
+	@:route('/testpostinject/') function testPostInject() {
+		return this.postRanCorrectly;
 	}
 }
