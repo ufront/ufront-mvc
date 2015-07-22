@@ -81,10 +81,10 @@ class TestUtils {
 				response = HttpResponse.spy();
 				response.flush().stub();
 			}
-			if ( session==null ) {
+			if ( session==null && injector.hasMapping(UFHttpSession)==false ) {
 				session = new ufront.web.session.VoidSession();
 			}
-			if (auth==null) {
+			if ( auth==null && injector.hasMapping(UFAuthHandler)==false ) {
 				auth = new ufront.auth.YesBossAuthHandler();
 			}
 
@@ -267,7 +267,7 @@ class TestUtils {
 		public static function responseShouldBe( testContext:RequestTestContext, expectedResponse:String, ?p:PosInfos ):RequestTestContext {
 			var doneCallback = Assert.createAsync();
 			testContext.result.handle( function(outcome) {
-				Assert.equals( expectedResponse, testContext.context.response.getBuffer() );
+				Assert.equals( expectedResponse, testContext.context.response.getBuffer(), p );
 				doneCallback();
 			});
 			return testContext;

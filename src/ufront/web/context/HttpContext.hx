@@ -9,7 +9,6 @@ package ufront.web.context;
 	import ufront.auth.UFAuthUser;
 	import ufront.log.Message;
 	import ufront.log.MessageList;
-	import ufront.web.session.VoidSession;
 	import ufront.web.url.filter.UFUrlFilter;
 	import ufront.web.session.*;
 	import ufront.auth.*;
@@ -237,14 +236,15 @@ class HttpContext {
 			catch(e:Dynamic) ufLog('Failed to load UFHttpSession: $e. Using VoidSession instead.'+haxe.CallStack.toString(haxe.CallStack.exceptionStack()));
 		if ( this.session==null ) this.session = new VoidSession();
 		injector.map( UFHttpSession ).toValue( this.session );
+		injector.mapRuntimeTypeOf( this.session ).toValue( this.session );
 
 		if ( auth!=null ) this.auth = auth;
 		if ( this.auth==null )
 			try this.auth = injector.getValue( UFAuthHandler )
 			catch(e:Dynamic) ufLog('Failed to load UFAuthHandler: $e. Using NobodyAuthHandler instead.'+haxe.CallStack.toString(haxe.CallStack.exceptionStack()));
 		if ( this.auth==null ) this.auth = new NobodyAuthHandler();
-		// TODO: make sure minject can support types like this, either with or without parameters, but not as a String.
 		injector.map( UFAuthHandler ).toValue( this.auth );
+		injector.mapRuntimeTypeOf( this.auth ).toValue( this.auth );
 	}
 
 	/**
