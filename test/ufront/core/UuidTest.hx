@@ -25,7 +25,6 @@ class UuidTest {
 
 	public function testCreate():Void {
 		for ( i in 0...10 ) {
-			trace( Uuid.create() );
 			Assert.isTrue( Uuid.isValid(Uuid.create()) );
 		}
 	}

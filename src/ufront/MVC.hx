@@ -69,6 +69,7 @@ class MVC {}
 @:noDoc @:noUsing typedef Futuristic<T> = ufront.core.Futuristic<T>;
 @:noDoc @:noUsing typedef MultiValueMap<T> = ufront.core.MultiValueMap<T>;
 @:noDoc @:noUsing typedef OrderedStringMap<T> = ufront.core.OrderedStringMap<T>;
+@:noDoc @:noUsing typedef Uuid = ufront.core.Uuid;
 
 // `ufront.handler` package
 @:noDoc @:noUsing typedef ErrorPageHandler = ufront.handler.ErrorPageHandler;
