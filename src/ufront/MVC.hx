@@ -140,6 +140,7 @@ class MVC {}
 @:noDoc @:noUsing typedef CacheSession = ufront.web.session.CacheSession;
 @:noDoc @:noUsing typedef FileSession = ufront.web.session.FileSession;
 @:noDoc @:noUsing typedef InlineSessionMiddleware = ufront.web.session.InlineSessionMiddleware;
+@:noDoc @:noUsing typedef TestSession = ufront.web.session.TestSession;
 @:noDoc @:noUsing typedef UFHttpSession = ufront.web.session.UFHttpSession;
 @:noDoc @:noUsing typedef VoidSession = ufront.web.session.VoidSession;
 
