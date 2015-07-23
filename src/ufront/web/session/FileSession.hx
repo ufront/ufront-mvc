@@ -222,7 +222,7 @@ class FileSession implements UFHttpSession {
 			#if sys
 				return
 					try File.getContent( filename ).asGoodSurprise()
-					catch ( e:Dynamic ) null.asGoodSurprise();
+					catch ( e:Dynamic ) SurpriseTools.asGoodSurprise( null );
 			#elseif nodejs
 				return
 					Fs.readFile.bind( filename, { encoding: "utf-8" } ).asSurprise().map(function(o) {
@@ -238,7 +238,7 @@ class FileSession implements UFHttpSession {
 		else {
 			context.ufWarn('Session ID $sessionID was invalid, resetting session.');
 			sessionID = null;
-			return null.asGoodSurprise();
+			return SurpriseTools.asGoodSurprise( null );
 		}
 	}
 
