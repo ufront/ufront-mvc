@@ -190,7 +190,8 @@ class FileSession implements UFHttpSession {
 			return
 				doCreateSessionDirectory() >>
 				doReadSessionFile >>
-				doUnserializeSessionData;
+				doUnserializeSessionData >>
+				function(n:Noise) { this.started = true; return Noise; };
 		}
 		else return SurpriseTools.success();
 	}
