@@ -231,7 +231,7 @@ class CacheSession implements UFHttpSession {
 	/**
 	Commit if required.
 
-	Returns an Outcome, which is a Failure if the commit failed, usually because of not having permission to write to disk.
+	Returns an Outcome, which is a Failure if the commit failed.
 	**/
 	public function commit():Surprise<Noise,Error> {
 

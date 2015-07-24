@@ -277,7 +277,7 @@ class FileSession implements UFHttpSession {
 	**/
 	public function commit():Surprise<Noise,Error> {
 		// If no session ID has been set yet, make sure we set one during the process.
-		if ( sessionID==null && commitFlag && sessionData==null )
+		if ( sessionID==null && sessionData!=null )
 			this.regenerateID();
 
 		return

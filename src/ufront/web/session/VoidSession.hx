@@ -40,5 +40,5 @@ class VoidSession implements UFHttpSession {
 
 	public function close():Void {}
 
-	function get_id() return "";
+	function get_id() return null;
 }
