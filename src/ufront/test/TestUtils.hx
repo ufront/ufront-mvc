@@ -687,7 +687,7 @@ class NaturalLanguageTests {
 
 		/** Check that a test request failed. This is an alias for `TestUtils.assertFailure` **/
 		public static inline function itShouldFail( testContext:RequestTestContext, ?p:PosInfos ):RequestTestContext
-			return TestUtils.assertFailure( testContext, p );
+			return TestUtils.assertFailure( testContext, null, null, null, p );
 
 		/** Check that a test request failed in the expected way. This is an alias for `TestUtils.assertFailure` **/
 		public static inline function itShouldFailWith( testContext:RequestTestContext, ?code:Int, ?msg:String, ?data:Dynamic, ?p:PosInfos ):RequestTestContext
