@@ -161,7 +161,7 @@ class CacheSession implements UFHttpSession {
 			if ( context.injector.hasMapping(String,"sessionSavePath") )
 				context.injector.getValue( String, "sessionSavePath" )
 			else defaultSavePath;
-		this.cache = 
+		this.cache =
 			if ( cacheConnection==null ) throw 'No UFCacheConnection was injected into CacheSession';
 			else cacheConnection.getNamespace( savePath );
 	}
@@ -250,7 +250,9 @@ class CacheSession implements UFHttpSession {
 				if ( regenerateFlag ) {
 					// Delete the old cached entry, and then we'll commit the new one.
 					commitFlag = true;
-					return cache.remove( oldSessionID ).changeFailureToError();
+					return
+						if ( oldSessionID!=null ) cache.remove( oldSessionID ).changeFailureToError();
+						else SurpriseTools.success();
 				}
 				return Future.sync( Success(Noise) );
 			}
