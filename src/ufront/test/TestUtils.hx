@@ -119,6 +119,35 @@ class TestUtils {
 		}
 
 		/**
+		Add cookies, redirects and Referrer headers from the last request.
+
+		This is useful when mocking multiple requests as part of a session.
+		**/
+		public static inline function loadSessionInfo( context:HttpContext, previousRequest:RequestTestContext ):HttpContext {
+
+			// Set cookies from the previous request and response.
+			var previousCookies = previousRequest.context.request.cookies;
+			var cookiesSetOnRequest = previousRequest.context.response.getCookies();
+			for ( name in previousCookies.keys() ) {
+				context.request.cookies.set( name, previousCookies[name] );
+			}
+			for ( c in cookiesSetOnRequest ) {
+				context.request.cookies.set( c.name, c.value );
+			}
+
+			// Set the referrer to the previous requests URI.
+			context.request.clientHeaders.set( 'Referer', previousRequest.context.request.uri );
+
+			// If the previous request gave a redirect header, set that as the URI for the current request.
+			if ( previousRequest.context.response.isRedirect() ) {
+				// context.request.uri = previousRequest.context.response.redirectLocation;
+				throw "Not implemented";
+			}
+
+			return context;
+		}
+
+		/**
 		Test a route on a `HttpApplication` or a `Controller` by executing the request.
 
 		If the app is supplied, the request will be executed with the given context.
@@ -637,6 +666,11 @@ class NaturalLanguageTests {
 		public static inline function withTheAuthHandler( context:HttpContext, auth:UFAuthHandler ):HttpContext {
 			@:privateAccess context.auth = auth;
 			return context;
+		}
+
+		/** Add cookies, redirects etc from the last request. This is an alias for `TestUtils.loadSessionInfo` **/
+		public static inline function followingOnFrom( context:HttpContext, previousRequest:RequestTestContext ):HttpContext {
+			return TestUtils.loadSessionInfo( context, previousRequest );
 		}
 
 		/** Test the given `HttpContext` on a given app. This is an alias for `TestUtils.testRoute` **/
