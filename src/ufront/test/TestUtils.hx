@@ -74,9 +74,13 @@ class TestUtils {
 				request = HttpRequest.mock();
 				@:privateAccess request.uri.returns( uri );
 				@:privateAccess request.scriptDirectory.returns( "./" );
+				@:privateAccess request.cookies.returns( new MultiValueMap() );
+				@:privateAccess request.query.returns( new MultiValueMap() );
+				@:privateAccess request.post.returns( new MultiValueMap() );
 				@:privateAccess request.params.returns( (params!=null) ? params : new MultiValueMap() );
 				@:privateAccess request.httpMethod.returns( (method!=null) ? method.toUpperCase() : "GET" );
 				@:privateAccess request.clientHeaders.returns( new MultiValueMap() );
+
 			}
 			if ( response==null ) {
 				response = HttpResponse.spy();
