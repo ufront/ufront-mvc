@@ -22,8 +22,7 @@ class Issue20 {
 	public function testViewEngineInjection():Void {
 		whenIVisit("/")
 		.onTheController( Issue20Controller )
-		.itShouldLoad()
-		.finishTest();
+		.itShouldLoad();
 	}
 }
 

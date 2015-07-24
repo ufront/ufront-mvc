@@ -8,8 +8,7 @@ import ufront.auth.*;
 import haxe.PosInfos;
 import ufront.web.Controller;
 import ufront.log.OriginalTraceLogger;
-import ufront.app.UfrontApplication;
-import ufront.app.UfrontConfiguration;
+import ufront.app.*;
 import ufront.web.result.ActionResult;
 import ufront.core.MultiValueMap;
 import minject.Injector;
@@ -105,40 +104,27 @@ class TestUtils {
 		}
 
 		/**
-		Test a route on a `UfrontApplication` or a `Controller` by executing the request.
+		Test a route on a `HttpApplication` or a `Controller` by executing the request.
 
 		If the app is supplied, the request will be executed with the given context.
-		If only the controller is supplied, a simple UfrontApplication will be instantiated.
+		If only the controller is supplied, a simple UfrontApplication will be instantiated (and disposed of after use).
 		It is recommended that your app have `disableBrowserTrace: true` and `errorHandlers: []` in it's configuration, to make debugging your unit test simpler.
 
-		If the route is executed successfully, the `RouteTestResult` (an object holding the `UfrontApplication` and `HttpContext`) is returned so that you can analyze it further.
-		See `TestUtils.assertSuccess()`, `TestUtils.assertFailure`, `TestUtils.responseShouldBe` and `TestUtils.checkResult` for methods that can run further tests on a `RouteTestResult`.
-
-		If an error is encountered, the `HttpError` is returned as a `Failure`.
-
-		**Asynchronous Test**
-
-		Because a `UfrontApplication` is designed to execute asynchronously, during `testRoute` we call `Assert.createAsync` to let our testing framework know it must wait for completion.
-		Because of this, every time you call `testRoute()` you must be careful to call `TestUtils.finishAsyncTest()` after you have run your tests.
-
-		**Example:**
-
-		```
-		"/blog/"
-		  .mockHttpContext()
-		  .assertSuccess()
-		  .finishAsyncTest();
-		```
+		The `RequestTestContext` is returned, allowing you to wait for `RequestTestContext.result` to complete, and analyze the `HttpApplication` and `HttpContext`.
+		See `TestUtils.assertSuccess()`, `TestUtils.assertFailure`, `TestUtils.responseShouldBe` and `TestUtils.checkResult` for methods that can run further tests on a `RequestTestContext`.
 
 		@param context The mocked `HttpContext` to use for executing a test request.
-		@param app (optional) The `UfrontApplication` to execute for the test request.
+		@param app (optional) The `HttpApplication` to execute for the test request.
 		@param controller (optional) The index controller to start routing from. Must be supplied if `app` is not supplied.
-		@return A `RequestTestContext` containing the context of the request as well as the end result.
+		@return A `RequestTestContext` containing the context of the request, the application, and the result of the `HttpApplication.execute()` call.
 		**/
-		public static function testRoute( context:HttpContext, ?app:UfrontApplication, ?controller:Class<Controller>, ?p:PosInfos ):RequestTestContext {
+		public static function testRoute( context:HttpContext, ?app:HttpApplication, ?controller:Class<Controller>, ?p:PosInfos ):RequestTestContext {
 			if ( app==null && controller==null )
 				throw new Error('Either app or controller must be supplied to testRoute', p);
+
+			var usingTmpApp = false;
 			if ( app==null ) {
+				usingTmpApp = true;
 				var ufrontConf:UfrontConfiguration = {
 					indexController: controller,
 					disableBrowserTrace: true,
@@ -149,14 +135,21 @@ class TestUtils {
 				app.addLogHandler( new OriginalTraceLogger() );
 			}
 			@:privateAccess context.injector.parent = app.injector;
-			var resultSurprise = app.execute( context );
-			// Make sure our test suite waits for the test to complete.
-			resultSurprise.handle( Assert.createAsync() );
-			return {
-				result: resultSurprise,
+
+			var testContext = {
+				result:  app.execute( context ),
 				app: app,
 				context: context
 			};
+			testContext.result.handle( Assert.createAsync() );
+
+			if ( usingTmpApp ) {
+				// Dispose of the application once this request is done.
+				// If the user supplied their own app, we'll let them dispose of it.
+				disposeApp( testContext );
+			}
+
+			return testContext;
 		}
 
 		/**
@@ -561,7 +554,7 @@ class NaturalLanguageTests {
 		}
 
 		/** Test the given `HttpContext` on a given app. This is an alias for `TestUtils.testRoute` **/
-		public static inline function onTheApp( context:HttpContext, app:UfrontApplication, ?p:PosInfos ):RequestTestContext
+		public static inline function onTheApp( context:HttpContext, app:HttpApplication, ?p:PosInfos ):RequestTestContext
 			return TestUtils.testRoute( context, app, p );
 
 		/** Test the given `HttpContext` on a given controller. This is an alias for `TestUtils.testRoute` **/
@@ -595,10 +588,6 @@ class NaturalLanguageTests {
 		/** Alert our async test runner that the testing is complete. This is an alias for `TestUtils.onComplete` **/
 		public static inline function andFinishWith( testContext:RequestTestContext, ?callback:Callback<Dynamic> ):RequestTestContext
 			return TestUtils.onComplete( testContext, callback );
-
-		/** Dispose the current application when you're done running tests with it. This is an alias for `TestUtils.disposeApp` **/
-		public static inline function finishTest( testContext:RequestTestContext ):RequestTestContext
-			return TestUtils.disposeApp( testContext );
 	#end
 }
 
@@ -616,8 +605,8 @@ class NaturalLanguageTests {
 	typedef RequestTestContext = {
 		/** The asynchronous result of the `app.execute()` call. Wait for this to complete before testing the results. **/
 		public var result:Surprise<Noise,Error>;
-		/** The `UfrontApplication` that the test was executed on. **/
-		public var app:UfrontApplication;
+		/** The `HttpApplication` that the test was executed on. **/
+		public var app:HttpApplication;
 		/** The `HttpContext` of the current test request. **/
 		public var context:HttpContext;
 	}
