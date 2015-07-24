@@ -87,15 +87,7 @@ class CacheSession implements UFHttpSession {
 	The current `HttpContext`.
 	Supplied by dependency injection.
 	**/
-	@inject
-	public var context:HttpContext;
-
-	/**
-	The `UFCacheConnection` to use.
-	Supplied by dependency injection.
-	**/
-	@inject
-	public var cacheConnection:UFCacheConnection;
+	public var context(default,null):HttpContext;
 
 	/**
 	The name of the cookie (or request parameter) that holds the session ID.
@@ -151,11 +143,12 @@ class CacheSession implements UFHttpSession {
 	Use the current injector to check for configuration for this session: `this.sessionName`, `this.expiry` and `this.savePath`.
 
 	If no values are available in the injector, the defaults will be used.
-	This also initialises a cache from our `this.cacheConnection` using `this.savePath` as the namespace.
+	This also initialises a cache from the supplied `cacheConnection` using `this.savePath` as the namespace.
 	This will be called automatically as part of dependency injection.
 	**/
-	@inject public function injectConfig( context:HttpContext ) {
+	@inject public function injectConfig( context:HttpContext, cacheConnection:UFCacheConnection ) {
 		// Manually check for these injections, because if they're not provided we have defaults - we don't want minject to throw an error.
+		this.context = context;
 		this.sessionName =
 			if ( context.injector.hasMapping(String,"sessionName") )
 				context.injector.getValue( String, "sessionName" )
@@ -168,7 +161,9 @@ class CacheSession implements UFHttpSession {
 			if ( context.injector.hasMapping(String,"sessionSavePath") )
 				context.injector.getValue( String, "sessionSavePath" )
 			else defaultSavePath;
-		this.cache = this.cacheConnection.getNamespace( savePath );
+		this.cache = 
+			if ( cacheConnection==null ) throw 'No UFCacheConnection was injected into CacheSession';
+			else cacheConnection.getNamespace( savePath );
 	}
 
 	/**
