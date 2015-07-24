@@ -27,7 +27,7 @@ class TestSession implements UFHttpSession {
 
 	public function triggerCommit():Void {};
 
-	public function isActive():Bool return false;
+	public function isActive():Bool return true;
 
 	public function get( name:String ):Dynamic return map[name];
 

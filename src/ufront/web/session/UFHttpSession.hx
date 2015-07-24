@@ -57,7 +57,7 @@ interface UFHttpSession {
 	/** Remove an item from the session. **/
 	public function remove( name:String ):Void;
 
-	/** Return whether or not there is already an active session, and whether it is ready to use (that is, `this.init()` has been completed). **/
+	/** Return whether or not the session is active, meaning it has been initialised either in this request or in a previous request. **/
 	public function isActive():Bool;
 
 	/**

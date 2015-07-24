@@ -451,11 +451,9 @@ class FileSession implements UFHttpSession {
 		regenerateFlag = true;
 	}
 
-	/**
-	Whether or not the current session is active, meaning it has been assigned an ID and has been initialized.
-	**/
+	/** Return whether or not the session is active, meaning it has been initialised either in this request or in a previous request. **/
 	public inline function isActive():Bool {
-		return started && get_id()!=null;
+		return started || get_id()!=null;
 	}
 
 	/**

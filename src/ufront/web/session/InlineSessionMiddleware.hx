@@ -53,7 +53,7 @@ class InlineSessionMiddleware implements UFMiddleware {
 	**/
 	public function responseOut( ctx:HttpContext ):Surprise<Noise,Error> {
 		return
-			if ( ctx.session!=null ) ctx.session.commit();
+			if ( ctx.session!=null && ctx.session.isActive() ) ctx.session.commit();
 			else SurpriseTools.success();
 	}
 }
