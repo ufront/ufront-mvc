@@ -4,7 +4,15 @@ import tink.CoreApi;
 import ufront.core.Futuristic;
 import ufront.cache.UFCache;
 
-/** A `UFCacheConnection` that works with `MemoryCache`. **/
+/**
+A `UFCacheConnection` that works with `MemoryCache`.
+
+You should assign this to a variable that will persist through requests, meaning:
+
+- On Neko, assigning it to a static variable: `static var memoryCacheCnx = new MemoryCacheConnection()`.
+- On NodeJS, assign this to a variable that lives outside of the current request context.
+- On PHP, this cache will not last longer than the current request.
+**/
 class MemoryCacheConnection implements UFCacheConnection implements UFCacheConnectionSync {
 	var caches:Map<String,MemoryCache>;
 
