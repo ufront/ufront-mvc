@@ -199,7 +199,9 @@ class FileSession implements UFHttpSession {
 		var dir = savePath.removeTrailingSlashes();
 		#if sys
 			return SurpriseTools.tryCatchSurprise(function() {
-				FileSystem.createDirectory( dir );
+				if ( FileSystem.exists(dir)==false ) {
+					FileSystem.createDirectory( dir );
+				}
 				return Noise;
 			}, 'Failed to create directory $dir');
 		#elseif nodejs
@@ -236,7 +238,7 @@ class FileSession implements UFHttpSession {
 			#end
 		}
 		else {
-			context.ufWarn('Session ID $sessionID was invalid, resetting session.');
+			context.ufWarn( 'Session ID $sessionID was invalid, resetting session.' );
 			sessionID = null;
 			return SurpriseTools.asGoodSurprise( null );
 		}
@@ -249,7 +251,7 @@ class FileSession implements UFHttpSession {
 			} catch ( e:Dynamic ) {
 				// If this fails, we'll give a warning but not trigger a failure.
 				// This might happen if the session was from a previous compilation and one of the types serializes differently, etc.
-				context.ufWarn('Failed to unserialize session data: $e');
+				context.ufWarn( 'Failed to unserialize session data: $e' );
 			}
 		}
 		return Noise;

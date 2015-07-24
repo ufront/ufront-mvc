@@ -13,6 +13,8 @@ import ufront.app.UfrontConfiguration;
 import ufront.web.result.ActionResult;
 import ufront.core.MultiValueMap;
 import minject.Injector;
+#if neko import neko.Web; #end
+#if php import php.Web; #end
 #if utest import utest.Assert; #end
 #if mockatoo using mockatoo.Mockatoo; #end
 using tink.CoreApi;
@@ -73,7 +75,13 @@ class TestUtils {
 			if ( request==null ) {
 				request = HttpRequest.mock();
 				@:privateAccess request.uri.returns( uri );
-				@:privateAccess request.scriptDirectory.returns( "./" );
+				@:privateAccess request.scriptDirectory.returns(
+					#if (neko||php)
+						(Web.isModNeko) ? Web.getCwd() : "./"
+					#else
+						"./"
+					#end
+				);
 				@:privateAccess request.cookies.returns( new MultiValueMap() );
 				@:privateAccess request.query.returns( new MultiValueMap() );
 				@:privateAccess request.post.returns( new MultiValueMap() );
