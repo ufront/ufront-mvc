@@ -23,15 +23,15 @@ class ControllerTest {
 		var controller:Controller = context.injector.instantiate( TopController );
 		Assert.equals( context, controller.context );
 
-		'/sub/testpostinject/'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "true" );
+		'/sub/testpostinject/'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "true" ).disposeApp();
 	}
 
 	public function testBaseUri():Void {
-		'/baseurl/'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "/" );
-		'/sub/baseurl/'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "/sub/" );
-		'/sub/baseurl'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "/sub/" );
-		'/custom/jason/baseurl'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "/custom/jason/" );
-		'/custom/ufront/baseurl'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "/custom/ufront/" );
+		'/baseurl/'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "/" ).disposeApp();
+		'/sub/baseurl/'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "/sub/" ).disposeApp();
+		'/sub/baseurl'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "/sub/" ).disposeApp();
+		'/custom/jason/baseurl'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "/custom/jason/" ).disposeApp();
+		'/custom/ufront/baseurl'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "/custom/ufront/" ).disposeApp();
 	}
 }
 

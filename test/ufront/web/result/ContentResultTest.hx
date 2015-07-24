@@ -38,7 +38,8 @@ class ContentResultTest {
 		whenIVisit("/")
 		.onTheController( ContentResultTestController )
 		.itShouldLoad()
-		.responseShouldBe( "<html><body>Hello!</body></html>" );
+		.responseShouldBe( "<html><body>Hello!</body></html>" )
+		.finishTest();
 	}
 }
 

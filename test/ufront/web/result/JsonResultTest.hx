@@ -32,7 +32,8 @@ class JsonResultTest {
 			var jsonObj = haxe.Json.parse( res.getBuffer() );
 			Assert.equals( "Jason", jsonObj.name );
 			Assert.equals( "Drop bears", jsonObj.irrationalFear );
-		});
+		})
+		.finishTest();
 	}
 
 	public function testClassInstance():Void {
@@ -44,14 +45,16 @@ class JsonResultTest {
 			var jsonObj = haxe.Json.parse( res.getBuffer() );
 			Assert.equals( 5, jsonObj.x );
 			Assert.equals( 21, jsonObj.y );
-		});
+		})
+		.finishTest();
 	}
 
 	public function testFuture():Void {
 		whenIVisit("/test-future/ufront/")
 		.onTheController( JsonResultTestController )
 		.itShouldLoad()
-		.theResponseShouldBe( '"ufront"' );
+		.theResponseShouldBe( '"ufront"' )
+		.finishTest();
 	}
 }
 

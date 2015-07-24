@@ -98,48 +98,48 @@ class TestUtilsTest {
 
 	public function testAssertSuccess():Void {
 		// First test some passing cases.
-		"/".mockHttpContext().testRoute( TestController ).assertSuccess();
-		"/".mockHttpContext().testRoute( TestController ).assertSuccess(TestController,"index",[]);
-		"/user/13/".mockHttpContext().testRoute( TestController ).assertSuccess(TestController,"getUser",[13]);
-		"/user/13/".mockHttpContext("POST", [ "name" => "Jason" ]).testRoute( TestController ).assertSuccess(TestController,"setUser",[13,{"name":"Jason"}]);
+		"/".mockHttpContext().testRoute( TestController ).assertSuccess().finishTest();
+		"/".mockHttpContext().testRoute( TestController ).assertSuccess(TestController,"index",[]).finishTest();
+		"/user/13/".mockHttpContext().testRoute( TestController ).assertSuccess(TestController,"getUser",[13]).finishTest();
+		"/user/13/".mockHttpContext("POST", [ "name" => "Jason" ]).testRoute( TestController ).assertSuccess(TestController,"setUser",[13,{"name":"Jason"}]).finishTest();
 
 		// And then test some failing cases.
 		expectFailure( function() {
-			"/".mockHttpContext().testRoute( TestController2 ).assertSuccess();
+			"/".mockHttpContext().testRoute( TestController2 ).assertSuccess().finishTest();
 		});
 		expectFailure( function() {
-			"/404".mockHttpContext().testRoute( TestController ).assertSuccess(TestController,"index",[]);
+			"/404".mockHttpContext().testRoute( TestController ).assertSuccess(TestController,"index",[]).finishTest();
 		});
 		expectFailure( function() {
-			"/error".mockHttpContext().testRoute( TestController ).assertSuccess(TestController,"index",[]);
+			"/error".mockHttpContext().testRoute( TestController ).assertSuccess(TestController,"index",[]).finishTest();
 		});
 		expectFailure( function() {
-			"/failure".mockHttpContext().testRoute( TestController ).assertSuccess(TestController,"index",[]);
+			"/failure".mockHttpContext().testRoute( TestController ).assertSuccess(TestController,"index",[]).finishTest();
 		});
 		expectFailure( function() {
-			"/user/not-an-int".mockHttpContext().testRoute( TestController ).assertSuccess(TestController,"index",[]);
+			"/user/not-an-int".mockHttpContext().testRoute( TestController ).assertSuccess(TestController,"index",[]).finishTest();
 		});
 	}
 
 	public function testAssertFailure():Void {
 		// First test some cases which fail as intended.
-		"/404".mockHttpContext().testRoute( TestController ).assertFailure( 404 );
-		"/error".mockHttpContext().testRoute( TestController ).assertFailure( 500 );
-		"/failure".mockHttpContext().testRoute( TestController ).assertFailure( 500 );
-		"/user/not-an-int".mockHttpContext().testRoute( TestController ).assertFailure( 400 );
+		"/404".mockHttpContext().testRoute( TestController ).assertFailure( 404 ).finishTest();
+		"/error".mockHttpContext().testRoute( TestController ).assertFailure( 500 ).finishTest();
+		"/failure".mockHttpContext().testRoute( TestController ).assertFailure( 500 ).finishTest();
+		"/user/not-an-int".mockHttpContext().testRoute( TestController ).assertFailure( 400 ).finishTest();
 
 		// Then test some cases which accidentally pass.
 		expectFailure( function() {
-			"/".mockHttpContext().testRoute( TestController ).assertFailure(404);
+			"/".mockHttpContext().testRoute( TestController ).assertFailure(404).finishTest();
 		});
 		expectFailure( function() {
-			"/".mockHttpContext().testRoute( TestController ).assertFailure(404);
+			"/".mockHttpContext().testRoute( TestController ).assertFailure(404).finishTest();
 		});
 		expectFailure( function() {
-			"/user/13/".mockHttpContext().testRoute( TestController ).assertFailure(404);
+			"/user/13/".mockHttpContext().testRoute( TestController ).assertFailure(404).finishTest();
 		});
 		expectFailure( function() {
-			"/user/13/".mockHttpContext("POST", [ "name" => "Jason" ]).testRoute( TestController ).assertFailure(404);
+			"/user/13/".mockHttpContext("POST", [ "name" => "Jason" ]).testRoute( TestController ).assertFailure(404).finishTest();
 		});
 	}
 }

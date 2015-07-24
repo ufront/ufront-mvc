@@ -122,7 +122,7 @@ class HttpApplication
 
 	See also `OriginalTraceLogger`.
 	**/
-	public var originalTrace(default,null):Dynamic->PosInfos->Void;
+	public var originalTrace(default,null):Dynamic->?Null<PosInfos>->Void;
 
 	/**
 	Messages (traces, logs, warnings and errors) that are not associated with a specific request.
@@ -206,6 +206,7 @@ class HttpApplication
 					case Success(_):
 				}
 			}
+			haxe.Log.trace = this.originalTrace;
 			return Success(Noise);
 		});
 	}

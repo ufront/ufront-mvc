@@ -361,6 +361,19 @@ class TestUtils {
 			});
 			return testContext;
 		}
+
+		/**
+		Dispose of the app once the request has completed.
+		This is useful in that it disposes of any modules that require it, and restores the original trace function.
+		You should always call this after you have finished running your current set of tests.
+		**/
+		public static function disposeApp( testContext:RequestTestContext ):RequestTestContext {
+			var doneCallback = Assert.createAsync();
+			testContext.app.dispose().handle(function(_) {
+				doneCallback();
+			});
+			return testContext;
+		}
 	#end
 }
 
@@ -570,6 +583,10 @@ class NaturalLanguageTests {
 		/** Alert our async test runner that the testing is complete. This is an alias for `TestUtils.onComplete` **/
 		public static inline function andFinishWith( testContext:RequestTestContext, ?callback:Callback<Dynamic> ):RequestTestContext
 			return TestUtils.onComplete( testContext, callback );
+
+		/** Dispose the current application when you're done running tests with it. This is an alias for `TestUtils.disposeApp` **/
+		public static inline function finishTest( testContext:RequestTestContext ):RequestTestContext
+			return TestUtils.disposeApp( testContext );
 	#end
 }
 

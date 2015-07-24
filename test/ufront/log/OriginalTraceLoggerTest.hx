@@ -11,6 +11,7 @@ class OriginalTraceLoggerTest {
 
 	public function testBasic():Void {
 		var traceCounter = 0;
+		var oldTrace = haxe.Log.trace;
 		haxe.Log.trace = function(msg:Dynamic,?pos:haxe.PosInfos) {
 			traceCounter++;
 		}
@@ -28,6 +29,10 @@ class OriginalTraceLoggerTest {
 		.andThenCheck(function () {
 			var expected = #if debug 5 #else 4 #end;
 			Assert.equals( expected, traceCounter );
+
+			testApp.dispose().handle(function() {
+				haxe.Log.trace = oldTrace;
+			});
 		});
 	}
 }

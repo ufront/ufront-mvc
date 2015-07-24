@@ -44,13 +44,15 @@ class RedirectResultTest {
 		whenIVisit( "/" ).onTheController( FutureRedirectTestController ).itShouldReturn( RedirectResult, function(r) {
 			Assert.equals( "/2999-12-31/", r.url );
 			Assert.isFalse( r.permanentRedirect );
-		});
+		})
+		.finishTest();
 
 		// Test calling this from the `create()` method.
 		whenIVisit( "/permanent" ).onTheController( FutureRedirectTestController ).itShouldReturn( RedirectResult, function(r) {
 			Assert.equals( "/tomorrow/", r.url );
 			Assert.isTrue( r.permanentRedirect );
-		});
+		})
+		.finishTest();
 	}
 }
 

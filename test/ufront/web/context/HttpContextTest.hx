@@ -29,15 +29,15 @@ class HttpContextTest {
 		var context2 = '/sameSession/'.mockHttpContext( appInjector );
 		Assert.notEquals( context1.session, context2.session );
 		Assert.notEquals( context1.session.id, context2.session.id );
-		context1.testRoute( SingletonInjectionController ).assertSuccess().responseShouldBe( "true" );
-		context2.testRoute( SingletonInjectionController ).assertSuccess().responseShouldBe( "true" );
+		context1.testRoute( SingletonInjectionController ).assertSuccess().responseShouldBe( "true" ).finishTest();
+		context2.testRoute( SingletonInjectionController ).assertSuccess().responseShouldBe( "true" ).finishTest();
 
 
 		var context3 = '/sameAuth/'.mockHttpContext( appInjector );
 		var context4 = '/sameAuth/'.mockHttpContext( appInjector );
 		Assert.notEquals( context3.auth, context4.auth );
-		context3.testRoute( SingletonInjectionController ).assertSuccess().responseShouldBe( "true" );
-		context4.testRoute( SingletonInjectionController ).assertSuccess().responseShouldBe( "true" );
+		context3.testRoute( SingletonInjectionController ).assertSuccess().responseShouldBe( "true" ).finishTest();
+		context4.testRoute( SingletonInjectionController ).assertSuccess().responseShouldBe( "true" ).finishTest();
 	}
 }
 
