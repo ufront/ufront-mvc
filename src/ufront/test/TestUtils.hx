@@ -7,6 +7,7 @@ import ufront.web.session.UFHttpSession;
 import ufront.auth.*;
 import haxe.PosInfos;
 import ufront.web.Controller;
+import ufront.log.OriginalTraceLogger;
 import ufront.app.UfrontApplication;
 import ufront.app.UfrontConfiguration;
 import ufront.web.result.ActionResult;
@@ -129,9 +130,11 @@ class TestUtils {
 				var ufrontConf:UfrontConfiguration = {
 					indexController: controller,
 					disableBrowserTrace: true,
+					disableServerTrace: true,
 					errorHandlers: [],
 				}
 				app = new UfrontApplication( ufrontConf );
+				app.addLogHandler( new OriginalTraceLogger() );
 			}
 			@:privateAccess context.injector.parent = app.injector;
 			var resultSurprise = app.execute( context );

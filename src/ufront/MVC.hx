@@ -82,6 +82,7 @@ class MVC {}
 @:noDoc @:noUsing typedef Message = ufront.log.Message.Message;
 @:noDoc @:noUsing typedef MessageType = ufront.log.Message.MessageType;
 @:noDoc @:noUsing typedef MessageList = ufront.log.MessageList;
+@:noDoc @:noUsing typedef OriginalTraceLogger = ufront.log.OriginalTraceLogger;
 @:noDoc @:noUsing typedef RemotingLogger = ufront.log.RemotingLogger;
 @:noDoc @:noUsing typedef ServerConsoleLogger = ufront.log.ServerConsoleLogger;
 

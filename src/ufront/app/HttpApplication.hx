@@ -116,6 +116,15 @@ class HttpApplication
 	public var urlFilters(default,null):Array<UFUrlFilter>;
 
 	/**
+	The original trace method before `HttpApplication` takes over `haxe.Log.trace`.
+
+	This is useful if you wish to access the original method, for example if it is required to log messages in a unit testing framework.
+
+	See also `OriginalTraceLogger`.
+	**/
+	public var originalTrace(default,null):Dynamic->PosInfos->Void;
+
+	/**
 	Messages (traces, logs, warnings and errors) that are not associated with a specific request.
 
 	These are generally recorded from calls to `trace()` or `haxe.Log.trace()`, which have no knowledge of the current request.
@@ -160,6 +169,7 @@ class HttpApplication
 	When responding to a request, `init()` is called as the first step of our chain in each `execute()` call.
 	**/
 	public function init():Surprise<Noise,Error> {
+		this.originalTrace = haxe.Log.trace;
 		haxe.Log.trace = function(msg:Dynamic, ?pos:PosInfos) {
 			messages.push({ msg: msg, pos: pos, type: Trace });
 		}
