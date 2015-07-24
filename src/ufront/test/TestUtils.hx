@@ -59,7 +59,7 @@ class TestUtils {
 
 		@param uri The URI to use for the mock request. eg `/blog/first-post.html?source=social`. This is ignored if `request` is provided.
 		@param method (optional) The HTTP method to use. eg `POST` or `GET`. This is ignored if `request` is provided. Default is `"GET"`.
-		@param params (optional) Any HTTP parameters to use. eg `[ name=>"Jason", gender=>"Male" ]`. This is ignored if `request` is provided.
+		@param params (optional) Any HTTP parameters to use. eg `[ name=>"Jason", gender=>"Male" ]`. These will be added to either `request.post` (if `method=="POST"`) or `request.query` otherwise. This is ignored if `request` is provided.
 		@param injector (optional) A custom `Injector` to use in the HTTP Context.
 		@param request (optional) A custom `HttpRequest` to use. If supplied, this will be used instead of `uri`, `method` and `params`.
 		@param response (optional) A custom `HttpResponse` to use.
@@ -82,12 +82,26 @@ class TestUtils {
 						"./"
 					#end
 				);
-				@:privateAccess request.cookies.returns( new MultiValueMap() );
-				@:privateAccess request.query.returns( new MultiValueMap() );
-				@:privateAccess request.post.returns( new MultiValueMap() );
-				@:privateAccess request.params.returns( (params!=null) ? params : new MultiValueMap() );
+				var cookies = new MultiValueMap();
+				var query = new MultiValueMap();
+				var post = new MultiValueMap();
+				var headers = new MultiValueMap();
+				@:privateAccess request.cookies.returns( cookies );
+				@:privateAccess request.query.returns( query );
+				@:privateAccess request.post.returns( post );
+				@:privateAccess request.params.callsRealMethod();
+
+				var paramsTarget = (method!=null && method.toUpperCase()=="POST") ? post : query;
+				if ( params!=null ) {
+					for ( key in params.keys() ) {
+						for ( val in params.getAll(key) ) {
+							paramsTarget.add( key, val );
+						}
+					}
+				}
+
 				@:privateAccess request.httpMethod.returns( (method!=null) ? method.toUpperCase() : "GET" );
-				@:privateAccess request.clientHeaders.returns( new MultiValueMap() );
+				@:privateAccess request.clientHeaders.returns( headers );
 
 			}
 			if ( response==null ) {
@@ -477,7 +491,7 @@ whenISubmit([ "name"=>"Jason", "message"=>"Do you have more cat pictures?" ])
 
 // Kitchen sink example 1:
 whenIVisit("/search")
-.withTheParameters([ "q"=>"Ufront" ])
+.withTheQueryParams([ "q"=>"Ufront" ])
 .withTheSessionHandler( new VoidSession() )
 .withTheAuthHandler( new NobodyAuthHandler() )
 .andInjectAValue( String, "uf-content", "contentDirectory" )
@@ -542,13 +556,45 @@ class NaturalLanguageTests {
 		A helper to add parameters to your mock request.
 
 		```
-		whenIVist("/search").withTheParams([ "q"=>"search query"])
+		whenIVist("/search").withTheQueryParams([ "q"=>"search query"])
 		```
 		**/
-		public static function withTheParams( context:HttpContext, params:MultiValueMap<String> ):HttpContext {
+		public static function withTheQueryParams( context:HttpContext, params:MultiValueMap<String> ):HttpContext {
 			for ( key in params.keys() ) {
 				for ( val in params.getAll(key) )
-					context.request.params.add( key, val );
+					context.request.query.add( key, val );
+			}
+			return context;
+		}
+
+
+		/**
+		A helper to add parameters to your mock request.
+
+		```
+		whenIVist("/search").withThePostParams([ "q"=>"search query"])
+		```
+		**/
+		public static function withThePostParams( context:HttpContext, params:MultiValueMap<String> ):HttpContext {
+			for ( key in params.keys() ) {
+				for ( val in params.getAll(key) )
+					context.request.post.add( key, val );
+			}
+			return context;
+		}
+
+
+		/**
+		A helper to add parameters to your mock request.
+
+		```
+		whenIVist("/search").withTheCookies([ "q"=>"search query"])
+		```
+		**/
+		public static function withTheCookies( context:HttpContext, params:MultiValueMap<String> ):HttpContext {
+			for ( key in params.keys() ) {
+				for ( val in params.getAll(key) )
+					context.request.cookies.add( key, val );
 			}
 			return context;
 		}
