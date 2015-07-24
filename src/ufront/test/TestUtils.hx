@@ -18,6 +18,7 @@ import minject.Injector;
 #if mockatoo using mockatoo.Mockatoo; #end
 using tink.CoreApi;
 using ufront.core.InjectionTools;
+using ufront.core.AsyncTools;
 #end
 
 /**
@@ -373,11 +374,50 @@ class TestUtils {
 		You should always call this after you have finished running your current set of tests.
 		**/
 		public static function disposeApp( testContext:RequestTestContext ):RequestTestContext {
-			var doneCallback = Assert.createAsync();
-			testContext.app.dispose().handle(function(_) {
-				doneCallback();
-			});
-			return testContext;
+			return onComplete( testContext, testContext.app.dispose );
+		}
+
+		/**
+		Simulate multiple requests, one after the other.
+		This allows you to test interactions that happen across a session, such as reaching a login page, posting login details, redirecting to a new page, and displaying a page.
+		It will wait for each request to finish before executing the next request.
+
+		@param app The HttpApplication to run the tests against.  It will be disposed (using `HttpApplication.dispose`) at the end of the request cycle.
+		@param requests An array of functions that each will execute a test, perform any checks, and return the `RequestTestContext`.
+		  Each function can take one parameter, the `RequestTestContext` of the previous completed request.
+		  This can be used for continuing cookies, processing redirects etc.
+		  If one of the requests returns a failure rather (if the app encountered an error) then any remaining requests will not be executed.
+		@return `Surprise<Noise,Error>` The result of the final `app.execute()` call that was executed.
+		**/
+		public static function simulateSession( app:HttpApplication, requests:Array<Null<RequestTestContext>->RequestTestContext> ):Surprise<Noise,Error> {
+			var requests = requests.copy();
+			var previousRequestContext:RequestTestContext = null;
+			function processNextRequest():Surprise<Noise,Error> {
+				var currentRequest = requests.shift();
+				var currentRequestContext = currentRequest( previousRequestContext );
+				return currentRequestContext.result.flatMap(function(outcome) {
+					switch outcome {
+						case Success(_):
+							if ( requests.length>0 ) {
+								previousRequestContext = currentRequestContext;
+								return processNextRequest();
+							}
+							else {
+								disposeApp( currentRequestContext );
+								return currentRequestContext.result;
+							}
+						case Failure(err):
+							return err.asBadSurprise();
+					}
+				});
+			}
+
+			var result =
+				if ( requests.length>0 ) processNextRequest();
+				else SurpriseTools.success();
+			// Stop tink futures from being lazy.
+			result.handle(function() {});
+			return result;
 		}
 	#end
 }
