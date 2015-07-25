@@ -1,7 +1,7 @@
-package ufront.handler;
+package ufront.web;
 
 import utest.Assert;
-import ufront.handler.MVCHandler;
+import ufront.web.MVCHandler;
 
 class MVCHandlerTest {
 	var instance:MVCHandler;

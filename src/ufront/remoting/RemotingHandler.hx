@@ -1,4 +1,4 @@
-package ufront.handler;
+package ufront.remoting;
 
 import haxe.remoting.Context;
 import haxe.Serializer;
@@ -222,5 +222,5 @@ class RemotingHandler implements UFRequestHandler {
 
 	}
 
-	public function toString() return "ufront.handler.RemotingHandler";
+	public function toString() return "ufront.remoting.RemotingHandler";
 }

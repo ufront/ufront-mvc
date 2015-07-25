@@ -15,5 +15,7 @@ class TestAll {
 		runner.addCase( new ControllerMacrosTest() );
 		runner.addCase( new UserAgentTest() );
 		runner.addCase( new ControllerTest() );
+		runner.addCase( new ErrorPageHandlerTest() );
+		runner.addCase( new MVCHandlerTest() );
 	}
 }

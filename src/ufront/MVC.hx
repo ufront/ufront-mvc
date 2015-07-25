@@ -71,11 +71,6 @@ class MVC {}
 @:noDoc @:noUsing typedef OrderedStringMap<T> = ufront.core.OrderedStringMap<T>;
 @:noDoc @:noUsing typedef Uuid = ufront.core.Uuid;
 
-// `ufront.handler` package
-@:noDoc @:noUsing typedef ErrorPageHandler = ufront.handler.ErrorPageHandler;
-@:noDoc @:noUsing typedef MVCHandler = ufront.handler.MVCHandler;
-@:noDoc @:noUsing typedef RemotingHandler = ufront.handler.RemotingHandler;
-
 // `ufront.log` package
 @:noDoc @:noUsing typedef BrowserConsoleLogger = ufront.log.BrowserConsoleLogger;
 @:noDoc @:noUsing typedef FileLogger = ufront.log.FileLogger;
@@ -91,6 +86,7 @@ class MVC {}
 @:noDoc @:noUsing typedef HttpConnection = ufront.remoting.HttpConnection;
 @:noDoc @:noUsing typedef RemotingError<FailureType> = ufront.remoting.RemotingError<FailureType>;
 @:noDoc @:noUsing typedef RemotingUtil = ufront.remoting.RemotingUtil;
+@:noDoc @:noUsing typedef RemotingHandler = ufront.remoting.RemotingHandler;
 
 // `ufront.test` package
 @:noDoc @:noUsing typedef TestUtils = ufront.test.TestUtils.TestUtils;
@@ -118,6 +114,8 @@ class MVC {}
 @:noDoc @:noUsing typedef OnDataCallback = ufront.web.context.HttpRequest.OnDataCallback;
 @:noDoc @:noUsing typedef OnEndPartCallback = ufront.web.context.HttpRequest.OnEndPartCallback;
 @:noDoc @:noUsing typedef HttpResponse = ufront.web.context.HttpResponse;
+@:noDoc @:noUsing typedef ErrorPageHandler = ufront.web.ErrorPageHandler;
+@:noDoc @:noUsing typedef MVCHandler = ufront.web.MVCHandler;
 
 // `ufront.web.result` package
 @:noDoc @:noUsing typedef ActionResult = ufront.web.result.ActionResult.ActionResult;

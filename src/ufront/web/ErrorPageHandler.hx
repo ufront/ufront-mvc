@@ -1,4 +1,4 @@
-package ufront.handler;
+package ufront.web;
 
 import haxe.CallStack;
 import tink.core.Error;

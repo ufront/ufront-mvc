@@ -1,7 +1,7 @@
-package ufront.handler;
+package ufront.remoting;
 
 import utest.Assert;
-import ufront.handler.RemotingHandler;
+import ufront.remoting.RemotingHandler;
 
 class RemotingHandlerTest {
 	var instance:RemotingHandler;

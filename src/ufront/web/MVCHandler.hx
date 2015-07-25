@@ -1,4 +1,4 @@
-package ufront.handler;
+package ufront.web;
 
 import haxe.PosInfos;
 import ufront.log.Message;
@@ -71,5 +71,5 @@ class MVCHandler implements UFRequestHandler {
 			}
 	}
 
-	public function toString() return "ufront.handler.MVCHandler";
+	public function toString() return "ufront.web.MVCHandler";
 }

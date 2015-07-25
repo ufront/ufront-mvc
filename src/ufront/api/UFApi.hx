@@ -170,7 +170,7 @@ class UFApi {
 		/**
 		A shortcut to `HttpContext.ufTrace`
 
-		A `messages` array must be injected for these to function correctly.  Use `ufront.handler.MVCHandler` and `ufront.handler.RemotingHandler` to inject this correctly.
+		A `messages` array must be injected for these to function correctly.  Use `ufront.web.MVCHandler` and `ufront.remoting.RemotingHandler` to inject this correctly.
 		**/
 		@:noCompletion
 		inline function ufTrace( msg:Dynamic, ?pos:PosInfos ) {
@@ -180,7 +180,7 @@ class UFApi {
 		/**
 		A shortcut to `HttpContext.ufLog`
 
-		A `messages` array must be injected for these to function correctly.  Use `ufront.handler.MVCHandler` and `ufront.handler.RemotingHandler` to inject this correctly.
+		A `messages` array must be injected for these to function correctly.  Use `ufront.web.MVCHandler` and `ufront.remoting.RemotingHandler` to inject this correctly.
 		**/
 		@:noCompletion
 		inline function ufLog( msg:Dynamic, ?pos:PosInfos ) {
@@ -190,7 +190,7 @@ class UFApi {
 		/**
 		A shortcut to `HttpContext.ufWarn`
 
-		A `messages` array must be injected for these to function correctly.  Use `ufront.handler.MVCHandler` and `ufront.handler.RemotingHandler` to inject this correctly.
+		A `messages` array must be injected for these to function correctly.  Use `ufront.web.MVCHandler` and `ufront.remoting.RemotingHandler` to inject this correctly.
 		**/
 		@:noCompletion
 		inline function ufWarn( msg:Dynamic, ?pos:PosInfos ) {
@@ -200,7 +200,7 @@ class UFApi {
 		/**
 		A shortcut to `HttpContext.ufError`
 
-		A `messages` array must be injected for these to function correctly.  Use `ufront.handler.MVCHandler` and `ufront.handler.RemotingHandler` to inject this correctly.
+		A `messages` array must be injected for these to function correctly.  Use `ufront.web.MVCHandler` and `ufront.remoting.RemotingHandler` to inject this correctly.
 		**/
 		@:noCompletion
 		inline function ufError( msg:Dynamic, ?pos:PosInfos ) {

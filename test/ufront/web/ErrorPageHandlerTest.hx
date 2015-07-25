@@ -1,7 +1,7 @@
-package ufront.handler;
+package ufront.web;
 
 import utest.Assert;
-import ufront.handler.ErrorPageHandler;
+import ufront.web.ErrorPageHandler;
 
 class ErrorPageHandlerTest {
 	var instance:ErrorPageHandler;

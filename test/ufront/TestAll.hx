@@ -7,7 +7,6 @@ class TestAll {
 	public static function addTests( runner:Runner ) {
 		ufront.core.TestAll.addTests( runner );
 		ufront.app.TestAll.addTests( runner );
-		ufront.handler.TestAll.addTests( runner );
 		ufront.log.TestAll.addTests( runner );
 		ufront.web.TestAll.addTests( runner );
 		ufront.view.TestAll.addTests( runner );

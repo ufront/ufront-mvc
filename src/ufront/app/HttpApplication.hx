@@ -74,8 +74,8 @@ class HttpApplication
 
 	Examples:
 
-	 - `ufront.handler.MVCHandler`
-	 - `ufront.handler.RemotingHandler`
+	 - `ufront.web.MVCHandler`
+	 - `ufront.remoting.RemotingHandler`
 	 - A handler which passes static assets to the client (in case your web server does not do this automatically)
 	 - A CSS Preprocesser handler (compile *.css requests from *.sass or *.less files using an appropriate CSS preprocessor)
 

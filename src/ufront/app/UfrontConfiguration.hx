@@ -12,7 +12,7 @@ import ufront.web.context.*;
 import ufront.module.*;
 import ufront.app.UFMiddleware;
 import ufront.app.UFErrorHandler;
-import ufront.handler.ErrorPageHandler;
+import ufront.web.ErrorPageHandler;
 import ufront.web.session.InlineSessionMiddleware;
 import ufront.web.upload.TmpFileUploadMiddleware;
 #if ufront_ufadmin
