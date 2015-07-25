@@ -189,7 +189,8 @@ class TestUtils {
 			var testContext = {
 				result:  app.execute( context ),
 				app: app,
-				context: context
+				context: context,
+				testFailed: false
 			};
 			testContext.result.handle( Assert.createAsync() );
 
@@ -231,6 +232,7 @@ class TestUtils {
 		**/
 		public static function assertSuccess( testContext:RequestTestContext, ?controller:Class<Dynamic>, ?action:String, ?args:Array<Dynamic>, ?p:PosInfos ):RequestTestContext {
 			var doneCallback = Assert.createAsync();
+			var failuresBefore = countFailures();
 			testContext.result.handle(function (outcome) switch outcome {
 				case Success( _ ):
 					var ctx = testContext.context.actionContext;
@@ -248,9 +250,9 @@ class TestUtils {
 					}
 
 					// If an action was specified, check it matches.
-					if ( action!=null )
-						if ( action!=ctx.action )
-							Assert.fail( '[${ctx.action}] was not equal to expected action [$action] after dispatching', p );
+					if ( action!=null && action!=ctx.action ) {
+						Assert.fail( '[${ctx.action}] was not equal to expected action [$action] after dispatching', p );
+					}
 
 					// If an args array was specified, check length and args match.
 					if ( args!=null ) {
@@ -262,10 +264,13 @@ class TestUtils {
 							Assert.same( expected, actual, recursive, 'Expected argument ${i+1} for MVC action `$action()` to be `$expected`, but was `$actual`', p );
 						}
 					}
+					if ( failuresBefore<countFailures() )
+						testContext.testFailed = true;
 					doneCallback();
 				case Failure( f ):
 					var exceptionStack = haxe.CallStack.toString(haxe.CallStack.exceptionStack());
 					Assert.fail( 'Expected routing to succeed, but it did not (failed with error $f, ${f.data} ${exceptionStack})', p );
+					testContext.testFailed = true;
 					doneCallback();
 			});
 			return testContext;
@@ -291,10 +296,12 @@ class TestUtils {
 		**/
 		public static function assertFailure( testContext:RequestTestContext, ?code:Null<Int>, ?message:Null<String>, ?innerData:Null<Dynamic>, ?p:PosInfos ):RequestTestContext {
 			var doneCallback = Assert.createAsync();
+			var failuresBefore = countFailures();
 			testContext.result.handle(function processOutcome(outcome) {
 				switch outcome {
 					case Success( _ ):
 						Assert.fail( 'Expected routing to fail, but it was a success', p );
+						testContext.testFailed = true;
 						doneCallback();
 					case Failure( failure ):
 						if ( code!=null )
@@ -306,6 +313,8 @@ class TestUtils {
 						if ( innerData!=null )
 							Assert.same( innerData, failure.data, true, 'Failure data [${failure.data}] was not equal to expected failure data [$innerData]', p );
 						Assert.isTrue(true);
+						if ( failuresBefore<countFailures() )
+							testContext.testFailed = true;
 						doneCallback();
 				}
 			});
@@ -324,8 +333,11 @@ class TestUtils {
 		**/
 		public static function responseShouldBe( testContext:RequestTestContext, expectedResponse:String, ?p:PosInfos ):RequestTestContext {
 			var doneCallback = Assert.createAsync();
+			var failuresBefore = countFailures();
 			testContext.result.handle( function(outcome) {
 				Assert.equals( expectedResponse, testContext.context.response.getBuffer(), p );
+				if ( failuresBefore<countFailures() )
+					testContext.testFailed = true;
 				doneCallback();
 			});
 			return testContext;
@@ -365,6 +377,7 @@ class TestUtils {
 		**/
 		public static function checkResult<T:ActionResult>( testContext:RequestTestContext, expectedResultType:Class<T>, ?check:T->Void, ?p:PosInfos ):RequestTestContext {
 			var doneCallback = Assert.createAsync();
+			var failuresBefore = countFailures();
 			testContext.result.handle( function(outcome) switch outcome {
 				case Success(_):
 					var res = testContext.context.actionContext.actionResult;
@@ -372,6 +385,8 @@ class TestUtils {
 					if ( check!=null && Std.is(res,expectedResultType) ) {
 						check( cast res );
 					}
+					if ( failuresBefore<countFailures() )
+						testContext.testFailed = true;
 					doneCallback();
 				case Failure(_):
 					// We do not assert a failure here, as `TestUtils.assertSuccess()` will already check that case, without blocking this test.
@@ -389,8 +404,11 @@ class TestUtils {
 		**/
 		public static function check( testContext:RequestTestContext, check:Callback<RequestTestContext> ):RequestTestContext {
 			var doneCallback = Assert.createAsync();
+			var failuresBefore = countFailures();
 			testContext.result.handle(function(_) {
 				check.invoke( testContext );
+				if ( failuresBefore<countFailures() )
+					testContext.testFailed = true;
 				doneCallback();
 			});
 			return testContext;
@@ -410,8 +428,11 @@ class TestUtils {
 		**/
 		public static function onComplete( testContext:RequestTestContext, callback:Callback<Dynamic> ):RequestTestContext {
 			var doneCallback = Assert.createAsync();
+			var failuresBefore = countFailures();
 			testContext.result.handle(function(_) {
 				callback.invoke( null );
+				if ( failuresBefore<countFailures() )
+					testContext.testFailed = true;
 				doneCallback();
 			});
 			return testContext;
@@ -445,18 +466,16 @@ class TestUtils {
 				var currentRequest = requests.shift();
 				var currentRequestContext = currentRequest( previousRequestContext );
 				return currentRequestContext.result.flatMap(function(outcome) {
-					switch outcome {
-						case Success(_):
-							if ( requests.length>0 ) {
-								previousRequestContext = currentRequestContext;
-								return processNextRequest();
-							}
-							else {
-								disposeApp( currentRequestContext );
-								return currentRequestContext.result;
-							}
-						case Failure(err):
-							return err.asBadSurprise();
+					var someTestsRemaining = requests.length>0;
+					if ( !currentRequestContext.testFailed && someTestsRemaining ) {
+						previousRequestContext = currentRequestContext;
+						return processNextRequest();
+					}
+					else {
+						// That was either the final request in the session, or it didn't pass.
+						// So we're done. Dispose and return the result of the final request.
+						disposeApp( currentRequestContext );
+						return currentRequestContext.result;
 					}
 				});
 			}
@@ -464,9 +483,23 @@ class TestUtils {
 			var result =
 				if ( requests.length>0 ) processNextRequest();
 				else SurpriseTools.success();
-			// Stop tink futures from being lazy.
+			// Stop tink futures from being lazy. If we don't do this the flatMap above may never execute.
 			result.handle(function() {});
 			return result;
+		}
+
+		/** Count the number of failed assertions. We use this in the methods above to determine if a set of tests has failed or not. **/
+		static function countFailures():Int {
+			var fails = 0;
+			for ( r in Assert.results ) {
+				switch r {
+					case Success(_):
+					case Warning(_):
+					default:
+						fails++;
+				}
+			}
+			return fails;
 		}
 	#end
 }
@@ -735,5 +768,7 @@ class NaturalLanguageTests {
 		public var app:HttpApplication;
 		/** The `HttpContext` of the current test request. **/
 		public var context:HttpContext;
+		/** Did the test fail. If this is `true` then when using `TestUtils.simulateSession` further tests will not be processed. **/
+		public var testFailed:Bool;
 	}
 #end
