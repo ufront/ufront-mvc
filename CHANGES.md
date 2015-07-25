@@ -1,11 +1,4 @@
-{
-  "name": "ufront-mvc",
-  "license": "MIT",
-  "classPath": "src",
-  "tags": ["ufront","web","framework","mvc","neko","php","js","nodejs","isomorphic","server","client"],
-  "description": "A full-featured MVC Framework for Neko, PHP, NodeJS and browser JS, that runs on both server and client.",
-  "contributors": ["fponticelli","jason"],
-  "releasenote": "# 1.0.0
+# 1.0.0
 
 This is a 1.0.0 release of ufront-mvc - Hoorah!
 
@@ -111,13 +104,8 @@ As such, this release includes a number of breaking changes from the last `1.0.0
 
 - Major cleanup, refactor, documentation, fixes and unit testing of `ufront.web.url` package.
 
-",
-  "version": "1.0.0",
-  "url": "https://github.com/ufront/ufront-mvc",
-  "dependencies": {
-    "compiletime": "",
-    "minject": "",
-    "tink_core": "",
-    "tink_macro": ""
-  }
-}
+---
+
+# Older changes
+
+For changes prior to 1.0.0, please see http://lib.haxe.org/p/ufront-mvc/versions/

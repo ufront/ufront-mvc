@@ -31,3 +31,18 @@ It provides:
 
 See the main [ufront](https://github.com/ufront/ufront) repo or the [ufront.net website](http://ufront.net) for more information about Ufront.
 
+### Learn more
+
+- [API Documentation](http://api.ufront.net/)
+- [Ufront website](http://ufront.net) (including tutorials)
+
+### Contributions
+
+- Please use the [Github Issue Tracker](https://github.com/ufront/ufront-mvc/issues/) to report bugs.
+- Pull requests always welcome, please ask on
+- Contributions to this README are definitely welcome!
+
+### Support
+
+- [Gitter ufront/ufront](https://gitter.im/ufront/ufront) for chat.
+- [Stack Overflow questions tagged ufront](http://stackoverflow.com/questions/tagged/ufront) for Q&A.
