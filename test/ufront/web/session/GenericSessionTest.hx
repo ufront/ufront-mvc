@@ -96,7 +96,17 @@ class GenericSessionTest {
 				.followingOnFrom( prev )
 				.onTheApp( testApp )
 				.itShouldLoad()
-				.theResponseShouldBe( 'Done' );
+				.theResponseShouldBe( 'Done' )
+				.andThenCheck(function(ctx) {
+					var cookie = ctx.context.response.getCookies().get( CacheSession.defaultSessionName );
+					Assert.notNull( cookie );
+					if ( cookie!=null ) {
+						// Check that it has changed, and it is valid.
+						Assert.notEquals( sessionID, cookie.value );
+						Assert.isTrue( Uuid.isValid(cookie.value) );
+						sessionID = cookie.value;
+					}
+				});
 			},
 			function(prev) {
 				return
@@ -128,7 +138,15 @@ class GenericSessionTest {
 				.followingOnFrom( prev )
 				.onTheApp( testApp )
 				.itShouldFail();
-			}
+			},
+			function(prev) {
+				return
+				whenIVisit( "/", testApp.injector )
+				.followingOnFrom( prev )
+				.onTheApp( testApp )
+				.itShouldLoad()
+				.theResponseShouldBe( "Session ID is null" );
+			},
 		]);
 	}
 
