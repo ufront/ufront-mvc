@@ -97,15 +97,9 @@ class UfrontApplication extends HttpApplication {
 			remotingHandler.loadApiContext( configuration.remotingApi );
 		}
 
-		// Map some default injector rules
+		// Map the controllers to the injector.
 		for ( controller in configuration.controllers ) {
 			injector.mapRuntimeTypeOf( controller ).toClass( controller );
-		}
-		for ( api in configuration.apis ) {
-			injector.mapRuntimeTypeOf( api ).toClass( api );
-			var asyncApi = UFAsyncApi.getAsyncApi( api );
-			if ( asyncApi!=null )
-				injector.mapRuntimeTypeOf( asyncApi ).toClass( asyncApi );
 		}
 
 		// Set up handlers and middleware
@@ -147,7 +141,7 @@ class UfrontApplication extends HttpApplication {
 			injector.mapRuntimeTypeOf( configuration.authImplementation ).toClass( configuration.authImplementation );
 		}
 
-		// Set up the view engine, add it to the injector as a singleton, under both "UFViewEngine" and the implementation type.
+		// Set up the view engine, add it to the injector as a singleton.
 		if ( configuration.viewEngine!=null ) {
 			injector.map( String, "viewPath" ).toValue( configuration.viewPath );
 			injector.map( UFViewEngine ).toSingleton( configuration.viewEngine );
@@ -180,6 +174,15 @@ class UfrontApplication extends HttpApplication {
 
 		if ( firstRun )
 			initOnFirstExecute( httpContext );
+
+		// UFApis need to be mapped as singletons for each request:
+		// Singletons so that they can be co-dependent, and each request so that the any injected content (such as session data) is kept private per request.
+		for ( api in configuration.apis ) {
+			httpContext.injector.mapRuntimeTypeOf( api ).toSingleton( api );
+			var asyncApi = UFAsyncApi.getAsyncApi( api );
+			if ( asyncApi!=null )
+				httpContext.injector.mapRuntimeTypeOf( asyncApi ).toSingleton( asyncApi );
+		}
 
 		// execute
 		return super.execute( httpContext );

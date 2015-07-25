@@ -46,6 +46,7 @@ As such, this release includes a number of breaking changes from the last `1.0.0
 ### `ufront.api`
 
 - Fix: Make constructor for UFApiClientContext public.
+- APIs are now mapped as singletons in the injector for each HttpContext. This means that API1 and API2 can be dependent on each other.
 
 ### `ufront.auth`
 
