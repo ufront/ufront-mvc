@@ -124,15 +124,21 @@ class TestUtils {
 		This is useful when mocking multiple requests as part of a session.
 		**/
 		public static inline function loadSessionInfo( context:HttpContext, previousRequest:RequestTestContext ):HttpContext {
-
 			// Set cookies from the previous request and response.
 			var previousCookies = previousRequest.context.request.cookies;
-			var cookiesSetOnRequest = previousRequest.context.response.getCookies();
+			var cookiesSetOnResponse = previousRequest.context.response.getCookies();
 			for ( name in previousCookies.keys() ) {
 				context.request.cookies.set( name, previousCookies[name] );
 			}
-			for ( c in cookiesSetOnRequest ) {
-				context.request.cookies.set( c.name, c.value );
+			var now = Date.now().getTime();
+			for ( c in cookiesSetOnResponse ) {
+				var expired = (c.expires!=null) && (c.expires.getTime()<now);
+				if ( expired || c.value==null || c.value=="" ) {
+					context.request.cookies.remove( c.name );
+				}
+				else {
+					context.request.cookies.set( c.name, c.value );
+				}
 			}
 
 			// Set the referrer to the previous requests URI.
