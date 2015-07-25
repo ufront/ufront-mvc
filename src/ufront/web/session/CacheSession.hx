@@ -258,7 +258,6 @@ class CacheSession implements UFHttpSession {
 			}
 			>> function(_:Noise):Surprise<Noise,Error> {
 				if ( commitFlag && sessionData!=null ) {
-					setCookie( sessionID, expiry );
 					return cache.set( sessionID, sessionData ).changeSuccessToNoise().changeFailureToError();
 				}
 				return Future.sync( Success(Noise) );

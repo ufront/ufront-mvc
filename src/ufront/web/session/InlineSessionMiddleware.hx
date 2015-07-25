@@ -44,7 +44,7 @@ class InlineSessionMiddleware implements UFMiddleware {
 	**/
 	public function requestIn( ctx:HttpContext ):Surprise<Noise,Error> {
 		return
-			if ( alwaysStart || ctx.session.id!=null ) ctx.session.init();
+			if ( alwaysStart || (ctx.session.id!=null && ctx.session.id!="") ) ctx.session.init();
 			else SurpriseTools.success();
 	}
 
