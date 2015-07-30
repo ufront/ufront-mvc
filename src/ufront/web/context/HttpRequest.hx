@@ -3,6 +3,7 @@ import haxe.io.Bytes;
 import haxe.ds.StringMap;
 import ufront.web.upload.UFFileUpload;
 import ufront.core.MultiValueMap;
+import ufront.web.HttpError;
 using tink.CoreApi;
 using StringTools;
 
@@ -73,7 +74,7 @@ class HttpRequest {
 			#elseif neko new neko.ufront.web.context.HttpRequest();
 			#elseif (js && !nodejs) new js.ufront.web.context.HttpRequest();
 			#elseif (js && nodejs) throw "Please use `new nodejs.ufront.web.HttpRequest(req)` instead";
-			#else throw new NotImplemented();
+			#else throw HttpError.notImplemented();
 			#end
 	}
 
