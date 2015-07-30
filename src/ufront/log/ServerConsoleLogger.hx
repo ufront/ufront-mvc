@@ -47,7 +47,8 @@ class ServerConsoleLogger implements UFLogHandler {
 		var extras =
 			if ( m.pos!=null && m.pos.customParams!=null ) ", "+m.pos.customParams.join(", ")
 			else "";
-		return '${m.type}: ${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';
+		var type = Type.enumConstructor( m.type ).substr( 1 );
+		return '$type: ${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';
 	}
 
 	static function writeLog( message:String, ?type:MessageType=null ):Void {

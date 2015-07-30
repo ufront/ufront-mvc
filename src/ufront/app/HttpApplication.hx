@@ -171,7 +171,7 @@ class HttpApplication
 	public function init():Surprise<Noise,Error> {
 		this.originalTrace = haxe.Log.trace;
 		haxe.Log.trace = function(msg:Dynamic, ?pos:PosInfos) {
-			messages.push({ msg: msg, pos: pos, type: Trace });
+			messages.push({ msg: msg, pos: pos, type: MTrace });
 		}
 		if ( modulesReady==null ) {
 			var futures = [];

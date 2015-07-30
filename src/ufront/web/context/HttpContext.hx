@@ -311,7 +311,7 @@ class HttpContext {
 	Inline shortcuts are provided from `ufront.web.Controller` and `ufront.api.UFApi` so that you can call ufTrace() and it points to this method.
 	**/
 	public inline function ufTrace( msg:Dynamic, ?pos:PosInfos ) {
-		messages.push({ msg: msg, pos: pos, type:Trace });
+		messages.push({ msg: msg, pos: pos, type:MTrace });
 	}
 
 	/**
@@ -320,7 +320,7 @@ class HttpContext {
 	Similar to ufTrace, except that the message is noted to be a Log, which may be displayed differently by the tracing module.
 	**/
 	public inline function ufLog( msg:Dynamic, ?pos:PosInfos ) {
-		messages.push({ msg: msg, pos: pos, type:Log });
+		messages.push({ msg: msg, pos: pos, type:MLog });
 	}
 
 	/**
@@ -329,7 +329,7 @@ class HttpContext {
 	Similar to ufTrace, except that the message is noted to be a Warning, which may be displayed differently by the tracing module.
 	**/
 	public inline function ufWarn( msg:Dynamic, ?pos:PosInfos ) {
-		messages.push({ msg: msg, pos: pos, type:Warning });
+		messages.push({ msg: msg, pos: pos, type:MWarning });
 	}
 
 	/**
@@ -341,7 +341,7 @@ class HttpContext {
 	It may be sensible to use it in your error handling code, but not _as_ your error handling code.
 	**/
 	public inline function ufError( msg:Dynamic, ?pos:PosInfos ) {
-		messages.push({ msg: msg, pos: pos, type:Error });
+		messages.push({ msg: msg, pos: pos, type:MError });
 	}
 
 	public function toString() {

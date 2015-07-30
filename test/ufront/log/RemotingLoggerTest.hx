@@ -34,8 +34,8 @@ class RemotingLoggerTest {
 
 	@:access(ufront.log.RemotingLogger)
 	public function testFormatMessage():Void {
-		var msg1 = { msg:null, type:Trace, pos:fakePosInfos[0] };
-		var msg2 = { msg:"Hello", type:Log, pos:fakePosInfos[1] };
+		var msg1 = { msg:null, type:MTrace, pos:fakePosInfos[0] };
+		var msg2 = { msg:"Hello", type:MLog, pos:fakePosInfos[1] };
 
 		var result1 = RemotingLogger.formatMessage( msg1 );
 		var result2 = RemotingLogger.formatMessage( msg2 );
@@ -56,12 +56,12 @@ class RemotingLoggerTest {
 		var pageContent = "HXR Remoting Response";
 		ctx.response.contentType = "application/x-haxe-remoting";
 		ctx.response.write( pageContent );
-		ctx.messages.push({ msg: "Hello", type:Trace, pos:fakePosInfos[0] });
-		ctx.messages.push({ msg: "World", type:Log, pos:fakePosInfos[0] });
+		ctx.messages.push({ msg: "Hello", type:MTrace, pos:fakePosInfos[0] });
+		ctx.messages.push({ msg: "World", type:MLog, pos:fakePosInfos[0] });
 
 		var appMessages = [];
-		appMessages.push({ msg: "Goodbye", type:Warning, pos:fakePosInfos[1] });
-		appMessages.push({ msg: "Space", type:Error, pos:fakePosInfos[1] });
+		appMessages.push({ msg: "Goodbye", type:MWarning, pos:fakePosInfos[1] });
+		appMessages.push({ msg: "Space", type:MError, pos:fakePosInfos[1] });
 
 		var remotingLogger:UFLogHandler = new RemotingLogger();
 		remotingLogger.log( ctx, appMessages );

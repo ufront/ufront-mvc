@@ -15,8 +15,8 @@ class MessageListTest {
 	public function teardown():Void {}
 
 	public function testMessageList():Void {
-		var message1 = createMessage( "Hello Theo", Trace );
-		var message2 = createMessage( 400, Error );
+		var message1 = createMessage( "Hello Theo", MTrace );
+		var message2 = createMessage( 400, MError );
 
 		var emptyMessageList = new MessageList();
 		emptyMessageList.push( message1 );
@@ -36,7 +36,7 @@ class MessageListTest {
 		Assert.equals( 2, messageArray1.length );
 		Assert.equals( 2, messageArray2.length );
 		Assert.equals( "Hello Theo", messageArray1[0].msg );
-		Assert.equals( Error, messageArray2[1].type );
+		Assert.equals( MError, messageArray2[1].type );
 	}
 
 	function createMessage( msg:Dynamic, type:MessageType, ?pos:haxe.PosInfos ) {

@@ -65,10 +65,10 @@ class BrowserConsoleLogger implements UFLogHandler {
 	**/
 	static function formatMessage( m:Message ):String {
 		var type = switch (m.type) {
-			case Trace: "log";
-			case Log: "info";
-			case Warning: "warn";
-			case Error: "error";
+			case MTrace: "log";
+			case MLog: "info";
+			case MWarning: "warn";
+			case MError: "error";
 		}
 		var extras =
 			if ( m.pos!=null && m.pos.customParams!=null ) ", "+m.pos.customParams.join(", ")
@@ -92,10 +92,10 @@ class BrowserConsoleLogger implements UFLogHandler {
 		public static function printMessage( m:Message ):Void {
 			var console = js.Browser.window.console;
 			var logMethod = switch (m.type) {
-				case Trace: console.log;
-				case Log: console.info;
-				case Warning: console.warn;
-				case Error: console.error;
+				case MTrace: console.log;
+				case MLog: console.info;
+				case MWarning: console.warn;
+				case MError: console.error;
 			}
 			var posString = '${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber})';
 			var params = [posString,m.msg];

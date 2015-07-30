@@ -57,10 +57,10 @@ class RemotingUtil {
 						var msg = '[R]${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';
 						var c = js.Browser.window.console;
 						switch m.type {
-							case Trace: c.log( msg );
-							case Log: c.info( msg );
-							case Warning: c.warn( msg );
-							case Error: c.error( msg );
+							case MTrace: c.log( msg );
+							case MLog: c.info( msg );
+							case MWarning: c.warn( msg );
+							case MError: c.error( msg );
 						}
 					#else
 						m.pos.fileName="[R]"+m.pos.fileName;

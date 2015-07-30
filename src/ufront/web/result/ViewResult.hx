@@ -236,8 +236,8 @@ class ViewResult extends ActionResult {
 	public function new( ?data:TemplateData, ?viewPath:String, ?templatingEngine:TemplatingEngine ) {
 		this.data = (data!=null) ? data : {};
 		this.helpers = {};
-		this.templateSource = (viewPath!=null) ? FromEngine(viewPath,templatingEngine) : Unknown;
-		this.layoutSource = Unknown;
+		this.templateSource = (viewPath!=null) ? TFromEngine(viewPath,templatingEngine) : TUnknown;
+		this.layoutSource = TUnknown;
 		this.finalOutputTrigger = Future.trigger();
 		this.finalOutput = finalOutputTrigger;
 	}
@@ -249,13 +249,13 @@ class ViewResult extends ActionResult {
 	@param templatingEngine (optional) A templating engine to use with this layout. If none is specified, the first templating engine matching the layoutPath's extension will be used.
 	**/
 	public function withLayout( layoutPath:String, ?templatingEngine:TemplatingEngine ):ViewResult {
-		this.layoutSource = FromEngine( layoutPath, templatingEngine );
+		this.layoutSource = TFromEngine( layoutPath, templatingEngine );
 		return this;
 	}
 
 	/** Prevent a default layout from wrapping this view - this view will appear standalone, not wrapped by a layout. **/
 	public function withoutLayout():ViewResult {
-		this.layoutSource = None;
+		this.layoutSource = TNone;
 		return this;
 	}
 
@@ -273,10 +273,10 @@ class ViewResult extends ActionResult {
 			templatingEngine = TemplatingEngines.haxe;
 
 		if (template!=null)
-			this.templateSource = FromString( template, templatingEngine );
+			this.templateSource = TFromString( template, templatingEngine );
 
 		if (layout!=null)
-			this.layoutSource = FromString( layout, templatingEngine );
+			this.layoutSource = TFromString( layout, templatingEngine );
 
 		return this;
 	}
@@ -307,9 +307,9 @@ class ViewResult extends ActionResult {
 	**/
 	override function executeResult( actionContext:ActionContext ) {
 
-		if ( layoutSource.match(Unknown) )
+		if ( layoutSource.match(TUnknown) )
 			layoutSource = inferLayoutFromContext( actionContext );
-		if ( templateSource.match(Unknown) )
+		if ( templateSource.match(TUnknown) )
 			templateSource = inferViewPathFromContext( actionContext );
 
 		var viewFolder = getViewFolder( actionContext );
@@ -401,7 +401,7 @@ class ViewResult extends ActionResult {
 			viewPath = action.charAt(0).toLowerCase() + action.substr(1);
 		}
 
-		return FromEngine( viewPath, null );
+		return TFromEngine( viewPath, null );
 	}
 
 	static function inferLayoutFromContext( actionContext:ActionContext ):TemplateSource {
@@ -428,33 +428,33 @@ class ViewResult extends ActionResult {
 			} catch (e:Dynamic) {}
 		}
 
-		return (layoutPath!=null) ? FromEngine(layoutPath,null) : None;
+		return (layoutPath!=null) ? TFromEngine(layoutPath,null) : TNone;
 	}
 
 	static function addViewFolderToPath( layoutSource:TemplateSource, viewFolder:String ):TemplateSource {
 		return switch layoutSource {
-			case FromEngine(path,engine):
+			case TFromEngine(path,engine):
 				// Usually, a view will go inside a viewFolder - for example all views in HomeController will go inside `/$viewDir/home/`.
 				// If a viewPath begins with a leading slash though, it is treated as "absolute", or at least, relative to the global viewDirectory, not the controller's viewFolder.
 				// So if it is "absolute", drop the leading slash because it's only absolute relative to the viewDirectory.
 				// If it does not begin with a leading slash, prepend the viewFolder.
 				path = path.startsWith("/") ? path.substr(1) : '$viewFolder/$path';
-				FromEngine( path, engine );
+				TFromEngine( path, engine );
 			case _: layoutSource;
 		}
 	}
 
 	static function loadTemplateFromSource( source:TemplateSource, engine:UFViewEngine ):Surprise<Null<UFTemplate>,Error> {
 		return switch source {
-			case FromString(str,templatingEngine):
+			case TFromString(str,templatingEngine):
 				try Future.sync( Success(templatingEngine.factory(str)) )
 				catch (e:Dynamic) {
 					var engine = 'Templating Engine: "${templatingEngine.type}"';
 					var template = 'String template: "${str}"';
 					Future.sync( error('Failed to parse template.','$engine\n$template') );
 				}
-			case FromEngine(path,templatingEngine): engine.getTemplate( path, templatingEngine );
-			case None, Unknown: Future.sync( Success(null) );
+			case TFromEngine(path,templatingEngine): engine.getTemplate( path, templatingEngine );
+			case TNone, TUnknown: Future.sync( Success(null) );
 		}
 	}
 
@@ -479,8 +479,8 @@ class ViewResult extends ActionResult {
 }
 
 enum TemplateSource {
-	FromString( str:String, ?templatingEngine:TemplatingEngine );
-	FromEngine( path:String, ?templatingEngine:TemplatingEngine );
-	None;
-	Unknown;
+	TFromString( str:String, ?templatingEngine:TemplatingEngine );
+	TFromEngine( path:String, ?templatingEngine:TemplatingEngine );
+	TNone;
+	TUnknown;
 }

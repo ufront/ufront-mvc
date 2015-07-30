@@ -33,10 +33,10 @@ class BrowserConsoleLoggerTest {
 
 	@:access(ufront.log.BrowserConsoleLogger)
 	public function testFormatMessage():Void {
-		var msg1 = { msg:"Haxe", type:Trace, pos:fakePosInfos[0] };
-		var msg2 = { msg:"Has", type:Log, pos:fakePosInfos[0] };
-		var msg3 = { msg:"Macros", type:Warning, pos:fakePosInfos[0] };
-		var msg4 = { msg:"!!11", type:Error, pos:fakePosInfos[1] };
+		var msg1 = { msg:"Haxe", type:MTrace, pos:fakePosInfos[0] };
+		var msg2 = { msg:"Has", type:MLog, pos:fakePosInfos[0] };
+		var msg3 = { msg:"Macros", type:MWarning, pos:fakePosInfos[0] };
+		var msg4 = { msg:"!!11", type:MError, pos:fakePosInfos[1] };
 
 		var result1 = BrowserConsoleLogger.formatMessage( msg1 );
 		var result2 = BrowserConsoleLogger.formatMessage( msg2 );
@@ -63,12 +63,12 @@ class BrowserConsoleLoggerTest {
 
 		ctx.response.contentType = "text/html";
 		ctx.response.write( pageContent );
-		ctx.messages.push({ msg: "Hello", type:Trace, pos:fakePosInfos[0] });
-		ctx.messages.push({ msg: "World", type:Log, pos:fakePosInfos[0] });
+		ctx.messages.push({ msg: "Hello", type:MTrace, pos:fakePosInfos[0] });
+		ctx.messages.push({ msg: "World", type:MLog, pos:fakePosInfos[0] });
 
 		var appMessages = [];
-		appMessages.push({ msg: "Goodbye", type:Warning, pos:fakePosInfos[1] });
-		appMessages.push({ msg: "Space", type:Error, pos:fakePosInfos[1] });
+		appMessages.push({ msg: "Goodbye", type:MWarning, pos:fakePosInfos[1] });
+		appMessages.push({ msg: "Space", type:MError, pos:fakePosInfos[1] });
 
 		var browserConsoleLogger:UFLogHandler = new BrowserConsoleLogger();
 		browserConsoleLogger.log( ctx, appMessages );

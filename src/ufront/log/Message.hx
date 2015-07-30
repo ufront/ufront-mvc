@@ -14,8 +14,8 @@ typedef Message = {
 
 /** A simple enum to differentiate the severity of the message being logged. **/
 enum MessageType {
-	Trace;
-	Log;
-	Warning;
-	Error;
+	MTrace;
+	MLog;
+	MWarning;
+	MError;
 }

@@ -28,7 +28,7 @@ class NobodyAuthHandlerTest {
 			nobodyAuth.requireLogin();
 			Assert.fail( 'Expected error to be thrown' );
 		}
-		catch (e:AuthError) Assert.same( e, NotLoggedIn )
+		catch (e:AuthError) Assert.same( e, ANotLoggedIn )
 		catch (e:Dynamic) Assert.fail( 'Wrong error type' );
 
 		Assert.isFalse( nobodyAuth.isLoggedInAs(new BossUser()) );
@@ -38,7 +38,7 @@ class NobodyAuthHandlerTest {
 			nobodyAuth.requireLoginAs(boss);
 			Assert.fail( 'Expected error to be thrown' );
 		}
-		catch (e:AuthError) Assert.equals( ""+e, ""+NotLoggedInAs(boss) )
+		catch (e:AuthError) Assert.equals( ""+e, ""+ANotLoggedInAs(boss) )
 		catch (e:Dynamic) Assert.fail( 'Wrong error type' );
 
 		Assert.isFalse( nobodyAuth.hasPermission(HaveCake) );
@@ -48,7 +48,7 @@ class NobodyAuthHandlerTest {
 			nobodyAuth.requirePermission(EatCake);
 			Assert.fail( 'Expected error to be thrown' );
 		}
-		catch (e:AuthError) Assert.same( e, NoPermission(EatCake) )
+		catch (e:AuthError) Assert.same( e, ANoPermission(EatCake) )
 		catch (e:Dynamic) Assert.fail( 'Wrong error type' );
 
 
@@ -56,7 +56,7 @@ class NobodyAuthHandlerTest {
 			nobodyAuth.requirePermissions([HaveCake,EatCake]);
 			Assert.fail( 'Expected error to be thrown' );
 		}
-		catch (e:AuthError) Assert.same( e, NoPermission(HaveCake) )
+		catch (e:AuthError) Assert.same( e, ANoPermission(HaveCake) )
 		catch (e:Dynamic) Assert.fail( 'Wrong error type' );
 
 		Assert.equals( null, nobodyAuth.currentUser );

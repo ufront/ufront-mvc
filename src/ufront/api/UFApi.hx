@@ -174,7 +174,7 @@ class UFApi {
 		**/
 		@:noCompletion
 		inline function ufTrace( msg:Dynamic, ?pos:PosInfos ) {
-			messages.push({ msg: msg, pos: pos, type:Trace });
+			messages.push({ msg: msg, pos: pos, type:MTrace });
 		}
 
 		/**
@@ -184,7 +184,7 @@ class UFApi {
 		**/
 		@:noCompletion
 		inline function ufLog( msg:Dynamic, ?pos:PosInfos ) {
-			messages.push({ msg: msg, pos: pos, type:Log });
+			messages.push({ msg: msg, pos: pos, type:MLog });
 		}
 
 		/**
@@ -194,7 +194,7 @@ class UFApi {
 		**/
 		@:noCompletion
 		inline function ufWarn( msg:Dynamic, ?pos:PosInfos ) {
-			messages.push({ msg: msg, pos: pos, type:Warning });
+			messages.push({ msg: msg, pos: pos, type:MWarning });
 		}
 
 		/**
@@ -204,7 +204,7 @@ class UFApi {
 		**/
 		@:noCompletion
 		inline function ufError( msg:Dynamic, ?pos:PosInfos ) {
-			messages.push({ msg: msg, pos: pos, type:Error });
+			messages.push({ msg: msg, pos: pos, type:MError });
 		}
 	#elseif client
 		var className:String;
