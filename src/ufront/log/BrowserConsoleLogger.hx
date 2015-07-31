@@ -45,7 +45,7 @@ class BrowserConsoleLogger implements UFLogHandler {
 				if( results.length>0 ) {
 					var script = '\n<script type="text/javascript">\n${results.join("\n")}\n</script>';
 					var newContent = CallJavascriptResult.insertScriptsBeforeBodyTag( ctx.response.getBuffer(), [script] );
-					ctx.response.clear();
+					ctx.response.clearContent();
 					ctx.response.write( newContent );
 				}
 			}
