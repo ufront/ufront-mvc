@@ -423,7 +423,8 @@ class HttpApplication
 	Then mark the middleware and requestHandlers as complete, so the `execute` function can log, flush and finish the request.
 	**/
 	function handleError( err:Error, ctx:HttpContext, doneTrigger:FutureTrigger<Outcome<Noise,Error>> ):Void {
-		if ( !ctx.completion.has(CErrorHandlersComplete) ) {
+		if ( !ctx.completion.has(CErrorHandlersTriggered) ) {
+			ctx.completion.set( CErrorHandlersTriggered );
 
 			var errHandlerModules = errorHandlers.map(
 				function(m) return new Pair(

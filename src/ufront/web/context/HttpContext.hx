@@ -388,6 +388,8 @@ enum RequestCompletion {
 	CLogHandlersComplete;
 	/** The "Flush" stage is complete, the `HttpResponse` does not need to be flushed. **/
 	CFlushComplete;
-	/** The Error Handlers have run, if any further error are encountered do not attempt to handle them. **/
+	/** The Error Handlers have been triggered, if any further error are encountered do not attempt to handle them. **/
+	CErrorHandlersTriggered;
+	/** The Error Handlers have run and completed successfully. **/
 	CErrorHandlersComplete;
 }
