@@ -2,9 +2,12 @@ package ufront.api;
 
 import haxe.EnumFlags;
 import ufront.remoting.RemotingError;
-import haxe.CallStack;
 import ufront.remoting.RemotingUtil;
+import ufront.web.HttpError;
+import tink.core.Error;
+import haxe.CallStack;
 import haxe.rtti.Meta;
+using ufront.core.AsyncTools;
 using tink.CoreApi;
 
 /**
@@ -88,7 +91,7 @@ class UFAsyncApi<SyncApi:UFApi> {
 
 	public function new() {}
 
-	function _makeApiCall<A,B>( method:String, args:Array<Dynamic>, flags:EnumFlags<ApiReturnType> ):Surprise<A,RemotingError<B>> {
+	function _makeApiCall<A,B>( method:String, args:Array<Dynamic>, flags:EnumFlags<ApiReturnType>, ?pos:haxe.PosInfos ):Surprise<A,TypedError<RemotingError<B>>> {
 		var remotingCallString = '$className.$method(${args.join(",")})';
 		#if server
 			function callApi():Dynamic {
@@ -96,7 +99,8 @@ class UFAsyncApi<SyncApi:UFApi> {
 			}
 			function returnError( e:Dynamic ) {
 				var stack = CallStack.toString( CallStack.exceptionStack() );
-				return Future.sync( Failure(RServerSideException(remotingCallString,e,stack)) );
+				var remotingError = RServerSideException(remotingCallString,e,stack);
+				return HttpError.remotingError( remotingError, pos ).asBadSurprise();
 			}
 
 			if ( flags.has(ARTVoid) ) {
@@ -111,7 +115,7 @@ class UFAsyncApi<SyncApi:UFApi> {
 					var surprise:Surprise<A,B> = callApi();
 					return surprise.map(function(result) return switch result {
 						case Success(data): Success(data);
-						case Failure(err): Failure(RApiFailure(remotingCallString,err));
+						case Failure(err): Failure(HttpError.remotingError(RApiFailure(remotingCallString,err),pos));
 					});
 				}
 				catch ( e:Dynamic ) return returnError(e);
@@ -130,7 +134,7 @@ class UFAsyncApi<SyncApi:UFApi> {
 					var outcome:Outcome<A,B> = callApi();
 					return switch outcome {
 						case Success(data): Future.sync( Success(data) );
-						case Failure(err): Future.sync( Failure(RApiFailure(remotingCallString,err)) );
+						case Failure(err): Future.sync( Failure(HttpError.remotingError(RApiFailure(remotingCallString,err),pos)) );
 					}
 				}
 				catch ( e:Dynamic ) return returnError(e);
@@ -146,10 +150,10 @@ class UFAsyncApi<SyncApi:UFApi> {
 			var resultTrigger = Future.trigger();
 			var cnx = cnx.resolve(className).resolve(method);
 			cnx.setErrorHandler(RemotingUtil.wrapErrorHandler(function (err:RemotingError<Dynamic>) {
-				resultTrigger.trigger( Failure(cast err) );
+				resultTrigger.trigger( Failure(HttpError.remotingError(cast err,pos)) );
 			}));
 			cnx.call( args, function(result:Dynamic) {
-				var wrappedOutcome:Outcome<A,RemotingError<B>>;
+				var wrappedOutcome:Outcome<A,TypedError<RemotingError<B>>>;
 				if ( flags.has(ARTVoid) ) {
 					wrappedOutcome = Success(cast Noise);
 				}
@@ -157,7 +161,7 @@ class UFAsyncApi<SyncApi:UFApi> {
 					var outcome:Outcome<A,B> = result;
 					wrappedOutcome = switch outcome {
 						case Success(data): Success(data);
-						case Failure(err): Failure(RApiFailure(remotingCallString,err));
+						case Failure(err): Failure(HttpError.remotingError(RApiFailure(remotingCallString,err),pos));
 					}
 				}
 				else {

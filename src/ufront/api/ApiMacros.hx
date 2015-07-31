@@ -1,5 +1,6 @@
 package ufront.api;
 
+import haxe.PosInfos;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
@@ -284,7 +285,7 @@ class ApiMacros {
 	}
 
 	static function addAsyncProxyMemberMethods( cb:ClassBuilder ) {
-		function getExtraArgs( _, _ ) return [];
+		function getExtraArgs( _, _ ):Array<FunctionArg> return [];
 		addProxyMemberMethods( cb, getExtraArgs, buildAsyncFnBody, asyncifyReturnType );
 	}
 
@@ -325,11 +326,11 @@ class ApiMacros {
 			- Our call to `getResultWrapFlagsForReturnType` still requires `unify()` and therefore converting ComplexType to Type, but because of the transformations in our build macro above, it all works.
 
 		@param cb The current ClassBuilder.
-		@param getExtraArgs A function that takes the return type and the flags and generates extra arguments for the field.
-		@param getFnBody A function that takes the field name, arguments and return type flags and generates a function body expression.
-		@param getReturnType A function that takes the return type and the flags and generates a new return type to use for the field.
+		@param getExtraArgs A function of the form `function(origReturnType:ComplexType,returnTypeFlags:EnumFlags<ApiReturnType>):Array<FunctionArg>` that generates any extra arguments for required for the async proxy function.
+		@param getFnBody A function of the form `function(fakePos:PosInfos, arguments:Iterable<FunctionArg>, returnType:EnumFlags<ApiReturnType> ):Expr` which returns a function body expression for the async proxy function.
+		@param getReturnType A function of the form `function(origReturnType:ComplexType,returnTypeFlags:EnumFlags<ApiReturnType>):ComplexType` that generates a new return type for the async proxy function.
 	**/
-	static function addProxyMemberMethods( cb:ClassBuilder, getExtraArgs:ComplexType->EnumFlags<ApiReturnType>->Array<FunctionArg>, getFnBody:String->Iterable<FunctionArg>->EnumFlags<ApiReturnType>->Expr, getReturnType:ComplexType->EnumFlags<ApiReturnType>->ComplexType  ) {
+	static function addProxyMemberMethods( cb:ClassBuilder, getExtraArgs:ComplexType->EnumFlags<ApiReturnType>->Array<FunctionArg>, getFnBody:PosInfos->Iterable<FunctionArg>->EnumFlags<ApiReturnType>->Expr, getReturnType:ComplexType->EnumFlags<ApiReturnType>->ComplexType  ) {
 		var apiClassTypeRef = getClassTypeFromFirstTypeParam( cb );
 		var pos = cb.target.pos;
 		if ( apiClassTypeRef!=null ) {
@@ -347,7 +348,9 @@ class ApiMacros {
 								// TODO: We should investigate if we can read metadata here instead of unifying types again.
 								var flags = getResultWrapFlagsForReturnType( f.ret, pos );
 								var returnType = getReturnType( f.ret, flags );
-								var fnBody = getFnBody( apiMember.name, f.args, flags );
+								var posDetails = Context.getPosInfos( apiMember.pos );
+								var posInfos:PosInfos = { methodName:apiMember.name, lineNumber:0, fileName:posDetails.file, customParams:null, className:cb.target.name };
+								var fnBody = getFnBody( posInfos, f.args, flags );
 								var member:Member = {
 									pos: apiMember.pos,
 									name: apiMember.name,
@@ -434,7 +437,7 @@ class ApiMacros {
 	}
 
 	/**
-		Change `doSomething():String` to `doSomething:Suprise<String,RemotingError<Noise>` etc.
+		Change `doSomething():String` to `doSomething:Suprise<String,TypedError<RemotingError<Noise>>` etc.
 		Only works with a TPath ComplexType.
 		Please note this makes assumptions about the type parameters.
 		If your API returns a `Surprise` or `Outcome`, it expects the 1st type parameter to represent a `Success` and the second to represent a `Failure` type.
@@ -445,25 +448,25 @@ class ApiMacros {
 	static function asyncifyReturnType( rt:ComplexType, flags:EnumFlags<ApiReturnType> ):ComplexType {
 		var typeParams = getParamsFromComplexType( rt );
 		if ( flags.has(ARTVoid) ) {
-			return macro :tink.core.Future.Surprise<Noise,ufront.remoting.RemotingError<tink.core.Noise>>;
+			return macro :tink.core.Future.Surprise<Noise,tink.core.Error.TypedError<ufront.remoting.RemotingError<tink.core.Noise>>>;
 		}
 		else if ( flags.has(ARTFuture) && flags.has(ARTOutcome) ) {
 			var successType = typeParams[0];
 			var failureType = typeParams[1];
-			return macro :tink.core.Future.Surprise<$successType,ufront.remoting.RemotingError<$failureType>>;
+			return macro :tink.core.Future.Surprise<$successType,tink.core.Error.TypedError<ufront.remoting.RemotingError<$failureType>>>;
 		}
 		else if ( flags.has(ARTFuture) ) {
 			var type = typeParams[0];
-			return macro :tink.core.Future.Surprise<$type,ufront.remoting.RemotingError<tink.core.Noise>>;
+			return macro :tink.core.Future.Surprise<$type,tink.core.Error.TypedError<ufront.remoting.RemotingError<tink.core.Noise>>>;
 		}
 		else if ( flags.has(ARTOutcome) ) {
 			var successType = typeParams[0];
 			var failureType = typeParams[1];
-			return macro :tink.core.Future.Surprise<$successType,ufront.remoting.RemotingError<$failureType>>;
+			return macro :tink.core.Future.Surprise<$successType,tink.core.Error.TypedError<ufront.remoting.RemotingError<$failureType>>>;
 		}
 		else {
 			var type = rt;
-			return macro :tink.core.Future.Surprise<$type,ufront.remoting.RemotingError<tink.core.Noise>>;
+			return macro :tink.core.Future.Surprise<$type,tink.core.Error.TypedError<ufront.remoting.RemotingError<tink.core.Noise>>>;
 		}
 	}
 
@@ -516,12 +519,14 @@ class ApiMacros {
 		return typeParams;
 	}
 
-	static function buildAsyncFnBody( name:String, args:Iterable<FunctionArg>, flags:EnumFlags<ApiReturnType> ):Expr {
+	static function buildAsyncFnBody( pos:PosInfos, args:Iterable<FunctionArg>, flags:EnumFlags<ApiReturnType> ):Expr {
+		var name = pos.methodName;
 		var argIdents = [ for(a in args) macro $i{a.name} ];
-		return macro return _makeApiCall( $v{name}, $a{argIdents}, haxe.EnumFlags.ofInt($v{flags}) );
+		return macro return _makeApiCall( $v{name}, $a{argIdents}, haxe.EnumFlags.ofInt($v{flags}), $v{pos} );
 	}
 
-	static function buildAsyncCallbackFnBody( name:String, args:Iterable<FunctionArg>, flags:EnumFlags<ApiReturnType> ):Expr {
+	static function buildAsyncCallbackFnBody( pos:PosInfos, args:Iterable<FunctionArg>, flags:EnumFlags<ApiReturnType> ):Expr {
+		var name = pos.methodName;
 		var argIdents = [ for(a in args) macro $i{a.name} ];
 		return macro _makeApiCall( $v{name}, $a{argIdents}, haxe.EnumFlags.ofInt($v{flags}), onResult, onError );
 	}

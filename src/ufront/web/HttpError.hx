@@ -3,6 +3,7 @@ package ufront.web;
 import haxe.PosInfos;
 import tink.core.Error;
 import ufront.auth.AuthError;
+import ufront.remoting.RemotingError;
 using tink.CoreApi;
 
 /**
@@ -84,6 +85,16 @@ class HttpError {
 	}
 
 	/**
+	A Http 422 "Unprocessable Entity" error.
+
+	@param pos (optional) The position of the error. Can be supplied, otherwise the call site of this function is used.
+	@return A wrapped `Error` object, with the error code 422.
+	**/
+	static public function unprocessableEntity( ?pos:PosInfos ):Error {
+		return new Error( 422, "Unprocessable Entity", pos );
+	}
+
+	/**
 	A Http 401 "Unauthorized Access" error based on an `AuthError`.
 
 	@param error The AuthError that has been raised.
@@ -101,13 +112,28 @@ class HttpError {
 	}
 
 	/**
-	A Http 422 "Unprocessable Entity" error.
+	A Http 500 "Internal Server Error" error based on a `RemotingError`.
 
+	@param error The AuthError that has been raised.
 	@param pos (optional) The position of the error. Can be supplied, otherwise the call site of this function is used.
-	@return A wrapped `Error` object, with the error code 422.
+	@return A wrapped `Error` object, with the error code 401.
 	**/
-	static public function unprocessableEntity( ?pos:PosInfos ):Error {
-		return new Error( 422, "Unprocessable Entity", pos );
+	static public function remotingError<T>( error:RemotingError<T>, ?pos:PosInfos ):TypedError<RemotingError<T>> {
+		return switch error {
+			case RHttpError( remotingCallString, responseCode, responseData ): Error.typed( responseCode, 'HTTP $responseCode Error during $remotingCallString', error, pos );
+			case RApiNotFound( remotingCallString, errorMessage ): Error.typed( 404, 'Remoting API $remotingCallString not found: $errorMessage', error, pos );
+			case RServerSideException( remotingCallString, e, stack ):
+				var errorObj = Std.instance( e, Error );
+				if ( errorObj!=null )
+					Error.typed( errorObj.code, errorObj.message, error, pos )
+				else
+					Error.typed( 500, 'Internal Server Error while executing $remotingCallString', error, pos );
+			case RClientCallbackException( remotingCallString, e ): Error.typed( 500, 'Error during callback after $remotingCallString: $e', error, pos );
+			case RUnserializeFailed( remotingCallString, troubleLine, err ): Error.typed( 422, 'Remoting serialization failed for call $remotingCallString: could not process $troubleLine', error, pos );
+			case RNoRemotingResult( remotingCallString, responseData ): Error.typed( 500, 'Error with response for $remotingCallString: no remoting response found', error, pos );
+			case RApiFailure( remotingCallString, data ): Error.typed( 500, 'Call to $remotingCallString failed: $data', error, pos );
+			case RUnknownException( e ): Error.typed( 500, 'Unknown exception during remoting call', error, pos );
+		}
 	}
 
 	/**

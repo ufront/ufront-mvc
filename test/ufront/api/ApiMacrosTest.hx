@@ -156,7 +156,7 @@ interface MyApiInterface {
 	function doSysStuff():String;
 }
 interface MyApiInterfaceAsync {
-	function doSysStuff():Surprise<String,RemotingError<Noise>>;
+	function doSysStuff():Surprise<String,Error>;
 }
 interface MyApiInterfaceCallback {
 	function doSysStuff( onResult:Callback<String>, ?onError:Callback<RemotingError<Noise>> ):Void;
