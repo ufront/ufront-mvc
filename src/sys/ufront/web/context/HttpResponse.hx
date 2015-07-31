@@ -1,20 +1,21 @@
-package neko.ufront.web.context;
+package sys.ufront.web.context;
 
-import neko.Web;
+#if neko
+	import neko.Web;
+#elseif php
+	import php.Web;
+#end
+import ufront.web.HttpError;
 using StringTools;
 
 /**
-An implementation of `ufront.web.context.HttpResponse` for Neko.
+An implementation of `ufront.web.context.HttpRequest` for Neko and PHP, based on the `neko.Web` and `php.Web` API.
 
 @author Franco Ponticelli, Jason O'Neil
 **/
 class HttpResponse extends ufront.web.context.HttpResponse {
-	public function new() {
-		super();
-	}
-
 	override function flush() {
-		if ( _flushed )
+		if (_flushed)
 			return;
 
 		_flushed = true;
@@ -29,7 +30,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 			}
 		}
 		catch ( e:Dynamic ) {
-			throw 'Cannot flush cookies on response: $e';
+			throw HttpError.internalServerError( 'Failed to set cookie on response', e );
 		}
 
 		// Write headers
@@ -42,7 +43,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 				Web.setHeader( key, val );
 			}
 			catch ( e:Dynamic ) {
-				throw 'Invalid header: "$key: $val", or output already sent';
+				throw HttpError.internalServerError( 'Invalid header: "$key: $val", or output already sent', e );
 			}
 		}
 

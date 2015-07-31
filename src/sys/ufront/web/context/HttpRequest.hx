@@ -1,9 +1,14 @@
-package neko.ufront.web.context;
+package sys.ufront.web.context;
 
+#if neko
+	import neko.Web;
+#elseif php
+	import php.Web;
+#end
 import haxe.io.Bytes;
-import neko.Lib;
 import ufront.web.upload.*;
 import ufront.web.UserAgent;
+import ufront.web.HttpError;
 import ufront.core.MultiValueMap;
 import haxe.ds.StringMap;
 import ufront.web.context.HttpRequest.OnPartCallback;
@@ -14,37 +19,32 @@ using tink.CoreApi;
 using StringTools;
 
 /**
-	An implementation of `ufront.web.context.HttpRequest` for neko.
+	An implementation of `ufront.web.context.HttpRequest` for Neko and PHP, based on the `neko.Web` and `php.Web` API.
 
-	Supported servers:
+	Supported servers on Neko:
 
 	- `mod_neko` on Apache.
 	- `mod_tora` on Apache.
 	- `mod_tora` with FastCGI support (for Nginx etc).
 	- `nekotools server`
 
-	Platform quirks with NodeJS and HttpRequest:
+	Platform quirks:
 
-	- `HttpRequest.parseMultipart` completely fails on `nekotools server`.
+	- Neko: `HttpRequest.parseMultipart` completely fails on `nekotools server`.
 	  If you are using uploads in your app, it is recomended to have a development environment using a more thoroughly tested server.
-	- `HttpRequest.parseMultipart` callbacks **must** function synchronously, despite the fact they are supposed to return a `Future`.
+	- Neko and PHP: `HttpRequest.parseMultipart` callbacks **must** function synchronously, despite the fact they are supposed to return a `Future`.
 
 	@author Franco Ponticelli, Jason O'Neil
 **/
 class HttpRequest extends ufront.web.context.HttpRequest {
-	static function encodeName( s:String ) {
-		return s.urlEncode().replace( '.', '%2E' );
-	}
 
 	public function new() {
-		_init();
 		_parsed = false;
 	}
 
 	override function get_queryString() {
 		if ( queryString==null ) {
-			var v = _get_params_string();
-			queryString = (v!=null) ? new String(v).urlDecode() : "";
+			queryString = Web.getParamsString();
 
 			var indexOfHash = queryString.indexOf("#");
 			if ( indexOfHash>-1 ) {
@@ -55,12 +55,8 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 	}
 
 	override function get_postString() {
-		if ( httpMethod=="GET" )
-			return "";
-		if ( null==postString ) {
-			var v = _get_post_data();
-			postString = (v!=null) ? new String(v).urlDecode() : "";
-		}
+		if ( postString==null )
+			postString = (httpMethod=="GET") ? "" : Web.getPostData();
 		return postString;
 	}
 
@@ -84,7 +80,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 
 		// Prevent this running more than once.
 		if (_parsed)
-			throw "parseMultipart() has been called more than once.";
+			throw HttpError.internalServerError( "parseMultipart() has been called more than once." );
 
 		_parsed = true;
 
@@ -126,7 +122,6 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 			currentContent = null;
 			partName = newPartName.urlDecode();
 			isFile = false;
-			// Sys.println( 'PART $partName : FILE $newPartFilename <br />' );
 			if ( null!=newPartFilename ) {
 				if ( ""!=newPartFilename ) {
 					fileName = newPartFilename.urlDecode();
@@ -138,30 +133,17 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 		};
 		function doData( bytes:Bytes, pos:Int, len:Int ) {
 			if ( isFile ) {
-				// Sys.println( 'Is a file, do something!<br />' );
 				if (len > 0) processCallbackResult( onData(bytes,pos,len) );
 			}
 			else {
 				if ( currentContent==null ) currentContent = "";
 				currentContent += bytes.getString(pos,len);
-
-				// Sys.println( 'Append content: $currentContent<br />' );
 			}
 		};
 
-		// Call mod_neko's "parse_multipart_data" using the callbacks above
+		// Call "parse_multipart_data" using the callbacks above
 		try {
-			_parse_multipart(
-				function(p,f) {
-					var partName = new String(p);
-					var fileName = if( f==null ) null else new String(f);
-					doPart( partName, fileName );
-				},
-				function(buf,pos,len) {
-					var data = untyped new haxe.io.Bytes(__dollar__ssize(buf),buf);
-					doData(data,pos,len);
-				}
-			);
+			Web.parseMultipart( doPart, doData );
 		}
 		catch ( e:Dynamic ) {
 			var err = 'Failed to parse multipart data: $e';
@@ -187,11 +169,13 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 	}
 
 	override function get_post() {
-		if ( httpMethod=="GET" )
-			return new MultiValueMap();
-		if ( null==post ) {
-			if ( isMultipart() ) {
-				if ( _parsed==false ) parseMultipart();
+		if ( post==null ) {
+			if ( httpMethod=="GET" ) {
+				post = new MultiValueMap();
+			}
+			else if ( isMultipart() ) {
+				if ( _parsed==false )
+					parseMultipart();
 			}
 			else {
 				post = getMultiValueMapFromString(postString);
@@ -202,56 +186,36 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 
 	override function get_cookies() {
 		if ( cookies==null ) {
-			var p = _get_cookies();
-			cookies = new MultiValueMap();
-			var k = "";
-			while( p!=null ) {
-				untyped k.__s = p[0];
-				cookies.add(k,new String(p[1]));
-				p = untyped p[2];
-			}
+			cookies = MultiValueMap.fromMap( Web.getCookies() );
 		}
 		return cookies;
 	}
 
 	override function get_hostName() {
 		if ( hostName==null )
-			hostName = new String(_get_host_name());
+			hostName = Web.getHostName();
 		return hostName;
 	}
 
 	override function get_clientIP() {
 		if ( clientIP==null )
-			clientIP = new String(_get_client_ip());
+			clientIP = Web.getClientIP();
 		return clientIP;
 	}
 
-	/**
-	 *  @todo the page processor removal is quite hackish
-	 */
 	override function get_uri() {
-		if ( uri==null ) {
-			uri = new String(_get_uri());
-			if(uri.endsWith(".n")) {
-				var p = uri.split("/");
-				p.pop();
-				uri = p.join("/") + "/";
-			}
-		}
+		if ( uri==null )
+			uri = Web.getURI();
 		return uri;
 	}
 
 	override function get_clientHeaders() {
 		if ( clientHeaders==null ) {
-			clientHeaders = new StringMap();
-			var v = _get_client_headers();
-			while( v != null ) {
-				var headerName = new String(v[0]);
-				var headerValues = new String(v[1]);
-				for ( val in headerValues.split(",") ) {
-					clientHeaders.add( headerName, val.trim() );
+			clientHeaders = new MultiValueMap();
+			for ( header in Web.getClientHeaders() ) {
+				for ( val in header.value.split(",") ) {
+					clientHeaders.add( header.header, val.trim() );
 				}
-				v = cast v[2];
 			}
 		}
 		return clientHeaders;
@@ -259,38 +223,28 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 
 	override function get_httpMethod() {
 		if ( httpMethod==null ) {
-			httpMethod = new String(_get_http_method());
+			httpMethod = Web.getMethod();
 			if ( httpMethod==null ) httpMethod = "";
 		}
 		return httpMethod;
 	}
 
 	override function get_scriptDirectory() {
-		if ( scriptDirectory==null ) {
-			scriptDirectory = new String(_get_cwd());
-		}
+		if ( scriptDirectory==null )
+			scriptDirectory = Web.getCwd();
 		return scriptDirectory;
 	}
 
 	override function get_authorization() {
 		if ( authorization==null ) {
-			authorization = { user:null, pass:null };
-			var reg = ~/^Basic ([^=]+)=*$/;
-			var h = clientHeaders.get( "Authorization" );
-			if( h!=null && reg.match(h) ){
-				var val = reg.matched( 1 );
-				val = untyped new String( _base_decode(val.__s,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".__s) );
-				var a = val.split(":");
-				if( a.length != 2 ){
-					throw "Unable to decode authorization.";
-				}
-				authorization = {user: a[0],pass: a[1]};
-			}
+			authorization = Web.getAuthorization();
+			if ( authorization==null )
+				authorization = { user:null, pass:null };
 		}
 		return authorization;
 	}
 
-	static function getMultiValueMapFromString(s:String):MultiValueMap<String> {
+	static function getMultiValueMapFromString( s:String ):MultiValueMap<String> {
 		var map = new MultiValueMap();
 		for (part in s.split("&")) {
 			var index = part.indexOf("=");
@@ -301,36 +255,5 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 			}
 		}
 		return map;
-	}
-
-	static var _get_params_string:Dynamic;
-	static var _get_post_data:Dynamic;
-	static var _get_cookies:Dynamic;
-	static var _get_host_name:Dynamic;
-	static var _get_client_ip:Dynamic;
-	static var _get_uri:Dynamic;
-	static var _get_client_headers:Dynamic;
-	static var _get_cwd:Dynamic;
-	static var _get_http_method:Dynamic;
-	static var _parse_multipart:Dynamic;
-	static var _base_decode = Lib.load("std","base_decode",2);
-	static var _inited = false;
-	static function _init() {
-		if(_inited)
-			return;
-		_inited = true;
-		var get_env = Lib.load("std", "get_env", 1);
-		var ver = untyped get_env("MOD_NEKO".__s);
-		var lib = "mod_neko" + if ( ver==untyped "1".__s ) "" else ver;
-		_get_params_string = Lib.load(lib, "get_params_string", 0);
-		_get_post_data = Lib.load(lib, "get_post_data", 0);
-		_get_cookies = Lib.load(lib, "get_cookies", 0);
-		_get_host_name = Lib.load(lib, "get_host_name", 0);
-		_get_client_ip = Lib.load(lib, "get_client_ip", 0);
-		_get_uri = Lib.load(lib, "get_uri", 0);
-		_get_client_headers = Lib.loadLazy(lib, "get_client_headers", 0);
-		_get_cwd = Lib.load(lib, "cgi_get_cwd", 0);
-		_get_http_method = Lib.loadLazy(lib,"get_http_method",0);
-		_parse_multipart = Lib.loadLazy(lib, "parse_multipart_data", 2);
 	}
 }

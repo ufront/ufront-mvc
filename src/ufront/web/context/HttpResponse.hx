@@ -34,10 +34,9 @@ class HttpResponse {
 	**/
 	public static function create():HttpResponse {
 		return
-			#if php new php.ufront.web.context.HttpResponse();
-			#elseif neko new neko.ufront.web.context.HttpResponse();
+			#if (neko || php) new sys.ufront.web.context.HttpResponse();
 			#elseif (js && !nodejs) new js.ufront.web.context.HttpResponse();
-			#elseif (js && nodejs) throw "Please use `new nodejs.ufront.web.HttpResponse(res)` instead";
+			#elseif (js && nodejs) throw HttpError.internalServerError( "Please use `new nodejs.ufront.web.HttpResponse(res)` instead" );
 			#else new HttpResponse();
 			#end
 	}

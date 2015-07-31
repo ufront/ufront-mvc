@@ -70,10 +70,9 @@ class HttpRequest {
 	**/
 	public static function create():HttpRequest {
 		return
-			#if php new php.ufront.web.context.HttpRequest();
-			#elseif neko new neko.ufront.web.context.HttpRequest();
+			#if (neko || php) new sys.ufront.web.context.HttpRequest();
 			#elseif (js && !nodejs) new js.ufront.web.context.HttpRequest();
-			#elseif (js && nodejs) throw "Please use `new nodejs.ufront.web.HttpRequest(req)` instead";
+			#elseif (js && nodejs) throw HttpError.internalServerError( "Please use `new nodejs.ufront.web.HttpRequest(req)` instead" );
 			#else throw HttpError.notImplemented();
 			#end
 	}
