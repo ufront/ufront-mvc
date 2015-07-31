@@ -1,6 +1,7 @@
 package ufront.core;
 
 import haxe.ds.StringMap;
+import ufront.web.HttpError;
 
 /**
 An ordered map implementation.
@@ -47,7 +48,7 @@ class OrderedStringMap<T> {
 		for ( i in 0...__keys.length )
 			if ( __keys[i]==key )
 				return i;
-		return throw "this should never happen";
+		return throw HttpError.internalServerError( '$key exists in hash but not in array' );
 	}
 
 	public function exists( key:String ):Bool {

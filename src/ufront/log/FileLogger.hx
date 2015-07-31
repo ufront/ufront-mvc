@@ -11,6 +11,7 @@ package ufront.log;
 import ufront.app.*;
 import haxe.PosInfos;
 import ufront.web.context.HttpContext;
+import ufront.web.HttpError;
 import ufront.core.AsyncTools;
 using tink.CoreApi;
 using haxe.io.Path;
@@ -85,7 +86,7 @@ class FileLogger implements UFLogHandler implements UFInitRequired {
 		#elseif nodejs
 			return Fs.appendFile.bind( logFile, content, null ).asVoidSurprise();
 		#else
-			return throw "Not implemented";
+			return SurpriseTools.asBadSurprise( HttpError.notImplemented() );
 		#end
 	}
 

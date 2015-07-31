@@ -259,7 +259,7 @@ class ApiMacros {
 					#if server
 						this.api =
 							try injector.getValue( $syncApiReference )
-							catch (e:Dynamic) throw 'Failed to inject '+Type.getClassName($syncApiReference)+' into '+Type.getClassName(Type.getClass(this));
+							catch (e:Dynamic) throw ufront.web.HttpError.internalServerError( 'Failed to inject '+Type.getClassName($syncApiReference)+' into '+Type.getClassName(Type.getClass(this)), e );
 					#end
 					this.className = $v{syncApiName};
 				}

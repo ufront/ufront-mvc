@@ -42,7 +42,7 @@ class FilePathResult extends FileResult {
 			}
 			return SurpriseTools.success();
 		#else
-			return throw "FilePathResult is only implemented on `sys` platforms.";
+			return throw HttpError.notImplemented();
 		#end
 	}
 }

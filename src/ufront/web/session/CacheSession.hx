@@ -2,6 +2,7 @@ package ufront.web.session;
 
 import ufront.web.context.HttpContext;
 import ufront.web.HttpCookie;
+import ufront.web.HttpError;
 import ufront.web.session.UFHttpSession;
 import ufront.cache.UFCache;
 import ufront.core.Uuid;
@@ -162,7 +163,7 @@ class CacheSession implements UFHttpSession {
 				context.injector.getValue( String, "sessionSavePath" )
 			else defaultSavePath;
 		this.cache =
-			if ( cacheConnection==null ) throw 'No UFCacheConnection was injected into CacheSession';
+			if ( cacheConnection==null ) throw HttpError.internalServerError( 'No UFCacheConnection was injected into CacheSession' );
 			else cacheConnection.getNamespace( savePath );
 	}
 
@@ -417,8 +418,8 @@ class CacheSession implements UFHttpSession {
 		return Uuid.create();
 	}
 
-	inline function checkStarted() {
+	inline function checkStarted( ?pos:haxe.PosInfos ) {
 		if ( !started )
-			throw "Trying to access session data before calling init()";
+			throw HttpError.internalServerError( "Trying to access session data before calling init()", pos );
 	}
 }

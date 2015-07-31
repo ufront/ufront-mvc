@@ -1,7 +1,8 @@
 package ufront.web;
 
 import haxe.PosInfos;
-import tink.core.Error.ErrorCode;
+import tink.core.Error;
+import ufront.auth.AuthError;
 using tink.CoreApi;
 
 /**
@@ -74,11 +75,29 @@ class HttpError {
 	/**
 	A Http 401 "Unauthorized Access" error.
 
+	@param message (optional) A description of the error. Default is "Unauthorized Access".
 	@param pos (optional) The position of the error. Can be supplied, otherwise the call site of this function is used.
 	@return A wrapped `Error` object, with the error code 401.
 	**/
-	static public function unauthorized( ?pos:PosInfos ):Error {
-		return new Error( 401, "Unauthorized Access", pos );
+	static public function unauthorized( ?message:String="Unauthorized Access", ?pos:PosInfos ):Error {
+		return new Error( 401, message, pos );
+	}
+
+	/**
+	A Http 401 "Unauthorized Access" error based on an `AuthError`.
+
+	@param error The AuthError that has been raised.
+	@param pos (optional) The position of the error. Can be supplied, otherwise the call site of this function is used.
+	@return A wrapped `Error` object, with the error code 401.
+	**/
+	static public function authError( error:AuthError, ?pos:PosInfos ):TypedError<AuthError> {
+		var msg = switch error {
+			case ANotLoggedIn: 'Not Logged In';
+			case ALoginFailed( msg ): 'Login Failed: $msg';
+			case ANotLoggedInAs( u ): 'Not Logged In As $u';
+			case ANoPermission( p ): 'Permission $p denied';
+		}
+		return Error.typed( 401, msg, error, pos );
 	}
 
 	/**

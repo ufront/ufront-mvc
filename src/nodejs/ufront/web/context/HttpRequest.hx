@@ -9,6 +9,7 @@ import ufront.web.UserAgent;
 import ufront.core.MultiValueMap;
 import haxe.ds.StringMap;
 import ufront.core.AsyncTools;
+import ufront.web.HttpError;
 using tink.CoreApi;
 using StringTools;
 
@@ -50,7 +51,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 			if ( httpMethod=="GET" )
 				postString = "";
 			else
-				throw "Not implemented for NodeJS yet...";
+				throw HttpError.internalServerError( 'HttpRequest.postString() not implemented on NodeJS' );
 		}
 		return postString;
 	}
@@ -62,12 +63,12 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 			return SurpriseTools.success();
 
 		if (_parsed)
-			return throw new Error('parseMultipart() can only been called once');
+			return throw HttpError.internalServerError('HttpRequest.parseMultipart() can only been called once');
 
 		_parsed = true;
 
 		var post = get_post();
-		throw "parseMultipart not implemented for NodeJS yet.";
+		throw HttpError.internalServerError( 'HttpRequest.parseMultipart() not implemented on NodeJS' );
 	}
 
 	override function get_query() {
@@ -133,8 +134,8 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 				var val = reg.matched( 1 );
 				val = new js.node.Buffer(val, 'base64').toString( "utf-8" );
 				var a = val.split(":");
-				if( a.length != 2 ){
-					throw "Unable to decode authorization.";
+				if( a.length!=2 ){
+					throw HttpError.badRequest( "Unable to decode username and password" );
 				}
 				authorization = {user: a[0],pass: a[1]};
 			}

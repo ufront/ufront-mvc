@@ -2,6 +2,7 @@ package js.ufront.web.context;
 
 import js.Browser.*;
 import js.html.*;
+import ufront.web.HttpError;
 using StringTools;
 
 /**
@@ -54,7 +55,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 			}
 		}
 		catch ( e:Dynamic ) {
-			throw 'Cannot set cookies on response: $e';
+			throw HttpError.internalServerError( 'Cannot set cookies on response', e );
 		}
 
 		// Write headers
@@ -109,7 +110,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 		else {
 			// TODO: Figure out if there is a sensible way to fall back to the server.
 			// Perhaps setting document.location to trigger a server load?
-			throw 'Cannot use ufront-client-mvc to render content type "$contentType". Only "text/html" is supported.';
+			throw HttpError.internalServerError( 'Cannot use ufront-client-mvc to render content type "$contentType". Only "text/html" is supported.' );
 		}
 	}
 }

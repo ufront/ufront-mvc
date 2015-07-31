@@ -32,7 +32,7 @@ class QueryStringUrlFilter implements UFUrlFilter {
 			frontScript =
 				#if php "index.php"
 				#elseif neko "index.n"
-				#else throw "Target not implemented, always pass a value for frontScript"
+				#else throw HttpError.internalServerError( "Target not implemented, always pass a value for frontScript" )
 				#end
 			;
 		this.frontScript = frontScript;

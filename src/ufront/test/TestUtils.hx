@@ -147,7 +147,7 @@ class TestUtils {
 			// If the previous request gave a redirect header, set that as the URI for the current request.
 			if ( previousRequest.context.response.isRedirect() ) {
 				// context.request.uri = previousRequest.context.response.redirectLocation;
-				throw "Not implemented";
+				throw HttpError.notImplemented();
 			}
 
 			return context;

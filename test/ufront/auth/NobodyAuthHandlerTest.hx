@@ -6,6 +6,7 @@ import ufront.auth.YesBossAuthHandler;
 import ufront.auth.YesBossAuthHandlerTest;
 import ufront.auth.AuthError;
 import ufront.auth.*;
+import tink.core.Error;
 using ufront.test.TestUtils;
 
 class NobodyAuthHandlerTest {
@@ -28,7 +29,10 @@ class NobodyAuthHandlerTest {
 			nobodyAuth.requireLogin();
 			Assert.fail( 'Expected error to be thrown' );
 		}
-		catch (e:AuthError) Assert.same( e, ANotLoggedIn )
+		catch (e:TypedError<Dynamic>) {
+			Assert.same( e.data, ANotLoggedIn );
+			Assert.is( e.data, AuthError );
+		}
 		catch (e:Dynamic) Assert.fail( 'Wrong error type' );
 
 		Assert.isFalse( nobodyAuth.isLoggedInAs(new BossUser()) );
@@ -38,7 +42,10 @@ class NobodyAuthHandlerTest {
 			nobodyAuth.requireLoginAs(boss);
 			Assert.fail( 'Expected error to be thrown' );
 		}
-		catch (e:AuthError) Assert.equals( ""+e, ""+ANotLoggedInAs(boss) )
+		catch (e:TypedError<Dynamic>) {
+			Assert.is( e.data, AuthError );
+			Assert.equals( ""+e.data, ""+ANotLoggedInAs(boss) );
+		}
 		catch (e:Dynamic) Assert.fail( 'Wrong error type' );
 
 		Assert.isFalse( nobodyAuth.hasPermission(HaveCake) );
@@ -48,7 +55,10 @@ class NobodyAuthHandlerTest {
 			nobodyAuth.requirePermission(EatCake);
 			Assert.fail( 'Expected error to be thrown' );
 		}
-		catch (e:AuthError) Assert.same( e, ANoPermission(EatCake) )
+		catch (e:TypedError<Dynamic>) {
+			Assert.is( e.data, AuthError );
+			Assert.same( e.data, ANoPermission(EatCake) );
+		}
 		catch (e:Dynamic) Assert.fail( 'Wrong error type' );
 
 
@@ -56,7 +66,10 @@ class NobodyAuthHandlerTest {
 			nobodyAuth.requirePermissions([HaveCake,EatCake]);
 			Assert.fail( 'Expected error to be thrown' );
 		}
-		catch (e:AuthError) Assert.same( e, ANoPermission(HaveCake) )
+		catch (e:TypedError<Dynamic>)  {
+			Assert.is( e.data, AuthError );
+			Assert.same( e.data, ANoPermission(HaveCake) );
+		}
 		catch (e:Dynamic) Assert.fail( 'Wrong error type' );
 
 		Assert.equals( null, nobodyAuth.currentUser );

@@ -8,6 +8,7 @@ import haxe.ds.StringMap;
 import haxe.Serializer;
 import haxe.Unserializer;
 import tink.CoreApi;
+import ufront.web.HttpError;
 import ufront.core.Uuid;
 #if sys
 	import sys.FileSystem;
@@ -491,9 +492,9 @@ class FileSession implements UFHttpSession {
 		return Uuid.create();
 	}
 
-	inline function checkStarted() {
+	inline function checkStarted( ?pos:haxe.PosInfos ) {
 		if ( !started )
-			throw "Trying to access session data before init() has been run";
+			throw HttpError.internalServerError( "Trying to access session data before init() has been run" );
 	}
 
 	static inline function testValidId( id:String ):Bool {

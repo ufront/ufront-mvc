@@ -47,7 +47,7 @@ class ErrorPageHandler implements UFErrorHandler {
 		}
 
 		// rethrow error if catchErrors has been disabled
-		if (!catchErrors) throw httpError;
+		if (!catchErrors) httpError.throwSelf();
 
 		return SurpriseTools.success();
 	}

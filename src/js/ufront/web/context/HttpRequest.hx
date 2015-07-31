@@ -3,6 +3,7 @@ package js.ufront.web.context;
 import haxe.io.Bytes;
 import ufront.web.upload.*;
 import ufront.web.UserAgent;
+import ufront.web.HttpError;
 import ufront.core.MultiValueMap;
 import haxe.ds.StringMap;
 import ufront.web.context.HttpRequest.OnPartCallback;
@@ -134,7 +135,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 	override function get_scriptDirectory() {
 		if ( scriptDirectory==null ) {
 			// This does not make much sense on the client.
-			throw 'Cannot access request.scriptDirectory in ufront-client-mvc';
+			throw HttpError.internalServerError( 'Cannot access request.scriptDirectory in ufront-client-mvc' );
 		}
 		return scriptDirectory;
 	}

@@ -21,7 +21,7 @@ interface UFAuthHandler {
 
 	/**
 	Require the user to be logged in.
-	Otherwise throw `AuthError.NotLoggedIn`
+	Otherwise throw `HttpError.authError(ANotLoggedIn)`.
 	**/
 	function requireLogin():Void;
 
@@ -33,7 +33,7 @@ interface UFAuthHandler {
 
 	/**
 	Require this user to be the one currently logged in.
-	Otherwise will throw `AuthError.NotLoggedInAs( user )`
+	Otherwise will throw `HttpError.authError(ANotLoggedInAs(user))`
 	**/
 	function requireLoginAs( user:UFAuthUser ):Void;
 
@@ -51,13 +51,13 @@ interface UFAuthHandler {
 
 	/**
 	Require the given user to have the specified permission.
-	If not, throw `AuthError.NoPermission(permission)`.
+	If not, throw `HttpError.authError(ANoPermission(permission))`.
 	**/
 	function requirePermission( permission:EnumValue ):Void;
 
 	/**
 	Require the given user to have the specified permissions.
-	If not, throw `AuthError.NoPermission(permission)`.
+	If not, throw `HttpError.authError(ANoPermission(permission))`.
 	**/
 	function requirePermissions( permissions:Iterable<EnumValue> ):Void;
 

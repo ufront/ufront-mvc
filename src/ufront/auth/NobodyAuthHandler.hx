@@ -1,6 +1,7 @@
 package ufront.auth;
 
 import ufront.auth.AuthError;
+import ufront.web.HttpError;
 
 /**
 An AuthHandler which always gives no permissions.
@@ -16,19 +17,19 @@ class NobodyAuthHandler implements UFAuthHandler {
 
 	public function isLoggedIn() return false;
 
-	public function requireLogin() throw ANotLoggedIn;
+	public function requireLogin() throw HttpError.authError( ANotLoggedIn );
 
 	public function isLoggedInAs( user:UFAuthUser ) return false;
 
-	public function requireLoginAs( user:UFAuthUser ) throw ANotLoggedInAs( user );
+	public function requireLoginAs( user:UFAuthUser ) throw HttpError.authError( ANotLoggedInAs(user) );
 
 	public function hasPermission( permission:EnumValue ) return false;
 
 	public function hasPermissions( permissions:Iterable<EnumValue> ) return false;
 
-	public function requirePermission( permission:EnumValue ) throw ANoPermission( permission );
+	public function requirePermission( permission:EnumValue ) throw HttpError.authError( ANoPermission(permission) );
 
-	public function requirePermissions( permissions:Iterable<EnumValue> ) for (p in permissions) throw ANoPermission( p );
+	public function requirePermissions( permissions:Iterable<EnumValue> ) for (p in permissions) throw HttpError.authError( ANoPermission(p) );
 
 	public function toString() return "NobodyAuthHandler";
 

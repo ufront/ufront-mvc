@@ -58,6 +58,10 @@ class HttpErrorTest {
 		Assert.equals( 401, e.code );
 		Assert.equals( "Unauthorized Access", e.message );
 
+		var e = HttpError.unauthorized("NOT ALLOWED");
+		Assert.equals( 401, e.code );
+		Assert.equals( "NOT ALLOWED", e.message );
+
 		var e = HttpError.unprocessableEntity();
 		Assert.equals( 422, e.code );
 		Assert.equals( "Unprocessable Entity", e.message );

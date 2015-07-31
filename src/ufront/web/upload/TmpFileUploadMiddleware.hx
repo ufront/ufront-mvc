@@ -6,6 +6,7 @@ package ufront.web.upload;
 	import sys.io.FileOutput;
 #end
 import ufront.web.context.HttpContext;
+import ufront.web.HttpError;
 import ufront.app.UFMiddleware;
 import ufront.core.Uuid;
 import ufront.app.HttpApplication;
@@ -101,7 +102,7 @@ class TmpFileUploadMiddleware implements UFMiddleware {
 						}
 					});
 			#else
-				return throw "Not implemented";
+				return throw HttpError.notImplemented();
 			#end
 		}
 		else return SurpriseTools.success();

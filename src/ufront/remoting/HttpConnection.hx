@@ -1,6 +1,7 @@
 package ufront.remoting;
 
 import ufront.remoting.RemotingError;
+import ufront.web.HttpError;
 
 /**
 A remoting connection that works over synchronous HTTP connections, with some ufront specific extensions.

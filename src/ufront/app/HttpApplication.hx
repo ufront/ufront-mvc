@@ -467,12 +467,12 @@ class HttpApplication
 			//   - the "flush" stage...
 			// rethrow the error, and hopefully they'll come to this line number and figure out what happened.
 			var msg = 'You had an error after your error handler had already run.  Last active module: ${currentModule.className}.${currentModule.methodName}';
-			#if neko
+			#if sys
 				Sys.println(msg);
 				Sys.println('Error Data: ${err.data}');
-				neko.Lib.rethrow( err );
+				err.throwSelf();
 			#else
-				throw '$msg. \n$err. \nError data: ${err.data}';
+				throw '$msg \nError: $err \nError Data: ${err.data}';
 			#end
 		}
 	}

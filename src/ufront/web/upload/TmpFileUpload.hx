@@ -6,6 +6,7 @@ import haxe.io.Eof;
 	import sys.FileSystem;
 	import sys.io.File;
 #end
+import ufront.web.HttpError;
 import ufront.web.upload.UFFileUpload;
 using ufront.core.AsyncTools;
 using tink.CoreApi;
@@ -64,7 +65,7 @@ class TmpFileUpload implements UFFileUpload {
 			}
 			catch ( e:Dynamic ) return Failure(Error.withData("Error during TmpFileUpload.getBytes()",e)).asFuture();
 		#else
-			return throw "Not implemented";
+			return throw HttpError.notImplemented();
 		#end
 	}
 
@@ -78,7 +79,7 @@ class TmpFileUpload implements UFFileUpload {
 			}
 			catch ( e:Dynamic ) return Failure(Error.withData("Error during TmpFileUpload.getString()",e)).asFuture();
 		#else
-			return throw "Not implemented";
+			return throw HttpError.notImplemented();
 		#end
 	}
 
@@ -93,7 +94,7 @@ class TmpFileUpload implements UFFileUpload {
 			}
 			catch ( e:Dynamic ) return Failure(Error.withData("Error during TmpFileUpload.writeToFile()",e)).asFuture();
 		#else
-			return throw "Not implemented";
+			return throw HttpError.notImplemented();
 		#end
 	}
 
@@ -146,7 +147,7 @@ class TmpFileUpload implements UFFileUpload {
 			}
 			catch ( e:Dynamic ) return Failure(Error.withData("Error during TmpFileUpload.process()",e)).asFuture();
 		#else
-			return throw "Not implemented";
+			return throw HttpError.notImplemented();
 		#end
 	}
 
@@ -163,7 +164,7 @@ class TmpFileUpload implements UFFileUpload {
 			}
 			catch ( e:Dynamic ) return Failure( Error.withData("Error during TmpFileUpload.deleteTmpFile()",e) );
 		#else
-			throw "Not implemented";
+			throw HttpError.notImplemented();
 		#end
 	}
 }
