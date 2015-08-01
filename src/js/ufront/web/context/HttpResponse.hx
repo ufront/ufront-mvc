@@ -81,19 +81,30 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 			newDoc.find( "head" ).children(false).appendTo( document.head.empty() );
 			newDoc.find( "body" ).children(false).appendTo( document.body.empty() );
 			
-			// find out all <script> tags and (re)execute them
-			document.find("script").each(function(node) {
-				var script = document.createElement('script');
-				script.setAttr("type", 'text/javascript');
-				if(node.attr("src") != "")
-					script.setAttr("src", node.attr("src"));
-				if (node.text() != "")
-					untyped script.text = node.text();
-				document.body.appendChild(script);
+			// re-run <script> with "uf-reload" attribute
+			// e.g. <script uf-reload>console.log("test");</script>
+			var scriptTags = document.getElementsByTagName('script');
+			
+			for (i in 0...scriptTags.length)
+			{
+				var node = scriptTags.item(i);
 				
-				// remove from the DOM
-				document.body.removeChild(document.body.lastChild);
-			});
+				var reload = node.getAttribute("uf-reload");
+				if (reload != null && reload != "false")
+				{
+					var script = document.createElement('script');
+					script.setAttribute("type", 'text/javascript');
+					
+					var src = node.getAttribute("src");
+					if(src != null)	script.setAttribute("src", src);
+					
+					script.innerHTML = node.innerHTML;
+					document.body.appendChild(script);
+					
+					// remove from the DOM
+					document.body.removeChild(document.body.lastChild);
+				}
+			}
 		}
 		else if ( this.isRedirect() ) {
 			#if pushstate
