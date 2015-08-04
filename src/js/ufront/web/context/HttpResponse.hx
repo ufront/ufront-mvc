@@ -87,8 +87,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 				while ( fromParent.firstChild!=null )
 					toParent.appendChild( fromParent.firstChild );
 			}
-			emptyElement( document.head );
-			moveChildNodes( newDoc.head, document.head );
+			document.title = newDoc.title;
 			emptyElement( document.body );
 			moveChildNodes( newDoc.body, document.body );
 		}
@@ -110,7 +109,8 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 		else {
 			// TODO: Figure out if there is a sensible way to fall back to the server.
 			// Perhaps setting document.location to trigger a server load?
-			throw HttpError.internalServerError( 'Cannot use ufront-client-mvc to render content type "$contentType". Only "text/html" is supported.' );
+			js.Browser.console.log( 'Cannot use ufront-client-mvc to render content type "$contentType". Redirecting to server for rendering this content.' );
+			document.location.reload();
 		}
 	}
 }
