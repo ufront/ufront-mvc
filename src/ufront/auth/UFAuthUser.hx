@@ -13,7 +13,7 @@ interface UFAuthUser {
 	You can specify either a single permission or a group or permissions.
 	All permissions must be satisfied for it to return true.
 	**/
-	function can( ?permission:EnumValue, ?permissions:Iterable<EnumValue> ) : Bool;
+	function can( ?permission:EnumValue, ?permissions:Iterable<EnumValue> ):Bool;
 
 	/**
 	A string representing a unique identifier for this user.
