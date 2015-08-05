@@ -204,8 +204,14 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 	}
 
 	override function get_uri() {
-		if ( uri==null )
+		if ( uri==null ) {
 			uri = Web.getURI();
+			#if neko
+				// mod_neko has a peculiarity where mod_rewrite still passes "index.n" to the uri parameter, but only if the url is "/".
+				if( uri.endsWith("/index.n") )
+					uri = uri.substr( 0, uri.lastIndexOf("/")+1 );
+			#end
+		}
 		return uri;
 	}
 
