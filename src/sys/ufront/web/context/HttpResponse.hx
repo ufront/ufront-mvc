@@ -15,39 +15,47 @@ An implementation of `ufront.web.context.HttpRequest` for Neko and PHP, based on
 **/
 class HttpResponse extends ufront.web.context.HttpResponse {
 	override function flush() {
-		if (_flushed)
-			return;
-
-		_flushed = true;
 
 		// Set HTTP status code
-		Web.setReturnCode( status );
+		if ( !_flushedStatus ) {
+			_flushedStatus = true;
+			Web.setReturnCode( status );
+		}
 
 		// Set Cookies
-		try {
-			for ( cookie in _cookies ) {
-				Web.setCookie( cookie.name, cookie.value, cookie.expires, cookie.domain, cookie.path, cookie.secure, cookie.httpOnly );
+		if ( !_flushedCookies ) {
+			_flushedCookies = true;
+			try {
+				for ( cookie in _cookies ) {
+					Web.setCookie( cookie.name, cookie.value, cookie.expires, cookie.domain, cookie.path, cookie.secure, cookie.httpOnly );
+				}
 			}
-		}
-		catch ( e:Dynamic ) {
-			throw HttpError.internalServerError( 'Failed to set cookie on response', e );
+			catch ( e:Dynamic ) {
+				throw HttpError.internalServerError( 'Failed to set cookie on response', e );
+			}
 		}
 
 		// Write headers
-		for ( key in _headers.keys() ) {
-			var val = _headers.get(key);
-			if ( key=="Content-type" && null!=charset && val.startsWith('text/') ) {
-				val += "; charset=" + charset;
-			}
-			try {
-				Web.setHeader( key, val );
-			}
-			catch ( e:Dynamic ) {
-				throw HttpError.internalServerError( 'Invalid header: "$key: $val", or output already sent', e );
+		if ( !_flushedHeaders ) {
+			_flushedHeaders = true;
+			for ( key in _headers.keys() ) {
+				var val = _headers.get(key);
+				if ( key=="Content-type" && null!=charset && val.startsWith('text/') ) {
+					val += "; charset=" + charset;
+				}
+				try {
+					Web.setHeader( key, val );
+				}
+				catch ( e:Dynamic ) {
+					throw HttpError.internalServerError( 'Invalid header: "$key: $val", or output already sent', e );
+				}
 			}
 		}
 
 		// Write response content
-		Sys.print( _buff.toString() );
+		if ( !_flushedContent ) {
+			_flushedContent = true;
+			Sys.print( _buff.toString() );
+		}
 	}
 }

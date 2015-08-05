@@ -38,79 +38,72 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 	override function flush() {
 
 		// Log the request to the console.
-		var location = window.location.pathname+window.location.search;
-		window.console.log( '[$status] ${location}' );
-
-		if ( _flushed )
-			return;
-
-		_flushed = true;
+		if ( !_flushedStatus ) {
+			_flushedStatus = true;
+			var location = window.location.pathname+window.location.search;
+			window.console.log( '[$status] ${location}' );
+		}
 
 		// Set Cookies
-		try {
-			for ( cookie in _cookies ) {
-				// So, document.cookie behaves like a String, but actually will process the description string and add a cookie.
-				// See http://www.quirksmode.org/js/cookies.html
-				document.cookie = cookie.description;
+		if ( !_flushedCookies ) {
+			_flushedCookies = true;
+			try {
+				for ( cookie in _cookies ) {
+					// So, document.cookie behaves like a String, but actually will process the description string and add a cookie.
+					// See http://www.quirksmode.org/js/cookies.html
+					document.cookie = cookie.description;
+				}
 			}
-		}
-		catch ( e:Dynamic ) {
-			throw HttpError.internalServerError( 'Cannot set cookies on response', e );
+			catch ( e:Dynamic ) {
+				throw HttpError.internalServerError( 'Cannot set cookies on response', e );
+			}
 		}
 
 		// Write headers
-		for ( key in _headers.keys() ) {
-			var val = _headers.get(key);
-			if ( key=="Content-type" && null!=charset && val.startsWith('text/') ) {
-				val += "; charset=" + charset;
+		if ( !_flushedHeaders ) {
+			_flushedHeaders = true;
+
+			// Process redirect headers.
+			if ( this.isRedirect() ) {
+				_flushedContent = true;
+				#if pushstate
+					if ( this.redirectLocation.startsWith("/") || this.redirectLocation.startsWith(window.location.origin) ) {
+						// The URL is on this site, attempt a pushstate.
+						// TODO: Not every request here should be on the client, for example, if the redirect points to a download.
+						// We should add a mechanism for the client to defer to the server when it cannot display the appropriate content type.
+						pushstate.PushState.replace( this.redirectLocation );
+					}
+					else {
+						document.location.href = this.redirectLocation;
+					}
+				#else
+					document.location.href = this.redirectLocation;
+				#end
 			}
-			// TODO: decide if any headers are worth reading, and implementing as specific behaviours.
-			// For example, we could use <meta http-equiv="" /> tags.
-			// Redirect headers also seem like a good culprit to pick up here.
+
+			// TODO: consider if we support other headers, possibly using <meta http-equiv="" /> tags.
 		}
 
 		// Write response content
-		if ( contentType=="text/html" ) {
-			// This method only has IE9 support.  We might need something better in future.
-			var newDoc = document.implementation.createHTMLDocument("");
-			newDoc.documentElement.innerHTML = _buff.toString();
+		if ( !_flushedContent ) {
+			_flushedContent = true;
+			if ( contentType=="text/html" ) {
+				// This method only has IE9 support.  We might need something with more platform support.
+				var newDoc = document.implementation.createHTMLDocument("");
+				newDoc.documentElement.innerHTML = _buff.toString();
 
-			// TODO: deleting all old elements and replacing them is fairly brutal.
-			// A DOM diffing algorithm could be better.
-			// Apparently react does diffs level by level in the DOM heirarchy, which would be less complicated to resolve.
-			// On the other hand, we could leave it up to the ActionResult classes to be more clever with templating etc, and this is just a crude fallback.
-			function emptyElement( parent:Element ) {
-				while ( parent.firstChild!=null )
-					parent.removeChild( parent.firstChild );
+				document.title = newDoc.title;
+				// We are fairly brutal - replacing all elements in the old body with elements in the new body, and ignoring changes in the <head>.
+				// Use a custom ActionResult and call `response.preventFlushContent()` for a more fine-grained approach.
+				while ( document.body.firstChild!=null )
+					document.body.removeChild( document.body.firstChild );
+				while ( newDoc.firstChild!=null )
+					document.body.appendChild( newDoc.firstChild );
 			}
-			function moveChildNodes( fromParent:Element, toParent:Element ) {
-				while ( fromParent.firstChild!=null )
-					toParent.appendChild( fromParent.firstChild );
+			else {
+				js.Browser.console.log( 'Cannot use ufront-client-mvc to render content type "$contentType". Redirecting to server for rendering this content.' );
+				document.location.reload();
 			}
-			document.title = newDoc.title;
-			emptyElement( document.body );
-			moveChildNodes( newDoc.body, document.body );
-		}
-		else if ( this.isRedirect() ) {
-			#if pushstate
-				if ( this.redirectLocation.startsWith("/") || this.redirectLocation.startsWith(window.location.origin) ) {
-					// The URL is on this site, attempt a pushstate.
-					// TODO: Not every request here should be on the client, for example, if the redirect points to a download.
-					// We should add a mechanism for the client to defer to the server when it cannot display the appropriate content type.
-					pushstate.PushState.replace( this.redirectLocation );
-				}
-				else {
-					document.location.href = this.redirectLocation;
-				}
-			#else
-				document.location.href = this.redirectLocation;
-			#end
-		}
-		else {
-			// TODO: Figure out if there is a sensible way to fall back to the server.
-			// Perhaps setting document.location to trigger a server load?
-			js.Browser.console.log( 'Cannot use ufront-client-mvc to render content type "$contentType". Redirecting to server for rendering this content.' );
-			document.location.reload();
 		}
 	}
 }

@@ -19,40 +19,48 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 	}
 
 	override function flush() {
-		if ( _flushed )
-			return;
-
-		_flushed = true;
 
 		// Set HTTP status code
-		res.statusCode = status;
+		if ( !_flushedStatus ) {
+			_flushedStatus = true;
+			res.statusCode = status;
+		}
 
 		// Set Cookies
-		try {
-			var cookieHeader = [
-				for ( cookie in _cookies ) '${cookie.name}=${cookie.description}'
-			];
-			res.setHeader( "Set-Cookie", cookieHeader );
-		}
-		catch ( e:Dynamic ) {
-			throw HttpError.internalServerError( 'Failed to set cookie on response', e );
+		if ( !_flushedCookies ) {
+			_flushedCookies = true;
+			try {
+				var cookieHeader = [
+					for ( cookie in _cookies ) '${cookie.name}=${cookie.description}'
+				];
+				res.setHeader( "Set-Cookie", cookieHeader );
+			}
+			catch ( e:Dynamic ) {
+				throw HttpError.internalServerError( 'Failed to set cookie on response', e );
+			}
 		}
 
 		// Write headers
-		for ( key in _headers.keys() ) {
-			var val = _headers.get(key);
-			if ( key=="Content-type" && null!=charset && val.startsWith('text/') ) {
-				val += "; charset=" + charset;
-			}
-			try {
-				res.setHeader(key, val);
-			}
-			catch ( e:Dynamic ) {
-				throw HttpError.internalServerError( 'Invalid header: "$key: $val", or output already sent', e );
+		if ( !_flushedHeaders ) {
+			_flushedHeaders = true;
+			for ( key in _headers.keys() ) {
+				var val = _headers.get(key);
+				if ( key=="Content-type" && null!=charset && val.startsWith('text/') ) {
+					val += "; charset=" + charset;
+				}
+				try {
+					res.setHeader(key, val);
+				}
+				catch ( e:Dynamic ) {
+					throw HttpError.internalServerError( 'Invalid header: "$key: $val", or output already sent', e );
+				}
 			}
 		}
 
 		// Write response content
-		res.end( _buff.toString() );
+		if ( !_flushedContent ) {
+			_flushedContent = true;
+			res.end( _buff.toString() );
+		}
 	}
 }

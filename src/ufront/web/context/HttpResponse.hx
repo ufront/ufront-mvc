@@ -82,7 +82,10 @@ class HttpResponse {
 	var _buff:StringBuf;
 	var _headers:OrderedStringMap<String>;
 	var _cookies:StringMap<HttpCookie>;
-	var _flushed:Bool;
+	var _flushedStatus:Bool;
+	var _flushedCookies:Bool;
+	var _flushedHeaders:Bool;
+	var _flushedContent:Bool;
 
 	/**
 	Create a new (blank) `HttpResponse`.
@@ -91,7 +94,10 @@ class HttpResponse {
 	**/
 	public function new() {
 		clear();
-		_flushed = false;
+		_flushedStatus = false;
+		_flushedCookies = false;
+		_flushedHeaders = false;
+		_flushedContent = false;
 	}
 
 	/**
@@ -100,7 +106,20 @@ class HttpResponse {
 	This is useful if some code has written to the output manually, (using `Sys.print` or similar), rather than writing to the response.
 	**/
 	public function preventFlush():Void {
-		_flushed = true;
+		_flushedStatus = true;
+		_flushedCookies = true;
+		_flushedHeaders = true;
+		_flushedContent = true;
+	}
+
+	/**
+	Prevent the response from flushing the content.
+
+	Headers, cookies and the status will still be written.
+	This is useful on the client-side for custom ActionResults that perform partial-diffing of the dom and only update certain nodes.
+	**/
+	public function preventFlushContent():Void {
+		_flushedContent = true;
 	}
 
 	/**
@@ -291,7 +310,10 @@ class HttpResponse {
 		s.serialize( _buff.toString() );
 		s.serialize( _headers );
 		s.serialize( _cookies );
-		s.serialize( _flushed );
+		s.serialize( _flushedStatus );
+		s.serialize( _flushedCookies );
+		s.serialize( _flushedHeaders );
+		s.serialize( _flushedContent );
 	}
 
 	@:keep
@@ -300,7 +322,10 @@ class HttpResponse {
 		_buff.add( u.unserialize() );
 		_headers = u.unserialize();
 		_cookies = u.unserialize();
-		_flushed = u.unserialize();
+		_flushedStatus = u.unserialize();
+		_flushedCookies = u.unserialize();
+		_flushedHeaders = u.unserialize();
+		_flushedContent = u.unserialize();
 	}
 
 	function get_contentType():String {

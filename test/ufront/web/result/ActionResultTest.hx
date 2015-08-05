@@ -26,7 +26,10 @@ class ActionResultTest {
 		Assert.is( nullResult, EmptyResult );
 		nullResult.executeResult( ctx1.actionContext );
 		Assert.equals( "", ctx1.response.getBuffer() );
-		Assert.isFalse( ctx1.response._flushed );
+		Assert.isFalse( ctx1.response._flushedStatus );
+		Assert.isFalse( ctx1.response._flushedCookies );
+		Assert.isFalse( ctx1.response._flushedHeaders );
+		Assert.isFalse( ctx1.response._flushedContent );
 
 		// Check a normal value is converted to a String and wrapped in a ContentResult.
 		var done1 = Assert.createAsync();

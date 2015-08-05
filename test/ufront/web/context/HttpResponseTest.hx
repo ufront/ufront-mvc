@@ -139,8 +139,11 @@ class HttpResponseTest {
 class HttpResponseMock extends HttpResponse {
 	public var flushCalled:Int = 0;
 	override public function flush() {
-		if (_flushed) return;
-		_flushed = true;
+		if (_flushedStatus && _flushedCookies && _flushedHeaders && _flushedContent) return;
+		_flushedStatus = true;
+		_flushedCookies = true;
+		_flushedHeaders = true;
+		_flushedContent = true;
 		flushCalled++;
 	}
 }
