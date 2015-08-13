@@ -42,11 +42,6 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 		if ( queryString==null ) {
 			// Get the query string from document.location, but ignore the leading "?" character.
 			queryString = document.location.search.substr( 1 );
-
-			var indexOfHash = queryString.indexOf( "#" );
-			if ( indexOfHash>-1 ) {
-				queryString = queryString.substring( 0, indexOfHash );
-			}
 		}
 		return queryString;
 	}
