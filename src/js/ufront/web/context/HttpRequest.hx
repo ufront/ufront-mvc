@@ -50,7 +50,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 		if ( httpMethod=="GET" )
 			return "";
 		if ( null==postString ) {
-			postString = window.history.state.post;
+			postString = window.history.state.__postData;
 		}
 		return postString;
 	}
@@ -122,7 +122,8 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 
 	override function get_httpMethod() {
 		if ( httpMethod==null ) {
-			httpMethod = Reflect.hasField(window.history.state, "post") ? "POST" : "GET";
+			var state = window.history.state;
+			httpMethod = state!=null && Reflect.hasField(window.history.state,"__postData") ? "POST" : "GET";
 		}
 		return httpMethod;
 	}
