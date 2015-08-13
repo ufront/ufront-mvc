@@ -53,6 +53,8 @@ If the template and layout that is rendered has a different `body[data-layout]` 
 
 If some of the partial sections in the old body are not in the new body, the sections in the old body will be emptied.
 If some of the partial sections in the new body are not in the old body, they will be ignored.
+
+A `partial-loading` CSS class will be added to each partial node when the PartialViewResult is instantiated, and removed when the view has finished executing.
 **/
 class PartialViewResult extends ViewResult {
 
@@ -71,12 +73,21 @@ class PartialViewResult extends ViewResult {
 		/**
 		Create a new PartialViewResult, with the specified data.
 
+		The `partial-loading` class will be added to any `[data-partial]` nodes immediately.
+
 		@param data (optional) Some initial template data to set. If not supplied, an empty {} object will be used.
 		@param viewPath (optional) A specific view path to use. If not supplied, it will be inferred based on the `ActionContext` in `this.executeResult()`.
 		@param templatingEngine (optional) A specific templating engine to use for the view. If not supplied, it will be inferred based on the `viewPath` in `this.executeResult()`.
 		**/
 		public function new( ?data:TemplateData, ?viewPath:String, ?templatingEngine:TemplatingEngine ) {
 			super( data, viewPath, templatingEngine );
+
+			// Add 'partial-loading' class to each partial section.
+			var oldPartialNodes = document.querySelectorAll( "[data-partial]" );
+			for ( i in 0...oldPartialNodes.length ) {
+				var oldPartialNode = Std.instance( oldPartialNodes.item(i), Element );
+				oldPartialNode.classList.add( 'partial-loading' );
+			}
 		}
 
 		override function writeResponse( response:String, combinedData:TemplateData, actionContext:ActionContext ) {
@@ -90,25 +101,25 @@ class PartialViewResult extends ViewResult {
 				document.title = newDoc.title;
 				var oldPartialNodes = document.querySelectorAll( "[data-partial]" );
 				for ( i in 0...oldPartialNodes.length ) {
-					var oldPartialNode = oldPartialNodes.item( i );
+					var oldPartialNode = Std.instance( oldPartialNodes.item(i), Element );
+					oldPartialNode.classList.remove( 'partial-loading' );
 					var partialName = getAttr( oldPartialNode, "data-partial" );
 					var newPartialNode = newDoc.querySelector('[data-partial=$partialName]');
-
 					replaceChildren( newPartialNode, oldPartialNode );
-					window.scrollTo( 0, 0 );
 				}
+				window.scrollTo( 0, 0 );
 				res.preventFlushContent();
 			}
 
 
 		}
 
-		static function getAttr( node:Node, name:String ):Null<String> {
-			var elm = Std.instance( node, Element );
-			if ( elm==null )
-				return null;
-			var attributeNode = elm.attributes.getNamedItem( name );
-			return (attributeNode!=null) ? attributeNode.value : null;
+		static function getAttr( elm:Element, name:String ):Null<String> {
+			if ( elm!=null ) {
+				var attributeNode = elm.attributes.getNamedItem( name );
+				return (attributeNode!=null) ? attributeNode.value : null;
+			}
+			return null;
 		}
 	#end
 }
