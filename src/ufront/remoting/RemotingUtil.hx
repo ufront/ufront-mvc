@@ -34,54 +34,59 @@ class RemotingUtil {
 		var hxrFound = false;
 		var errors = [];
 		var onError = wrapErrorHandler( errorHandler );
-		for ( line in response.split('\n') ) {
-			if ( line=="" ) continue;
-			try switch (line.substr(0,3)) {
-				case "hxr":
-					var s = new haxe.Unserializer(line.substr(3));
-					ret =
-						try s.unserialize()
-						catch(e:Dynamic) throw RUnserializeFailed( remotingCallString, line.substr(3), '$e' )
-					;
-					hxrFound = true;
-				case "hxt":
-					var s = new haxe.Unserializer(line.substr(3));
-					var m:Message =
-						try s.unserialize()
-						catch(e:Dynamic) throw RUnserializeFailed( remotingCallString, line.substr(3), '$e' )
-					;
-					#if js
-						var extras =
-							if ( m.pos!=null && m.pos.customParams!=null ) " "+m.pos.customParams.join(" ")
-							else "";
-						var msg = '[R]${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';
-						var c = js.Browser.window.console;
-						switch m.type {
-							case MTrace: c.log( msg );
-							case MLog: c.info( msg );
-							case MWarning: c.warn( msg );
-							case MError: c.error( msg );
-						}
-					#else
-						m.pos.fileName="[R]"+m.pos.fileName;
-						haxe.Log.trace('[${m.type}]${m.msg}', m.pos);
-					#end
-				case "hxs":
-					var s = new haxe.Unserializer(line.substr(3));
-					stack =
-						try s.unserialize()
-						catch(e:Dynamic) throw RUnserializeFailed( remotingCallString, line.substr(3), '$e' )
-					;
-				case "hxe":
-					var s = new haxe.Unserializer(line.substr(3));
-					ret =
-						try s.unserialize()
-						catch(e:Dynamic) throw RServerSideException( remotingCallString, e, stack )
-					;
-				default:
-					throw RUnserializeFailed( remotingCallString, line, "Invalid line in response" );
+
+		if ( response.substr(0,2)!="hx" ) {
+			onError( RNoRemotingResult(remotingCallString,response) );
+		}
+		else {
+			for ( line in response.split('\n') ) {
+				if ( line=="" ) continue;
+				switch (line.substr(0,3)) {
+					case "hxr":
+						var s = new haxe.Unserializer(line.substr(3));
+						ret =
+							try s.unserialize()
+							catch(e:Dynamic) errors.push( RUnserializeFailed(remotingCallString, line.substr(3), '$e') )
+						;
+						hxrFound = true;
+					case "hxt":
+						var s = new haxe.Unserializer(line.substr(3));
+						var m:Message =
+							try s.unserialize()
+							catch(e:Dynamic) errors.push( RUnserializeFailed(remotingCallString, line.substr(3), '$e') )
+						;
+						#if js
+							var extras =
+								if ( m.pos!=null && m.pos.customParams!=null ) " "+m.pos.customParams.join(" ")
+								else "";
+							var msg = '[R]${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';
+							var c = js.Browser.window.console;
+							switch m.type {
+								case MTrace: c.log( msg );
+								case MLog: c.info( msg );
+								case MWarning: c.warn( msg );
+								case MError: c.error( msg );
+							}
+						#else
+							m.pos.fileName="[R]"+m.pos.fileName;
+							haxe.Log.trace('[${m.type}]${m.msg}', m.pos);
+						#end
+					case "hxs":
+						var s = new haxe.Unserializer(line.substr(3));
+						stack =
+							try s.unserialize()
+							catch(e:Dynamic) errors.push( RUnserializeFailed(remotingCallString, line.substr(3), '$e') )
+						;
+					case "hxe":
+						var s = new haxe.Unserializer(line.substr(3));
+						ret =
+							try s.unserialize()
+							catch(e:Dynamic) errors.push( RServerSideException(remotingCallString, e, stack) )
+						;
+					default:
+						errors.push( RUnserializeFailed(remotingCallString, line, "Invalid line in response") );
+				}
 			}
-			catch( err:Dynamic ) errors.push( err );
 		}
 
 		if ( errors.length==0 ) {
