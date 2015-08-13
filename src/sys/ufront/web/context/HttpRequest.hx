@@ -218,11 +218,21 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 	override function get_clientHeaders() {
 		if ( clientHeaders==null ) {
 			clientHeaders = new MultiValueMap();
+			#if php
+				// php.Web.getClientHeaders() uses `$_SERVER`, which mutates the header names. (Uppercased, replace `-` with `_`).
+				var headers:StringMap<String> = php.Lib.hashOfAssociativeArray( untyped __php__("apache_request_headers()") );
+				for( name in headers.keys() ) {
+					for ( val in headers.get(name).split(",") ) {
+						clientHeaders.add( name, val.trim() );
+					}
+				}
+			#else
 			for ( header in Web.getClientHeaders() ) {
 				for ( val in header.value.split(",") ) {
 					clientHeaders.add( header.header, val.trim() );
 				}
 			}
+			#end
 		}
 		return clientHeaders;
 	}
