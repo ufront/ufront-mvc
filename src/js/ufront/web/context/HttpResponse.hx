@@ -93,17 +93,30 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 				newDoc.documentElement.innerHTML = _buff.toString();
 
 				document.title = newDoc.title;
-				// We are fairly brutal - replacing all elements in the old body with elements in the new body, and ignoring changes in the <head>.
+				// We are fairly brutal - replacing all elements in the old head and body with elements in the new head and body.
 				// Use a custom ActionResult and call `response.preventFlushContent()` for a more fine-grained approach.
-				while ( document.body.firstChild!=null )
-					document.body.removeChild( document.body.firstChild );
-				while ( newDoc.firstChild!=null )
-					document.body.appendChild( newDoc.firstChild );
+				replaceChildren( newDoc.head, document.head );
+				replaceChildren( newDoc.body, document.body );
+				window.scrollTo( 0, 0 );
 			}
 			else {
 				js.Browser.console.log( 'Cannot use ufront-client-mvc to render content type "$contentType". Redirecting to server for rendering this content.' );
 				document.location.reload();
 			}
 		}
+	}
+
+	/**
+	This is a utility function for replacing dom nodes in one parent with children from another parent.
+
+	If `sourceParent` is null, the target parent will be emptied.
+	If `targetParent` is null, the result is unspecified.
+	**/
+	public static function replaceChildren( sourceParent:Null<Node>, targetParent:Node ):Void {
+		while ( targetParent.firstChild!=null )
+			targetParent.removeChild( targetParent.firstChild );
+		if ( sourceParent!=null )
+			while ( sourceParent.firstChild!=null )
+				targetParent.appendChild( sourceParent.firstChild );
 	}
 }
