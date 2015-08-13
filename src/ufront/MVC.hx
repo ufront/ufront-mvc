@@ -133,6 +133,7 @@ class MVC {}
 @:noDoc @:noUsing typedef FileResult = ufront.web.result.FileResult;
 @:noDoc @:noUsing typedef HttpAuthResult = ufront.web.result.HttpAuthResult;
 @:noDoc @:noUsing typedef JsonResult<T> = ufront.web.result.JsonResult<T>;
+@:noDoc @:noUsing typedef PartialViewResult = ufront.web.result.PartialViewResult;
 @:noDoc @:noUsing typedef RedirectResult = ufront.web.result.RedirectResult;
 @:noDoc @:noUsing typedef ViewResult = ufront.web.result.ViewResult;
 

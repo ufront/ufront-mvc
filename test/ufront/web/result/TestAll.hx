@@ -6,6 +6,7 @@ import utest.Runner;
 class TestAll {
 	public static function addTests( runner:Runner ) {
 		runner.addCase( new DetoxResultTest() );
+		runner.addCase( new PartialViewResultTest() );
 		runner.addCase( new ViewResultTest() );
 		runner.addCase( new ContentResultTest() );
 		runner.addCase( new RedirectResultTest() );
