@@ -22,11 +22,11 @@ Instead of returning a synchronous value though, each method will return a `Surp
 
 The return type for each function will be typed as follows:
 
-- An API return type of `:Surprise<A,B>` will become `:Surprise<A,RemotingError<B>>`.
-- An API return type of `:Future<T>` will become `:Surprise<T,RemotingError<Dynamic>>`.
-- An API return type of `:Outcome<A,B>` will become `:Surprise<A,RemotingError<B>>`.
-- An API return type of `:Void` will become `:Surprise<Noise,RemotingError<Dynamic>>`.
-- An API return type of `:T` will become `:Surprise<T,RemotingError<Dynamic>>`.
+- An API return type of `:Surprise<A,B>` will become `:Surprise<A,TypedError<RemotingError<B>>>`.
+- An API return type of `:Future<T>` will become `:Surprise<T,TypedError<RemotingError<Dynamic>>>`.
+- An API return type of `:Outcome<A,B>` will become `:Surprise<A,TypedError<RemotingError<B>>>`.
+- An API return type of `:Void` will become `:Surprise<Noise,TypedError<RemotingError<Dynamic>>>`.
+- An API return type of `:T` will become `:Surprise<T,TypedError<RemotingError<Dynamic>>>`.
 
 #### Client and Server differences:
 
