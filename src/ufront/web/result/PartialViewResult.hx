@@ -18,8 +18,8 @@ On the client side, this will:
 
 - Pick the relevant view and layout in the same way as ViewResult.
 - Execute the layout and the template to get a full HTML response.
-- Check the body for a `data-layout` attribute. If the attribute has changed with the new request, then the entire body will be replaced.
-- Otherwise, check for elements with a `data-partial` attribute, and replace the old children of each partial element with the new children.
+- Check the body for a `data-uf-layout` attribute. If the attribute has changed with the new request, then the entire body will be replaced.
+- Otherwise, check for elements with a `data-uf-partial` attribute, and replace the old children of each partial element with the new children.
 
 ### Example
 
@@ -27,17 +27,17 @@ Imagine this template:
 
 ```html
 <html>
-<body data-layout="site-page">
+<body data-uf-layout="site-page">
     <div class="container" />
         <div class="row">
             <div class="col-md-3">
-                <ul data-partial="nav">
+                <ul data-uf-partial="nav">
                     ::for (link in navItems)::
                         <li>::link::</li>
                     ::end::
                 </ul>
             </div>
-            <div class="col-md-9" data-partial="content">
+            <div class="col-md-9" data-uf-partial="content">
                 ::content::
             </div>
         </div>
@@ -47,14 +47,14 @@ Imagine this template:
 ```
 
 When this is executed server-side, it will render the view and the layout as per normal.
-When it is executed client-side, it will execute the view and the layout, but only replace the DOM nodes inside the navigation `ul[data-partial=nav]` and the `div[data-partial=content]`.
+When it is executed client-side, it will execute the view and the layout, but only replace the DOM nodes inside the navigation `ul[data-uf-partial=nav]` and the `div[data-uf-partial=content]`.
 
-If the template and layout that is rendered has a different `body[data-layout]` attribute, then the entire view will be re-rendered.
+If the template and layout that is rendered has a different `body[data-uf-layout]` attribute, then the entire view will be re-rendered.
 
 If some of the partial sections in the old body are not in the new body, the sections in the old body will be emptied.
 If some of the partial sections in the new body are not in the old body, they will be ignored.
 
-A `partial-loading` CSS class will be added to each partial node when the PartialViewResult is instantiated, and removed when the view has finished executing.
+A `uf-partial-loading` CSS class will be added to each partial node when the PartialViewResult is instantiated, and removed when the view has finished executing.
 **/
 class PartialViewResult extends ViewResult {
 
@@ -73,7 +73,7 @@ class PartialViewResult extends ViewResult {
 		/**
 		Create a new PartialViewResult, with the specified data.
 
-		The `partial-loading` class will be added to any `[data-partial]` nodes immediately.
+		The `uf-partial-loading` class will be added to any `[data-uf-partial]` nodes immediately.
 
 		@param data (optional) Some initial template data to set. If not supplied, an empty {} object will be used.
 		@param viewPath (optional) A specific view path to use. If not supplied, it will be inferred based on the `ActionContext` in `this.executeResult()`.
@@ -82,11 +82,11 @@ class PartialViewResult extends ViewResult {
 		public function new( ?data:TemplateData, ?viewPath:String, ?templatingEngine:TemplatingEngine ) {
 			super( data, viewPath, templatingEngine );
 
-			// Add 'partial-loading' class to each partial section.
-			var oldPartialNodes = document.querySelectorAll( "[data-partial]" );
+			// Add 'uf-partial-loading' class to each partial section.
+			var oldPartialNodes = document.querySelectorAll( "[data-uf-partial]" );
 			for ( i in 0...oldPartialNodes.length ) {
 				var oldPartialNode = Std.instance( oldPartialNodes.item(i), Element );
-				oldPartialNode.classList.add( 'partial-loading' );
+				oldPartialNode.classList.add( 'uf-partial-loading' );
 			}
 		}
 
@@ -97,14 +97,14 @@ class PartialViewResult extends ViewResult {
 			var newDoc = document.implementation.createHTMLDocument("");
 			newDoc.documentElement.innerHTML = response;
 
-			if ( getAttr(document.body,"data-layout")==getAttr(newDoc.body,"data-layout") ) {
+			if ( getAttr(document.body,"data-uf-layout")==getAttr(newDoc.body,"data-uf-layout") ) {
 				document.title = newDoc.title;
-				var oldPartialNodes = document.querySelectorAll( "[data-partial]" );
+				var oldPartialNodes = document.querySelectorAll( "[data-uf-partial]" );
 				for ( i in 0...oldPartialNodes.length ) {
 					var oldPartialNode = Std.instance( oldPartialNodes.item(i), Element );
-					oldPartialNode.classList.remove( 'partial-loading' );
-					var partialName = getAttr( oldPartialNode, "data-partial" );
-					var newPartialNode = newDoc.querySelector('[data-partial=$partialName]');
+					oldPartialNode.classList.remove( 'uf-partial-loading' );
+					var partialName = getAttr( oldPartialNode, "data-uf-partial" );
+					var newPartialNode = newDoc.querySelector('[data-uf-partial=$partialName]');
 					replaceChildren( newPartialNode, oldPartialNode );
 				}
 				window.scrollTo( 0, 0 );
