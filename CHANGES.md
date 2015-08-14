@@ -1,3 +1,11 @@
+# 1.0.1
+
+- Use `uf-` prefix for `PartialViewResult`. So it's now `[data-uf-partial]` and `[data-uf-layout]` and `.uf-partial-loading`.
+  A quick patch release to correct this behaviour before it begins getting used.
+
+
+---
+
 # 1.0.0
 
 This is a 1.0.0 release of ufront-mvc - Hoorah!
