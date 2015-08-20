@@ -74,6 +74,8 @@ abstract MultiValueMap<T>( StringMap<Array<T>> ) from StringMap<Array<T>> to Str
 	If there is no parameter with this name, the array will have a length of `0`.
 	If `name` is null, the result is unspecified.
 
+	Please note the array returned is the array used internally, so modifying the contents of the array will also modify the contents of the MultiValueMap.
+
 	If the field name in your HTML input ended with "[]", you do not include that here.
 	For example, the values of `<input name='phone[]' /><input name='phone[]' />` should be accessed with `MultiValueMap.getAll('phone')`.
 	**/
