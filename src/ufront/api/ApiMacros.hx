@@ -253,7 +253,9 @@ class ApiMacros {
 	static function addInjectApiMethod( cb:ClassBuilder ) {
 		var syncApiType = getTypeFromFirstTypeParam( cb );
 		if ( syncApiType!=null ) {
-			var syncApiName = fullNameFromComplexType( syncApiType.toComplex() );
+			var ct = syncApiType.toComplex();
+			var syncApiName = fullNameFromComplexType( ct );
+			var runtimeClassName = runtimeNameFromComplexType( ct );
 			var syncApiReference = syncApiName.resolve();
 			var tmp = macro class Tmp {
 				@inject public function injectApi( injector:minject.Injector ) {
@@ -262,7 +264,7 @@ class ApiMacros {
 							try injector.getValue( $syncApiReference )
 							catch (e:Dynamic) throw ufront.web.HttpError.internalServerError( 'Failed to inject '+Type.getClassName($syncApiReference)+' into '+Type.getClassName(Type.getClass(this)), e );
 					#end
-					this.className = $v{syncApiName};
+					this.className = $v{runtimeClassName};
 				}
 			}
 			cb.addMember( tmp.fields[0] );
