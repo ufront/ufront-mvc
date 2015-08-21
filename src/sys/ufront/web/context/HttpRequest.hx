@@ -54,8 +54,6 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 			if ( indexOfHash>-1 ) {
 				queryString = queryString.substring( 0, indexOfHash );
 			}
-
-			queryString = queryString.urlDecode();
 		}
 		return queryString;
 	}
@@ -65,7 +63,6 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 			postString = (httpMethod=="GET") ? "" : Web.getPostData();
 			if ( postString==null )
 				postString = "";
-			postString = postString.urlDecode();
 		}
 		return postString;
 	}
@@ -289,7 +286,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 			if ( index>0 ) {
 				var name = part.substr(0,index);
 				var val = part.substr(index+1);
-				map.add( name, val );
+				map.add( name, val.urlDecode() );
 			}
 		}
 		return map;

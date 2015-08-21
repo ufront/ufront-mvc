@@ -102,7 +102,8 @@ class HttpRequest {
 	/**
 	The raw query string in a GET request.
 
-	This is the part of the URL following a `?` character.
+	This is the part of the URL following a `?` character and before a `#` character.
+	This value has not been URL decoded.
 
 	Will return an empty String if there are no GET parameters.
 	**/
@@ -111,6 +112,8 @@ class HttpRequest {
 
 	/**
 	The raw post string in a POST request.
+
+	This value has not been URL decoded.
 
 	Will return an empty String if there are no POST parameters.
 	**/
@@ -121,6 +124,8 @@ class HttpRequest {
 	The query parameters included in this request for this request.
 
 	These are the parameters supplied in the URL, following the `?` character.
+
+	These values have been URL decoded.
 	**/
 	public var query(get, null):MultiValueMap<String>;
 	function get_query():MultiValueMap<String> return throw HttpError.abstractMethod();
@@ -129,6 +134,8 @@ class HttpRequest {
 	The POST parameters for this request.
 
 	If there are no POST parameters, or this is a GET request, this will return an empty map.
+
+	These values have been URL decoded.
 
 	> **Note:** If the request is a multipart request, and `parseMultipart` has not been called, it will be called to fetch all the post data from the various parts.
 	> Because `parseMultipart` can only be called once, this will prevent you from being able to process any file uploads.
@@ -175,8 +182,9 @@ class HttpRequest {
 	/**
 	The Uri requested in this HTTP request.
 
-	This is the URI before any filters have been applied.
+	This value has been URL decoded.
 
+	This is the URI before any URL filters have been applied.
 	See `HttpContext.getRequestUri()` for a filtered version of the URI.
 	**/
 	public var uri(get, null):String;
