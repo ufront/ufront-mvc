@@ -101,8 +101,8 @@ class HttpRequest {
 
 	/**
 	The raw query string in a GET request.
-
 	This is the part of the URL following a `?` character and before a `#` character.
+
 	This value has not been URL decoded.
 
 	Will return an empty String if there are no GET parameters.
