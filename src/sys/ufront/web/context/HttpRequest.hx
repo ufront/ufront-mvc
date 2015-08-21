@@ -45,18 +45,26 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 	override function get_queryString() {
 		if ( queryString==null ) {
 			queryString = Web.getParamsString();
+			if ( queryString==null )
+				queryString = "";
 
 			var indexOfHash = queryString.indexOf("#");
 			if ( indexOfHash>-1 ) {
 				queryString = queryString.substring( 0, indexOfHash );
 			}
+
+			queryString = queryString.urlDecode();
 		}
 		return queryString;
 	}
 
 	override function get_postString() {
-		if ( postString==null )
+		if ( postString==null ) {
 			postString = (httpMethod=="GET") ? "" : Web.getPostData();
+			if ( postString==null )
+				postString = "";
+			postString = postString.urlDecode();
+		}
 		return postString;
 	}
 
@@ -178,7 +186,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 					parseMultipart();
 			}
 			else {
-				post = getMultiValueMapFromString(postString);
+				post = getMultiValueMapFromString( postString );
 			}
 		}
 		return post;
@@ -210,6 +218,9 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 				// mod_neko has a peculiarity where mod_rewrite still passes "index.n" to the uri parameter, but only if the url is "/".
 				if( uri.endsWith("/index.n") )
 					uri = uri.substr( 0, uri.lastIndexOf("/")+1 );
+			#elseif php
+				// PHP does not decode the URI.
+				uri = uri.urlDecode();
 			#end
 		}
 		return uri;
@@ -262,7 +273,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 
 	static function getMultiValueMapFromString( s:String ):MultiValueMap<String> {
 		var map = new MultiValueMap();
-		for (part in s.split("&")) {
+		for ( part in s.split("&") ) {
 			var index = part.indexOf("=");
 			if ( index>0 ) {
 				var name = part.substr(0,index);
