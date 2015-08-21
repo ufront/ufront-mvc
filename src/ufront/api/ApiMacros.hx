@@ -348,7 +348,7 @@ class ApiMacros {
 						switch apiMember.getFunction() {
 							case Success(f):
 								// TODO: We should investigate if we can read metadata here instead of unifying types again.
-								var flags = getResultWrapFlagsForReturnType( f.ret, pos );
+								var flags = getResultWrapFlagsForReturnType( f.ret, apiMember.pos );
 								var returnType = getReturnType( f.ret, flags );
 								var posDetails = Context.getPosInfos( apiMember.pos );
 								var posInfos:PosInfos = { methodName:apiMember.name, lineNumber:0, fileName:posDetails.file, customParams:null, className:cb.target.name };
@@ -448,7 +448,7 @@ class ApiMacros {
 		I'm not sure if there is a workaround for this.
 	**/
 	static function asyncifyReturnType( rt:ComplexType, flags:EnumFlags<ApiReturnType> ):ComplexType {
-		var typeParams = getParamsFromComplexType( rt );
+		var typeParams = getParamsFromComplexType( rt, flags );
 		if ( flags.has(ARTVoid) ) {
 			return macro :tink.core.Future.Surprise<Noise,tink.core.Error.TypedError<ufront.remoting.RemotingError<tink.core.Noise>>>;
 		}
@@ -473,7 +473,7 @@ class ApiMacros {
 	}
 
 	static function getCallbackArgsForField( rt:ComplexType, flags:EnumFlags<ApiReturnType> ):Array<FunctionArg> {
-		var typeParams = getParamsFromComplexType( rt );
+		var typeParams = getParamsFromComplexType( rt, flags );
 		var onResultType:ComplexType,
 			onErrorType:ComplexType;
 		if ( flags.has(ARTVoid) ) {
@@ -508,17 +508,33 @@ class ApiMacros {
 		];
 	}
 
-	static function getParamsFromComplexType( ct:ComplexType ):Array<ComplexType> {
-		var typeParams = [];
-		switch ct {
-			case TPath(t):
-				for ( p in t.params ) switch p {
-					case TPType(paramCT): typeParams.push( paramCT );
-					case _:
+	static function getParamsFromComplexType( ct:ComplexType, flags:EnumFlags<ApiReturnType> ):Array<ComplexType> {
+		// Note we can't use the ComplexType parameters, in case the type is an alias and the type parameters
+		// have different meanings to those in Outcome, Future and Surprise.
+		function getParams(type:Type, expectedName:String):Array<Type> {
+			// Follow until we get to the expected type.
+			while ( type.match(TType(_,_)) ) {
+				var typeName = type.toString();
+				typeName = typeName.substr( 0, typeName.indexOf("<") );
+				if ( typeName!=expectedName ) {
+					type = type.reduce( true );
 				}
-			case _:
+				else break;
+			}
+			return switch type {
+				case TType(ref, params) if (ref.toString()==expectedName): params;
+				case TAbstract(ref, params) if (ref.toString()==expectedName): params;
+				case TEnum(ref, params) if (ref.toString()==expectedName): params;
+				case _:
+					Context.fatalError( 'Expected type ${type.toString()} to be a $expectedName', Context.currentPos() );
+			}
 		}
-		return typeParams;
+		var params =
+			if ( flags.has(ARTFuture) && flags.has(ARTOutcome) ) getParams( ct.toType().sure(), "tink.core.Surprise" );
+			else if ( flags.has(ARTFuture) ) getParams( ct.toType().sure(), "tink.core.Future" );
+			else if ( flags.has(ARTOutcome) ) getParams( ct.toType().sure(), "tink.core.Outcome" );
+			else [];
+		return [for (p in params) p.toComplex()];
 	}
 
 	static function buildAsyncFnBody( pos:PosInfos, args:Iterable<FunctionArg>, flags:EnumFlags<ApiReturnType> ):Expr {

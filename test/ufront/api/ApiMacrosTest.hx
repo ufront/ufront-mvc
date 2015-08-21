@@ -89,22 +89,32 @@ class ApiMacrosTest {
 	public function testContext() {
 		// Check that `UFApiContext.getApisInContext()` works.
 		var apis = UFApiContext.getApisInContext( MyApi );
-		Assert.equals( 2, apis.length );
+		Assert.equals( 3, apis.length );
 		Assert.equals( "ufront.api.ApiTest1", Type.getClassName(apis[0]) );
 		Assert.equals( "ufront.api.ApiTest2", Type.getClassName(apis[1]) );
+		Assert.equals( "ufront.api.ApiTest3", Type.getClassName(apis[2]) );
 	}
 
 	public function testAsyncProxies() {
 		var api1 = new ApiTest1();
 		var asyncApi1 = new ApiTest1Async();
 		var asyncApi2 = new ApiTest2Async();
+		var api3 = new ApiTest3();
+		var asyncApi3 = new ApiTest3Async();
 
 		// Check classes can be used as values
 		Assert.isTrue( Std.is(asyncApi1,ApiTest1Async) );
 		Assert.isTrue( Std.is(asyncApi2,ApiTest2Async) );
+
 		// Check interfaces
 		Assert.isTrue( Std.is(api1,MyApiInterface) );
 		Assert.isTrue( Std.is(asyncApi1,MyApiInterfaceAsync) );
+
+		// Ensure that aliases of tink.core.[Surprise|Future|Outcome] function correctly.
+		// Especially if these aliases have type parameters with different meanings to the tink type.
+		Assert.isTrue( Std.is(api3,Api3InterfaceSync) );
+		Assert.isTrue( Std.is(asyncApi3,Api3InterfaceAsync) );
+
 		// Check the `getAsyncApi` functionality.
 		var result = UFAsyncApi.getAsyncApi( ApiTest1 );
 		Assert.equals( "ufront.api.ApiTest1Async", Type.getClassName(result) );
@@ -175,10 +185,34 @@ class ApiTest2 extends UFApi {
 class ApiTest2Async extends UFAsyncApi<ApiTest2> {}
 
 //
+// Test API 3 using aliases of tink.core.* types to confuse type parameters.
+//
+class ApiTest3 extends UFApi implements Api3InterfaceSync {
+	public function returnOutcome():MyOutcome<String> return null;
+	public function returnFuture():MyFuture return null;
+	public function returnSurprise():MySurprise<Error,String> return null;
+}
+class ApiTest3Async extends UFAsyncApi<ApiTest3> implements Api3InterfaceAsync {}
+interface Api3InterfaceSync {
+	public function returnOutcome():Outcome<String,Error>;
+	public function returnFuture():Future<String>;
+	public function returnSurprise():Surprise<String,Error>;
+}
+interface Api3InterfaceAsync {
+	public function returnOutcome():Surprise<String,Error>;
+	public function returnFuture():Surprise<String,Error>;
+	public function returnSurprise():Surprise<String,Error>;
+}
+typedef MyOutcome<T> = Outcome<T,Error>;
+typedef MyFuture = Future<String>;
+typedef MySurprise<T1,T2> = Surprise<T2,T1>;
+
+//
 // Contexts
 //
 class MyApi extends UFApiContext {
 	var test1:ApiTest1;
 	var test2:ApiTest2;
+	var test3:ApiTest3;
 }
 class MyApiClient extends UFApiClientContext<MyApi> {}
