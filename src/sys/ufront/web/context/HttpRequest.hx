@@ -218,6 +218,10 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 				// mod_neko has a peculiarity where mod_rewrite still passes "index.n" to the uri parameter, but only if the url is "/".
 				if( uri.endsWith("/index.n") )
 					uri = uri.substr( 0, uri.lastIndexOf("/")+1 );
+				// nekotools also needs a URI decode.
+				if (Sys.executablePath().indexOf('nekotools') > -1) {
+					uri = uri.urlDecode();
+				}
 			#elseif php
 				// PHP does not decode the URI.
 				uri = uri.urlDecode();
