@@ -4,6 +4,8 @@ package sys.ufront.web.context;
 	import neko.Web;
 #elseif php
 	import php.Web;
+	import php.NativeArray;
+	import php.Lib;
 #end
 import haxe.io.Bytes;
 import ufront.web.upload.*;
@@ -130,13 +132,11 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 			currentContent = null;
 			partName = newPartName.urlDecode();
 			isFile = false;
-			if ( null!=newPartFilename ) {
-				if ( ""!=newPartFilename ) {
-					fileName = newPartFilename.urlDecode();
-					post.add(partName, fileName);
-					processCallbackResult( onPart(partName,fileName) );
-					isFile = true;
-				}
+			if ( newPartFilename!=null && newPartFilename!="" ) {
+				fileName = newPartFilename.urlDecode();
+				post.add(partName, fileName);
+				processCallbackResult( onPart(partName,fileName) );
+				isFile = true;
 			}
 		};
 		function doData( bytes:Bytes, pos:Int, len:Int ) {
@@ -151,10 +151,17 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 
 		// Call "parse_multipart_data" using the callbacks above
 		try {
-			Web.parseMultipart( doPart, doData );
+			#if php
+				// Haxe's Web.parseMultipart function can't handle post values that share the same name in a multipart request.
+				// We have a Ufront specific workaround, we support multiple values on a parameter, but only 1 level - no recursive PHP associative arrays.
+				WebOverride.parseMultipart( doPart, doData );
+			#else
+				Web.parseMultipart( doPart, doData );
+			#end
 		}
 		catch ( e:Dynamic ) {
-			var err = 'Failed to parse multipart data: $e';
+			var stack = haxe.CallStack.toString( haxe.CallStack.exceptionStack() );
+			var err = 'Failed to parse multipart data: $e\n$stack';
 			errors.push( err );
 		}
 
@@ -288,3 +295,73 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 		return map;
 	}
 }
+
+#if php
+private class WebOverride {
+	/**
+		Parse the multipart data. Call `onPart` when a new part is found
+		with the part name and the filename if present
+		and `onData` when some part data is readed. You can this way
+		directly save the data on hard drive in the case of a file upload.
+	**/
+	public static function parseMultipart( onPart : String -> String -> Void, onData : Bytes -> Int -> Int -> Void ) : Void {
+		var a : NativeArray = untyped __var__("_POST");
+		if(untyped __call__("get_magic_quotes_gpc"))
+			untyped __php__("reset($a); while(list($k, $v) = each($a)) $a[$k] = stripslashes((string)$v)");
+		var post = Lib.hashOfAssociativeArray(a);
+
+		for (key in post.keys())
+		{
+			onPart(key, "");
+			var v:Dynamic = post.get(key);
+			// Start Ufront Specific: check for an array here, and drill down 1 level only.
+			// The original Haxe version only called onData() assuming `v` was a String, which it is not always.
+			if (untyped __call__("is_array",v)) {
+				var map = Lib.hashOfAssociativeArray(v);
+				var first = true;
+				for (val in map) {
+					if (!first)
+						onPart(key, "");
+					onData(Bytes.ofString(val), 0, untyped __call__("strlen", val));
+					first = false;
+				}
+			}
+			else onData(Bytes.ofString(v), 0, untyped __call__("strlen", v));
+			// End Ufront Specific.
+		}
+
+		if(!untyped __call__("isset", __php__("$_FILES"))) return;
+		var parts : Array<String> = untyped __call__("new _hx_array",__call__("array_keys", __php__("$_FILES")));
+		for(part in parts) {
+			var info : Dynamic = untyped __php__("$_FILES[$part]");
+			var tmp : String = untyped info['tmp_name'];
+			var file : String = untyped info['name'];
+			var err : Int = untyped info['error'];
+
+			if(err > 0) {
+				switch(err) {
+					case 1: throw "The uploaded file exceeds the max size of " + untyped __call__('ini_get', 'upload_max_filesize');
+					case 2: throw "The uploaded file exceeds the max file size directive specified in the HTML form (max is" + untyped __call__('ini_get', 'post_max_size') + ")";
+					case 3: throw "The uploaded file was only partially uploaded";
+					case 4: continue; // No file was uploaded
+					case 6: throw "Missing a temporary folder";
+					case 7: throw "Failed to write file to disk";
+					case 8: throw "File upload stopped by extension";
+				}
+			}
+			onPart(part, file);
+			if ("" != file)
+			{
+				var h = untyped __call__("fopen", tmp, "r");
+				var bsize = 8192;
+				while (!untyped __call__("feof", h)) {
+					var buf : String = untyped __call__("fread", h, bsize);
+					var size : Int = untyped __call__("strlen", buf);
+					onData(Bytes.ofString(buf), 0, size);
+				}
+				untyped __call__("fclose", h);
+			}
+		}
+	}
+}
+#end
