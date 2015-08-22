@@ -567,7 +567,7 @@ class ControllerMacros {
 					if ( optional ) macro (uriParts[$v{partNum}]!=null && uriParts[$v{partNum}]!="") ? uriParts[$v{partNum}] : $defaultValue
 					else macro uriParts[$v{partNum}]
 				;
-				var lines = createReadExprForType( name, expr, type, optional, false);
+				var lines = createReadExprForType( name, name, expr, type, optional, false);
 				return { ident: ident, lines: lines };
 			case AKParams( params, allParamsOptional ):
 				var lines = [];
@@ -585,7 +585,7 @@ class ControllerMacros {
 					var tmpIdentName = '_param_tmp_'+p.name;
 					var tmpIdent = tmpIdentName.resolve();
 					var getValueExpr = if(p.array) macro params.getAll($v{p.name}) else macro params.get($v{p.name});
-					for ( l in createReadExprForType(tmpIdentName, getValueExpr, p.type, isOptional, p.array) ) {
+					for ( l in createReadExprForType('args.${p.name}',tmpIdentName, getValueExpr, p.type, isOptional, p.array) ) {
 						lines.push( l );
 					}
 					fields.push( { field: p.name, expr: tmpIdent } );
@@ -611,7 +611,7 @@ class ControllerMacros {
 		- validates the input
 		- declares and sets the value of the ident
 	**/
-	static function createReadExprForType( identName:String, readExpr:ExprOf<String>, type:RouteArgType, optional:Bool, array:Bool ):Array<Expr> {
+	static function createReadExprForType( paramName:String, identName:String, readExpr:ExprOf<String>, type:RouteArgType, optional:Bool, array:Bool ):Array<Expr> {
 		// Reification of `macro var $i{identName} = $readExpr` isn't working, so I'm using this helper
 		function createVarDecl( name:String, expr:Expr ) {
 			return {
@@ -630,11 +630,11 @@ class ControllerMacros {
 				[declaration];
 			case SATInt:
 				var declaration = createVarDecl( identName, if(array) macro $readExpr.map(function(a) return Std.parseInt(a)) else macro Std.parseInt($readExpr) );
-				var check = macro if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{identName}+":Int = "+$readExpr );
+				var check = macro if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Int = "+$readExpr );
 				( optional ) ? [declaration] : [declaration,check];
 			case SATFloat:
 				var declaration = createVarDecl( identName, if(array) macro $readExpr.map(function(a) return Std.parseFloat(a)) else macro Std.parseFloat($readExpr) );
-				var check = macro if (Math.isNaN($i{identName})) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{identName}+":Float = "+$readExpr );
+				var check = macro if (Math.isNaN($i{identName})) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Float = "+$readExpr );
 				( optional ) ? [declaration] : [declaration,check];
 			case SATBool:
 				var readStr = macro var v = $readExpr;
@@ -642,7 +642,7 @@ class ControllerMacros {
 				[readStr,transformToBool];
 			case SATDate:
 				var declaration = createVarDecl( identName, if(array) macro $readExpr.map(function(a) return try Date.fromString(a) catch(e:Dynamic) null) else macro try Date.fromString($readExpr) catch(e:Dynamic) null );
-				var check = macro if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{identName}+":Date = "+$readExpr );
+				var check = macro if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Date = "+$readExpr );
 				( optional ) ? [declaration] : [declaration,check];
 		}
 	}
