@@ -131,7 +131,12 @@ class HttpError {
 			case RClientCallbackException( remotingCallString, e ): Error.typed( 500, 'Error during callback after $remotingCallString: $e', error, pos );
 			case RUnserializeFailed( remotingCallString, troubleLine, err ): Error.typed( 422, 'Remoting serialization failed for call $remotingCallString: could not process $troubleLine', error, pos );
 			case RNoRemotingResult( remotingCallString, responseData ): Error.typed( 500, 'Error with response for $remotingCallString: no remoting response found', error, pos );
-			case RApiFailure( remotingCallString, data ): Error.typed( 500, 'Call to $remotingCallString failed: $data', error, pos );
+			case RApiFailure( remotingCallString, data ):
+				if ( Std.is(data,Error) ) {
+					var e:Error = cast data;
+					Error.typed( e.code, e.message, error, e.pos );
+				}
+				else Error.typed( 500, 'Call to $remotingCallString failed: $data', error, pos );
 			case RUnknownException( e ): Error.typed( 500, 'Unknown exception during remoting call', error, pos );
 		}
 	}
