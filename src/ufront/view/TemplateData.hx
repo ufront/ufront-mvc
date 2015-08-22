@@ -126,17 +126,27 @@ abstract TemplateData({}) to {} {
 	}
 
 	/**
-	Set many values from a `Map<String,Dynamic>`
+	Set many values from an object.
 
-	`templateData.set(fieldName,fieldValue)` will be called for each field on the object.
+	`templateData.set(fieldName,fieldValue)` will be called for each field or property on the object.
 
-	Reflect is used with `fields` and `field` to read the value of every field.
+	The behaviour differ depending on if this is an anonymous object or a class instance:
 
-	@param map The data object to set.
+	- Anonymous objects will find all fields using `Reflect.fields()` and fetch the values using `Reflect.field()`.
+	- Class instance objects will find all fields using `Type.getInstanceFields()` and fetch the values using `Reflect.getProperty()`.
+	- Other values will be ignored.
+
+	@param d The data object to set.
 	@return The same TemplateData so that method chaining is enabled.
 	**/
 	public function setObject( d:{} ):TemplateData {
-		for ( k in Reflect.fields(d) ) set( k, Reflect.field(d,k) );
+		switch Type.typeof(d) {
+			case TObject:
+				for ( k in Reflect.fields(d) ) set( k, Reflect.field(d,k) );
+			case TClass(cls):
+				for ( k in Type.getInstanceFields(cls) ) set( k, Reflect.getProperty(d,k) );
+			case _:
+		}
 		return new TemplateData( this );
 	}
 
@@ -190,11 +200,11 @@ abstract TemplateData({}) to {} {
 	/**
 	Automatically cast from an object to a TemplateData.
 
-	This is a no-op - the object will be used as is.
+	This results in a new object, the equivalent of calling `new TemplateData().setObject( d )`.
 
 	This cast comes last in the code so it should be used only if none of the other casts were utilised.
 	**/
 	@:from public static inline function fromObject( d:{} ):TemplateData {
-		return new TemplateData( d );
+		return new TemplateData( {} ).setObject( d );
 	}
 }
