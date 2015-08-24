@@ -577,7 +577,7 @@ class ControllerMacros {
 
 					// If it is not optional, add check to make sure it is present
 					var isOptional = p.optional || allParamsOptional;
-					if ( false==isOptional ) {
+					if ( false==isOptional && p.type.match(SATBool)==false ) {
 						var checkExists = macro if ( !params.exists($v{p.name}) ) throw ufront.web.HttpError.badRequest( 'Missing parameter '+$v{p.name} );
 						lines.push( checkExists );
 					}
@@ -638,7 +638,7 @@ class ControllerMacros {
 				( optional ) ? [declaration] : [declaration,check];
 			case SATBool:
 				var readStr = macro var v = $readExpr;
-				var transformToBool = createVarDecl( identName, if(array) macro $readExpr.map(function(v) return (v!="false" && v!="0" && v!="null")) else macro (v!="false" && v!="0" && v!="null") );
+				var transformToBool = createVarDecl( identName, if(array) macro $readExpr.map(function(v) return (v!=null && v!="false" && v!="0" && v!="null")) else macro (v!=null && v!="false" && v!="0" && v!="null") );
 				[readStr,transformToBool];
 			case SATDate:
 				var declaration = createVarDecl( identName, if(array) macro $readExpr.map(function(a) return try Date.fromString(a) catch(e:Dynamic) null) else macro try Date.fromString($readExpr) catch(e:Dynamic) null );
