@@ -286,7 +286,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 			if ( index>0 ) {
 				var name = part.substr(0,index);
 				var val = part.substr(index+1);
-				map.add( name, val.urlDecode() );
+				map.add( name.urlDecode(), val.urlDecode() );
 			}
 		}
 		return map;
