@@ -422,6 +422,31 @@ class TestUtils {
 		}
 
 		/**
+		Save the HTML output of the request to a static HTML file.
+
+		This can be useful for generating screenshots (using `wkhtmltoimage` or similar) and using them for quality control.
+
+		@param testContext The outcome from a call to `this.testRoute()`.
+		@param filename The filename to save the HTML content to. If the directory does not exist it will be created.
+		@return The same `testContext` that was passed in.
+		**/
+		public static function saveHtmlOutput( testContext:RequestTestContext, filename:String ):RequestTestContext {
+			#if sys
+				var doneCallback = Assert.createAsync();
+				testContext.result.handle(function(_) {
+					var html = testContext.context.response.getBuffer();
+					var dir = haxe.io.Path.directory( filename );
+					sys.FileSystem.createDirectory( dir );
+					sys.io.File.saveContent( filename, html );
+					doneCallback();
+				});
+				return testContext;
+			#else
+				throw 'saveHtmlOutput Not implemented on non-sys platforms';
+			#end
+		}
+
+		/**
 		Call a callback function after the test request has finished executing.
 
 		This can be useful to either:
