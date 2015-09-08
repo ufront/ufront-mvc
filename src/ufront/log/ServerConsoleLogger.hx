@@ -24,8 +24,11 @@ class ServerConsoleLogger implements UFLogHandler {
 		var messages = [];
 
 		var userDetails = ctx.request.clientIP;
-		if ( ctx.sessionID!=null ) userDetails += ' ${ctx.sessionID}';
-		if ( ctx.currentUserID!=null ) userDetails += ' ${ctx.currentUserID}';
+		try {
+			if ( ctx.sessionID!=null ) userDetails += ' ${ctx.sessionID}';
+			if ( ctx.currentUserID!=null ) userDetails += ' ${ctx.currentUserID}';
+		}
+		catch (e:Dynamic) {}
 		var requestLog = '[${ctx.request.httpMethod} ${ctx.request.uri}] from [$userDetails], response: [${ctx.response.status} ${ctx.response.contentType}]';
 
 		messages.push( requestLog );

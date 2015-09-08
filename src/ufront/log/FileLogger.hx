@@ -68,8 +68,11 @@ class FileLogger implements UFLogHandler implements UFInitRequired {
 		var req = context.request;
 		var res = context.response;
 		var userDetails = req.clientIP;
-		if ( context.sessionID!=null ) userDetails += ' ${context.sessionID}';
-		if ( context.currentUserID!=null ) userDetails += ' ${context.currentUserID}';
+		try {
+			if ( context.sessionID!=null ) userDetails += ' ${context.sessionID}';
+			if ( context.currentUserID!=null ) userDetails += ' ${context.currentUserID}';
+		}
+		catch (e:Dynamic) {}
 
 		var content = '${Date.now()} [${req.httpMethod}] [${req.uri}] from [$userDetails], response: [${res.status} ${res.contentType}]\n';
 		for( msg in context.messages )
