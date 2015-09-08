@@ -29,6 +29,8 @@ class TestSession implements UFHttpSession {
 
 	public function isActive():Bool return true;
 
+	public function isReady():Bool return true;
+
 	public function get( name:String ):Dynamic return map[name];
 
 	public function set( name:String, value:Dynamic ):Void map[name] = value;

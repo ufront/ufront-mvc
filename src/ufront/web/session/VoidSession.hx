@@ -26,6 +26,8 @@ class VoidSession implements UFHttpSession {
 
 	public function isActive():Bool return false;
 
+	public function isReady():Bool return false;
+
 	public function get( name:String ):Dynamic return null;
 
 	public function set( name:String, value:Dynamic ):Void {}
