@@ -20,7 +20,7 @@ public function showHomepage() {
 }
 ```
 **/
-class CallJavascriptResult<T:ActionResult> extends ActionResult {
+class CallJavascriptResult<T:ActionResult> extends ActionResult implements WrappedResult<T> {
 
 	// Static helpers
 

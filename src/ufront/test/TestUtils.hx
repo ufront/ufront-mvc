@@ -10,6 +10,7 @@ import ufront.web.Controller;
 import ufront.log.OriginalTraceLogger;
 import ufront.app.*;
 import ufront.web.result.ActionResult;
+import ufront.web.result.WrappedResult;
 import ufront.core.MultiValueMap;
 import minject.Injector;
 #if neko import neko.Web; #end
@@ -372,15 +373,21 @@ class TestUtils {
 
 		@param testContext The outcome from a call to `this.testRoute()`.
 		@param expectedResultType The class you are expecting your result to be. For example, a `JsonResult`.
+		@param unwrapWrappedResults If the result type is wrappped (eg by `CallJavascriptResult`) should we unwrap it before checking the type? Default is true.
 		@param check (optional) A function to execute with additional tests, so you can analyze the result in more detail.
 		@return The same `testContext` that was passed in.
 		**/
-		public static function checkResult<T:ActionResult>( testContext:RequestTestContext, expectedResultType:Class<T>, ?check:T->Void, ?p:PosInfos ):RequestTestContext {
+		public static function checkResult<T:ActionResult>( testContext:RequestTestContext, expectedResultType:Class<T>, ?unwrapWrappedResults:Bool=true, ?check:T->Void, ?p:PosInfos ):RequestTestContext {
 			var doneCallback = Assert.createAsync();
 			var failuresBefore = countFailures();
 			testContext.result.handle( function(outcome) switch outcome {
 				case Success(_):
 					var res = testContext.context.actionContext.actionResult;
+					if ( unwrapWrappedResults ) {
+						while ( Std.is(res,WrappedResult) ) {
+							res = cast(res,WrappedResult<Dynamic>).originalResult;
+						}
+					}
 					Assert.is( res, expectedResultType, 'Expected result to be ${Type.getClassName(expectedResultType)}, but it was ${Type.getClassName(Type.getClass(res))}', p );
 					if ( check!=null && Std.is(res,expectedResultType) ) {
 						check( cast res );
