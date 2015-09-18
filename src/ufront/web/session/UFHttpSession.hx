@@ -7,7 +7,7 @@ An interface describing an open HTTP session.
 
 The methods are similar to `Map`, with `get()`, `set()`, `exists()`, `remove()` and `clear()`.
 
-There are also some methods and properties to do with the actual session, not the data inside it: `init()`, `isActive()`, `id`, `close()`, `commit()`, `regenerateID()` and `setExpiry()`.
+There are also some methods and properties to do with the actual session, not the data inside it: `init()`, `isActive()`, `isReady()`, `id`, `close()`, `commit()`, `regenerateID()` and `setExpiry()`.
 
 Using the `UFHttpSession` interface, rather than one of the implementation classes, allows you to write code that can function with a different session implementation.
 This is useful if you are writing that will be used by multiple apps (perhaps with multiple session implementations), or if you might change your session technology in future.
@@ -59,6 +59,9 @@ interface UFHttpSession {
 
 	/** Return whether or not the session is active, meaning it has been initialised either in this request or in a previous request. **/
 	public function isActive():Bool;
+
+	/** Return whether or not the session is ready, meaning init() has been called and it is ready to use. **/
+	public function isReady():Bool;
 
 	/**
 	Flag the current session for removal.

@@ -49,11 +49,11 @@ class InlineSessionMiddleware implements UFMiddleware {
 	}
 
 	/**
-	If the session is active, commit the session before finishing the request.
+	If the session is active and has been used, commit the session before finishing the request.
 	**/
 	public function responseOut( ctx:HttpContext ):Surprise<Noise,Error> {
 		return
-			if ( ctx.session!=null && ctx.session.isActive() ) ctx.session.commit();
+			if ( ctx.session!=null && ctx.session.isReady() ) ctx.session.commit();
 			else SurpriseTools.success();
 	}
 }

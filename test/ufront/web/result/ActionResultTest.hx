@@ -3,6 +3,7 @@ package ufront.web.result;
 import utest.Assert;
 import ufront.web.result.ActionResult;
 import ufront.web.result.*;
+import ufront.web.url.filter.*;
 using ufront.test.TestUtils;
 
 class ActionResultTest {
@@ -53,5 +54,49 @@ class ActionResultTest {
 			Assert.equals( "/homepage/", ctx3.response.redirectLocation );
 			done2();
 		});
+	}
+
+	public function testTransformUri() {
+		var uri1 = "/";
+		var uri2 = "~/";
+		var uri3 = "/home/index.html";
+		var uri4 = "~/home/index.html";
+		var uri5 = "http://some/~/home/index.html";
+
+		var contextSimple = "/".mockHttpContext();
+		var contextDirFilter = "/".mockHttpContext();
+		contextDirFilter.setUrlFilters([ new DirectoryUrlFilter("/path/to/app/") ]);
+		var contextPathInfoFilter = "/".mockHttpContext();
+		contextPathInfoFilter.setUrlFilters([ new PathInfoUrlFilter("index.php",false) ]);
+		var contextQueryStringFilter = "/".mockHttpContext();
+		contextQueryStringFilter.setUrlFilters([ new QueryStringUrlFilter("page","index.php",true) ]);
+
+		// No URL filters
+		Assert.equals( "/", ActionResult.transformUri(contextSimple.actionContext,uri1) );
+		Assert.equals( "/", ActionResult.transformUri(contextSimple.actionContext,uri2) );
+		Assert.equals( "/home/index.html", ActionResult.transformUri(contextSimple.actionContext,uri3) );
+		Assert.equals( "/home/index.html", ActionResult.transformUri(contextSimple.actionContext,uri4) );
+		Assert.equals( "http://some/~/home/index.html", ActionResult.transformUri(contextSimple.actionContext,uri5) );
+
+		// Directory URL filter
+		Assert.equals( "/", ActionResult.transformUri(contextDirFilter.actionContext,uri1) );
+		Assert.equals( "/path/to/app", ActionResult.transformUri(contextDirFilter.actionContext,uri2) );
+		Assert.equals( "/home/index.html", ActionResult.transformUri(contextDirFilter.actionContext,uri3) );
+		Assert.equals( "/path/to/app/home/index.html", ActionResult.transformUri(contextDirFilter.actionContext,uri4) );
+		Assert.equals( "http://some/~/home/index.html", ActionResult.transformUri(contextDirFilter.actionContext,uri5) );
+
+		// Path info URL filter
+		Assert.equals( "/", ActionResult.transformUri(contextPathInfoFilter.actionContext,uri1) );
+		Assert.equals( "/index.php", ActionResult.transformUri(contextPathInfoFilter.actionContext,uri2) );
+		Assert.equals( "/home/index.html", ActionResult.transformUri(contextPathInfoFilter.actionContext,uri3) );
+		Assert.equals( "/index.php/home/index.html", ActionResult.transformUri(contextPathInfoFilter.actionContext,uri4) );
+		Assert.equals( "http://some/~/home/index.html", ActionResult.transformUri(contextPathInfoFilter.actionContext,uri5) );
+
+		// Query String URL filter
+		Assert.equals( "/", ActionResult.transformUri(contextQueryStringFilter.actionContext,uri1) );
+		Assert.equals( "/", ActionResult.transformUri(contextQueryStringFilter.actionContext,uri2) );
+		Assert.equals( "/home/index.html", ActionResult.transformUri(contextQueryStringFilter.actionContext,uri3) );
+		Assert.equals( "/index.php?page=/home/index.html", ActionResult.transformUri(contextQueryStringFilter.actionContext,uri4) );
+		Assert.equals( "http://some/~/home/index.html", ActionResult.transformUri(contextQueryStringFilter.actionContext,uri5) );
 	}
 }

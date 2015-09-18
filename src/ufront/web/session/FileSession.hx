@@ -458,6 +458,11 @@ class FileSession implements UFHttpSession {
 		return started || get_id()!=null;
 	}
 
+	/** Return whether or not the session is ready to use (has been initialised). **/
+	public inline function isReady():Bool {
+		return started;
+	}
+
 	/**
 	Return the current ID, either one that has been set during `this.init()`, or one found in either `HttpRequest.cookies` or `HttpRequest.params`.
 	**/

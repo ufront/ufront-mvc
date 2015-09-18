@@ -29,6 +29,18 @@ class ActionResult {
 	}
 
 	/**
+	A helper function to transform any clean URI (beginning with `~/`) into a concrete URI by applying the `UFUrlFilter` filters on the current app.
+
+	For example might transform `~/login/` into `/my/app/login/` or `index.php?q=/login/` depending on your filters.
+	URLs which do not begin with `~/` will not be affected.
+	**/
+	public static function transformUri( actionContext:ActionContext, uri:String ):String {
+		if ( StringTools.startsWith(uri,"~/") )
+			return actionContext.httpContext.generateUri( uri.substr(2) );
+		else return uri;
+	}
+
+	/**
 		Wrap a dynamic result in an ActionResult.
 
 		If it is null, an `EmptyResult` will be used.

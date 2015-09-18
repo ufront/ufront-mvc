@@ -176,6 +176,16 @@ By default, it is configured to use the `FileViewEngine`, loading views from the
 We use a `UFViewEngine` to load our templates, and these support multiple templating engines.
 You can view some available engines in `TemplatingEngines`, and it will be fairly easy to create a new templating engine if needed.
 You can use `UfrontApplication.addTemplatingEngine()` to add a new engine, which will then be available to your view results.
+
+### Partial URLs
+
+We will use `ContentResult.replaceRelativeLinks` to replace relative URIs in HTML `src`, `href` and `action` attributes.
+
+```
+<a href="~/login/">Login</a>
+... becomes ...
+<a href="/path/to/app/index.php?q=/login/">Login</a>
+```
 **/
 class ViewResult extends ActionResult {
 
@@ -340,6 +350,8 @@ class ViewResult extends ActionResult {
 					var finalOut =
 						if ( layoutTemplate.match(Success(null)) ) viewOut
 						else executeTemplate( "layout", layoutTemplate, combinedData.set('viewContent',viewOut) ).sure();
+
+					finalOut = ContentResult.replaceRelativeLinks( actionContext, finalOut );
 
 					writeResponse( finalOut, combinedData, actionContext );
 					this.finalOutputTrigger.trigger( finalOut );

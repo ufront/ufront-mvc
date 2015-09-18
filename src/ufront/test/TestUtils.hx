@@ -10,6 +10,7 @@ import ufront.web.Controller;
 import ufront.log.OriginalTraceLogger;
 import ufront.app.*;
 import ufront.web.result.ActionResult;
+import ufront.web.result.WrappedResult;
 import ufront.core.MultiValueMap;
 import minject.Injector;
 #if neko import neko.Web; #end
@@ -372,15 +373,21 @@ class TestUtils {
 
 		@param testContext The outcome from a call to `this.testRoute()`.
 		@param expectedResultType The class you are expecting your result to be. For example, a `JsonResult`.
+		@param unwrapWrappedResults If the result type is wrappped (eg by `CallJavascriptResult`) should we unwrap it before checking the type? Default is true.
 		@param check (optional) A function to execute with additional tests, so you can analyze the result in more detail.
 		@return The same `testContext` that was passed in.
 		**/
-		public static function checkResult<T:ActionResult>( testContext:RequestTestContext, expectedResultType:Class<T>, ?check:T->Void, ?p:PosInfos ):RequestTestContext {
+		public static function checkResult<T:ActionResult>( testContext:RequestTestContext, expectedResultType:Class<T>, ?unwrapWrappedResults:Bool=true, ?check:T->Void, ?p:PosInfos ):RequestTestContext {
 			var doneCallback = Assert.createAsync();
 			var failuresBefore = countFailures();
 			testContext.result.handle( function(outcome) switch outcome {
 				case Success(_):
 					var res = testContext.context.actionContext.actionResult;
+					if ( unwrapWrappedResults ) {
+						while ( Std.is(res,WrappedResult) ) {
+							res = cast(res,WrappedResult<Dynamic>).originalResult;
+						}
+					}
 					Assert.is( res, expectedResultType, 'Expected result to be ${Type.getClassName(expectedResultType)}, but it was ${Type.getClassName(Type.getClass(res))}', p );
 					if ( check!=null && Std.is(res,expectedResultType) ) {
 						check( cast res );
@@ -412,6 +419,31 @@ class TestUtils {
 				doneCallback();
 			});
 			return testContext;
+		}
+
+		/**
+		Save the HTML output of the request to a static HTML file.
+
+		This can be useful for generating screenshots (using `wkhtmltoimage` or similar) and using them for quality control.
+
+		@param testContext The outcome from a call to `this.testRoute()`.
+		@param filename The filename to save the HTML content to. If the directory does not exist it will be created.
+		@return The same `testContext` that was passed in.
+		**/
+		public static function saveHtmlOutput( testContext:RequestTestContext, filename:String ):RequestTestContext {
+			#if sys
+				var doneCallback = Assert.createAsync();
+				testContext.result.handle(function(_) {
+					var html = testContext.context.response.getBuffer();
+					var dir = haxe.io.Path.directory( filename );
+					sys.FileSystem.createDirectory( dir );
+					sys.io.File.saveContent( filename, html );
+					doneCallback();
+				});
+				return testContext;
+			#else
+				throw 'saveHtmlOutput Not implemented on non-sys platforms';
+			#end
 		}
 
 		/**

@@ -27,11 +27,11 @@ class ControllerTest {
 	}
 
 	public function testBaseUri():Void {
-		'/baseurl/'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "/" );
-		'/sub/baseurl/'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "/sub/" );
-		'/sub/baseurl'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "/sub/" );
-		'/custom/jason/baseurl'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "/custom/jason/" );
-		'/custom/ufront/baseurl'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "/custom/ufront/" );
+		'/baseurl/'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "~/" );
+		'/sub/baseurl/'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "~/sub/" );
+		'/sub/baseurl'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "~/sub/" );
+		'/custom/jason/baseurl'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "~/custom/jason/" );
+		'/custom/ufront/baseurl'.mockHttpContext().testRoute( TopController ).assertSuccess().responseShouldBe( "~/custom/ufront/" );
 	}
 }
 

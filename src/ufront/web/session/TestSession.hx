@@ -12,7 +12,7 @@ This is useful for writing unit tests etc.
 **/
 class TestSession implements UFHttpSession {
 	public var id(get,null):String;
-    public var map:Map<String,Dynamic>;
+	public var map:Map<String,Dynamic>;
 
 	public function new() {
 		map = new Map();
@@ -28,6 +28,8 @@ class TestSession implements UFHttpSession {
 	public function triggerCommit():Void {};
 
 	public function isActive():Bool return true;
+
+	public function isReady():Bool return true;
 
 	public function get( name:String ):Dynamic return map[name];
 

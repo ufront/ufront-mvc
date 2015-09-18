@@ -175,9 +175,11 @@ class Controller {
 	/**
 	The Base URI that was used to access this controller.
 
+	This is the URL after filters have been processed, as it is used for routing.
+	This will always begin with `~/` indicating that it is a relative URL, and will be transformed if you have URL filters and use it in a `ViewResult`, `ContentResult`, `RedirectResult` or `DetoxResult`.
 	This will always include a trailing slash.
 
-	For example if you had `/user/profile/jason/` trigger `UserController` and the `profile` action for "jason", then baseUri would be `/user/`.
+	For example if you had `/user/profile/jason/` trigger `UserController` and the `profile` action for "jason", then baseUri would be `~/user/`.
 
 	This is set at the beginning of `this.execute()`, before routing occurs.
 	**/
@@ -264,7 +266,7 @@ class Controller {
 	function setBaseUri( uriPartsBeforeRouting:Array<String> ) {
 		var remainingUri = uriPartsBeforeRouting.join( "/" ).addTrailingSlash();
 		var fullUri = context.getRequestUri().addTrailingSlash();
-		baseUri = fullUri.substr( 0, fullUri.length-remainingUri.length ).addTrailingSlash();
+		baseUri = "~" + fullUri.substr( 0, fullUri.length-remainingUri.length ).addTrailingSlash();
 	}
 
 	/** Based on a set of enum flags, wrap as required.  If null, return an appropriately wrapped EmptyResult() **/
