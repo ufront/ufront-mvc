@@ -3,6 +3,7 @@ package ufront.web.result;
 import utest.Assert;
 import ufront.web.result.ContentResult;
 import ufront.test.TestUtils.NaturalLanguageTests.*;
+import ufront.web.url.filter.*;
 using ufront.test.TestUtils;
 using tink.CoreApi;
 
@@ -39,6 +40,41 @@ class ContentResultTest {
 		.onTheController( ContentResultTestController )
 		.itShouldLoad()
 		.responseShouldBe( "<html><body>Hello!</body></html>" );
+	}
+
+	public function testReplaceRelativeLinks() {
+		var html = '<html>
+		<a href="/">Absolute</a>
+		<a href="~/">Relative</a>
+		<img src=\'/absolute.jpg\' />
+		<img src=\'~/relative.png\' />
+		<a href="/absolute/">Link</a>
+		<a href="~/relative/">Link</a>
+		<script src=\'/absolute.js\' />
+		<script src=\'~/relative.js\' />
+		"~/relative/"
+		\'~/relative/\'
+		Done!';
+		var expected = '<html>
+		<a href="/">Absolute</a>
+		<a href="/path/to/app/index.php?q=/">Relative</a>
+		<img src=\'/absolute.jpg\' />
+		<img src=\'/path/to/app/index.php?q=/relative.png\' />
+		<a href="/absolute/">Link</a>
+		<a href="/path/to/app/index.php?q=/relative/">Link</a>
+		<script src=\'/absolute.js\' />
+		<script src=\'/path/to/app/index.php?q=/relative.js\' />
+		"~/relative/"
+		\'~/relative/\'
+		Done!';
+
+		var context = "/".mockHttpContext();
+		context.setUrlFilters([
+			new DirectoryUrlFilter( "/path/to/app" ),
+			new QueryStringUrlFilter( "q", "index.php", false )
+		]);
+		var actual = ContentResult.replaceRelativeLinks( context.actionContext, html );
+		Assert.equals( expected, actual );
 	}
 }
 

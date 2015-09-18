@@ -9,6 +9,8 @@ using tink.CoreApi;
 An `ActionResult` that redirects the client to a new location.
 
 This works using `HttpResponse.redirect(url)` or `HttpResponse.permanentRedirect(url)`.
+
+Relative links (beginning with `~/`) will be processed using `HttpContext.generateUri()`.
 **/
 class RedirectResult extends ActionResult {
 
@@ -45,10 +47,11 @@ class RedirectResult extends ActionResult {
 		actionContext.httpContext.response.clearContent();
 		actionContext.httpContext.response.clearHeaders();
 
+		var transformedUrl = ActionResult.transformUri( actionContext, url );
 		if(permanentRedirect)
-			actionContext.httpContext.response.permanentRedirect( url );
+			actionContext.httpContext.response.permanentRedirect( transformedUrl );
 		else
-			actionContext.httpContext.response.redirect( url );
+			actionContext.httpContext.response.redirect( transformedUrl );
 
 		return SurpriseTools.success();
 	}

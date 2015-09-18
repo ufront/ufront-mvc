@@ -31,6 +31,8 @@ package ufront.web.result;
 	layout.view = myViewWidget;
 	return new DetoxResult( layout );
 	```
+
+	Partial URLs used in `src=`, `href=` and `<form action=` attributes will be processed using `ActionResult.transformUri`.
 	**/
 	class DetoxResult<W:Widget> extends ActionResult {
 
@@ -104,11 +106,31 @@ package ufront.web.result;
 			}
 			layout.mapData( data );
 
+			replaceRelativeLinks( actionContext, layout );
+
 			var dt = (docType!=null) ? docType : defaultDocType;
 			actionContext.httpContext.response.contentType = (contentType!=null) ? contentType : defaultContentType;
 			actionContext.httpContext.response.write( dt + layout.html() );
 
 			return SurpriseTools.success();
+		}
+
+		/**
+		Process a `DOMCollection` and look for relative links (beginning with `~/`) to process.
+
+		This will search for `*[href]`, `*[src]` and `form[action]` attributes and process them using `ActionResult.transformUri`.
+		**/
+		public static function replaceRelativeLinks( actionContext:ActionContext, layout:DOMCollection ) {
+			function replace( element:String, attribute:String ) {
+				for ( node in layout.find('$element[$attribute^="~/"]') ) {
+					var originalUri = node.attr( attribute );
+					var transformedUri = ActionResult.transformUri( actionContext, originalUri );
+					node.setAttr( attribute, transformedUri );
+				}
+			}
+			replace( "", "href" );
+			replace( "", "src" );
+			replace( "form", "action" );
 		}
 	}
 #end
