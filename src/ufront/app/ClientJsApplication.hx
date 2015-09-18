@@ -15,6 +15,9 @@ package ufront.app;
 	import ufront.api.*;
 	import pushstate.PushState;
 	import ufront.web.url.filter.*;
+	import ufront.web.client.UFClientAction;
+	import tink.CoreApi;
+	import ufront.core.ClassRef;
 	using ufront.core.InjectionTools;
 	using StringTools;
 
@@ -63,6 +66,13 @@ package ufront.app;
 		It is configured using the `viewEngine` property on your `UfrontClientConfiguration`.
 		**/
 		public var viewEngine(default,null):UFViewEngine;
+
+		/**
+		Get the most recent `HttpContext`.
+
+		If no requests have been executed yet, this will generate a new HttpContext based on the current browser state.
+		**/
+		public var currentContext(get,null):HttpContext;
 
 		/**
 		Initialize a new ClientJsApplication with the given configurations.
@@ -167,6 +177,72 @@ package ufront.app;
 				this.executeRequest();
 			});
 			return this;
+		}
+
+		override public function executeRequest():Surprise<Noise,Error> {
+			loadCurrentContext();
+			return this.execute( currentContext );
+		}
+
+		override public function init():Surprise<Noise,Error> {
+			_currentApps.push( this );
+			return super.init();
+		}
+
+		override public function dispose():Surprise<Noise,Error> {
+			_currentApps.remove( this );
+			return super.dispose();
+		}
+
+		/**
+		Register a `UFClientAction` to be available in `this.executeAction`.
+		**/
+		public function registerAction( actionClass:Class<UFClientAction<Dynamic>> ):ClientJsApplication {
+			this.injector.mapRuntimeTypeOf( actionClass ).asSingleton();
+			return this;
+		}
+
+		/**
+		Execute a given UFClientAction, optionally passing data to the method.
+
+		If the `UFClientAction` has been triggered before, the action instance will be re-used.
+		If not, it will be created using dependency injection.
+
+		The action will be executed using `this.currentContext` and the provided data.
+
+		@param actionClass The `Class<UFClientAction>` or class name (as a `String`) for the action to execute.
+		@param data (optional) The data to provide to the action.
+		**/
+		public function executeAction<T>( actionClass:ClassRef<UFClientAction<T>>, ?data:Null<T> ):Void {
+			if ( this.injector.hasMapping(actionClass.toString()) ) {
+				var action:UFClientAction<T> = this.injector.getValueForType( actionClass.toString() );
+				action.execute( this.currentContext, data );
+			}
+			else throw 'UFClientAction ${actionClass.toString()} was not registered with the ClientJsApplication.';
+		}
+
+		function get_currentContext():HttpContext {
+			if ( this.currentContext==null )
+				loadCurrentContext();
+			return currentContext;
+		}
+
+		function loadCurrentContext() {
+			this.currentContext = HttpContext.createContext( this.injector, urlFilters );
+		}
+
+		// Statics used to expose `ufExecuteAction()` method.
+		static var _currentApps:Array<ClientJsApplication> = [];
+
+		/**
+		Call `executeAction()` for the current application (or applications).
+
+		This is exposed to the Javscript context as `ufExecuteAction()` and so can be called from 3rd party code.
+		**/
+		@:expose("ufExecuteAction")
+		public static function ufExecuteAction<T>( actionClass:ClassRef<UFClientAction<T>>, ?data:Null<T> ):Void {
+			for ( app in _currentApps )
+				app.executeAction( actionClass, data );
 		}
 	}
 #end

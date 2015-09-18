@@ -9,6 +9,7 @@ import ufront.api.*;
 import ufront.web.session.*;
 import ufront.auth.*;
 import ufront.web.context.*;
+import ufront.web.client.UFClientAction;
 import ufront.module.*;
 import ufront.app.UFMiddleware;
 import ufront.app.UFErrorHandler;
@@ -112,6 +113,15 @@ typedef UfrontClientConfiguration = {
 	@:optional public var apis:Null<Iterable<Class<UFApi>>>;
 
 	/**
+	Client Actions to add to the Dependency Injector.
+
+	These classes will be added to the application injector, mapped as singletons.
+
+	If not supplied, the default list will include all `UFClientAction` classes, fetched using `CompileTime.getAllClasses()`.
+	**/
+	@:optional public var clientActions:Null<Iterable<Class<UFClientAction<Dynamic>>>>;
+
+	/**
 	ViewEngine to add to the Dependency Injector.
 
 	This engine will be used to load views created using `ufront.web.result.ViewResult`, or other views as you need them.
@@ -186,6 +196,7 @@ class DefaultUfrontClientConfiguration {
 			disableBrowserTrace: false,
 			controllers: CompileTime.getAllClasses( Controller ),
 			apis: CompileTime.getAllClasses( UFApi ),
+			clientActions: CompileTime.getAllClasses( UFClientAction ),
 			viewEngine: HttpViewEngine,
 			templatingEngines: TemplatingEngines.all,
 			viewPath: "/view/",

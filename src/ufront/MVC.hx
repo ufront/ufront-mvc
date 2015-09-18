@@ -105,6 +105,9 @@ class MVC {}
 @:noDoc @:noUsing typedef UFTemplate = ufront.view.UFTemplate;
 @:noDoc @:noUsing typedef UFViewEngine = ufront.view.UFViewEngine;
 
+// `ufront.web.client` package
+@:noDoc @:noUsing typedef UFClientAction<T> = ufront.web.client.UFClientAction<T>;
+
 // `ufront.web.context` package
 @:noDoc @:noUsing typedef ActionContext = ufront.web.context.ActionContext;
 @:noDoc @:noUsing typedef HttpContext = ufront.web.context.HttpContext.HttpContext;
