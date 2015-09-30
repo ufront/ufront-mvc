@@ -244,5 +244,13 @@ package ufront.app;
 			for ( app in _currentApps )
 				app.executeAction( actionClass, data );
 		}
+
+		@:expose("ufExecuteSerializedAction")
+		public static function ufExecuteSerializedAction<T>( actionClass:ClassRef<UFClientAction<T>>, ?serializedData:Null<String> ):Void {
+			var data:T =
+				if ( serializedData==null ) null
+				else haxe.Unserializer.run( serializedData );
+			ufExecuteAction( actionClass, data );
+		}
 	}
 #end
