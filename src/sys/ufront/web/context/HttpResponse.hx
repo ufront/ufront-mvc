@@ -40,7 +40,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 			_flushedHeaders = true;
 			for ( key in _headers.keys() ) {
 				var val = _headers.get(key);
-				if ( key=="Content-type" && null!=charset && val.startsWith('text/') ) {
+				if ( key=="Content-type" && null!=charset && (val == 'application/json' || val.startsWith('text/')) ) {
 					val += "; charset=" + charset;
 				}
 				try {
