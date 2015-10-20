@@ -13,6 +13,8 @@ A `UFErrorHandler` module which displays an error page for the client when uncau
 It will display the error message in a simple template, and set the appropriate HTTP response code.
 
 The template can be modified by using your own implementations of `this.renderErrorForContent()` and `this.renderErrorPage()`.
+
+If `showStack` is true a stack-trace will also be shown. This is true by default if compiled with `-debug`.
 **/
 class ErrorPageHandler implements UFErrorHandler {
 	/**
@@ -24,6 +26,12 @@ class ErrorPageHandler implements UFErrorHandler {
 	**/
 	public var catchErrors:Bool = true;
 
+	/**
+	A flag dictating whether the error page should show the stack trace.
+	If compiled with `-debug`, this is true by default. Otherwise this is false by default.
+	**/
+	public var showStack = #if debug true #else false #end;
+
 	public function new() {}
 
 	/** Process the given error and display an appropriate error page. **/
@@ -31,13 +39,11 @@ class ErrorPageHandler implements UFErrorHandler {
 	public function handleError( httpError:Error, ctx:HttpContext ) {
 
 		// Pass the error to our log...
-		var callStack = #if debug " "+CallStack.toString( CallStack.exceptionStack() ) #else "" #end;
 		var inner = (httpError!=null && httpError.data!=null) ? ' (${httpError.data})' : "";
-		ctx.ufError( 'Handling error: $httpError$inner $callStack' );
+		var callStack = (showStack) ? " "+CallStack.toString( CallStack.exceptionStack() ) : "";
+		ctx.ufError( 'Handling error: ${httpError}${inner}${callStack}' );
 
 		if ( !ctx.completion.has(CRequestHandlersComplete) ) {
-			var showStack = #if debug true #else false #end;
-
 			// Clear the output, set the response code, and output.
 			ctx.response.clear();
 			ctx.response.status = httpError.code;
