@@ -43,7 +43,7 @@ A build macro is applied to all classes that implement `UFClientAction`.
 This removes every field from the class on the server.
 This is so that the class can exist on the server (so you can trigger client-side actions), while writing client specific code without conditional compilation.
 **/
-@:autoBuild( ClientActionMacros.emptyServer() )
+@:autoBuild( ufront.web.client.ClientActionMacros.emptyServer() )
 interface UFClientAction<T> {
 	#if client
 		/**

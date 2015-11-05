@@ -161,6 +161,14 @@ package ufront.app;
 					trace( 'Failed to load view engine ${Type.getClassName(configuration.viewEngine)}: $e' );
 				}
 			}
+
+			if ( configuration.clientActions!=null ) {
+				for ( clientAction in configuration.clientActions ) {
+					registerAction( clientAction );
+				}
+			}
+
+			_currentApps.push( this );
 		}
 
 		/**
@@ -182,11 +190,6 @@ package ufront.app;
 		override public function executeRequest():Surprise<Noise,Error> {
 			loadCurrentContext();
 			return this.execute( currentContext );
-		}
-
-		override public function init():Surprise<Noise,Error> {
-			_currentApps.push( this );
-			return super.init();
 		}
 
 		override public function dispose():Surprise<Noise,Error> {

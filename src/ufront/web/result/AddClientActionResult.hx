@@ -1,7 +1,10 @@
 package ufront.web.result;
 
 import ufront.web.context.*;
+import ufront.core.ClassRef;
+import ufront.web.client.UFClientAction;
 import ufront.core.AsyncTools;
+import haxe.Serializer;
 using tink.CoreApi;
 
 /**
@@ -10,7 +13,7 @@ An `AddClientActionResult` result wraps another `ActionResult`, and if it is a `
 It is easiest to use this through static extension:
 
 ```haxe
-using ufront.web.result.TriggerClientAction;
+using ufront.web.result.AddClientActionResult;
 
 public function showHomepage() {
   return
@@ -34,12 +37,11 @@ class AddClientActionResult<R:ActionResult,T> extends CallJavascriptResult<R> im
 
 	// Member
 
-	public var originalResult:R;
 	public var action:ClassRef<UFClientAction<T>>;
 	public var actionData:T;
 
-	public function new( originalResult:T, clientAction:ClassRef<UFClientAction<T>>, ?data:T ) {
-		this.originalResult = originalResult;
+	public function new( originalResult:R, clientAction:ClassRef<UFClientAction<T>>, ?data:T ) {
+		super( originalResult );
 		this.action = clientAction;
 		this.actionData = data;
 	}
@@ -57,7 +59,7 @@ class AddClientActionResult<R:ActionResult,T> extends CallJavascriptResult<R> im
 			var response = actionContext.httpContext.response;
 			if( response.contentType=="text/html" ) {
 				var className = this.action.toString();
-				var serializedData = haxe.Serialized.run( actionData );
+				var serializedData = Serializer.run( actionData );
 				var fnCall = 'ufExecuteSerializedAction( "$className", "$serializedData" )';
 				var script = '<script type="text/javascript">$fnCall</script>';
 				var newContent = CallJavascriptResult.insertScriptsBeforeBodyTag( response.getBuffer(), [script] );

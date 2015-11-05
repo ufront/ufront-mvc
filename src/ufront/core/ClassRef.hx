@@ -30,14 +30,14 @@ abstract ClassRef<T>(String) {
 	Get a `ClassRef` from a given `Class`.
 	This is available as a `@:from` cast.
 	**/
-	@:from public static inline function fromClass<T>( v:Class<T> ):ClassRef<T>
+	@:from public static inline function fromClass<T1>( v:Class<Dynamic> ):ClassRef<T1>
 		return new ClassRef( Type.getClassName(v) );
 
 	/**
 	Get a `ClassRef` from a given `String` with the class name.
-	The generated ClassRef will be unsafely cast into the expected ClassRef type `T`.
+	The generated ClassRef will be unsafely cast into the expected ClassRef type `T1`.
 	This is available as a `@:from` cast.
 	**/
-	@:from public static inline function fromClassName<T>( className:String ):ClassRef<T>
+	@:from public static inline function fromClassName<T1>( className:String ):ClassRef<T1>
 		return new ClassRef( className );
 }
