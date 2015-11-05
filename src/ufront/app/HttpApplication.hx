@@ -345,6 +345,7 @@ class HttpApplication
 		// The final future returned is for once the `flush()` call has completed, which will happen once all the modules have finished.
 		// See https://github.com/haxetink/tink_core#operators
 
+		logModule( httpContext, 'Begin executing request ${httpContext.getRequestUri()}' );
 		var allDone =
 			init() >>
 			function (n:Noise) return executeModules( reqMidModules, httpContext, CRequestMiddlewareComplete ) >>
@@ -356,7 +357,9 @@ class HttpApplication
 
 		// We need an empty handler to make sure all the `executeModules` calls above fire correctly.
 		// This seems to be tink_core trying to be clever with Lazy evaluation, and never performing the `flatMap` if it is never handled.
-		allDone.handle( function() {} );
+		allDone.handle( function() {
+			logModule( httpContext, 'End executing request ${httpContext.getRequestUri()}' );
+		} );
 
 		#if (debug && (neko || php))
 			// Do a quick check that the async code actually completed, and if not, inform which module dropped the ball.
@@ -372,6 +375,15 @@ class HttpApplication
 		return allDone;
 	}
 
+	// This tiny method logs the order our modules (middleware, request handlers, log handlers, error handlers) run.
+	// It only works if `-D UF_MODULE_DEBUG` is on.
+	// If `-D UF_MODULE_DEBUG` is not on, it will not have any effect whatsoever (the compiler will optimize the function into nothingness).
+	inline function logModule( ctx:HttpContext, msg:String ) {
+		#if UF_MODULE_DEBUG
+			ctx.ufLog( msg );
+		#end
+	}
+
 	/**
 	Execute a collection of modules (middleware or handlers) in order, until either a certain flag is marked as complete for that request, or all the modules have completed sucessfully.
 
@@ -384,14 +396,17 @@ class HttpApplication
 
 	Returns a future that will be a Success if the chain completed successfully, or a Failure containing the error otherwise.
 	**/
-	function executeModules( modules:Array<Pair<HttpContext->Surprise<Noise,Error>,Pos>>, ctx:HttpContext, ?flag:RequestCompletion ):Surprise<Noise,Error> {
+	function executeModules( modules:Array<Pair<HttpContext->Surprise<Noise,Error>,Pos>>, ctx:HttpContext, flag:RequestCompletion ):Surprise<Noise,Error> {
 		var done:FutureTrigger<Outcome<Noise,Error>> = Future.trigger();
+		logModule( ctx, '  Begin executing modules for ${flag}' );
 		function runNext() {
 			var m = modules.shift();
 			if ( flag!=null && ctx.completion.has(flag) ) {
+				logModule( ctx, '  Finished execcuting modules for ${flag} (completion flag was set)' );
 				done.trigger( Success(Noise) );
 			}
 			else if ( m==null ) {
+				logModule( ctx, '  Finished execcuting modules for ${flag} (all modules completed)' );
 				if (flag!=null)
 					ctx.completion.set( flag );
 				done.trigger( Success(Noise) );
@@ -399,6 +414,7 @@ class HttpApplication
 			else {
 				var moduleCb = m.a;
 				currentModule = m.b;
+				logModule( ctx, '    Executing module ${currentModule.className}.${currentModule.methodName}()' );
 				var moduleResult =
 					try moduleCb( ctx )
 					catch ( e:Dynamic ) {
@@ -408,7 +424,9 @@ class HttpApplication
 				moduleResult.handle( function (result) {
 					switch result {
 						case Success(_): runNext();
-						case Failure(e): handleError(e, ctx, done);
+						case Failure(e):
+							logModule( ctx, '  Module returned a failure. Handing control to the error handlers' );
+							handleError(e, ctx, done);
 					}
 				});
 			}
@@ -424,6 +442,7 @@ class HttpApplication
 	**/
 	function handleError( err:Error, ctx:HttpContext, doneTrigger:FutureTrigger<Outcome<Noise,Error>> ):Void {
 		if ( !ctx.completion.has(CErrorHandlersTriggered) ) {
+			logModule( ctx, '  Begin handling error $err' );
 			ctx.completion.set( CErrorHandlersTriggered );
 
 			var errHandlerModules = errorHandlers.map(
@@ -457,7 +476,10 @@ class HttpApplication
 				function (n:Noise) return clearMessages() >>
 				function (n:Noise) return flush( ctx );
 
-			allDone.handle( doneTrigger.trigger.bind(Failure(err)) );
+			allDone.handle( function() {
+				logModule( ctx, '  End handling error $err' );
+				doneTrigger.trigger(Failure(err));
+			});
 		}
 		else {
 			// This is bad: we are in `handleError` after `handleError` has already been called...
@@ -468,6 +490,7 @@ class HttpApplication
 			//   - the "flush" stage...
 			// rethrow the error, and hopefully they'll come to this line number and figure out what happened.
 			var msg = 'You had an error after your error handler had already run.  Last active module: ${currentModule.className}.${currentModule.methodName}';
+			logModule( ctx, msg );
 			#if sys
 				Sys.println(msg);
 				Sys.println('Error Data: ${err.data}');

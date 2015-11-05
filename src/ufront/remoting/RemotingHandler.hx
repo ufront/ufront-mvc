@@ -97,7 +97,7 @@ class RemotingHandler implements UFRequestHandler {
 					throw 'Remoting call did not have parameter `__x` which describes which API call to make.  Aborting';
 
 				// Understand the request that is being made and then execute it.
-				var remotingCall = StringTools.urlDecode( params["__x"] );
+				var remotingCall = params["__x"];
 				var u = new Unserializer( remotingCall );
 				path = u.unserialize();
 				args = u.unserialize();
