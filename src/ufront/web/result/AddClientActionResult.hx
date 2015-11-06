@@ -3,6 +3,7 @@ package ufront.web.result;
 import ufront.web.context.*;
 import ufront.core.ClassRef;
 import ufront.web.client.UFClientAction;
+import ufront.app.ClientJsApplication;
 import ufront.core.AsyncTools;
 import haxe.Serializer;
 using tink.CoreApi;
@@ -49,23 +50,31 @@ class AddClientActionResult<R:ActionResult,T> extends CallJavascriptResult<R> im
 	/**
 	Execute the result.
 
-	This will execute the original result, and then attempt to add the JS to execute the actions just before the body tag.
-	If the action data is
+	This will execute the original result, and then attempt to trigger the action to be executed.
 
-	Currently on the client we add the JS snippet in the same way, but in future we may execute the action directly once the request has completed.
+	On the server, it will trigger the action by adding inline JS to execute the actions just before the body tag.
+	The data will be serialized using standard Haxe serialization, and called using `ClientJsApplication.ufExecuteSerializedAction()`.
+
+	On the client, this will call `ClientJsApplication.ufExecuteAction()` directly.
+	Please note that currently this will execute immediately after the action result has finished executing, so possibly before middleware or `HttpResponse.flush()` have completed.
+	In future this may be changed to execute after the request has finished completely.
 	**/
 	override public function executeResult( actionContext:ActionContext ):Surprise<Noise,Error> {
 		return originalResult.executeResult( actionContext ) >> function(n:Noise) {
-			var response = actionContext.httpContext.response;
-			if( response.contentType=="text/html" ) {
-				var className = this.action.toString();
-				var serializedData = Serializer.run( actionData );
-				var fnCall = 'ufExecuteSerializedAction( "$className", "$serializedData" )';
-				var script = '<script type="text/javascript">$fnCall</script>';
-				var newContent = CallJavascriptResult.insertScriptsBeforeBodyTag( response.getBuffer(), [script] );
-				response.clearContent();
-				response.write( newContent );
-			}
+			#if server
+				var response = actionContext.httpContext.response;
+				if( response.contentType=="text/html" ) {
+					var className = this.action.toString();
+					var serializedData = Serializer.run( actionData );
+					var fnCall = 'ufExecuteSerializedAction( "$className", "$serializedData" )';
+					var script = '<script type="text/javascript">$fnCall</script>';
+					var newContent = CallJavascriptResult.insertScriptsBeforeBodyTag( response.getBuffer(), [script] );
+					response.clearContent();
+					response.write( newContent );
+				}
+			#elseif client
+				ClientJsApplication.ufExecuteAction( this.action, actionData );
+			#end
 			return Noise;
 		};
 	}
