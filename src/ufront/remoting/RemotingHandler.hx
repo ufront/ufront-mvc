@@ -99,8 +99,11 @@ class RemotingHandler implements UFRequestHandler {
 				// Understand the request that is being made and then execute it.
 				var remotingCall = params["__x"];
 				var u = new Unserializer( remotingCall );
-				path = u.unserialize();
-				args = u.unserialize();
+				try {
+					path = u.unserialize();
+					args = u.unserialize();
+				}
+				catch ( e:Dynamic ) throw 'Unable to deserialize remoting call: $e. Remoting call string: $remotingCall';
 				var apiCallFinished = executeApiCall( path, args, context, httpContext.actionContext );
 				remotingResponse = apiCallFinished.map(function(data:Dynamic) {
 					var s = new Serializer();
