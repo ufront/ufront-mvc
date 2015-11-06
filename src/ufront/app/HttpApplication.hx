@@ -522,11 +522,11 @@ class HttpApplication
 
 	Available on PHP, Neko and Client JS.
 	**/
-	public function executeRequest() {
+	public function executeRequest():Surprise<Noise,Error> {
 		var context =
 			if ( pathToContentDir!=null ) HttpContext.createContext( this.injector, urlFilters, pathToContentDir )
 			else HttpContext.createContext( this.injector, urlFilters );
-		this.execute( context );
+		return this.execute( context );
 	}
 	#elseif nodejs
 	/**
