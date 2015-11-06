@@ -98,6 +98,25 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 				replaceChildren( newDoc.head, document.head );
 				replaceChildren( newDoc.body, document.body );
 				window.scrollTo( 0, 0 );
+
+				// Re-run <script> with "uf-reload" attribute
+				// e.g. <script uf-reload>console.log("test");</script>
+				var scriptTags = document.getElementsByTagName('script');
+				for ( i in 0...scriptTags.length ) {
+					var node = scriptTags.item( i );
+					var reload = node.getAttribute( "uf-reload" );
+					if ( reload!=null && reload!="false" ) {
+						var script = document.createElement( 'script' );
+						script.setAttribute( "type", 'text/javascript' );
+						var src = node.getAttribute( "src" );
+						if( src!=null )
+							script.setAttribute("src", src);
+						script.innerHTML = node.innerHTML;
+						// Append (which will cause it to execute) and then remove immediately.
+						document.body.appendChild( script );
+						document.body.removeChild( document.body.lastChild );
+					}
+				}
 			}
 			else {
 				js.Browser.console.log( 'Cannot use ufront-client-mvc to render content type "$contentType". Redirecting to server for rendering this content.' );
