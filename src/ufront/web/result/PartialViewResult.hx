@@ -4,7 +4,7 @@ package ufront.web.result;
 	import ufront.view.TemplateData;
 	import ufront.view.TemplatingEngines;
 	import ufront.web.context.ActionContext;
-	import js.ufront.web.context.HttpResponse.replaceChildren;
+	import js.ufront.web.context.HttpResponse.replaceNode;
 	import js.Browser.*;
 	import js.html.*;
 #end
@@ -105,12 +105,15 @@ class PartialViewResult extends ViewResult {
 					oldPartialNode.classList.remove( 'uf-partial-loading' );
 					var partialName = getAttr( oldPartialNode, "data-uf-partial" );
 					var newPartialNode = newDoc.querySelector('[data-uf-partial=$partialName]');
-					replaceChildren( newPartialNode, oldPartialNode );
+					replaceNode( oldPartialNode, newPartialNode );
 				}
 				window.scrollTo( 0, 0 );
 				res.preventFlushContent();
 			}
-
+			else {
+				// If it is a different layout, we leave it to `HttpResponse.flush` to render from scratch.
+				super.writeResponse( response, combinedData, actionContext );
+			}
 
 		}
 

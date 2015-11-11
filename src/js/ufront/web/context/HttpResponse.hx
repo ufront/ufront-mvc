@@ -95,8 +95,8 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 				document.title = newDoc.title;
 				// We are fairly brutal - replacing all elements in the old head and body with elements in the new head and body.
 				// Use a custom ActionResult and call `response.preventFlushContent()` for a more fine-grained approach.
-				replaceChildren( newDoc.head, document.head );
-				replaceChildren( newDoc.body, document.body );
+				replaceNode( document.head, newDoc.head );
+				replaceNode( document.body, newDoc.body );
 				window.scrollTo( 0, 0 );
 
 				// Re-run <script> with "uf-reload" attribute
@@ -130,12 +130,27 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 
 	If `sourceParent` is null, the target parent will be emptied.
 	If `targetParent` is null, the result is unspecified.
+
+	@deprecated Please use `replaceNode` instead, as this will also update the element type and attributes.
 	**/
+	// TODO: Add @:deprecated() metadata.
 	public static function replaceChildren( sourceParent:Null<Node>, targetParent:Node ):Void {
 		while ( targetParent.firstChild!=null )
 			targetParent.removeChild( targetParent.firstChild );
 		if ( sourceParent!=null )
 			while ( sourceParent.firstChild!=null )
 				targetParent.appendChild( sourceParent.firstChild );
+	}
+
+	/**
+	This is a utility function for replacing one DOM node with another.
+
+	If `newNode` is null, then `oldNode` will be removed from the DOM with no replacement taking it's place.
+	If `oldNode` is null, or is not attached to the DOM, the result is unspecified.
+	**/
+	public static function replaceNode( oldNode:Null<Node>, newNode:Null<Node> ) {
+		if ( newNode!=null )
+			oldNode.parentNode.insertBefore( newNode, oldNode );
+		oldNode.parentNode.removeChild( oldNode );
 	}
 }
