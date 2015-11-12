@@ -127,8 +127,9 @@ class ApiMacros {
 
 		for ( field in serverContext.fields.get() ) {
 			// Create the proxy if it doesn't exist yet.
+			var pos = field.pos;
 			var apiType = field.type;
-			var typePathForProxy = defineCallbackProxyForType( apiType, field.pos );
+			var typePathForProxy = defineCallbackProxyForType( apiType, pos );
 			var proxyComplexType = TPath( typePathForProxy );
 
 			// Add the field.
@@ -136,13 +137,14 @@ class ApiMacros {
 			var tmp = macro class Tmp {
 				public var $fieldName:$proxyComplexType;
 			}
+			tmp.fields[0].pos = pos;
 			cb.addMember( tmp.fields[0] );
 
 			// Add the initialisation statement.
 			if ( Context.defined("client") )
-				constructor.addStatement( macro this.$fieldName = new $typePathForProxy( this.cnx ) );
+				constructor.addStatement( macro @:pos(pos) this.$fieldName = new $typePathForProxy( this.cnx ) );
 			else
-				constructor.addStatement( macro this.$fieldName = new $typePathForProxy() );
+				constructor.addStatement( macro @:pos(pos) this.$fieldName = new $typePathForProxy() );
 		}
 	}
 
@@ -177,11 +179,12 @@ class ApiMacros {
 				if ( member.isPublic==true && !member.isStatic ) {
 					switch member.kind {
 						case FFun(fun):
-							var remotingCall = buildSyncFnBody(member.name,fun.args);
+							var remotingCall = buildSyncFnBody(member.name,fun.args,member.pos);
 							var returnsVoid = fun.ret==null || fun.ret.match(TPath({name:"Void"}));
+							var pos = member.pos;
 							fun.expr =
- 								if ( returnsVoid ) macro $remotingCall;
-								else macro return $remotingCall;
+ 								if ( returnsVoid ) macro @:pos(pos) $remotingCall;
+								else macro @:pos(pos) return $remotingCall;
 						default:
 							// Not a function, get rid of it
 							cb.removeMember( member );
@@ -212,7 +215,7 @@ class ApiMacros {
 						var returnFlags = getResultWrapFlagsForReturnType( returnType, member.pos );
 						var int = returnFlags.toInt();
 						// If the metadata does not already exist, overwrite it, rather than add it.
-						var metaParams = [macro $v{int}];
+						var metaParams = [macro @:pos(member.pos) $v{int}];
 						member.extractMeta("returnType");
 						member.addMeta( "returnType", metaParams );
 					default:
@@ -268,6 +271,7 @@ class ApiMacros {
 					this.className = $v{runtimeClassName};
 				}
 			}
+			tmp.fields[0].pos = cb.target.pos;
 			cb.addMember( tmp.fields[0] );
 		}
 	}
@@ -330,10 +334,10 @@ class ApiMacros {
 
 		@param cb The current ClassBuilder.
 		@param getExtraArgs A function of the form `function(origReturnType:ComplexType,returnTypeFlags:EnumFlags<ApiReturnType>,pos:Position):Array<FunctionArg>` that generates any extra arguments for required for the async proxy function.
-		@param getFnBody A function of the form `function(fakePos:PosInfos, arguments:Iterable<FunctionArg>, returnType:EnumFlags<ApiReturnType> ):Expr` which returns a function body expression for the async proxy function.
+		@param getFnBody A function of the form `function(fakePos:PosInfos, arguments:Iterable<FunctionArg>, returnType:EnumFlags<ApiReturnType>, pos:Position ):Expr` which returns a function body expression for the async proxy function.
 		@param getReturnType A function of the form `function(origReturnType:ComplexType,returnTypeFlags:EnumFlags<ApiReturnType>,pos:Position):ComplexType` that generates a new return type for the async proxy function.
 	**/
-	static function addProxyMemberMethods( cb:ClassBuilder, getExtraArgs:ComplexType->EnumFlags<ApiReturnType>->Position->Array<FunctionArg>, getFnBody:PosInfos->Iterable<FunctionArg>->EnumFlags<ApiReturnType>->Expr, getReturnType:ComplexType->EnumFlags<ApiReturnType>->Position->ComplexType  ) {
+	static function addProxyMemberMethods( cb:ClassBuilder, getExtraArgs:ComplexType->EnumFlags<ApiReturnType>->Position->Array<FunctionArg>, getFnBody:PosInfos->Iterable<FunctionArg>->EnumFlags<ApiReturnType>->Position->Expr, getReturnType:ComplexType->EnumFlags<ApiReturnType>->Position->ComplexType  ) {
 		var apiClassTypeRef = getClassTypeFromFirstTypeParam( cb );
 		var pos = cb.target.pos;
 		if ( apiClassTypeRef!=null ) {
@@ -353,7 +357,7 @@ class ApiMacros {
 								var returnType = getReturnType( f.ret, flags, apiMember.pos );
 								var posDetails = Context.getPosInfos( apiMember.pos );
 								var posInfos:PosInfos = { methodName:apiMember.name, lineNumber:0, fileName:posDetails.file, customParams:null, className:cb.target.name };
-								var fnBody = getFnBody( posInfos, f.args, flags );
+								var fnBody = getFnBody( posInfos, f.args, flags, apiMember.pos );
 								var member:Member = {
 									pos: apiMember.pos,
 									name: apiMember.name,
@@ -551,21 +555,21 @@ class ApiMacros {
 		return [for (p in params) p.toComplex()];
 	}
 
-	static function buildAsyncFnBody( pos:PosInfos, args:Iterable<FunctionArg>, flags:EnumFlags<ApiReturnType> ):Expr {
+	static function buildAsyncFnBody( pos:PosInfos, args:Iterable<FunctionArg>, flags:EnumFlags<ApiReturnType>, p:Position ):Expr {
 		var name = pos.methodName;
-		var argIdents = [ for(a in args) macro $i{a.name} ];
-		return macro return _makeApiCall( $v{name}, $a{argIdents}, haxe.EnumFlags.ofInt($v{flags}), $v{pos} );
+		var argIdents = [ for(a in args) macro @:pos(p) $i{a.name} ];
+		return macro @:pos(p) return _makeApiCall( $v{name}, $a{argIdents}, haxe.EnumFlags.ofInt($v{flags}), $v{pos} );
 	}
 
-	static function buildAsyncCallbackFnBody( pos:PosInfos, args:Iterable<FunctionArg>, flags:EnumFlags<ApiReturnType> ):Expr {
+	static function buildAsyncCallbackFnBody( pos:PosInfos, args:Iterable<FunctionArg>, flags:EnumFlags<ApiReturnType>, p:Position ):Expr {
 		var name = pos.methodName;
-		var argIdents = [ for(a in args) macro $i{a.name} ];
-		return macro _makeApiCall( $v{name}, $a{argIdents}, haxe.EnumFlags.ofInt($v{flags}), onResult, onError );
+		var argIdents = [ for(a in args) macro @:pos(p) $i{a.name} ];
+		return macro @:pos(p) _makeApiCall( $v{name}, $a{argIdents}, haxe.EnumFlags.ofInt($v{flags}), onResult, onError );
 	}
 
-	static function buildSyncFnBody( name:String, args:Iterable<{name:String}> ):Expr {
-		var argIdents = [ for(a in args) macro $i{a.name} ];
-		return macro _makeApiCall( $v{name}, $a{argIdents} );
+	static function buildSyncFnBody( name:String, args:Iterable<{name:String}>, p:Position ):Expr {
+		var argIdents = [ for(a in args) macro @:pos(p) $i{a.name} ];
+		return macro @:pos(p) _makeApiCall( $v{name}, $a{argIdents} );
 	}
 
 	/**
