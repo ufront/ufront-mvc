@@ -148,7 +148,7 @@ class ControllerMacros {
 		Please note this does not add the member to the class, you must explicitly take the return result and add it to the class.
 	**/
 	static function createFunctionForVariable( varMember:Member, varType:ComplexType ):Outcome<Member,Error> {
-		if ( complexTypesUnify(varType, macro :ufront.web.Controller) ) {
+		if ( complexTypesUnify(varType, macro :ufront.web.Controller, varMember.pos) ) {
 			var fnName = "execute_"+varMember.name;
 			switch varType {
 				case TPath(p):
@@ -199,7 +199,7 @@ class ControllerMacros {
 		var args = argumentInfo.a;
 		var requiredLength = argumentInfo.b;
 		if ( catchAll ) routeParts.pop();
-		var voidReturn = checkIfReturnVoid( fn );
+		var voidReturn = checkIfReturnVoid( fn, member.pos );
 
 		return {
 			action: member,
@@ -224,9 +224,9 @@ class ControllerMacros {
 		- If the EReturn has no value, it is an empty return, so return true
 		- If no EReturn is found, return true.
 	**/
-	static function checkIfReturnVoid( fn:Function ):Bool {
+	static function checkIfReturnVoid( fn:Function, pos:Pos ):Bool {
 		if ( fn.ret!=null ) {
-			return complexTypesUnify( fn.ret, macro :StdTypes.Void );
+			return complexTypesUnify( fn.ret, macro :StdTypes.Void, pos );
 		}
 		else {
 			var returnFound = false;
@@ -245,8 +245,19 @@ class ControllerMacros {
 	/**
 		Check if 2 complex types unify.
 	**/
-	static function complexTypesUnify( ct1:ComplexType, ct2:ComplexType ) {
-		return Context.unify( ct1.toType(), ct2.toType() );
+	static function complexTypesUnify( ct1:ComplexType, ct2:ComplexType, pos:Pos ) {
+		function toType( c:ComplexType ):Type {
+			try {
+				return c.toType();
+			} catch (e:Dynamic) {
+				// Failed to unify. This usually means one of the types doesn't compile properly.
+				// It's really hard to give the correct error here, so we a) warn at the given error pos, and b) rethrow the original error.
+				// Though this will give the developer 2 positions to inspect, it's better than only giving them one, which might be the wrong one.
+				Context.warning( 'Failed to load type ${c.toString()}', pos );
+				return neko.Lib.rethrow( e );
+			}
+		}
+		return Context.unify( toType(ct1), toType(ct2) );
 	}
 
 	/**
@@ -266,14 +277,14 @@ class ControllerMacros {
 		var argumentInfo = [];
 		for ( arg in fnArgs ) {
 			if ( arg.type!=null ) {
-				var argKind = null;
+				var argKind;
 
 				if ( arg.name=="args" ) {
 
 					argKind = parseArgsArgument( arg.type, arg.opt, pos );
 
 				}
-				else if ( arg.name=="rest" && complexTypesUnify(arg.type,macro :Array<String>) ) {
+				else if ( arg.name=="rest" && complexTypesUnify(arg.type,macro :Array<String>,pos) ) {
 
 					if ( routeParts.length>0 && routeParts[routeParts.length-1]=="*" ) {
 						argKind = AKRest;
@@ -301,25 +312,15 @@ class ControllerMacros {
 							requiredLength = routePartIndex;
 					}
 
-					switch getRouteArgType( arg.type ) {
-						case Success(routeArgType):
-							var defaultVal =
-								if ( isOptional && arg.value!=null ) arg.value
-								else if ( isOptional ) macro null
-								else null
-							;
-							argKind = AKPart( arg.name, routePartIndex, routeArgType, isOptional, defaultVal );
-						case Failure(_):
-					}
+					var routeArgType = getRouteArgType( arg.type, arg.name, pos );
+					var defaultVal =
+						if ( isOptional && arg.value!=null ) arg.value
+						else if ( isOptional ) macro null
+						else null
+					;
+					argKind = AKPart( arg.name, routePartIndex, routeArgType, isOptional, defaultVal );
 				}
-
-				if ( argKind==null ) {
-
-					Context.warning( 'Only String, Int, Float, Bool, rest:Array<String> and args:{} are supported.', pos );
-					Context.error( 'Unsuported argument type ${arg.name}:${arg.type.toString()}.', pos );
-
-				}
-				else argumentInfo.push( argKind );
+				argumentInfo.push( argKind );
 			}
 			else Context.warning( 'Please provide explicit type information for argument ${arg.name}', pos );
 		}
@@ -343,14 +344,20 @@ class ControllerMacros {
 
 		Return the appropriate RouteArgType to make it easier to handle later.
 	**/
-	static function getRouteArgType( argType:ComplexType ) {
+	static function getRouteArgType( argType:ComplexType, argName:String, p:Pos ):RouteArgType {
 		return
-			if ( complexTypesUnify(argType, macro :String) || complexTypesUnify(argType, macro :Array<String>) ) Success(SATString);
-			else if ( complexTypesUnify(argType, macro :Int) || complexTypesUnify(argType, macro :Array<Int>) ) Success(SATInt);
-			else if ( complexTypesUnify(argType, macro :Float) || complexTypesUnify(argType, macro :Array<Float>) ) Success(SATFloat);
-			else if ( complexTypesUnify(argType, macro :Bool) || complexTypesUnify(argType, macro :Array<Bool>) ) Success(SATBool);
-			else if ( complexTypesUnify(argType, macro :Date) || complexTypesUnify(argType, macro :Array<Date>) ) Success(SATDate);
-			else Failure( Noise );
+			if ( complexTypesUnify(argType, macro :String, p) || complexTypesUnify(argType, macro :Array<String>, p) ) SATString;
+			else if ( complexTypesUnify(argType, macro :Int, p) || complexTypesUnify(argType, macro :Array<Int>, p) ) SATInt;
+			else if ( complexTypesUnify(argType, macro :Float, p) || complexTypesUnify(argType, macro :Array<Float>, p) ) SATFloat;
+			else if ( complexTypesUnify(argType, macro :Bool, p) || complexTypesUnify(argType, macro :Array<Bool>, p) ) SATBool;
+			else if ( complexTypesUnify(argType, macro :Date, p) || complexTypesUnify(argType, macro :Array<Date>, p) ) SATDate;
+			else {
+				var msg =
+					'Unsupported argument type $argName:${argType.toString()}'
+					+'\nOnly String, Int, Float, Bool, and Date arguments are supported (or arrays of these).';
+				Context.error( msg, p );
+				return null;
+			}
 	}
 
 	/**
@@ -378,27 +385,22 @@ class ControllerMacros {
 		switch type {
 			case TAnonymous( fields ):
 				var params = [];
-				try {
-					for ( f in fields ) {
-						var member:Member = f;
-						var paramVar = member.getVar().sure();
-						var argType = getRouteArgType( paramVar.type ).sure();
-						var hasOptionalMeta = member.extractMeta(":optional").isSuccess();
-						var isNullable = isComplexTypeOptional( paramVar.type );
-						var optional = hasOptionalMeta || isNullable;
-						params.push({
-							name: f.name,
-							type: argType,
-							optional: optional,
-							array: complexTypesUnify( paramVar.type, macro:Array<Dynamic> ),
-						});
-					}
-					return AKParams( params, allOptional );
+				for ( f in fields ) {
+					var member:Member = f;
+					var paramVar = member.getVar().sure();
+					var argType = getRouteArgType( paramVar.type, 'args.${f.name}', f.pos );
+					var hasOptionalMeta = member.extractMeta(":optional").isSuccess();
+					var isNullable = isComplexTypeOptional( paramVar.type );
+					var optional = hasOptionalMeta || isNullable;
+					var isArray = complexTypesUnify( paramVar.type, macro:Array<Dynamic>, f.pos );
+					params.push({
+						name: f.name,
+						type: argType,
+						optional: optional,
+						array: isArray,
+					});
 				}
-				catch ( e:Dynamic ) {
-					var msg = 'Failed to parse function argument `args`.  The args object must contain only the types String, Int, Float and Bool. \n$e';
-					Context.error( msg, pos );
-				}
+				return AKParams( params, allOptional );
 			case TPath(_):
 				switch (type.toType())
 				{

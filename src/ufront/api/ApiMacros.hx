@@ -4,6 +4,7 @@ import haxe.PosInfos;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
+import haxe.macro.ComplexTypeTools;
 import haxe.EnumFlags;
 using haxe.macro.Tools;
 using tink.CoreApi;
@@ -287,12 +288,12 @@ class ApiMacros {
 	}
 
 	static function addAsyncProxyMemberMethods( cb:ClassBuilder ) {
-		function getExtraArgs( _, _ ):Array<FunctionArg> return [];
+		function getExtraArgs(_,_,_):Array<FunctionArg> return [];
 		addProxyMemberMethods( cb, getExtraArgs, buildAsyncFnBody, asyncifyReturnType );
 	}
 
 	static function addCallbackProxyMemberMethods( cb:ClassBuilder ) {
-		function getReturnType(_,_) return macro :Void;
+		function getReturnType(_,_,_) return macro :Void;
 		addProxyMemberMethods( cb, getCallbackArgsForField, buildAsyncCallbackFnBody, getReturnType );
 	}
 
@@ -315,24 +316,24 @@ class ApiMacros {
 		- Knowing the type of the new API fields:
 			- Now that we are using `Field` or `Member` rather than `ClassField`, we are dealing with `ComplexType`s not `Type`s.
 			- These are literally just the description of the type based on the syntax, rather than the fully typed information from the compiler.
-			- We can use `complexType.toType().sure()` to turn it into a complete type, but, this will often fail when you are in a different context.
+			- We can use `toType( complexType )` to turn it into a complete type, but, this will often fail when you are in a different context.
 			- For example, the ComplexType of the return value on an API method can be analysed with `toType()` in the APIs build macro, but `toType()` will fail in the Proxy's build macro.
 			- You will get errors like "Class not found : Outcome", when Outcome is most definitely imported.
-			- One possible workaround is, during the API build macro, completing a round-trip: `complexType.toType( pos ).sure().toComplex()`
+			- One possible workaround is, during the API build macro, completing a round-trip: `toType( pos ).toComplex()`
 			- This will return a ComplexType the same as the original, but with absolute paths that will work independently of context.
 		- Our final solution:
 			- If our Proxy builds before the UFApi, we try to trigger the build on the UFApi.
-			- When we build our `UFApi`, we convert all ComplexTypes to use absolut paths in the `generalizeComplexTypes()` method.
+			- When we build our `UFApi`, we convert all ComplexTypes to use absolute paths in the `generalizeComplexTypes()` method.
 			- When we build our `UFApi`, we also cache the `Array<Member>` for the API in `cachedApiMembers`.
 			- We can use these members to then create the appropriate fields for the proxy.
 			- Our call to `getResultWrapFlagsForReturnType` still requires `unify()` and therefore converting ComplexType to Type, but because of the transformations in our build macro above, it all works.
 
 		@param cb The current ClassBuilder.
-		@param getExtraArgs A function of the form `function(origReturnType:ComplexType,returnTypeFlags:EnumFlags<ApiReturnType>):Array<FunctionArg>` that generates any extra arguments for required for the async proxy function.
+		@param getExtraArgs A function of the form `function(origReturnType:ComplexType,returnTypeFlags:EnumFlags<ApiReturnType>,pos:Position):Array<FunctionArg>` that generates any extra arguments for required for the async proxy function.
 		@param getFnBody A function of the form `function(fakePos:PosInfos, arguments:Iterable<FunctionArg>, returnType:EnumFlags<ApiReturnType> ):Expr` which returns a function body expression for the async proxy function.
-		@param getReturnType A function of the form `function(origReturnType:ComplexType,returnTypeFlags:EnumFlags<ApiReturnType>):ComplexType` that generates a new return type for the async proxy function.
+		@param getReturnType A function of the form `function(origReturnType:ComplexType,returnTypeFlags:EnumFlags<ApiReturnType>,pos:Position):ComplexType` that generates a new return type for the async proxy function.
 	**/
-	static function addProxyMemberMethods( cb:ClassBuilder, getExtraArgs:ComplexType->EnumFlags<ApiReturnType>->Array<FunctionArg>, getFnBody:PosInfos->Iterable<FunctionArg>->EnumFlags<ApiReturnType>->Expr, getReturnType:ComplexType->EnumFlags<ApiReturnType>->ComplexType  ) {
+	static function addProxyMemberMethods( cb:ClassBuilder, getExtraArgs:ComplexType->EnumFlags<ApiReturnType>->Position->Array<FunctionArg>, getFnBody:PosInfos->Iterable<FunctionArg>->EnumFlags<ApiReturnType>->Expr, getReturnType:ComplexType->EnumFlags<ApiReturnType>->Position->ComplexType  ) {
 		var apiClassTypeRef = getClassTypeFromFirstTypeParam( cb );
 		var pos = cb.target.pos;
 		if ( apiClassTypeRef!=null ) {
@@ -349,7 +350,7 @@ class ApiMacros {
 							case Success(f):
 								// TODO: We should investigate if we can read metadata here instead of unifying types again.
 								var flags = getResultWrapFlagsForReturnType( f.ret, apiMember.pos );
-								var returnType = getReturnType( f.ret, flags );
+								var returnType = getReturnType( f.ret, flags, apiMember.pos );
 								var posDetails = Context.getPosInfos( apiMember.pos );
 								var posInfos:PosInfos = { methodName:apiMember.name, lineNumber:0, fileName:posDetails.file, customParams:null, className:cb.target.name };
 								var fnBody = getFnBody( posInfos, f.args, flags );
@@ -362,7 +363,7 @@ class ApiMacros {
 										// TODO: write some unit tests to check type parameters in API functions are correctly supported.
 										params: f.params,
 										expr: fnBody,
-										args: f.args.concat( getExtraArgs(f.ret,flags) ),
+										args: f.args.concat( getExtraArgs(f.ret,flags,apiMember.pos) ),
 									}),
 									doc: 'Async call for `${apiClassName}.${apiMember.name}()`',
 									access: [ APublic ],
@@ -415,8 +416,21 @@ class ApiMacros {
 		}
 	}
 
+	static function toType( c:ComplexType, pos:Position ):Type {
+		try {
+			return ComplexTypeTools.toType( c );
+		}
+		catch ( e:Dynamic ) {
+			// Failed to unify. This usually means one of the types doesn't compile properly.
+			// It's really hard to give the correct error here, so we a) warn at the given error pos, and b) rethrow the original error.
+			// Though this will give the developer 2 positions to inspect, it's better than only giving them one, which might be the wrong one.
+			Context.warning( 'Failed to load type ${c.toString()}', pos );
+			return neko.Lib.rethrow( e );
+		}
+	}
+
 	static function generalizeComplexType( ct:ComplexType, pos:Position ):ComplexType {
-		return ct.toType( pos ).sure().toComplex();
+		return toType( ct, pos ).toComplex();
 	}
 
 	static function getTypeFromFirstTypeParam( cb:ClassBuilder ):Null<Type> {
@@ -447,8 +461,8 @@ class ApiMacros {
 		If your API returns values that unify with `Outcome`, `Future` or `Surprise`, but do not meet the above expectations, you may encounter strange results.
 		I'm not sure if there is a workaround for this.
 	**/
-	static function asyncifyReturnType( rt:ComplexType, flags:EnumFlags<ApiReturnType> ):ComplexType {
-		var typeParams = getParamsFromComplexType( rt, flags );
+	static function asyncifyReturnType( rt:ComplexType, flags:EnumFlags<ApiReturnType>, pos:Position ):ComplexType {
+		var typeParams = getParamsFromComplexType( rt, flags, pos );
 		if ( flags.has(ARTVoid) ) {
 			return macro :tink.core.Future.Surprise<Noise,tink.core.Error.TypedError<ufront.remoting.RemotingError<tink.core.Noise>>>;
 		}
@@ -472,8 +486,8 @@ class ApiMacros {
 		}
 	}
 
-	static function getCallbackArgsForField( rt:ComplexType, flags:EnumFlags<ApiReturnType> ):Array<FunctionArg> {
-		var typeParams = getParamsFromComplexType( rt, flags );
+	static function getCallbackArgsForField( rt:ComplexType, flags:EnumFlags<ApiReturnType>, pos:Position ):Array<FunctionArg> {
+		var typeParams = getParamsFromComplexType( rt, flags, pos );
 		var onResultType:ComplexType,
 			onErrorType:ComplexType;
 		if ( flags.has(ARTVoid) ) {
@@ -508,7 +522,7 @@ class ApiMacros {
 		];
 	}
 
-	static function getParamsFromComplexType( ct:ComplexType, flags:EnumFlags<ApiReturnType> ):Array<ComplexType> {
+	static function getParamsFromComplexType( ct:ComplexType, flags:EnumFlags<ApiReturnType>, pos:Position ):Array<ComplexType> {
 		// Note we can't use the ComplexType parameters, in case the type is an alias and the type parameters
 		// have different meanings to those in Outcome, Future and Surprise.
 		function getParams(type:Type, expectedName:String):Array<Type> {
@@ -530,9 +544,9 @@ class ApiMacros {
 			}
 		}
 		var params =
-			if ( flags.has(ARTFuture) && flags.has(ARTOutcome) ) getParams( ct.toType().sure(), "tink.core.Surprise" );
-			else if ( flags.has(ARTFuture) ) getParams( ct.toType().sure(), "tink.core.Future" );
-			else if ( flags.has(ARTOutcome) ) getParams( ct.toType().sure(), "tink.core.Outcome" );
+			if ( flags.has(ARTFuture) && flags.has(ARTOutcome) ) getParams( toType(ct,pos), "tink.core.Surprise" );
+			else if ( flags.has(ARTFuture) ) getParams( toType(ct,pos), "tink.core.Future" );
+			else if ( flags.has(ARTOutcome) ) getParams( toType(ct,pos), "tink.core.Outcome" );
 			else [];
 		return [for (p in params) p.toComplex()];
 	}
@@ -584,8 +598,8 @@ class ApiMacros {
 	}
 
 	static function unify( complexType1:ComplexType, complexType2:ComplexType, pos:tink.core.Error.Pos ):Bool {
-		var t1 = complexType1.toType( pos ).sure();
-		var t2 = complexType2.toType( pos ).sure();
+		var t1 = toType( complexType1, pos );
+		var t2 = toType( complexType2, pos );
 		return t1.unify( t2 );
 	}
 
