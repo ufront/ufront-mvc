@@ -701,6 +701,9 @@ class ControllerMacros {
 		An `onGenerate` function that adds `@wrappingRequired( enumFlags )` metadata for each controller action.
 
 		See `getResultWrapFlagsForReturnType` for details on which flags are set.
+
+		TODO: optimise this to run once per compile, not once per controller per compile.
+		We can probably shave down the compile time quite a bit.
 	**/
 	static function addResultWrappingMetadata( id:String, types:Array<Type> ):Void {
 		var baseController = Context.getType( "ufront.web.Controller" );
