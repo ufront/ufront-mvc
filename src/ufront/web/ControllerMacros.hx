@@ -66,7 +66,7 @@ class ControllerMacros {
 			Context.warning( 'No valid @:route metadata was found in this controller', classBuilder.target.pos );
 		}
 
-		classBuilder.addMember( buildExecuteField(routeInfos) );
+		classBuilder.addMember( buildExecuteField(routeInfos,classBuilder.target.pos) );
 	}
 
 	/**
@@ -152,12 +152,13 @@ class ControllerMacros {
 			var fnName = "execute_"+varMember.name;
 			switch varType {
 				case TPath(p):
+					var pos = varMember.pos;
 					var parts = p.pack.copy();
 					parts.push( p.name );
 					if ( p.sub!=null )
 						parts.push( p.sub );
 					var name = parts.join('.');
-					var fnBody:Expr = macro return this.context.injector.instantiate( $i{name} ).execute();
+					var fnBody:Expr = macro @:pos(pos) return this.context.injector.instantiate( $i{name} ).execute();
 					var fnReturnType:ComplexType = macro :tink.CoreApi.Surprise<ufront.web.result.ActionResult,tink.core.Error>;
 					var fn:Function = {
 						ret: fnReturnType,
@@ -165,7 +166,7 @@ class ControllerMacros {
 						expr: fnBody,
 					}
 
-					var fnMember:Member = Member.method( fnName, varMember.pos, false, fn );
+					var fnMember:Member = Member.method( fnName, pos, false, fn );
 
 					// Remove @:route metadata from variable and attach to function
 					var metaEntry = varMember.extractMeta( ':route' ).sure();
@@ -315,7 +316,7 @@ class ControllerMacros {
 					var routeArgType = getRouteArgType( arg.type, arg.name, pos );
 					var defaultVal =
 						if ( isOptional && arg.value!=null ) arg.value
-						else if ( isOptional ) macro null
+						else if ( isOptional ) macro @:pos(pos) null
 						else null
 					;
 					argKind = AKPart( arg.name, routePartIndex, routeArgType, isOptional, defaultVal );
@@ -417,7 +418,7 @@ class ControllerMacros {
 	/**
 		Build a `override public function execute()` method for this controller using the information from our routes.
 	**/
-	static function buildExecuteField( routeInfos:Array<RouteInfo> ):Member {
+	static function buildExecuteField( routeInfos:Array<RouteInfo>, pos:Pos ):Member {
 
 		var routes:Array<Pair<ExprOf<Bool>,Expr>> = [];
 		for ( routeInfo in routeInfos ) {
@@ -427,7 +428,7 @@ class ControllerMacros {
 		var ifElseRoutingBlock:Expr = createIfElseBlock( routes );
 
 		// Build the function
-		var fnBody:Expr = macro {
+		var fnBody:Expr = macro @:pos(pos) {
 			var uriParts = context.actionContext.uriParts;
 			setBaseUri( uriParts );
 			var params = context.request.params;
@@ -476,11 +477,12 @@ class ControllerMacros {
 	**/
 	static function generateConditionsForRoute( routeInfo:RouteInfo ):ExprOf<Bool> {
 		var conditions = [];
+		var p = routeInfo.action.pos;
 
 		// Check the method matches
 		if ( routeInfo.method!=null ) {
 			var requiredMethod = routeInfo.method.toLowerCase();
-			conditions.push( macro method.toLowerCase()==$v{requiredMethod} );
+			conditions.push( macro @:pos(p) method.toLowerCase()==$v{requiredMethod} );
 		}
 
 		// Check the length is correct
@@ -488,25 +490,25 @@ class ControllerMacros {
 		var maxParts = routeInfo.routeParts.length;
 		if ( routeInfo.catchAll ) {
 			if ( minParts>0 )
-				conditions.push( macro $v{minParts}<=uriParts.length );
+				conditions.push( macro @:pos(p) $v{minParts}<=uriParts.length );
 		}
 		else if ( minParts==maxParts ) {
-			conditions.push( macro $v{minParts}==uriParts.length );
+			conditions.push( macro @:pos(p) $v{minParts}==uriParts.length );
 		}
 		else {
-			conditions.push( macro ($v{minParts}<=uriParts.length && $v{maxParts}>=uriParts.length) );
+			conditions.push( macro @:pos(p) ($v{minParts}<=uriParts.length && $v{maxParts}>=uriParts.length) );
 		}
 
 		var pos = 0;
 		for ( part in routeInfo.routeParts ) {
 			if ( !part.startsWith("$") ) {
 				// Check non-capture segments match (all parts not beginning with "$")
-				conditions.push( macro uriParts[$v{pos}]==$v{part} );
+				conditions.push( macro @:pos(p) uriParts[$v{pos}]==$v{part} );
 			}
 			else {
 				// Check required capture segments exist and are not empty...
 				if ( pos<minParts )
-					conditions.push( macro uriParts[$v{pos}].length>0 );
+					conditions.push( macro @:pos(p) uriParts[$v{pos}].length>0 );
 			}
 			pos++;
 		}
@@ -523,34 +525,34 @@ class ControllerMacros {
 
 
 		// Prepare for the function call
-		var fnIdent = routeInfo.action.name.resolve();
+		var fnIdent = routeInfo.action.name.resolve( p );
 		var fnArgs = [];
 		for ( arg in routeInfo.args ) {
-			var argData = makeExprToReadArgFromRequest(arg);
+			var argData = makeExprToReadArgFromRequest( arg, p );
 			var ident = argData.ident;
 			fnArgs.push( ident );
 			for ( l in argData.lines )
 				lines.push( l );
 		}
 
-		lines.push( macro context.actionContext.action = $v{routeInfo.action.name} );
-		lines.push( macro context.actionContext.args = $a{fnArgs} );
+		lines.push( macro @:pos(p) context.actionContext.action = $v{routeInfo.action.name} );
+		lines.push( macro @:pos(p) context.actionContext.args = $a{fnArgs} );
 
 		// Splice the uriParts so that parts relevant to this execute don't affect subdispatching...
-		lines.push( macro context.actionContext.uriParts.splice(0,$v{routeInfo.routeParts.length}) );
+		lines.push( macro @:pos(p) context.actionContext.uriParts.splice(0,$v{routeInfo.routeParts.length}) );
 
 		// Execute the call, wrap the results
 		var functionCall = { expr: ECall(fnIdent,fnArgs), pos: p };
 		var wrappedFunctionCall = wrapReturnExpression( functionCall, routeInfo.action.name, routeInfo.voidReturn, lines );
-		lines.push( macro var result:tink.core.Future.Surprise<ufront.web.result.ActionResult,tink.core.Error> = $wrappedFunctionCall );
+		lines.push( macro @:pos(p) var result:tink.core.Future.Surprise<ufront.web.result.ActionResult,tink.core.Error> = $wrappedFunctionCall );
 
-		var setContextActionResult = macro setContextActionResultWhenFinished( result );
+		var setContextActionResult = macro @:pos(p) setContextActionResultWhenFinished( result );
 		lines.push( setContextActionResult );
 
 		// Return the actionResult
-		lines.push( macro return result );
+		lines.push( macro @:pos(p) return result );
 
-		return { expr: EBlock(lines), pos: routeInfo.action.pos };
+		return { expr: EBlock(lines), pos: p };
 	}
 
 	/**
@@ -561,15 +563,15 @@ class ControllerMacros {
 		a) containing the expression of the ident,
 		b) the lines to insert, including the `$ident = $readExpr` line.
 	**/
-	static function makeExprToReadArgFromRequest( arg:ArgumentKind ):{ ident:Expr, lines:Array<Expr> } {
+	static function makeExprToReadArgFromRequest( arg:ArgumentKind, pos:Pos ):{ ident:Expr, lines:Array<Expr> } {
 		switch arg {
 			case AKPart( name, partNum, type, optional, defaultValue ):
-				var ident = name.resolve();
+				var ident = name.resolve( pos );
 				var expr =
-					if ( optional ) macro (uriParts[$v{partNum}]!=null && uriParts[$v{partNum}]!="") ? uriParts[$v{partNum}] : $defaultValue
-					else macro uriParts[$v{partNum}]
+					if ( optional ) macro @:pos(pos) (uriParts[$v{partNum}]!=null && uriParts[$v{partNum}]!="") ? uriParts[$v{partNum}] : $defaultValue
+					else macro @:pos(pos) uriParts[$v{partNum}]
 				;
-				var lines = createReadExprForType( name, name, expr, type, optional, false);
+				var lines = createReadExprForType( name, name, expr, type, optional, false, pos);
 				return { ident: ident, lines: lines };
 			case AKParams( params, allParamsOptional ):
 				var lines = [];
@@ -580,27 +582,27 @@ class ControllerMacros {
 					// If it is not optional, add check to make sure it is present
 					var isOptional = p.optional || allParamsOptional;
 					if ( false==isOptional && p.type.match(SATBool)==false ) {
-						var checkExists = macro if ( !params.exists($v{p.name}) ) throw ufront.web.HttpError.badRequest( 'Missing parameter '+$v{p.name} );
+						var checkExists = macro @:pos(pos) if ( !params.exists($v{p.name}) ) throw ufront.web.HttpError.badRequest( 'Missing parameter '+$v{p.name} );
 						lines.push( checkExists );
 					}
 
 					var tmpIdentName = '_param_tmp_'+p.name;
-					var tmpIdent = tmpIdentName.resolve();
-					var getValueExpr = if(p.array) macro params.getAll($v{p.name}) else macro params.get($v{p.name});
-					for ( l in createReadExprForType('args.${p.name}',tmpIdentName, getValueExpr, p.type, isOptional, p.array) ) {
+					var tmpIdent = tmpIdentName.resolve( pos );
+					var getValueExpr = if(p.array) macro @:pos(pos) params.getAll($v{p.name}) else macro @:pos(pos) params.get($v{p.name});
+					for ( l in createReadExprForType('args.${p.name}',tmpIdentName, getValueExpr, p.type, isOptional, p.array, pos) ) {
 						lines.push( l );
 					}
 					fields.push( { field: p.name, expr: tmpIdent } );
 				}
 
 				// Add a args = {} property
-				var ident = "args".resolve();
+				var ident = "args".resolve( pos );
 				var expr = { expr: EObjectDecl(fields), pos: Context.currentPos() };
-				lines.push( macro var args = $expr );
+				lines.push( macro @:pos(pos) var args = $expr );
 				return { ident: ident, lines: lines };
 			case AKRest:
-				var ident = "rest".resolve();
-				var expr = macro var rest = context.actionContext.uriParts;
+				var ident = "rest".resolve( pos );
+				var expr = macro @:pos(pos) var rest = context.actionContext.uriParts;
 				return { ident: ident, lines: [ expr ] };
 		}
 	}
@@ -613,7 +615,7 @@ class ControllerMacros {
 		- validates the input
 		- declares and sets the value of the ident
 	**/
-	static function createReadExprForType( paramName:String, identName:String, readExpr:ExprOf<String>, type:RouteArgType, optional:Bool, array:Bool ):Array<Expr> {
+	static function createReadExprForType( paramName:String, identName:String, readExpr:ExprOf<String>, type:RouteArgType, optional:Bool, array:Bool, pos:Pos ):Array<Expr> {
 		// Reification of `macro var $i{identName} = $readExpr` isn't working, so I'm using this helper
 		function createVarDecl( name:String, expr:Expr ) {
 			return {
@@ -622,30 +624,46 @@ class ControllerMacros {
 					expr: expr,
 					type: null
 				}]),
-				pos: Context.currentPos()
+				pos: pos
 			};
 		}
 
-		return switch type {
+		switch type {
 			case SATString:
 				var declaration = createVarDecl( identName, readExpr );
-				[declaration];
+				return [declaration];
 			case SATInt:
-				var declaration = createVarDecl( identName, if(array) macro $readExpr.map(function(a) return Std.parseInt(a)) else macro Std.parseInt($readExpr) );
-				var check = macro if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Int = "+$readExpr );
-				( optional ) ? [declaration] : [declaration,check];
+				var declaration = createVarDecl(
+					identName,
+					if(array) macro  @:pos(pos) $readExpr.map(function(a) return Std.parseInt(a))
+					else macro  @:pos(pos) Std.parseInt($readExpr)
+				);
+				var check = macro @:pos(pos) if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Int = "+$readExpr );
+				return ( optional ) ? [declaration] : [declaration,check];
 			case SATFloat:
-				var declaration = createVarDecl( identName, if(array) macro $readExpr.map(function(a) return Std.parseFloat(a)) else macro Std.parseFloat($readExpr) );
-				var check = macro if (Math.isNaN($i{identName})) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Float = "+$readExpr );
-				( optional ) ? [declaration] : [declaration,check];
+				var declaration = createVarDecl(
+					identName,
+					if(array) macro @:pos(pos) $readExpr.map(function(a) return Std.parseFloat(a))
+					else macro @:pos(pos) Std.parseFloat($readExpr)
+				);
+				var check = macro @:pos(pos) if (Math.isNaN($i{identName})) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Float = "+$readExpr );
+				return ( optional ) ? [declaration] : [declaration,check];
 			case SATBool:
-				var readStr = macro var v = $readExpr;
-				var transformToBool = createVarDecl( identName, if(array) macro $readExpr.map(function(v) return (v!=null && v!="false" && v!="0" && v!="null")) else macro (v!=null && v!="false" && v!="0" && v!="null") );
-				[readStr,transformToBool];
+				var readStr = macro @:pos(pos) var v = $readExpr;
+				var transformToBool = createVarDecl(
+					identName,
+					if(array) macro @:pos(pos) $readExpr.map(function(v) return (v!=null && v!="false" && v!="0" && v!="null"))
+					else macro @:pos(pos) (v!=null && v!="false" && v!="0" && v!="null")
+				);
+				return [readStr,transformToBool];
 			case SATDate:
-				var declaration = createVarDecl( identName, if(array) macro $readExpr.map(function(a) return try Date.fromString(a) catch(e:Dynamic) null) else macro try Date.fromString($readExpr) catch(e:Dynamic) null );
-				var check = macro if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Date = "+$readExpr );
-				( optional ) ? [declaration] : [declaration,check];
+				var declaration = createVarDecl(
+					identName,
+					if(array) macro @:pos(pos) $readExpr.map(function(a) return try Date.fromString(a) catch(e:Dynamic) null)
+					else macro @:pos(pos) try Date.fromString($readExpr) catch(e:Dynamic) null
+				);
+				var check = macro @:pos(pos) if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Date = "+$readExpr );
+				return ( optional ) ? [declaration] : [declaration,check];
 		}
 	}
 
@@ -665,16 +683,17 @@ class ControllerMacros {
 		@return `ExprOf<Surprise<ActionResult,Error>>`
 	**/
 	static function wrapReturnExpression( returnExpr:Expr, routeName:String, voidReturn:Bool, lines:Array<Expr> ):Expr {
+		var pos = returnExpr.pos;
 		if ( voidReturn ) {
 			lines.push( returnExpr );
-			return macro wrapResult(null, haxe.EnumFlags.ofInt(0));
+			return macro @:pos(pos) wrapResult(null, haxe.EnumFlags.ofInt(0));
 		}
 		else {
-			var classRef = Context.getLocalClass().toString().resolve();
-			var readMetadata = macro haxe.rtti.Meta.getFields( $classRef ).$routeName.wrapResult[0];
-			var getEnumFlags = macro haxe.EnumFlags.ofInt( $readMetadata );
-			lines.push( macro var wrappingRequired = $getEnumFlags );
-			return macro wrapResult( $returnExpr, wrappingRequired );
+			var classRef = Context.getLocalClass().toString().resolve( pos );
+			var readMetadata = macro @:pos(pos) haxe.rtti.Meta.getFields( $classRef ).$routeName.wrapResult[0];
+			var getEnumFlags = macro @:pos(pos) haxe.EnumFlags.ofInt( $readMetadata );
+			lines.push( macro @:pos(pos) var wrappingRequired = $getEnumFlags );
+			return macro @:pos(pos) wrapResult( $returnExpr, wrappingRequired );
 		}
 	}
 
@@ -785,10 +804,10 @@ class ControllerMacros {
 			var condition = finalRemaining.a;
 			var block = finalRemaining.b;
 			if ( expr==null ) {
-				expr = macro if ($condition) $block;
+				expr = macro @:pos(condition.pos) if ($condition) $block;
 			}
 			else {
-				expr = macro if ($condition) $block else $expr;
+				expr = macro @:pos(condition.pos) if ($condition) $block else $expr;
 			}
 		}
 		return
@@ -804,7 +823,7 @@ class ControllerMacros {
 			var expr = null;
 			for ( condition in conditions ) {
 				if ( expr==null ) expr = condition;
-				else expr = macro $expr && $condition;
+				else expr = macro @:pos(condition.pos) $expr && $condition;
 			}
 			return expr;
 		}
