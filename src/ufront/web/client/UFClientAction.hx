@@ -1,6 +1,11 @@
 package ufront.web.client;
 
-import ufront.web.context.HttpContext;
+#if js
+	import ufront.web.context.HttpContext;
+	import js.Browser.window;
+	import haxe.PosInfos;
+	import haxe.extern.Rest;
+#end
 
 /**
 UFClientAction is a Javascript action that will run on the client's web browser.
@@ -22,7 +27,7 @@ Examples of what actions are inappropriate for:
 
 Actions can be triggered during a server request or from the client, even from 3rd party code.
 
-See `TriggerActionResult.triggerAction()` for how to trigger actions from a HTTP request.
+See `AddClientActionResult.triggerAction()` for how to trigger actions from a HTTP request.
 See `ClientJsApplication.executeAction()` for how to trigger actions on the client.
 
 ### Instantiation
@@ -32,23 +37,64 @@ The following process describes how actions are registered and executed on the c
 - Actions are registered with `ClientJsApplication.registerAction()`.
   This maps the action to the client application's injector as a singleton.
   (All actions in `UfrontClientConfiguration.clientActions` are registered when the app starts).
-- When `ClientJsApplication.triggerAction()` is called:
+- When `ClientJsApplication.executeAction()` is called:
 	- We use the application injector to fetch the singleton for the action.
 	  This means it'll be created with dependency injection, and the same action instance will be re-used each time the action is triggered.
 	- We will call `action.execute( ClientJsApplication.currentContext, data )`.
 
 ### Macro transformations.
 
-A build macro is applied to all classes that implement `UFClientAction`.
+A build macro is applied to all classes that extend `UFClientAction`.
 This removes every field from the class on the server.
 This is so that the class can exist on the server (so you can trigger client-side actions), while writing client specific code without conditional compilation.
 **/
 @:autoBuild( ufront.web.client.ClientActionMacros.emptyServer() )
-interface UFClientAction<T> {
+class UFClientAction<T> {
 	#if client
 		/**
 		Execute the current action with the given data.
 		**/
-		public function execute( context:HttpContext, ?data:Null<T> ):Void;
+		public function execute( context:HttpContext, ?data:Null<T> ):Void {}
+
+		/**
+		A default toString() that prints the current class name.
+		This is useful primarily for logging requests and knowing which controller was called.
+		**/
+		@:noCompletion
+		public function toString() {
+			return Type.getClassName( Type.getClass(this) );
+		}
+
+		/**
+		A shortcut to `console.log()`.
+		Please note this will bypass the usual log handlers and print straight to the JS console.
+		**/
+		@:noCompletion
+		inline function ufTrace( msg:Dynamic, ?pos:PosInfos ) logToConsole( window.console.log, msg, pos );
+
+		/**
+		A shortcut to `context.info()`.
+		Please note this will bypass the usual log handlers and print straight to the JS console.
+		**/
+		@:noCompletion
+		inline function ufLog( msg:Dynamic, ?pos:PosInfos ) logToConsole( window.console.info, msg, pos );
+
+		/**
+		A shortcut to `context.warn()`.
+		Please note this will bypass the usual log handlers and print straight to the JS console.
+		**/
+		@:noCompletion
+		inline function ufWarn( msg:Dynamic, ?pos:PosInfos ) logToConsole( window.console.warn, msg, pos );
+
+		/**
+		A shortcut to `context.error()`.
+		Please note this will bypass the usual log handlers and print straight to the JS console.
+		**/
+		@:noCompletion
+		inline function ufError( msg:Dynamic, ?pos:PosInfos ) logToConsole( window.console.error, msg, pos );
+
+		inline function logToConsole( fn:Rest<Dynamic>->Void, msg:Dynamic, p:PosInfos ) {
+			fn( '${p.className}.${p.methodName}()[${p.lineNumber}]:', msg );
+		}
 	#end
 }

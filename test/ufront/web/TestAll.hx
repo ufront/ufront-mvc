@@ -5,6 +5,7 @@ import utest.Runner;
 
 class TestAll {
 	public static function addTests( runner:Runner ) {
+		ufront.web.client.TestAll.addTests( runner );
 		ufront.web.context.TestAll.addTests( runner );
 		ufront.web.session.TestAll.addTests( runner );
 		ufront.web.result.TestAll.addTests( runner );
