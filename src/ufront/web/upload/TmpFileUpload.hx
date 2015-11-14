@@ -60,9 +60,9 @@ class TmpFileUpload implements UFFileUpload {
 	public function getBytes():Surprise<Bytes,Error> {
 		#if sys
 			try {
-				return Success(File.getBytes(tmpFileName)).asFuture();
+				return Success( File.getBytes(tmpFileName) ).asFuture();
 			}
-			catch ( e:Dynamic ) return Failure(Error.withData("Error during TmpFileUpload.getBytes()",e)).asFuture();
+			catch ( e:Dynamic ) return Failure( HttpError.wrap(e,'Error during TmpFileUpload.getBytes()') ).asFuture();
 		#else
 			return throw HttpError.notImplemented();
 		#end
@@ -75,9 +75,9 @@ class TmpFileUpload implements UFFileUpload {
 	public function getString( ?encoding:String="UTF-8" ):Surprise<String,Error> {
 		#if sys
 			try {
-				return Success(File.getContent(tmpFileName)).asFuture();
+				return Success( File.getContent(tmpFileName) ).asFuture();
 			}
-			catch ( e:Dynamic ) return Failure(Error.withData("Error during TmpFileUpload.getString()",e)).asFuture();
+			catch ( e:Dynamic ) return Failure( HttpError.wrap(e,"Error during TmpFileUpload.getString()") ).asFuture();
 		#else
 			return throw HttpError.notImplemented();
 		#end
@@ -89,10 +89,10 @@ class TmpFileUpload implements UFFileUpload {
 	public function writeToFile( newFilePath:String ):Surprise<Noise,Error> {
 		#if sys
 			try {
-				File.copy(tmpFileName, newFilePath);
+				File.copy( tmpFileName, newFilePath );
 				return SurpriseTools.success();
 			}
-			catch ( e:Dynamic ) return Failure(Error.withData("Error during TmpFileUpload.writeToFile()",e)).asFuture();
+			catch ( e:Dynamic ) return Failure( HttpError.wrap(e,"Error during TmpFileUpload.writeToFile()") ).asFuture();
 		#else
 			return throw HttpError.notImplemented();
 		#end
@@ -145,7 +145,7 @@ class TmpFileUpload implements UFFileUpload {
 
 				return doneTrigger.asFuture();
 			}
-			catch ( e:Dynamic ) return Failure(Error.withData("Error during TmpFileUpload.process()",e)).asFuture();
+			catch ( e:Dynamic ) return Failure( HttpError.wrap(e,"Error during TmpFileUpload.process()") ).asFuture();
 		#else
 			return throw HttpError.notImplemented();
 		#end
@@ -159,10 +159,10 @@ class TmpFileUpload implements UFFileUpload {
 	public function deleteTemporaryFile():Outcome<Noise,Error> {
 		#if sys
 			try {
-				FileSystem.deleteFile(tmpFileName);
+				FileSystem.deleteFile( tmpFileName );
 				return Success( Noise );
 			}
-			catch ( e:Dynamic ) return Failure( Error.withData("Error during TmpFileUpload.deleteTmpFile()",e) );
+			catch ( e:Dynamic ) return Failure( HttpError.wrap(e,"Error during TmpFileUpload.deleteTmpFile()") );
 		#else
 			throw HttpError.notImplemented();
 		#end
