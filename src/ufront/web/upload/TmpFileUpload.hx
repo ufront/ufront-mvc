@@ -123,23 +123,32 @@ class TmpFileUpload implements UFFileUpload {
 				var pos = 0;
 				function readNext() {
 					var final = false;
-					var bytes:Bytes;
+					var surprise:Surprise<Noise,Error>;
 					try {
-						bytes = fh.read( partSize ) ;
+						var bytes = fh.read( partSize ) ;
+						surprise = onData( bytes, pos, bytes.length );
 					}
 					catch ( e:Eof ) {
 						final = true;
-						bytes = fh.readAll( partSize );
+						var bytes = fh.readAll( partSize );
+						surprise = onData( bytes, pos, bytes.length );
 					}
-					onData( bytes, pos, bytes.length );
+					catch ( e:Dynamic ) {
+						surprise = Failure( HttpError.wrap(e,'Error during TmpFileUpload.process') ).asFuture();
+					}
+					surprise.handle(function(outcome) switch outcome {
+						case Success(_):
+							if ( final==false ) {
+								pos += partSize;
+								readNext();
+							}
+							else {
+								doneTrigger.trigger( Success(Noise) );
+							}
+						case Failure(err):
+							doneTrigger.trigger( Failure(err) );
+					});
 
-					if ( final==false ) {
-						pos += partSize;
-						readNext();
-					}
-					else {
-						doneTrigger.trigger( Success(Noise) );
-					}
 				}
 				readNext();
 
