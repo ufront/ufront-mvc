@@ -1,6 +1,7 @@
 package ufront.web.upload;
 
 import haxe.io.Bytes;
+import haxe.io.Input;
 
 using tink.CoreApi;
 
@@ -27,18 +28,24 @@ interface UFFileUpload {
 	/**
 	The contentType of the upload.
 
-	Please note this is not verified, so do not rely on this for security.
+	Please note this is not verified, and the value may not even be available depending on the platform / implementation.
 	**/
-	// Commenting out for now until I find a way to get this information on our major platforms, especially neko.
-	// var contentType:Null<String>;
+	var contentType:Null<String>;
 
-	/** Get the current upload as a `haxe.io.Bytes`. **/
+	/** Get the complete `Bytes` of the current upload. **/
 	function getBytes():Surprise<Bytes,Error>;
 
-	/** Get the current upload as a `String`. **/
-	function getString():Surprise<String,Error>;
+	/**
+	Get the complete `String` of the current upload.
+	Optionally specify an encoding to use.
+	Please note not all platforms or implementations support setting the encoding, so please use with care.
+	**/
+	function getString( ?encoding:String ):Surprise<String,Error>;
 
-	/** Write the current upload to a file on the filesystem. **/
+	/**
+	Write the current upload to a file on the filesystem.
+	This may not be supported on some platforms (such as client-side JS), in which case it will return an error.
+	**/
 	function writeToFile( filePath:String ):Surprise<Noise,Error>;
 
 	/**

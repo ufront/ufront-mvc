@@ -1,10 +1,9 @@
 package ufront.web.upload;
 
-import haxe.io.Bytes;
-import haxe.io.Eof;
+import haxe.io.*;
 #if sys
+	import sys.io.*;
 	import sys.FileSystem;
-	import sys.io.File;
 #end
 import ufront.web.HttpError;
 import ufront.web.upload.UFFileUpload;
@@ -16,8 +15,10 @@ using haxe.io.Path;
 A `FileUpload` implementation that allows you to operate on an upload that has been saved to a temporary file.
 
 `TmpFileUpload` is designed to work with `TmpFileUploadMiddleware`.
+This middleware currently does not support reading `contentType`.
 
 It is currently only implemented on `sys` platforms.
+
 **/
 class TmpFileUpload implements UFFileUpload {
 
@@ -35,8 +36,7 @@ class TmpFileUpload implements UFFileUpload {
 
 	Please note this is not verified, so do not rely on this for security.
 	**/
-	// Commenting out for now until I find a way to get this information on neko
-	// public var contentType:String;
+	public var contentType:Null<String>;
 
 	/** The path to the temporary file where the upload is being stored **/
 	var tmpFileName:String;
@@ -48,16 +48,15 @@ class TmpFileUpload implements UFFileUpload {
 
 	Please note that `originalFileName` will be sanitised using `haxe.io.Path.withoutDirectory()`.
 	**/
-	public function new( tmpFileName:String, postName:String, originalFileName:String, size:Int ) {
+	public function new( tmpFileName:String, postName:String, originalFileName:String, size:Int, ?contentType:String ) {
 		this.postName = postName;
 		this.originalFileName = originalFileName.withoutDirectory();
 		this.size = size;
 		this.tmpFileName = tmpFileName;
+		this.contentType = contentType;
 	}
 
-	/**
-	Get the current upload as a `haxe.io.Bytes`.
-	**/
+	/** Get the complete `Bytes` of the current upload. **/
 	public function getBytes():Surprise<Bytes,Error> {
 		#if sys
 			try {
@@ -71,8 +70,9 @@ class TmpFileUpload implements UFFileUpload {
 
 	/**
 	Get the current upload as a `String`.
+	Please note that `sys` platforms do ignore the "encoding" parameter, and will use the system default.
 	**/
-	public function getString():Surprise<String,Error> {
+	public function getString( ?encoding:String="UTF-8" ):Surprise<String,Error> {
 		#if sys
 			try {
 				return Success(File.getContent(tmpFileName)).asFuture();
