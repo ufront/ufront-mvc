@@ -20,23 +20,7 @@ This middleware currently does not support reading `contentType`.
 It is currently only implemented on `sys` platforms.
 
 **/
-class TmpFileUpload implements UFFileUpload {
-
-	/** The name of the POST argument (that is, the name of the file input) that this file was uploaded with. **/
-	public var postName:String;
-
-	/** The original name of this file on the client. **/
-	public var originalFileName:String;
-
-	/** The size of the upload in Bytes **/
-	public var size:Int;
-
-	/**
-	The contentType of the upload.
-
-	Please note this is not verified, so do not rely on this for security.
-	**/
-	public var contentType:Null<String>;
+class TmpFileUpload extends BaseUpload implements UFFileUpload {
 
 	/** The path to the temporary file where the upload is being stored **/
 	var tmpFileName:String;
@@ -49,15 +33,15 @@ class TmpFileUpload implements UFFileUpload {
 	Please note that `originalFileName` will be sanitised using `haxe.io.Path.withoutDirectory()`.
 	**/
 	public function new( tmpFileName:String, postName:String, originalFileName:String, size:Int, ?contentType:String ) {
-		this.postName = postName;
-		this.originalFileName = originalFileName.withoutDirectory();
-		this.size = size;
+		super( postName, originalFileName.withoutDirectory(), size, contentType );
 		this.tmpFileName = tmpFileName;
-		this.contentType = contentType;
 	}
 
 	/** Get the complete `Bytes` of the current upload. **/
 	public function getBytes():Surprise<Bytes,Error> {
+		if ( this.attachedUpload!=null )
+			return this.attachedUpload.getBytes();
+
 		#if sys
 			try {
 				return Success( File.getBytes(tmpFileName) ).asFuture();
@@ -73,6 +57,9 @@ class TmpFileUpload implements UFFileUpload {
 	Please note that `sys` platforms do ignore the "encoding" parameter, and will use the system default.
 	**/
 	public function getString( ?encoding:String="UTF-8" ):Surprise<String,Error> {
+		if ( this.attachedUpload!=null )
+			return this.attachedUpload.getString( encoding );
+
 		#if sys
 			try {
 				return Success( File.getContent(tmpFileName) ).asFuture();
@@ -87,6 +74,9 @@ class TmpFileUpload implements UFFileUpload {
 	Write the current upload to a file on the filesystem.
 	**/
 	public function writeToFile( newFilePath:String ):Surprise<Noise,Error> {
+		if ( this.attachedUpload!=null )
+			return this.attachedUpload.writeToFile( newFilePath );
+
 		#if sys
 			try {
 				File.copy( tmpFileName, newFilePath );
@@ -110,6 +100,9 @@ class TmpFileUpload implements UFFileUpload {
 	@return a future to notify you once all the data has been processed, or if an error occured at any point.
 	**/
 	public function process( onData:Bytes->Int->Int->Surprise<Noise,Error>, ?partSize:Null<Int> ):Surprise<Noise,Error> {
+		if ( this.attachedUpload!=null )
+			return this.attachedUpload.process( onData, partSize );
+
 		#if sys
 			try {
 				if( partSize == null ) {

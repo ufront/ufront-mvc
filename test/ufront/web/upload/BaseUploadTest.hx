@@ -1,10 +1,10 @@
 package ufront.web.upload;
 
 import utest.Assert;
-import ufront.web.upload.BrowserFileUpload;
+import ufront.web.upload.BaseUpload;
 
-class BrowserFileUploadTest {
-	var instance:BrowserFileUpload;
+class BaseUploadTest {
+	var instance:BaseUpload;
 
 	public function new() {}
 
