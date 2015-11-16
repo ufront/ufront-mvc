@@ -1,11 +1,10 @@
 package ufront.remoting;
 
 import haxe.remoting.Context;
-import haxe.Serializer;
-import haxe.Unserializer;
 import haxe.CallStack;
 import ufront.log.Message;
 import ufront.web.context.*;
+import ufront.web.upload.BaseUpload;
 import ufront.remoting.RemotingError;
 import minject.Injector;
 import ufront.api.*;
@@ -98,15 +97,23 @@ class RemotingHandler implements UFRequestHandler {
 
 				// Understand the request that is being made and then execute it.
 				var remotingCall = params["__x"];
-				var u = new Unserializer( remotingCall );
+				var u = new RemotingUnserializer( remotingCall, httpContext.request.files );
 				try {
 					path = u.unserialize();
 					args = u.unserialize();
+					// Let's check for any `BaseUpload` files that were serialized.
+					// These will have the correct `UFFileUpload` object in the `attachedUpload` property.
+					for ( i in 0...args.length ) {
+						var baseUpload = Std.instance( args[i], BaseUpload );
+						if ( baseUpload!=null && baseUpload.attachedUpload!=null ) {
+							args[i] = baseUpload.attachedUpload;
+						}
+					}
 				}
 				catch ( e:Dynamic ) throw 'Unable to deserialize remoting call: $e. Remoting call string: $remotingCall';
 				var apiCallFinished = executeApiCall( path, args, context, httpContext.actionContext );
 				remotingResponse = apiCallFinished.map(function(data:Dynamic) {
-					var s = new Serializer();
+					var s = new RemotingSerializer( RDServerToClient );
 					s.serialize( data );
 					return "hxr" + s.toString();
 				});
@@ -204,14 +211,14 @@ class RemotingHandler implements UFRequestHandler {
 		if ( httpContext.request.clientHeaders.exists("X-Ufront-Remoting") ) {
 			// We can include the "hxe" and "hxs" exception and stack trace.
 			// Serialize the exception
-			var s = new haxe.Serializer();
+			var s = new RemotingSerializer( RDServerToClient );
 			s.serializeException(e);
 			var serializedException = "hxe" + s.toString();
 
 			#if debug
 				// Serialize the stack trace
 				var exceptionStack = CallStack.toString( CallStack.exceptionStack() );
-				var serializedStack = "hxs" + Serializer.run( exceptionStack );
+				var serializedStack = "hxs" + RemotingSerializer.run( exceptionStack, RDServerToClient );
 				return serializedStack + "\n" + serializedException;
 			#else
 				return serializedException;
@@ -219,7 +226,7 @@ class RemotingHandler implements UFRequestHandler {
 		}
 		else {
 			// This is standard Haxe remoting.  Only use the "hxr" line with a serialized exception.
-			var s = new haxe.Serializer();
+			var s = new RemotingSerializer( RDServerToClient );
 			s.serializeException(e);
 			return "hxr" + s.toString();
 		}

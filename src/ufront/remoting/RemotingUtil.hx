@@ -43,14 +43,14 @@ class RemotingUtil {
 				if ( line=="" ) continue;
 				switch (line.substr(0,3)) {
 					case "hxr":
-						var s = new haxe.Unserializer(line.substr(3));
+						var s = new RemotingUnserializer(line.substr(3));
 						ret =
 							try s.unserialize()
 							catch(e:Dynamic) errors.push( RUnserializeFailed(remotingCallString, line.substr(3), '$e') )
 						;
 						hxrFound = true;
 					case "hxt":
-						var s = new haxe.Unserializer(line.substr(3));
+						var s = new RemotingUnserializer(line.substr(3));
 						var m:Message =
 							try s.unserialize()
 							catch(e:Dynamic) errors.push( RUnserializeFailed(remotingCallString, line.substr(3), '$e') )
@@ -72,13 +72,13 @@ class RemotingUtil {
 							haxe.Log.trace('[${m.type}]${m.msg}', m.pos);
 						#end
 					case "hxs":
-						var s = new haxe.Unserializer(line.substr(3));
+						var s = new RemotingUnserializer(line.substr(3));
 						stack =
 							try s.unserialize()
 							catch(e:Dynamic) errors.push( RUnserializeFailed(remotingCallString, line.substr(3), '$e') )
 						;
 					case "hxe":
-						var s = new haxe.Unserializer(line.substr(3));
+						var s = new RemotingUnserializer(line.substr(3));
 						ret =
 							try s.unserialize()
 							catch(e:Dynamic) errors.push( RServerSideException(remotingCallString, e, stack) )
