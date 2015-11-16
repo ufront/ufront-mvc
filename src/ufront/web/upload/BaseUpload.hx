@@ -11,11 +11,9 @@ The `BaseUpload` is a base class that can be used when implementing `UFFileUploa
 It's main purpose is to make it easier for transferring uploads from the client to the server as serialized objects.
 
 When a `BaseUpload` object is serialized via `RemotingSerializer`, and the purpose is to send the upload to the server, it will serialize the metadata about the object, and ask `RemotingSerializer` to attach the file to the remoting HTTP request.
-When the `RemotingUnserializer` tries to unpack a `BaseUpload` object, it will attach the corresponding `UFFileUpload` to
-
--
-
+When the `RemotingUnserializer` tries to unpack a `BaseUpload` object, it will attach the corresponding `UFFileUpload` to `attachedUpload`.
 **/
+@:keepSub // Because, for example, `BrowserFileUpload` needs to exist on the server to be deserialized, even though we'll never otherwise use it on the server.
 class BaseUpload {
 	/** The name of the POST argument (that is, the name of the file input) that this file was uploaded with. **/
 	public var postName:String;
@@ -67,7 +65,7 @@ class BaseUpload {
 			// It's a remoting serializer, and we're sending this upload to the server.
 			if ( Std.is(this,UFFileUpload)==false )
 				throw 'BaseUpload can only be serialized if the sub-class matches the UFFileUpload interface';
-			var uniquePostName = 'postName_'+Uuid.create();
+			var uniquePostName = postName+'_'+Uuid.create();
 			rs.uploads.add( uniquePostName, cast this );
 			s.serialize( uniquePostName );
 		}
