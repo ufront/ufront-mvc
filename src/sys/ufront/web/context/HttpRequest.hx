@@ -120,7 +120,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 				processCallbackResult( onEndPart() );
 			}
 			else if ( currentContent!=null ) {
-				post.add( partName, currentContent.urlDecode() );
+				post.add( partName, currentContent );
 			}
 		}
 		function doPart( newPartName:String, newPartFilename:String ) {
