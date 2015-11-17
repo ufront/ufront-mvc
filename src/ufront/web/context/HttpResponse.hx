@@ -78,7 +78,10 @@ class HttpResponse {
 	The default value is `200`.
 	**/
 	public var status:Int;
+	
+	var binary = false;
 
+	var _bytes:haxe.io.BytesBuffer;
 	var _buff:StringBuf;
 	var _headers:OrderedStringMap<String>;
 	var _cookies:StringMap<HttpCookie>;
@@ -163,6 +166,8 @@ class HttpResponse {
 	**/
 	public function clearContent():Void {
 		_buff = new StringBuf();
+		_bytes = new haxe.io.BytesBuffer();
+		binary = false;
 	}
 
 	/**
@@ -192,6 +197,8 @@ class HttpResponse {
 	**/
 	public function writeBytes( b:Bytes, pos:Int, len:Int ):Void {
 		_buff.add( b.getString(pos, len) );
+		_bytes.add(b);
+		binary = true;
 	}
 
 	/**
