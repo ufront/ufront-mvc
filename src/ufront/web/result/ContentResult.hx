@@ -42,20 +42,18 @@ class ContentResult extends ActionResult {
 	/**
 	Search for relative URLs in the HTML content and transform them using the appropriate URL filters.
 
-	This will transform all URLs beginning with `~/` and wrapped in single quotes or double quotes.
+	This will transform all URLs beginning with `~/` that are wrapped in either single quotes or double quotes, and contain no whitespace.
 
-	This will find URLs beginning with `~/` that look like they are part of a `href=`, `src=` or `action=` HTML attribute.
-	(Note: the regex used to check this checks for `src="~/path/"`, and does not yet verify that the pattern is inside a HTML tag, please use with care).
+	TODO: provide a way to 'escape' this behaviour, perhaps by using `~~/` which will be rendered as plain `~/`.
 	**/
 	public static function replaceRelativeLinks( actionContext:ActionContext, html:String ):String {
-		var singleQuotes = ~/(src|href|action)=(')(~\/[^']*)'/gi;
-		var doubleQuotes = ~/(src|href|action)=(")(~\/[^"]*)"/gi;
+		var singleQuotes = ~/(')(~\/[^'\s]*)'/gi;
+		var doubleQuotes = ~/(")(~\/[^"\s]*)"/gi;
 		function transformUri( r:EReg ):String {
-			var attName = r.matched( 1 );
-			var quote = r.matched( 2 );
-			var originalUri = r.matched( 3 );
+			var quote = r.matched( 1 );
+			var originalUri = r.matched( 2 );
 			var transformedUri = ActionResult.transformUri( actionContext, originalUri );
-			return attName+"="+quote+transformedUri+quote;
+			return quote+transformedUri+quote;
 		}
 		html = singleQuotes.map( html, transformUri );
 		html = doubleQuotes.map( html, transformUri );
