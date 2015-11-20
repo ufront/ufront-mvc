@@ -5,6 +5,7 @@ package ufront.web.result;
 #end
 import haxe.PosInfos;
 import ufront.view.TemplateData;
+import ufront.view.TemplateHelper;
 import ufront.view.TemplatingEngines;
 import ufront.view.UFViewEngine;
 import ufront.view.UFTemplate;
@@ -201,9 +202,14 @@ class ViewResult extends ActionResult {
 	public static function create( data:{} ):ViewResult return new ViewResult( data );
 
 	/**
-	Global values that should be made available to every view result.
+	Global values that should be made available to every ViewResult.
 	**/
 	public static var globalValues:TemplateData = {};
+
+	/**
+	Global helpers that should be made available to every ViewResult.
+	**/
+	public static var globalHelpers:Map<String,TemplateHelper> = new Map();
 
 	//
 	// Member Variables
@@ -219,7 +225,7 @@ class ViewResult extends ActionResult {
 	/**
 	Any helpers (dynamic functions) to pass to the template when it is executed.
 	**/
-	public var helpers:TemplateData;
+	public var helpers:Map<String,TemplateHelper>;
 
 	/** The source used for loading a view template. Set in the constructor or with `this.usingTemplateString()`, or inferred during `this.executeResult()`. **/
 	public var templateSource(default,null):TemplateSource;
@@ -245,7 +251,7 @@ class ViewResult extends ActionResult {
 	**/
 	public function new( ?data:TemplateData, ?viewPath:String, ?templatingEngine:TemplatingEngine ) {
 		this.data = (data!=null) ? data : {};
-		this.helpers = {};
+		this.helpers = new Map();
 		this.templateSource = (viewPath!=null) ? TFromEngine(viewPath,templatingEngine) : TUnknown;
 		this.layoutSource = TUnknown;
 		this.finalOutputTrigger = Future.trigger();
@@ -304,6 +310,18 @@ class ViewResult extends ActionResult {
 		return this;
 	}
 
+	/** Add a helper to be used in rendering the result. **/
+	public function addHelper( name:String, helper:TemplateHelper ) {
+		helpers[name] = helper;
+	}
+
+	/** Add multiple helpers to be used in rendering the result. **/
+	public function addHelpers( helpers:Map<String,TemplateHelper> ) {
+		for ( name in helpers.keys() ) {
+			addHelper( name, helpers[name] );
+		}
+	}
+
 	/**
 	Execute the given view, wrap it in a layout, and write it to the response.
 
@@ -343,13 +361,14 @@ class ViewResult extends ActionResult {
 		return FutureTools
 			.when( templateReady, layoutReady )
 			.map(function( viewTemplate:Outcome<Null<UFTemplate>,Error>, layoutTemplate:Outcome<Null<UFTemplate>,Error> ) {
-				var combinedData = getCombinedData( [globalValues,helpers,data], actionContext );
+				var combinedData = getCombinedData( [globalValues,data], actionContext );
+				var combinedHelpers = getCombinedHelpers( [globalHelpers,helpers] );
 				try {
 					// Execute the view, and then the layout (inserting the `viewContent`).
-					var viewOut = executeTemplate( "view", viewTemplate, combinedData ).sure();
+					var viewOut = executeTemplate( "view", viewTemplate, combinedData, combinedHelpers ).sure();
 					var finalOut =
 						if ( layoutTemplate.match(Success(null)) ) viewOut
-						else executeTemplate( "layout", layoutTemplate, combinedData.set('viewContent',viewOut) ).sure();
+						else executeTemplate( "layout", layoutTemplate, combinedData.set('viewContent',viewOut), combinedHelpers ).sure();
 
 					finalOut = ContentResult.replaceRelativeLinks( actionContext, finalOut );
 
@@ -372,6 +391,16 @@ class ViewResult extends ActionResult {
 		if ( controller!=null && combinedData.exists('baseUri')==false )
 			combinedData.set( 'baseUri', controller.baseUri );
 		return combinedData;
+	}
+
+	static function getCombinedHelpers( helperSets:Array<Map<String,TemplateHelper>> ):Map<String,TemplateHelper> {
+		var combinedHelpers = new Map();
+		for ( set in helperSets ) {
+			for ( name in set.keys() ) {
+				combinedHelpers[name] = set[name];
+			}
+		}
+		return combinedHelpers;
 	}
 
 	static function getViewFolder( actionContext:ActionContext ):String {
@@ -470,10 +499,10 @@ class ViewResult extends ActionResult {
 		}
 	}
 
-	static function executeTemplate( section:String, tplOutcome:Outcome<Null<UFTemplate>,Error>, combinedData:TemplateData ):Outcome<String,Error> {
+	static function executeTemplate( section:String, tplOutcome:Outcome<Null<UFTemplate>,Error>, combinedData:TemplateData, combinedHelpers:Map<String,TemplateHelper> ):Outcome<String,Error> {
 		switch tplOutcome {
 			case Success( tpl ):
-				try return Success( tpl.execute(combinedData) )
+				try return Success( tpl.execute(combinedData,combinedHelpers) )
 				catch (e:Dynamic) {
 					#if debug
 						trace( haxe.CallStack.toString(haxe.CallStack.exceptionStack()) );
