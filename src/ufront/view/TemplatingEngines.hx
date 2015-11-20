@@ -1,6 +1,7 @@
 package ufront.view;
 
 #if mustache import mustache.Mustache; #end
+import haxe.Constraints;
 using tink.CoreApi;
 
 /**
@@ -45,10 +46,31 @@ class TemplatingEngines {
 	static function get_haxe() return {
 		factory: function ( tplString ):UFTemplate {
 			var t = new haxe.Template( tplString );
-			return function (data:TemplateData) return t.execute( data.toObject() );
+			return function (data:TemplateData, ?helpers:Map<String,TemplateHelper>) {
+				var macrosObject:Dynamic<Function> = {};
+				if ( helpers!=null ) for ( helperName in helpers.keys() ) {
+					var paddedHelper = padHelperFnForHaxeTplMacro( helpers[helperName] );
+					Reflect.setField( macrosObject, helperName, paddedHelper );
+				}
+				return t.execute( data.toObject(), macrosObject );
+			}
 		},
 		type: "haxe.Template",
 		extensions: ["html", "tpl"]
+	}
+
+	static function padHelperFnForHaxeTplMacro( h:TemplateHelper ):Function {
+		return switch h.numArgs {
+			case 0: function(_) return h.getFn()();
+			case 1: function(_,a) return h.getFn()(a);
+			case 2: function(_,a,b) return h.getFn()(a,b);
+			case 3: function(_,a,b,c) return h.getFn()(a,b,c);
+			case 4: function(_,a,b,c,d) return h.getFn()(a,b,c,d);
+			case 5: function(_,a,b,c,d,e) return h.getFn()(a,b,c,d,e);
+			case 6: function(_,a,b,c,d,e,f) return h.getFn()(a,b,c,d,e,f);
+			case 7: function(_,a,b,c,d,e,f,g) return h.getFn()(a,b,c,d,e,f,g);
+			case _: throw "TemplateHelper supports a maximum of 7 arguments";
+		}
 	}
 
 	#if hxdtl

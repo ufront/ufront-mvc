@@ -11,25 +11,47 @@ It was designed this way to be flexible and integrate easily with existing templ
 
 For example, to use haxe's templating engine:
 
-```
-var tpl:UFTemplate = function (data) new haxe.Template( myTemplate ).execute( data.toObject() );
-tpl.execute([ 'name'=>'Jason', 'age'=>26, helper=>someHelper ]);
+```haxe TODO UPDATE THIS, maybe show erazor (one cast type) and Haxe (other cast, more complex fn)
+
+// Erazor:
+var tpl:UFTemplate = function (data:TemplateData) return new erazor.Template( tplString ).execute( data.toObject() );
+
+// Haxe Templating:
+// Note: because haxe.Template uses their own `macros`, which have an extra first argument, we would need to wrap the helpers first.
+var tpl:UFTemplate = function (data:TemplateData, helpers:TemplateHelper) return new haxe.Template( tplString ).execute( data.toObject(), wrapHelpers(helpers) );
 ```
 
 Implicit casts are provided to and from the underlying `TemplateData->String` type.
 **/
-abstract UFTemplate( TemplateData->String ) from TemplateData->String to TemplateData->String {
+@:callable
+abstract UFTemplate( TemplateData->Null<Map<String,TemplateHelper>>->String ) from TemplateData->Null<Map<String,TemplateHelper>>->String to TemplateData->Null<Map<String,TemplateHelper>>->String {
 
-	public function new( cb:TemplateData->String ) this = cb;
+	public function new( cb:TemplateData->Null<Map<String,TemplateHelper>>->String ) this = cb;
 
 	/**
-	Execute the template with the given data.
-
-	Please see `TemplateData` for an explanation of the different data types that can be accepted through the implicit casts.
+	If a templating engine combines data and helpers in a single object, you can create a UFTemplate from a single `TemplateData->String` function.
+	This will combine the `data` and `helpers` objects into a single object, and pass it to the callback.
 	**/
-	public inline function execute( data:TemplateData ):String {
-		// Haxe 3.0.1 won't allow me to call this() directly, it gives `Field this cannot be accessed for reading`.
-		var cb = this;
-		return cb(data);
+	@:from public static function fromSimpleCallback( cb:TemplateData->String ) {
+		return new UFTemplate(function(data,helpers) {
+			if ( helpers!=null ) {
+				data = TemplateData.fromObject( data );
+				for ( helperName in helpers.keys() ) {
+					data.set( helperName, helpers[helperName].getFn() );
+				}
+			}
+			return cb( data );
+		});
+	}
+
+	/**
+	Execute the template with the given data and helpers.
+
+	Please see `TemplateData` and `TemplateHelper` for an explanation of the different data types that can be accepted through the implicit casts.
+
+	`UFTemplate` also has `@:callable` metadata, so you can call it directly: `myTemplate( data, helpers )`.
+	**/
+	public inline function execute( data:TemplateData, ?helpers:Map<String,TemplateHelper> ):String {
+		return this( data, helpers );
 	}
 }

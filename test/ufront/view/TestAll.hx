@@ -8,6 +8,7 @@ class TestAll {
 		runner.addCase( new UFViewEngineTest() );
 		runner.addCase( new FileViewEngineTest() );
 		runner.addCase( new TemplateDataTest() );
+		runner.addCase( new TemplateHelperTest() );
 		runner.addCase( new TemplatingEnginesTest() );
 		runner.addCase( new UFTemplateTest() );
 	}

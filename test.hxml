@@ -12,6 +12,7 @@
 -cp src
 
 # Things need for tests
+-lib erazor
 -lib utest
 -lib detox
 -cp test
