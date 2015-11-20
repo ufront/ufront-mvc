@@ -34,13 +34,14 @@ abstract UFTemplate( TemplateData->Null<Map<String,TemplateHelper>>->String ) fr
 	**/
 	@:from public static function fromSimpleCallback( cb:TemplateData->String ) {
 		return new UFTemplate(function(data,helpers) {
+			var combinedData = new TemplateData();
 			if ( helpers!=null ) {
-				data = TemplateData.fromObject( data );
 				for ( helperName in helpers.keys() ) {
-					data.set( helperName, helpers[helperName].getFn() );
+					combinedData.set( helperName, helpers[helperName].getFn() );
 				}
 			}
-			return cb( data );
+			combinedData.setObject( data );
+			return cb( combinedData );
 		});
 	}
 
