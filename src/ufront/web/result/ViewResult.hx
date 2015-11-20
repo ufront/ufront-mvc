@@ -211,6 +211,11 @@ class ViewResult extends ActionResult {
 	**/
 	public static var globalHelpers:Map<String,TemplateHelper> = new Map();
 
+	/**
+	Global partials that should be made available to every ViewResult.
+	**/
+	public static var globalPartials:Map<String,TemplateSource> = new Map();
+
 	//
 	// Member Variables
 	//
@@ -226,6 +231,13 @@ class ViewResult extends ActionResult {
 	Any helpers (dynamic functions) to pass to the template when it is executed.
 	**/
 	public var helpers:Map<String,TemplateHelper>;
+
+	/**
+	Any partials that are to be made available during rendering.
+
+	They will be loaded during `renderResult()` and executed as required.
+	**/
+	public var partials:Map<String,TemplateSource>;
 
 	/**
 	The default folder to assume the templates are in.
@@ -261,6 +273,7 @@ class ViewResult extends ActionResult {
 	public function new( ?data:TemplateData, ?viewPath:String, ?templatingEngine:TemplatingEngine ) {
 		this.data = (data!=null) ? data : {};
 		this.helpers = new Map();
+		this.partials = new Map();
 		this.templateSource = (viewPath!=null) ? TFromEngine(viewPath,templatingEngine) : TUnknown;
 		this.layoutSource = TUnknown;
 		this.finalOutputTrigger = Future.trigger();
@@ -331,6 +344,30 @@ class ViewResult extends ActionResult {
 		}
 	}
 
+	/** Add a partial template file to be available while rendering the result. **/
+	public function addPartial( name:String, partialPath:String, ?templatingEngine:TemplatingEngine ) {
+		partials[name] = TFromEngine( partialPath, templatingEngine );
+	}
+
+	/** Add a partial template string to be available while rendering the result. **/
+	public function addPartialString( name:String, partialTemplate:String, templatingEngine:TemplatingEngine ) {
+		partials[name] = TFromString( partialTemplate, templatingEngine );
+	}
+
+	/** Add multiple partial template files to be available while rendering the result. **/
+	public function addPartials( partials:Map<String,String>, ?templatingEngine:TemplatingEngine ) {
+		for ( name in partials.keys() ) {
+			addPartial( name, partials[name], templatingEngine );
+		}
+	}
+
+	/** Add multiple partial template strings to be available while rendering the result. **/
+	public function addPartialStrings( partials:Map<String,String>, templatingEngine:TemplatingEngine ) {
+		for ( name in partials.keys() ) {
+			addPartialString( name, partials[name], templatingEngine );
+		}
+	}
+
 	/**
 	Execute the given ViewResult and write the response to the output.
 
@@ -371,7 +408,13 @@ class ViewResult extends ActionResult {
 	Render the current ViewResult and get the resulting String.
 
 	The view and layout templates will both be loaded from the given `UFViewEngine`.
-	They will be executed with data from `this.defaultData`, `ViewResult.globalData` and `this.data`, and helpers from `ViewResult.globalHelpers` and `this.helpers`, with the latter taking precedence over the former.
+	They will be executed with:
+
+	- partials from `ViewResult.globalPartials` and `this.partials`
+	- helpers from `ViewResult.globalHelpers` and `this.helpers`
+	- data from `this.defaultData`, `ViewResult.globalData` and `this.data`
+
+	with the latter taking precedence over the former.
 
 	The view will be rendered first, and then it's output will be available in the layout as the `viewContent` variable.
 
@@ -391,13 +434,16 @@ class ViewResult extends ActionResult {
 		}
 		var templateReady = loadTemplateFromSource( templateSource, viewEngine );
 		var layoutReady = loadTemplateFromSource( layoutSource, viewEngine );
+		var partialsReady = loadPartialTemplates( [globalPartials,partials], viewEngine );
 
 		return FutureTools
-			.when( templateReady, layoutReady )
-			.map(function( viewTemplate:Outcome<Null<UFTemplate>,Error>, layoutTemplate:Outcome<Null<UFTemplate>,Error> ) {
-				var combinedData = TemplateData.fromMany([ defaultData, globalValues, data ]);
-				var combinedHelpers = getCombinedHelpers([ globalHelpers, helpers ]);
+			.when( templateReady, layoutReady, partialsReady )
+			.map(function( viewTemplate:Outcome<Null<UFTemplate>,Error>, layoutTemplate:Outcome<Null<UFTemplate>,Error>, partialTemplates:Outcome<Map<String,UFTemplate>,Error> ) {
 				try {
+					var combinedData = TemplateData.fromMany([ defaultData, globalValues, data ]);
+					var combinedHelpers = getCombinedMap([ globalHelpers, helpers ]);
+					addHelpersForPartials( partialTemplates.sure(), combinedData, combinedHelpers );
+
 					// Execute the view, and then the layout (inserting the `viewContent`).
 					var viewOut = executeTemplate( "view", viewTemplate, combinedData, combinedHelpers ).sure();
 					if ( layoutTemplate.match(Success(null)) ) {
@@ -417,14 +463,14 @@ class ViewResult extends ActionResult {
 		actionContext.httpContext.response.write( response );
 	}
 
-	static function getCombinedHelpers( helperSets:Array<Map<String,TemplateHelper>> ):Map<String,TemplateHelper> {
-		var combinedHelpers = new Map();
-		for ( set in helperSets ) {
-			for ( name in set.keys() ) {
-				combinedHelpers[name] = set[name];
+	static function getCombinedMap<T>( mapSets:Array<Map<String,T>> ):Map<String,T> {
+		var combinedMaps = new Map();
+		for ( set in mapSets ) {
+			for ( key in set.keys() ) {
+				combinedMaps[key] = set[key];
 			}
 		}
-		return combinedHelpers;
+		return combinedMaps;
 	}
 
 	static function getViewFolder( actionContext:ActionContext ):String {
@@ -520,6 +566,55 @@ class ViewResult extends ActionResult {
 				}
 			case TFromEngine(path,templatingEngine): engine.getTemplate( path, templatingEngine );
 			case TNone, TUnknown: Future.sync( Success(null) );
+		}
+	}
+
+	static function loadPartialTemplates( partialSources:Array<Map<String,TemplateSource>>, engine:UFViewEngine ):Surprise<Map<String,UFTemplate>,Error> {
+		var allPartialSources = getCombinedMap( partialSources );
+		var allPartialTemplates = new Map();
+		var partialErrors = new Map();
+		var allPartialFutures = [];
+		for ( name in allPartialSources.keys() ) {
+			var source = allPartialSources[name];
+			var surprise = loadTemplateFromSource( source, engine );
+			surprise.handle(function(outcome) switch outcome {
+				case Success(tpl) if (tpl!=null): allPartialTemplates[name] = tpl;
+				case Success(_): partialErrors[name] = HttpError.internalServerError('Partial $name must be either TFromString or TFromEngine, was $source');
+				case Failure(err): partialErrors[name] = err;
+			});
+			allPartialFutures.push( surprise );
+		}
+		return Future.ofMany( allPartialFutures ).map(function(_) {
+			var numberOfErrors = Lambda.count(partialErrors);
+			return switch numberOfErrors {
+				case 0: Success( allPartialTemplates );
+				case 1:
+					var err = [for (e in partialErrors) e][0];
+					Failure( err );
+				case _:
+					var partialNames = [for (name in partialErrors.keys()) name];
+					error( 'Partials $partialNames failed to load: $partialErrors', partialErrors );
+			}
+		});
+	}
+
+	/**
+	Create helpers for each partial.
+	Add them to the helpers map as we go so they're available to other partials.
+	**/
+	static function addHelpersForPartials( partialTemplates:Map<String,UFTemplate>, combinedData:TemplateData, combinedHelpers:Map<String,TemplateHelper> ) {
+		for ( name in partialTemplates.keys() ) {
+			var partial = partialTemplates[name];
+			var partialFn = function( partialData:TemplateData ):String {
+				// Each partial can take one object as an argument: this will be added to the TemplateData used to process the partial.
+				if ( partialData==null )
+					partialData = new TemplateData();
+				else
+					partialData.set( "__current__", partialData );
+				partialData.setObject( combinedData );
+				return executeTemplate( 'Partial[$name]', Success(partial), partialData, combinedHelpers ).sure();
+			}
+			combinedHelpers[name] = partialFn;
 		}
 	}
 
