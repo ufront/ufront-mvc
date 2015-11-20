@@ -54,6 +54,7 @@ class ContentResultTest {
 		<script src=\'~/relative.js\' />
 		"~/relative/"
 		\'~/relative/\'
+		~/relative/
 		Done!';
 		var expected = '<html>
 		<a href="/">Absolute</a>
@@ -64,8 +65,9 @@ class ContentResultTest {
 		<a href="/path/to/app/index.php?q=/relative/">Link</a>
 		<script src=\'/absolute.js\' />
 		<script src=\'/path/to/app/index.php?q=/relative.js\' />
-		"~/relative/"
-		\'~/relative/\'
+		"/path/to/app/index.php?q=/relative/"
+		\'/path/to/app/index.php?q=/relative/\'
+		~/relative/
 		Done!';
 
 		var context = "/".mockHttpContext();
