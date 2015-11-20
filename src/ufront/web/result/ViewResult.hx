@@ -602,19 +602,18 @@ class ViewResult extends ActionResult {
 	Create helpers for each partial.
 	Add them to the helpers map as we go so they're available to other partials.
 	**/
-	static function addHelpersForPartials( partialTemplates:Map<String,UFTemplate>, combinedData:TemplateData, combinedHelpers:Map<String,TemplateHelper> ) {
+	static function addHelpersForPartials( partialTemplates:Map<String,UFTemplate>, contextData:TemplateData, contextHelpers:Map<String,TemplateHelper> ) {
 		for ( name in partialTemplates.keys() ) {
 			var partial = partialTemplates[name];
 			var partialFn = function( partialData:TemplateData ):String {
 				// Each partial can take one object as an argument: this will be added to the TemplateData used to process the partial.
-				if ( partialData==null )
-					partialData = new TemplateData();
-				else
-					partialData.set( "__current__", partialData );
-				partialData.setObject( combinedData );
-				return executeTemplate( 'Partial[$name]', Success(partial), partialData, combinedHelpers ).sure();
+				var combinedPartialData = new TemplateData();
+				combinedPartialData.setObject( contextData );
+				combinedPartialData.setObject( partialData );
+				combinedPartialData.set( "__current__", partialData );
+				return executeTemplate( 'Partial[$name]', Success(partial), combinedPartialData, contextHelpers ).sure();
 			}
-			combinedHelpers[name] = partialFn;
+			contextHelpers[name] = partialFn;
 		}
 	}
 
@@ -626,10 +625,10 @@ class ViewResult extends ActionResult {
 					#if debug
 						trace( haxe.CallStack.toString(haxe.CallStack.exceptionStack()) );
 					#end
-					return error( 'Unable to execute $section template', e );
+					return error( 'Unable to execute $section template: $e', e );
 				}
 			case Failure( err ):
-				return error( 'Unable to load $section template', err );
+				return error( 'Unable to load $section template: $err', err );
 		}
 	}
 
