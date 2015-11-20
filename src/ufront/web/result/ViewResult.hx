@@ -227,6 +227,15 @@ class ViewResult extends ActionResult {
 	**/
 	public var helpers:Map<String,TemplateHelper>;
 
+	/**
+	The default folder to assume the templates are in.
+
+	Any template that is to be loaded from an engine, and whose path does not begin with a '/', (so is not absolute), will be searched for inside `viewFolder`.
+
+	If `viewFolder` is null when `executeResult()` is called, it will be set based on the controller's `@viewFolder` metadata, or based on the controller's name.
+	**/
+	public var viewFolder:Null<String>;
+
 	/** The source used for loading a view template. Set in the constructor or with `this.usingTemplateString()`, or inferred during `this.executeResult()`. **/
 	public var templateSource(default,null):TemplateSource;
 
@@ -323,74 +332,89 @@ class ViewResult extends ActionResult {
 	}
 
 	/**
-	Execute the given view, wrap it in a layout, and write it to the response.
+	Execute the given ViewResult and write the response to the output.
 
-	In detail:
-
-	- Figure out which template and which layout to use. (See the documentation at the top of this class for more details.)
-	- Load the template and layout.
-	- Once loaded, execute the view template with all of our data (a combination of `globalValues`, `helpers` and `data`).
-	- If a layout is used, execute the layout with the same data, inserting our view into the `viewContent` variable of the layout.
-	- Write the final output to the `ufront.web.context.HttpResponse` with a `text/html` content type.
+	- If the layout or view has not been set, figure out which one to use. (See the documentation at the top of this class for details).
+	- If `viewFolder` is null, it will be set based on the controller's `@viewFolder` metadata or based on the controller's name.
+	- Run `renderResult()` with a `UFViewEngine` from our injector, and with the controller's `baseUri` property included in the default data.
+	- When the final render of the ViewResult is ready, replace any relative relative URLs using `ContentResult.replaceRelativeLinks()`.
+	- Write the final response to the client using `writeResponse()`. By default this will output it as `text/html`. You can also override `writeResponse()` in a sub class, as we do in `PartialViewResult`.
 	**/
 	override function executeResult( actionContext:ActionContext ) {
-
 		if ( layoutSource.match(TUnknown) )
 			layoutSource = inferLayoutFromContext( actionContext );
 		if ( templateSource.match(TUnknown) )
 			templateSource = inferViewPathFromContext( actionContext );
-
-		var viewFolder = getViewFolder( actionContext );
-		templateSource = addViewFolderToPath( templateSource, viewFolder );
-		layoutSource = addViewFolderToPath( layoutSource, viewFolder );
-
-		// Get the viewEngine from the injector.
+		if ( viewFolder==null )
+			viewFolder = getViewFolder( actionContext );
 		var viewEngine:UFViewEngine;
 		try {
 			viewEngine = actionContext.httpContext.injector.getValue( UFViewEngine );
 		} catch (e:Dynamic) {
-			var msg = "Failed to find a UFViewEngine in ViewResult.executeResult(), please make sure that one is made available in your application's injector";
-			return SurpriseTools.asSurpriseError( null, msg );
+			return SurpriseTools.asSurpriseError( e, "Failed to find a UFViewEngine in ViewResult.executeResult(), please make sure that one is made available in your application's injector" );
 		};
 
-		// Begin to load the templates (as Futures).
+		var defaultData = new TemplateData();
+		var controller = Std.instance( actionContext.controller, Controller );
+		if ( controller!=null )
+			defaultData.set( 'baseUri', controller.baseUri );
+
+		return renderResult( viewEngine, defaultData ) >> function(finalOut:String):Noise {
+			finalOut = ContentResult.replaceRelativeLinks( actionContext, finalOut );
+			writeResponse( finalOut, actionContext );
+			this.finalOutputTrigger.trigger( finalOut );
+			return Noise;
+		}
+	}
+
+	/**
+	Render the current ViewResult and get the resulting String.
+
+	The view and layout templates will both be loaded from the given `UFViewEngine`.
+	They will be executed with data from `this.defaultData`, `ViewResult.globalData` and `this.data`, and helpers from `ViewResult.globalHelpers` and `this.helpers`, with the latter taking precedence over the former.
+
+	The view will be rendered first, and then it's output will be available in the layout as the `viewContent` variable.
+
+	This can be used separately from `executeResult()` if you want to render a ViewResult outside of a regular HTTP context.
+	For example, if you wished to render a view and a layout to send a HTML email from the command line.
+	**/
+	public function renderResult( viewEngine:UFViewEngine, ?defaultData:TemplateData ):Surprise<String,Error> {
+		if ( layoutSource.match(TUnknown) )
+			return SurpriseTools.asSurpriseError( null, 'No layout template source was set on the ViewResult' );
+		if ( templateSource.match(TUnknown) )
+			return SurpriseTools.asSurpriseError( null, 'No view template source was set on the ViewResult' );
+		if ( defaultData==null )
+			defaultData = {}
+		if ( viewFolder!=null ) {
+			templateSource = addViewFolderToPath( templateSource, viewFolder );
+			layoutSource = addViewFolderToPath( layoutSource, viewFolder );
+		}
 		var templateReady = loadTemplateFromSource( templateSource, viewEngine );
 		var layoutReady = loadTemplateFromSource( layoutSource, viewEngine );
-
 
 		return FutureTools
 			.when( templateReady, layoutReady )
 			.map(function( viewTemplate:Outcome<Null<UFTemplate>,Error>, layoutTemplate:Outcome<Null<UFTemplate>,Error> ) {
-				var combinedData = getCombinedData( [globalValues,data], actionContext );
-				var combinedHelpers = getCombinedHelpers( [globalHelpers,helpers] );
+				var combinedData = TemplateData.fromMany([ defaultData, globalValues, data ]);
+				var combinedHelpers = getCombinedHelpers([ globalHelpers, helpers ]);
 				try {
 					// Execute the view, and then the layout (inserting the `viewContent`).
 					var viewOut = executeTemplate( "view", viewTemplate, combinedData, combinedHelpers ).sure();
-					var finalOut =
-						if ( layoutTemplate.match(Success(null)) ) viewOut
-						else executeTemplate( "layout", layoutTemplate, combinedData.set('viewContent',viewOut), combinedHelpers ).sure();
-
-					finalOut = ContentResult.replaceRelativeLinks( actionContext, finalOut );
-
-					writeResponse( finalOut, combinedData, actionContext );
-					this.finalOutputTrigger.trigger( finalOut );
-					return Success( Noise );
+					if ( layoutTemplate.match(Success(null)) ) {
+						return Success( viewOut );
+					}
+					else {
+						var layoutOut = executeTemplate( "layout", layoutTemplate, combinedData.set('viewContent',viewOut), combinedHelpers ).sure();
+						return Success( layoutOut );
+					}
 				}
 				catch (e:Error) return Failure( e );
 			});
 	}
 
-	function writeResponse( response:String, combinedData:TemplateData, actionContext:ActionContext ) {
+	function writeResponse( response:String, actionContext:ActionContext ) {
 		actionContext.httpContext.response.contentType = "text/html";
 		actionContext.httpContext.response.write( response );
-	}
-
-	static function getCombinedData( dataSets:Array<TemplateData>, actionContext:ActionContext ):TemplateData {
-		var combinedData = TemplateData.fromMany( dataSets );
-		var controller = Std.instance( actionContext.controller, Controller );
-		if ( controller!=null && combinedData.exists('baseUri')==false )
-			combinedData.set( 'baseUri', controller.baseUri );
-		return combinedData;
 	}
 
 	static function getCombinedHelpers( helperSets:Array<Map<String,TemplateHelper>> ):Map<String,TemplateHelper> {

@@ -90,7 +90,7 @@ class PartialViewResult extends ViewResult {
 			}
 		}
 
-		override function writeResponse( response:String, combinedData:TemplateData, actionContext:ActionContext ) {
+		override function writeResponse( response:String, actionContext:ActionContext ) {
 			var res = actionContext.httpContext.response;
 			res.contentType = "text/html";
 
@@ -112,9 +112,8 @@ class PartialViewResult extends ViewResult {
 			}
 			else {
 				// If it is a different layout, we leave it to `HttpResponse.flush` to render from scratch.
-				super.writeResponse( response, combinedData, actionContext );
+				super.writeResponse( response, actionContext );
 			}
-
 		}
 
 		static function getAttr( elm:Element, name:String ):Null<String> {
