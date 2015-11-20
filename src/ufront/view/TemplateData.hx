@@ -136,6 +136,8 @@ abstract TemplateData({}) to {} {
 	- Class instance objects will find all fields using `Type.getInstanceFields()` and fetch the values using `Reflect.getProperty()`.
 	- Other values will be ignored.
 
+	Please note on PHP, objects that are class instances may fail to load fields that are functions.
+
 	@param d The data object to set.
 	@return The same TemplateData so that method chaining is enabled.
 	**/
@@ -144,7 +146,17 @@ abstract TemplateData({}) to {} {
 			case TObject:
 				for ( k in Reflect.fields(d) ) set( k, Reflect.field(d,k) );
 			case TClass(cls):
-				for ( k in Type.getInstanceFields(cls) ) set( k, Reflect.getProperty(d,k) );
+				#if php
+					// PHP can't access properties on class instances using Reflect.getProperty, it throws an error.
+					// These checks and fallbacks are not required on JS or neko. It might be good to submit a bug report.
+					for ( k in Type.getInstanceFields(cls) ) {
+						try set( k, Reflect.getProperty(d,k) )
+						catch ( e:Dynamic ) try set( k, Reflect.field(d,k) )
+						catch ( e:Dynamic ) {}
+					}
+				#else
+					for ( k in Type.getInstanceFields(cls) ) set( k, Reflect.getProperty(d,k) );
+				#end
 			case _:
 		}
 		return new TemplateData( this );

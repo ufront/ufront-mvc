@@ -86,6 +86,30 @@ class TemplateDataTest {
 		Assert.equals( "Haxe", data["language"] );
 	}
 
+	public function testSetObjectWithNativeTypes():Void {
+		// I'm mostly wanting to make sure these don't throw errors.
+
+		var data = new TemplateData();
+		data.setObject({ y:3, doSomething:function() {} });
+		data.setObject( new SimpleTestClass(3) );
+		data.setObject( "A string!" );
+		data.setObject( ["An","Array"] );
+		data.setObject( new List() );
+		data.setObject( Date.now() );
+		data.setObject( Xml.parse("<p>Hello</p>") );
+		data.setObject( [].iterator() );
+		data.setObject( 0...3 );
+		data.setObject( new StringBuf() );
+		data.setObject( ~/some_regex/ );
+		#if !php
+			// PHP throws a fatal (uncatcheable) error here: Access to undeclared static property: StringTools::$__tname__
+			// It might be because Reflect.getFields() or Type.getInstanceFields() includes a reference to a function that is DCE'd.
+			// This might be worthy of a Haxe/PHP bug report.
+			data.setObject( StringTools );
+		#end
+		Assert.isTrue( true );
+	}
+
 	public function testFromObject():Void {
 		var emptyData:TemplateData = {};
 		Assert.equals( 0, Reflect.fields(emptyData).length );
@@ -161,4 +185,10 @@ class TemplateDataTest {
 		Assert.equals( 4, Reflect.fields(combined3).length );
 		Assert.equals( true, combined3["greatGuy"] );
 	}
+}
+
+private class SimpleTestClass {
+	var x = 0;
+	public function new(x) this.x = x;
+	public function inc() x++;
 }
