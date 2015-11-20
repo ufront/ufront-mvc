@@ -100,6 +100,7 @@ class MVC {}
 @:noDoc @:noUsing typedef FileViewEngine = ufront.view.FileViewEngine;
 @:noDoc @:noUsing typedef HttpViewEngine = ufront.view.HttpViewEngine;
 @:noDoc @:noUsing typedef TemplateData = ufront.view.TemplateData;
+@:noDoc @:noUsing typedef TemplateHelper = ufront.view.TemplateHelper;
 @:noDoc @:noUsing typedef TemplatingEngines = ufront.view.TemplatingEngines.TemplatingEngines;
 @:noDoc @:noUsing typedef TemplatingEngine = ufront.view.TemplatingEngines.TemplatingEngine;
 @:noDoc @:noUsing typedef UFTemplate = ufront.view.UFTemplate;
