@@ -25,12 +25,12 @@ The `PushState` library also allows us to fake a `POST` request.
 Platform quirks with `HttpRequest` and client-side JS:
 
 - `this.httpMethod`, `this.post` and `this.postString` - Implemented using `PushState` and faking a post request.
+- `this.parseMultipart()` - Not implemented, although you can use `BrowserFileUploadMiddleware` and `PushState` to handle file uploads using the `js.html.File` and `js.html.FileList` APIs.
 - `this.clientHeaders` - Not implemented: Not accessible in a browser environment. Will always be an empty Map.
 - `this.authorization` - Not implemented: HTTP Headers not accessible in a browser environment.
 - `this.userAgent` - Not implemented: HTTP Headers not accessible in a browser environment. This could be worked-around if there is demand.
 - `this.clientIP` - Not implemented: Not accessible from in a browser environment. Will always return "127.0.0.1".
 - `this.scriptDirectory` - Not implemented: It does not make sense in a browser environment.
-- `this.parseMultipart()` - Not implemented: This is not implemented, though may be possible using the HTML5 File Api.
 
 @author Franco Ponticelli, Jason O'Neil
 **/
@@ -139,6 +139,23 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 	override function get_authorization() {
 		// It's not possible to get HTTP Auth from Javascript.
 		return null;
+	}
+
+	/**
+	Check if the current request is emulating a `multipart/form-data` request.
+
+	This uses `PushState` to check if the current request has any associated file uploads.
+
+	If the `pushstate` haxelib is not being used, this will always return false.
+
+	See `BrowserFileUploadMiddleware` for a way to process pushstate file uploads automatically.
+	**/
+	override public function isMultipart():Bool {
+		#if pushstate
+			return pushstate.PushState.currentUploads!=null;
+		#else
+			return false;
+		#end
 	}
 
 	static function getMultiValueMapFromString(s:String, ?decodeRequired=false):MultiValueMap<String> {

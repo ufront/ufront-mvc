@@ -14,6 +14,9 @@ import ufront.module.*;
 import ufront.app.UFMiddleware;
 import ufront.app.UFErrorHandler;
 import ufront.web.ErrorPageHandler;
+#if pushstate
+	import ufront.web.upload.BrowserFileUploadMiddleware;
+#end
 
 /**
 Configuration options for setting up a `ClientJsApplication`.
@@ -202,7 +205,9 @@ class DefaultUfrontClientConfiguration {
 			viewPath: "/view/",
 			defaultLayout: null,
 			sessionImplementation: VoidSession,
-			requestMiddleware: [],
+			requestMiddleware: [
+				#if pushstate new BrowserFileUploadMiddleware(), #end
+			],
 			responseMiddleware: [],
 			errorHandlers: [ new ErrorPageHandler() ],
 			authImplementation:
