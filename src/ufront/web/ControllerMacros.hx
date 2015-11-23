@@ -430,7 +430,6 @@ class ControllerMacros {
 		// Build the function
 		var fnBody:Expr = macro @:pos(pos) {
 			var uriParts = context.actionContext.uriParts;
-			setBaseUri( uriParts );
 			var params = context.request.params;
 			var method = context.request.httpMethod;
 

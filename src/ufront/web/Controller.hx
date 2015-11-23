@@ -159,7 +159,7 @@ class Controller {
 	/**
 	The current HttpContext.
 
-	This is set via dependency injection.
+	This is set via dependency injection in the `injectContext()` method.
 
 	If you want to run some code after this has been injected, but before routing occurs, you can use `@post`.
 	For example:
@@ -170,7 +170,7 @@ class Controller {
 	}
 	```
 	**/
-	@inject public var context:HttpContext;
+	public var context:HttpContext;
 
 	/**
 	The Base URI that was used to access this controller.
@@ -181,7 +181,7 @@ class Controller {
 
 	For example if you had `/user/profile/jason/` trigger `UserController` and the `profile` action for "jason", then baseUri would be `~/user/`.
 
-	This is set at the beginning of `this.execute()`, before routing occurs.
+	This is set during `injectContext()`, before any routing occurs.
 	**/
 	public var baseUri(default,null):String;
 
@@ -193,6 +193,17 @@ class Controller {
 	If creating a controller manually, rather than via dependency injection, be sure to inject the dependencies (such as `context`) manually.
 	**/
 	public function new() {}
+
+	/**
+	Inject the HttpContext and set `baseUri`.
+	**/
+	@inject public function injectContext( context:HttpContext ) {
+		this.context = context;
+		var uriPartsBeforeRouting = context.actionContext.uriParts;
+		var remainingUri = uriPartsBeforeRouting.join( "/" ).addTrailingSlash();
+		var fullUri = context.getRequestUri().addTrailingSlash();
+		this.baseUri = "~" + fullUri.substr( 0, fullUri.length-remainingUri.length ).addTrailingSlash();
+	}
 
 	/**
 	Execute this controller using the current `HttpContext`.
@@ -262,12 +273,6 @@ class Controller {
 
 	// The following are helpers which are called by the macro-generated code in each controller's execute() method.
 	// You probably don't need to touch these unless you're working on a new way to generate the execute() method.
-
-	function setBaseUri( uriPartsBeforeRouting:Array<String> ) {
-		var remainingUri = uriPartsBeforeRouting.join( "/" ).addTrailingSlash();
-		var fullUri = context.getRequestUri().addTrailingSlash();
-		baseUri = "~" + fullUri.substr( 0, fullUri.length-remainingUri.length ).addTrailingSlash();
-	}
 
 	/** Based on a set of enum flags, wrap as required.  If null, return an appropriately wrapped EmptyResult() **/
 	function wrapResult( result:Dynamic, wrappingRequired:EnumFlags<ResultWrapRequired> ):Surprise<ActionResult,Error> {
