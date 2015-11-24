@@ -311,9 +311,9 @@ class FileSession implements UFHttpSession {
 				function tryNewID( cb:js.Error->Void ) {
 					sessionID = generateSessionID();
 					var file = getSessionFilePath( sessionID );
-					Fs.exists( file, function(exists) {
-						if ( exists==false ) {
-							// Either rename the old file, or create a blank file, to make sure we reserve our name.
+					Fs.access( file, function(err) {
+						if ( err!=null ) {
+							// The file does not exist, so let's claim the name while we can.
 							if ( oldSessionID!=null )
 								Fs.rename( getSessionFilePath(oldSessionID), file, cb );
 							else
