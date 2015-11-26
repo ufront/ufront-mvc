@@ -121,7 +121,7 @@ class UFViewEngine {
 				if ( tplEngines.length>0 ) {
 					var engine = tplEngines.shift();
 					if ( engine.extensions.has(ext) ) {
-						finalPath = path;
+						finalPath = haxe.io.Path.normalize(path);
 						getTemplateString( finalPath ).handle( function (result) switch result {
 							case Failure(err): tplStrReady.trigger( Failure(err) );
 							case Success(Some(tpl)):
