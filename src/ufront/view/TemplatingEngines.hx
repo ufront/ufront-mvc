@@ -30,6 +30,7 @@ class TemplatingEngines {
 	The default order is `[erazor,hxtemplo,mustache,hxdtl,haxe]`.
 	**/
 	public static var all:Array<TemplatingEngine> = [
+		#if erazor TemplatingEngines.erazorHtml, #end
 		#if erazor TemplatingEngines.erazor, #end
 		#if hxtemplo TemplatingEngines.hxtemplo, #end
 		#if mustache TemplatingEngines.mustache, #end
@@ -125,11 +126,10 @@ class TemplatingEngines {
 
 	#if erazor
 		/**
-		A templating engine for `Erazor` templates, a Haxe port of the `mvc-razor` templating language.
+		Similar to `TemplatingEngines.erazorHtml`, but with no HTML escaping.
 
-		Let's you mix Haxe code in with your templates.
-
-		Note: this only does runtime erazor templates, currently the macro-powered type checking is not available.
+		Please only use this if you are sure it is safe to trust the data being passed to your templates.
+		If you have are exporting user data as HTML, using `erazor` rather than `erazorHtml` will open you to the risk of XSS injection attacks.
 
 		This is available when the `erazor` haxelib is used.
 		**/
@@ -141,6 +141,55 @@ class TemplatingEngines {
 			},
 			type: "erazor.Template",
 			extensions: ["html","erazor"]
+		}
+
+		/**
+		A templating engine for `Erazor` templates, a Haxe port of the `mvc-razor` templating language.
+
+		Let's you mix Haxe code in with your templates.
+
+		Unlike `TemplatingEngines.erazor`, this engine will automatically escape all data.
+		You can use the `@raw()` helper to render data that should not be HTML escaped.
+		Helpers and Partials are not escaped - please be careful to make sure your partials escape by default.
+
+		If you wish to use a version that does no HTML escaping by default, use `TemplatingEngines.erazor`.
+
+		Note: this only does runtime erazor templates, currently the macro-powered type checking is not available.
+
+		This is available when the `erazor` haxelib is used.
+		**/
+		public static var erazorHtml(get,null):TemplatingEngine;
+		static function get_erazorHtml() return {
+			factory: function ( tplString ):UFTemplate {
+				var t = new erazor.HtmlTemplate( tplString );
+				return function (data:TemplateData, ?helpers:Map<String,TemplateHelper>) {
+					var combinedData = new TemplateData();
+					if ( helpers!=null ) {
+						for ( helperName in helpers.keys() ) {
+							var wrappedHelper = wrapHelperFnWithErazorSafeString( helpers[helperName] );
+							combinedData.set( helperName, wrappedHelper );
+						}
+					}
+					combinedData.setObject( data );
+					return t.execute( combinedData );
+				}
+			},
+			type: "erazor.HtmlTemplate",
+			extensions: ["html","erazor"]
+		}
+
+		static function wrapHelperFnWithErazorSafeString( h:TemplateHelper ):Function {
+			return switch h.numArgs {
+				case 0: function() return new erazor.Output.SafeString( h.getFn()() );
+				case 1: function(a) return new erazor.Output.SafeString( h.getFn()(a) );
+				case 2: function(a,b) return new erazor.Output.SafeString( h.getFn()(a,b) );
+				case 3: function(a,b,c) return new erazor.Output.SafeString( h.getFn()(a,b,c) );
+				case 4: function(a,b,c,d) return new erazor.Output.SafeString( h.getFn()(a,b,c,d) );
+				case 5: function(a,b,c,d,e) return new erazor.Output.SafeString( h.getFn()(a,b,c,d,e) );
+				case 6: function(a,b,c,d,e,f) return new erazor.Output.SafeString( h.getFn()(a,b,c,d,e,f) );
+				case 7: function(a,b,c,d,e,f,g) return new erazor.Output.SafeString( h.getFn()(a,b,c,d,e,f,g) );
+				case _: throw "TemplateHelper supports a maximum of 7 arguments";
+			}
 		}
 	#end
 
