@@ -130,7 +130,12 @@
 - __Fixed:__ Catch errors when checking for getting `HttpContext.sessionID` and `HttpContext.currentUserID` as these can be loaded after error handlers have already run.
 - __Fixed:__ Avoid use of `Fs.exists` on NodeJS, as it is deprecated.
 
+#### Dependency Updates
 
+- [compiletime:2.6.0](http://lib.haxe.org/p/compiletime/2.6.0/)
+- [minject:2.0.0-rc.1](http://lib.haxe.org/p/minject/2.0.0-rc.1/)
+- [tink_core:1.0.0-rc.11](http://lib.haxe.org/p/tink_core/1.0.0-rc.11/)
+- [tink_macro:0.6.4](http://lib.haxe.org/p/tink_macro/0.6.4/)
 
 ---
 
