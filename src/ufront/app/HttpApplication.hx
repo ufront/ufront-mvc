@@ -548,7 +548,7 @@ class HttpApplication
 			var context:HttpContext =
 				if ( pathToContentDir!=null ) HttpContext.createNodeJsContext( req, res, injector, urlFilters, pathToContentDir )
 				else HttpContext.createNodeJsContext( req, res, urlFilters );
-			this.execute( context ).handle( function(result) next() );
+			this.execute( context ).handle( function(result) next(null) );
 		};
 		app.use( ufAppMiddleware );
 		app.listen( port );
