@@ -1,5 +1,6 @@
 package ufront.web.client;
 
+#if macro
 import haxe.macro.Context;
 
 class ClientActionMacros {
@@ -8,3 +9,4 @@ class ClientActionMacros {
 		return Context.defined("server") ? [] : null;
 	}
 }
+#end
