@@ -333,39 +333,45 @@ class ViewResult extends ActionResult {
 	}
 
 	/** Add a helper to be used in rendering the result. **/
-	public function addHelper( name:String, helper:TemplateHelper ) {
+	public function addHelper( name:String, helper:TemplateHelper ):ViewResult {
 		helpers[name] = helper;
+		return this;
 	}
 
 	/** Add multiple helpers to be used in rendering the result. **/
-	public function addHelpers( helpers:Map<String,TemplateHelper> ) {
+	public function addHelpers( helpers:Map<String,TemplateHelper> ):ViewResult {
 		for ( name in helpers.keys() ) {
 			addHelper( name, helpers[name] );
 		}
+		return this;
 	}
 
 	/** Add a partial template file to be available while rendering the result. **/
-	public function addPartial( name:String, partialPath:String, ?templatingEngine:TemplatingEngine ) {
+	public function addPartial( name:String, partialPath:String, ?templatingEngine:TemplatingEngine ):ViewResult {
 		partials[name] = TFromEngine( partialPath, templatingEngine );
+		return this;
 	}
 
 	/** Add a partial template string to be available while rendering the result. **/
-	public function addPartialString( name:String, partialTemplate:String, templatingEngine:TemplatingEngine ) {
+	public function addPartialString( name:String, partialTemplate:String, templatingEngine:TemplatingEngine ):ViewResult {
 		partials[name] = TFromString( partialTemplate, templatingEngine );
+		return this;
 	}
 
 	/** Add multiple partial template files to be available while rendering the result. **/
-	public function addPartials( partials:Map<String,String>, ?templatingEngine:TemplatingEngine ) {
+	public function addPartials( partials:Map<String,String>, ?templatingEngine:TemplatingEngine ):ViewResult {
 		for ( name in partials.keys() ) {
 			addPartial( name, partials[name], templatingEngine );
 		}
+		return this;
 	}
 
 	/** Add multiple partial template strings to be available while rendering the result. **/
-	public function addPartialStrings( partials:Map<String,String>, templatingEngine:TemplatingEngine ) {
+	public function addPartialStrings( partials:Map<String,String>, templatingEngine:TemplatingEngine ):ViewResult {
 		for ( name in partials.keys() ) {
 			addPartialString( name, partials[name], templatingEngine );
 		}
+		return this;
 	}
 
 	/**
