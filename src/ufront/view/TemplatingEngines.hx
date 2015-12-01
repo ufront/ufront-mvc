@@ -14,11 +14,12 @@ The static variables for each library are surrounded in conditionals, so they wi
 
 Templating engines currently provided:
 
-- `haxe` - provided in the Standard Library, no extra haxelibs needed.
-- `hxdtl` - Django Templating Library for Haxe.  Available if `hxdtl` haxelib is being used.
+- `erazorHtml` - A powerful templating language that lets you switch between templates and haxe-code effortlessly.  Based on `mvc-razor`.  Available if `erazor` haxelib is being used.
+- `erazor` - Similar to `erazorHtml`, but without HTML escaping enabled by default.
 - `hxtemplo` - Simn's port of the `templo` templating language.  Available if `hxtemplo` haxelib is being used.
 - `mustache` - Mustache "Logic-less" templates.  Available if `mustache` haxelib is being used.
-- `erazor` - A powerful templating language that lets you switch between templates and haxe-code effortlessly.  Based on `mvc-razor`.  Available if `erazor` haxelib is being used.
+- `hxdtl` - Django Templating Library for Haxe.  Available if `hxdtl` haxelib is being used.
+- `haxe` - provided in the Standard Library, no extra haxelibs needed.
 
 If you would like to add support for another library, please send a pull request!
 **/
@@ -27,7 +28,7 @@ class TemplatingEngines {
 	/**
 	An array of all known templating engines that have been included for compilation.
 
-	The default order is `[erazor,hxtemplo,mustache,hxdtl,haxe]`.
+	The default order is `[erazorHtml,erazor,hxtemplo,mustache,hxdtl,haxe]`.
 	**/
 	public static var all:Array<TemplatingEngine> = [
 		#if erazor TemplatingEngines.erazorHtml, #end
