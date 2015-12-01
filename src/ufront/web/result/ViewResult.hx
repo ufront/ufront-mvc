@@ -180,11 +180,12 @@ You can use `UfrontApplication.addTemplatingEngine()` to add a new engine, which
 
 ### Partial URLs
 
-We will use `ContentResult.replaceRelativeLinks` to replace relative URIs in HTML `src`, `href` and `action` attributes.
+We will use `ContentResult.replaceVirtualLinks` to replace virtual URIs in HTML `src`, `href` and `action` attributes.
 
-```
+```html
+<!-- So this template: -->
 <a href="~/login/">Login</a>
-... becomes ...
+<!-- Might become (depending on how your app is set up): -->
 <a href="/path/to/app/index.php?q=/login/">Login</a>
 ```
 **/
@@ -380,7 +381,7 @@ class ViewResult extends ActionResult {
 	- If the layout or view has not been set, figure out which one to use. (See the documentation at the top of this class for details).
 	- If `viewFolder` is null, it will be set based on the controller's `@viewFolder` metadata or based on the controller's name.
 	- Run `renderResult()` with a `UFViewEngine` from our injector, and with the controller's `baseUri` property included in the default data.
-	- When the final render of the ViewResult is ready, replace any relative relative URLs using `ContentResult.replaceRelativeLinks()`.
+	- When the final render of the ViewResult is ready, replace any relative relative URLs using `ContentResult.replaceVirtualLinks()`.
 	- Write the final response to the client using `writeResponse()`. By default this will output it as `text/html`. You can also override `writeResponse()` in a sub class, as we do in `PartialViewResult`.
 	**/
 	override function executeResult( actionContext:ActionContext ) {
@@ -403,7 +404,7 @@ class ViewResult extends ActionResult {
 			defaultData.set( 'baseUri', controller.baseUri );
 
 		return renderResult( viewEngine, defaultData ) >> function(finalOut:String):Noise {
-			finalOut = ContentResult.replaceRelativeLinks( actionContext, finalOut );
+			finalOut = ContentResult.replaceVirtualLinks( actionContext, finalOut );
 			writeResponse( finalOut, actionContext );
 			this.finalOutputTrigger.trigger( finalOut );
 			return Noise;

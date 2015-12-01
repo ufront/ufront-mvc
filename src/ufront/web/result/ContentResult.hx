@@ -9,7 +9,7 @@ An `ActionResult` that prints specific `String` content to the client, optionall
 
 This works using `HttpResponse.write(content)` and `HttpResponse.contentType`.
 
-If the ContentType of the response is `text/html` then we will use `ContentResult.replaceRelativeLinks` to replace relative URIs in HTML `src`, `href` and `action` attributes.
+If the ContentType of the response is `text/html` then we will use `ContentResult.replaceVirtualLinks` to replace relative URIs in HTML `src`, `href` and `action` attributes.
 **/
 class ContentResult extends ActionResult {
 
@@ -33,20 +33,20 @@ class ContentResult extends ActionResult {
 			actionContext.httpContext.response.contentType = contentType;
 
 		if ( actionContext.httpContext.response.contentType=="text/html" )
-			content = replaceRelativeLinks( actionContext, content );
+			content = replaceVirtualLinks( actionContext, content );
 
 		actionContext.httpContext.response.write( content );
 		return SurpriseTools.success();
 	}
 
 	/**
-	Search for relative URLs in the HTML content and transform them using the appropriate URL filters.
+	Search for virtual URLs in the HTML content and transform them using the appropriate URL filters.
 
 	This will transform all URLs beginning with `~/` that are wrapped in either single quotes or double quotes, and contain no whitespace.
 
 	TODO: provide a way to 'escape' this behaviour, perhaps by using `~~/` which will be rendered as plain `~/`.
 	**/
-	public static function replaceRelativeLinks( actionContext:ActionContext, html:String ):String {
+	public static function replaceVirtualLinks( actionContext:ActionContext, html:String ):String {
 		var singleQuotes = ~/(')(~\/[^'\s]*)'/gi;
 		var doubleQuotes = ~/(")(~\/[^"\s]*)"/gi;
 		function transformUri( r:EReg ):String {

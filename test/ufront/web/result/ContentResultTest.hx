@@ -75,7 +75,7 @@ class ContentResultTest {
 			new DirectoryUrlFilter( "/path/to/app" ),
 			new QueryStringUrlFilter( "q", "index.php", false )
 		]);
-		var actual = ContentResult.replaceRelativeLinks( context.actionContext, html );
+		var actual = ContentResult.replaceVirtualLinks( context.actionContext, html );
 		Assert.equals( expected, actual );
 	}
 }

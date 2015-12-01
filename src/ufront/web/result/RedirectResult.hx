@@ -10,7 +10,7 @@ An `ActionResult` that redirects the client to a new location.
 
 This works using `HttpResponse.redirect(url)` or `HttpResponse.permanentRedirect(url)`.
 
-Relative links (beginning with `~/`) will be processed using `HttpContext.generateUri()`.
+Virtual links (beginning with `~/`) will be processed using `ActionResult.transformUri()`.
 **/
 class RedirectResult extends ActionResult {
 

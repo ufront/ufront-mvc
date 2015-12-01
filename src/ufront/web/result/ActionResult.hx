@@ -29,9 +29,9 @@ class ActionResult {
 	}
 
 	/**
-	A helper function to transform any clean URI (beginning with `~/`) into a concrete URI by applying the `UFUrlFilter` filters on the current app.
+	A helper function to transform any virtual URI (beginning with `~/`) into an absolute URI by applying the `UFUrlFilter` filters on the current app.
 
-	For example might transform `~/login/` into `/my/app/login/` or `index.php?q=/login/` depending on your filters.
+	For example might transform `~/login/` into `/my/app/login/` or `index.php?q=/login/` depending on how your app is set up.
 	URLs which do not begin with `~/` will not be affected.
 	**/
 	public static function transformUri( actionContext:ActionContext, uri:String ):String {

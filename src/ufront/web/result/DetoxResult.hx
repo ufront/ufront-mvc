@@ -106,7 +106,7 @@ package ufront.web.result;
 			}
 			layout.mapData( data );
 
-			replaceRelativeLinks( actionContext, layout );
+			replaceVirtualLinks( actionContext, layout );
 
 			var dt = (docType!=null) ? docType : defaultDocType;
 			actionContext.httpContext.response.contentType = (contentType!=null) ? contentType : defaultContentType;
@@ -116,11 +116,11 @@ package ufront.web.result;
 		}
 
 		/**
-		Process a `DOMCollection` and look for relative links (beginning with `~/`) to process.
+		Process a `DOMCollection` and look for virtual links (beginning with `~/`) to process.
 
 		This will search for `*[href]`, `*[src]` and `form[action]` attributes and process them using `ActionResult.transformUri`.
 		**/
-		public static function replaceRelativeLinks( actionContext:ActionContext, layout:DOMCollection ) {
+		public static function replaceVirtualLinks( actionContext:ActionContext, layout:DOMCollection ) {
 			function replace( element:String, attribute:String ) {
 				for ( node in layout.find('$element[$attribute^="~/"]') ) {
 					var originalUri = node.attr( attribute );
