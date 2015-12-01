@@ -41,11 +41,7 @@ class TmpFileUploadMiddleware implements UFMiddleware {
 	**/
 	public static var subDir:String = "uf-upload-tmp";
 
-	var files:Array<TmpFileUpload>;
-
-	public function new() {
-		files = [];
-	}
+	public function new() {}
 
 	/**
 	If the request is a multipart POST request, use `HttpRequest.parseMultipart()` to save the uploads to temporary files.
@@ -90,7 +86,6 @@ class TmpFileUploadMiddleware implements UFMiddleware {
 						file = null;
 						var tmpFile = new TmpFileUpload( tmpFilePath, postName, origFileName, size );
 						ctx.request.files.add( postName, tmpFile );
-						files.push( tmpFile );
 					}
 					return SurpriseTools.success();
 				}
@@ -113,12 +108,15 @@ class TmpFileUploadMiddleware implements UFMiddleware {
 	**/
 	public function responseOut( ctx:HttpContext ):Surprise<Noise,Error> {
 		if ( ctx.request.httpMethod.toLowerCase()=="post" && ctx.request.isMultipart() ) {
-			for ( f in files ) {
-				switch f.deleteTemporaryFile() {
-					case Failure( e ):
-						// Just log the error, do not break the request.
-						ctx.ufError( e );
-					default:
+			for ( f in ctx.request.files ) {
+				var tmpFile = Std.instance( f, TmpFileUpload );
+				if ( tmpFile!=null ) {
+					switch tmpFile.deleteTemporaryFile() {
+						case Failure( e ):
+							// Just log the error, do not break the request.
+							ctx.ufError( e );
+						default:
+					}
 				}
 			}
 		}
