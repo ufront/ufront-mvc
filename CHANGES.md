@@ -1,12 +1,147 @@
-# 1.0.1
+1.1.0
+=====
 
-- Use `uf-` prefix for `PartialViewResult`. So it's now `[data-uf-partial]` and `[data-uf-layout]` and `.uf-partial-loading`.
-  A quick patch release to correct this behaviour before it begins getting used.
+#### Improved platform consistency:
+
+- __Improved:__ the [Platform test][] repo that helps check platform consistency.
+- __Now consistent:__ `queryString` and `postString` are left URL encoded.
+- __Now consistent:__ `query` and `post` values are URL decoded correctly across PHP, Nekotools, GET requests, POST requests, Multipart requests and more.
+- __Now consistent:__ POST, GET and COOKIE parameter names are now URL decoded correctly.
+- __Now consistent:__ `uri` is now URL decoded corretly.
+- __Fixed:__ multipart upload handling on PHP when using multiple post values with the same name.
+
+[Platform test]: https://github.com/ufront/mvc-platform-test/
+
+#### Client Actions
+
+- __New:__ The new [UFClientAction][] class can be used to build Javascript actions that are triggered on the client.
+    - When a UFClientAction is executed it has access to the current HttpContext, and so can use any remoting APIs, dependency injection, etc.
+- __New:__ [AddClientActionResult][] can be used to trigger a [UFClientAction][] to run once a page has loaded. These can be triggered from the client or the server, and will run seamlessly on the client.
+- __New:__ You can trigger a [UFClientAction][] directly from [ClientJsApplication][]:
+    - `jsApp.executeAction( action, ?data )`
+    - `ufExecuteAction( action, ?data )`
+    - `ufExecuteSerializedAction( action, ?serializedData )`
+
+[UFClientAction]: http://api.ufront.net/ufront/web/client/UFClientAction.html
+[AddClientActionResult]: http://api.ufront.net/ufront/web/result/AddClientActionResult.html
+[ClientJsApplication]: http://api.ufront.net/ufront/app/ClientJsApplication.html
+
+#### Improved ViewResult support for helpers and partials
+
+- __New:__ [TemplateHelper][] abstract to describe template helpers and store information about how many arguments they expect.
+- __New:__ [UFTemplate][] functions can now be either take either of the following forms:
+    - `function execute(data:TemplateData):String`
+    - `function execute(data:TemplateData, helpers:StringMap<TemplateHelper>):String`
+- Support helpers in [ViewResult][]
+    - __New:__ `addHelper(name,helper)` and `addHelpers(map)` methods.
+    - __New:__ `static var globalHelpers:Map<String,TemplateHelper>`
+    - __Improved:__ `executeResult()` now passes through both `helpers` and `globalHelpers` to the templates.
+    - __Improved (breaking):__ `ViewResult.helpers` is now a `Map<String,TemplateHelper>` rather than a `TemplateData`. Given helpers did not actually work before, we decided to allow this breaking change.
+- Support partials in [ViewResult][]
+    - Partials can load any template file from your [UFViewEngine][].
+    - Partials are called in the same way as helpers for your given templating engine.
+    - __New:__ `addPartial(name,file)` and `addPartials(map)` methods.
+    - __New:__ `addPartialString(name,tpl)` and `addPartialStrings(map)` methods.
+    - __New:__ `var partials:Map<String,TemplateSource>`
+    - __New:__ `static var globalPartials:Map<String,TemplateSource>`
+- __New:__ Add `ViewResult.renderResult()` for rendering a layout and view outside of a normal HttpContext - for example, when sending a HTML email.
+
+[TemplateHelper]: http://api.ufront.net/ufront/view/TemplateHelper.html
+[UFTemplate]: http://api.ufront.net/ufront/view/UFTemplate.html
+[ViewResult]: http://api.ufront.net/ufront/web/result/ViewResult.html
+[UFViewEngine]: http://api.ufront.net/ufront/view/UFViewEngine.html
+
+
+#### Virtual URLs
+
+- __New__: Added [ActionResult.transformUri()][transformUri].
+- __New__: Added [ContentResult.replaceVirtualLinks()][replaceVirtualLinks].
+- __Improved:__ Start processing Virtual URLs (those beginning with `~/`) in common ActionResults:
+    - `ContentResult` will now replace URLs found in any text/html result.
+    - `ViewResult` will now replace URLs found in any text/html result.
+    - `DetoxResult` will now replace URLs found in `src`, `href` or `action` attributes.
+    - `RedirectResult`
+- __Improved:__ [Controller.baseUri][baseUri] now uses a Virtual URL (meaning it always begins with `~/`).
+
+[replaceVirtualLinks]: http://api.ufront.net/ufront/web/result/ContentResult.html#replaceVirtualLinks
+[transformUri]: http://api.ufront.net/ufront/web/result/ActionResult.html#transformUri
+[baseUri]: http://api.ufront.net/ufront/web/Controller.html#baseUri
+
+#### Uploads
+
+- __New:__ Added [BrowserFileUpload][] for handling file uploads on the client with [File][] and [FileReader][] Javascript APIs.
+- __New:__ Support uploads seemlessly in client-side `HttpRequest.uploads` with the new PushState and [BrowserFileUploadMiddleware][].
+- __New:__ Upload files during a HTTP remoting API call.
+    - APIs that take a `UFFileUpload` object will be called using a `multipart/form-data` HTTP request that attaches the file.
+    - [RemotingSerializer][] and [RemotingUnserializer][] will be used to attach and retrieve uploads as part of the remoting call.
+    - __New:__ The new [BaseUpload][] class is used by both [TmpFileUpload][] and [BrowserFileUpload][] to make sure that these uploads can be sent over remoting calls safely.
+- __Improved:__ Changes to the [UFFileUpload][] interface:
+    - New `upload.contentType` property.
+    - Calls to `upload.getString()` can now optionally specify the encoding to use.
+    - These are not supported on every platform.
+- __Fixed:__ `TmpFileUpload.process()` now respects asynchronous processing functions.
+- __Fixed:__ [TmpFileUploadMiddleware][] no longer logs errors for failing to delete files that were already deleted in previous requests.
+
+[TmpFileUpload]: http://api.ufront.net/ufront/web/upload/TmpFileUpload.html
+[BrowserFileUpload]: http://api.ufront.net/ufront/web/upload/BrowserFileUpload.html
+[TmpFileUploadMiddleware]: http://api.ufront.net/ufront/web/upload/TmpFileUploadMiddleware.html
+[BrowserFileUploadMiddleware]: http://api.ufront.net/ufront/web/upload/BrowserFileUploadMiddleware.html
+[File]: http://api.haxe.org/js/html/File.html
+[FileReader]: http://api.haxe.org/js/html/FileReader.html
+[UFFileUpload]: http://api.ufront.net/ufront/web/upload/UFFileUpload.html
+[BaseUpload]: http://api.ufront.net/ufront/web/upload/BaseUpload.html
+[RemotingSerializer]: http://api.ufront.net/ufront/remoting/RemotingSerializer.html
+[RemotingUnserializer]: http://api.ufront.net/ufront/remoting/RemotingUnserializer.html
+
+#### Small additions:
+
+- __New:__ Add [TemplatingEngines.erazorHtml][erazorHtml] (escapes HTML by default, and uses the `raw()` helper to allow an unescaped value).
+- __New:__ Add [HttpSession.isReady()][isReady].
+- __New:__ Add [WrappedResult][] interface for results that wrap an existing type, like `CallJavascriptResult` - making it easier for unit tests to differentiate the real result type from a wrapped result.
+- __New:__ Add [TestUtils.saveHtmlOutput()][saveHtmlOutput] for saving HTML output of a page during unit tests, so that you can, for example, render a screen-shot.
+- __New:__ Script tags that have a "uf-reload" attribute (`<script uf-reload>`) will be re-executed on each client-side page load, rather than only being executed on the first page.
+- __New:__ Add `-D UF_MODULE_DEBUG` flag for logging which modules are run in which order. Useful for debugging middleware issues.
+
+[erazorHtml]: http://api.ufront.net/ufront/view/TemplatingEngines.html#erazorHtml
+[isReady]: http://api.ufront.net/ufront/web/session/UFHttpSession.html#isReady
+[WrappedResult]: http://api.uf.dev/ufront/web/result/WrappedResult.html
+[saveHtmlOutput]: http://api.uf.dev/ufront/test/TestUtils.html#saveHtmlOutput
+
+#### Small improvements
+
+- __Improved:__ Add charset in header for 'application/json' responses.
+- __Improved:__ Give better error messages when `args:{}` parameters cannot be parsed in your controllers.
+- __Improved__: Allow `TemplateData` to work with class instances.  A resulting implementation change is that casting from an anonymous object now results in copying the object, rather than using the object directly.
+- __Improved__: Less confusing error message when a `UFAsyncApi` returns a Failure.
+- __Improved:__ Add `showStack` option to `ErrorPageHandler`.
+- __Improved:__ Give a more obvious message when the remoting call could not be understood.
+- __Improved:__ Try prevent `ApiMacros` and `ControllerMacros` from reporting incorrect compiler error positions.
+- __Improved:__ Set `Controller.baseUri` as part of dependency injection, rather than at the start of `execute()`. This allows you to access `baseUri` during a `@post` injection method, which can be useful for setting `ViewResult.globalValues` etc.
+
+#### Bug fixes
+
+- [Fix remoting with classes that are submodules](https://github.com/ufront/ufront-mvc/issues/29)
+- [Bug fix for APIs which return an alias of Outcome,Future or Surprise](https://github.com/ufront/ufront-mvc/commit/611e0c4b708aa5e43db002a6a5e0b7279dde5007)
+- Ensure that `PartialViewResult` falls back to `HttpResponse.flush()` correctly if the layout has changed.
+- __Fixed__: PHP `TemplateData.setObject()` not working with function values.
+- __Fixed__: Working with checkboxes as controller args: if the parameter is not found, it only means it was not checked, not that the parameter was missing.
+- __Fixed:__ Catch errors when checking for getting `HttpContext.sessionID` and `HttpContext.currentUserID` as these can be loaded after error handlers have already run.
+- __Fixed:__ Avoid use of `Fs.exists` on NodeJS, as it is deprecated.
+
 
 
 ---
 
-# 1.0.0
+1.0.1
+=====
+
+- Use `uf-` prefix for `PartialViewResult`. So it's now `[data-uf-partial]` and `[data-uf-layout]` and `.uf-partial-loading`.
+  A quick patch release to correct this behaviour before it begins getting used.
+
+---
+
+1.0.0
+=====
 
 This is a 1.0.0 release of ufront-mvc - Hoorah!
 
