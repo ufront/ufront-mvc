@@ -118,6 +118,7 @@
 - __Improved:__ Try prevent `ApiMacros` and `ControllerMacros` from reporting incorrect compiler error positions.
 - __Improved:__ Set `Controller.baseUri` as part of dependency injection, rather than at the start of `execute()`. This allows you to access `baseUri` during a `@post` injection method, which can be useful for setting `ViewResult.globalValues` etc.
 - __Improved:__ The default auth handler on `UfrontClientConfiguration` is now `NobodyAuthHandler`, which is safer than the previous `YesBossAuthHandler` default.
+- __Improved:__ `PartialViewResult` will now create a new node for each partial, and allow time for the old node to transition out of view using CSS transitions.  The incoming node will have the `uf-partial-incoming` class and the outgoing node will have the `uf-partial-outgoing` class. You can use a `data-uf-transition-timeout` attribute or `PartialViewResult.transitionTimeout` to ensure the old node has time to transition out correctly.
 
 #### Bug fixes
 

@@ -147,10 +147,33 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 
 	If `newNode` is null, then `oldNode` will be removed from the DOM with no replacement taking it's place.
 	If `oldNode` is null, or is not attached to the DOM, the result is unspecified.
+
+	The optional parameter `animationTimeout` is the number of milliseconds that should be waited before removing `oldNode` from the DOM:
+
+	- If `animationTimeout` is set to 0 (default), then `oldNode` will be removed immediately.
+	- If `animationTimeout` is a value greater than 0, then `oldNode` will be removed either when a `transitionend` event is triggered, or after the specified time, whichever comes first.
+	- If `animationTimeout` is less than 0, then `oldNode` will be removed if (and when) the `transitionend` event is triggered.
 	**/
-	public static function replaceNode( oldNode:Null<Node>, newNode:Null<Node> ) {
+	public static function replaceNode( oldNode:Null<Node>, newNode:Null<Node>, ?animationTimeout:Int=0 ) {
 		if ( newNode!=null )
 			oldNode.parentNode.insertBefore( newNode, oldNode );
-		oldNode.parentNode.removeChild( oldNode );
+
+		var removed:Bool = false;
+		function removeOld() {
+			if ( removed==false ) {
+				oldNode.parentNode.removeChild( oldNode );
+				removed = true;
+			}
+		}
+
+		if ( animationTimeout!=0 ) {
+			var isWebkit = Reflect.hasField( document.documentElement.style, 'WebkitTransition' );
+			var transEndEventName = isWebkit ? 'webkitTransitionEnd' : 'transitionend';
+			oldNode.addEventListener( transEndEventName , function() removeOld() );
+			if ( animationTimeout>0 ) {
+				window.setTimeout( function() removeOld(), animationTimeout );
+			}
+		}
+		else removeOld();
 	}
 }
