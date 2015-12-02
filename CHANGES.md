@@ -117,6 +117,7 @@
 - __Improved:__ Give a more obvious message when the remoting call could not be understood.
 - __Improved:__ Try prevent `ApiMacros` and `ControllerMacros` from reporting incorrect compiler error positions.
 - __Improved:__ Set `Controller.baseUri` as part of dependency injection, rather than at the start of `execute()`. This allows you to access `baseUri` during a `@post` injection method, which can be useful for setting `ViewResult.globalValues` etc.
+- __Improved:__ The default auth handler on `UfrontClientConfiguration` is now `NobodyAuthHandler`, which is safer than the previous `YesBossAuthHandler` default.
 
 #### Bug fixes
 
