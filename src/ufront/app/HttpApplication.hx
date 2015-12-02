@@ -548,10 +548,7 @@ class HttpApplication
 			var context:HttpContext =
 				if ( pathToContentDir!=null ) HttpContext.createNodeJsContext( req, res, injector, urlFilters, pathToContentDir )
 				else HttpContext.createNodeJsContext( req, res, urlFilters );
-			this.execute( context ).handle( function(result) switch result {
-				case Failure( err ): next( new express.Error(err.toString()) );
-				default: next( null );
-			});
+			this.execute( context ).handle( function(_) next( null ));
 		};
 		app.use( ufAppMiddleware );
 		app.listen( port );
