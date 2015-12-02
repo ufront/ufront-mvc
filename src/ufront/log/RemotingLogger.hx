@@ -17,19 +17,24 @@ If `-debug` is defined, any application level messages (those from "trace" rathe
 If the `HttpRequest` does not contain the `X-Ufront-Remoting` header, or the `HttpResponse.contentType` is not "application/x-haxe-remoting", the traces will not be displayed.
 **/
 class RemotingLogger implements UFLogHandler {
-	public function new() {}
+	var messageFormatter:UFMessageFormatter;
+	
+	public function new(?messageFormatter:UFMessageFormatter) {
+		this.messageFormatter = messageFormatter == null ? new MessageFormatter() : messageFormatter;
+	}
+
 
 	public function log( httpContext:HttpContext, appMessages:Array<Message> ) {
 
 		if( httpContext.request.clientHeaders.exists("X-Ufront-Remoting") && httpContext.response.contentType=="application/x-haxe-remoting" ) {
 			var results = [];
 			for( msg in httpContext.messages )
-				results.push( formatMessage(msg) );
+				results.push( messageFormatter.format(msg) );
 
 			#if debug
 				if ( appMessages!=null) {
 					for( msg in appMessages )
-						results.push( formatMessage(msg) );
+						results.push( messageFormatter.format(msg) );
 				}
 			#end
 
@@ -40,8 +45,12 @@ class RemotingLogger implements UFLogHandler {
 
 		return SurpriseTools.success();
 	}
+}
 
-	static function formatMessage( m:Message ):String {
+private class MessageFormatter implements UFMessageFormatter {
+	public function new() {}
+	
+	public function format( m:Message ):String {
 		// Make sure everything is converted to a String before we serialize it.
 		m.msg = ''+m.msg;
 		if ( m.pos.customParams != null) {

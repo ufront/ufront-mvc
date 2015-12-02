@@ -18,7 +18,12 @@ This will use a different method on each platform where it makes sense:
 This will flush the messages (traces, logs, warnings and errors) from the current context to the appropriate server log.
 **/
 class ServerConsoleLogger implements UFLogHandler {
-	public function new() {}
+	var messageFormatter:UFMessageFormatter;
+	
+	public function new(?messageFormatter:UFMessageFormatter) {
+		this.messageFormatter = messageFormatter == null ? new MessageFormatter() : messageFormatter;
+	}
+
 
 	public function log( ctx:HttpContext, appMessages:Array<Message> ) {
 		var messages = [];
@@ -34,24 +39,16 @@ class ServerConsoleLogger implements UFLogHandler {
 		messages.push( requestLog );
 
 		for( msg in ctx.messages )
-			messages.push( formatMsg(msg) );
+			messages.push( messageFormatter.format(msg) );
 
 		if ( appMessages!=null) {
 			for( msg in appMessages )
-				messages.push( formatMsg(msg) );
+				messages.push( messageFormatter.format(msg) );
 		}
 
 		writeLog( messages.join("\n  ") );
 
 		return SurpriseTools.success();
-	}
-
-	static function formatMsg( m:Message ):String {
-		var extras =
-			if ( m.pos!=null && m.pos.customParams!=null ) ", "+m.pos.customParams.join(", ")
-			else "";
-		var type = Type.enumConstructor( m.type ).substr( 1 );
-		return '$type: ${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';
 	}
 
 	static function writeLog( message:String, ?type:MessageType=null ):Void {
@@ -64,5 +61,17 @@ class ServerConsoleLogger implements UFLogHandler {
 			var console:js.html.Console = untyped console;
 			console.log( message );
 		#end
+	}
+}
+
+private class MessageFormatter implements UFMessageFormatter {
+	public function new() {}
+	
+	public function format(m:Message):String {
+		var extras =
+			if ( m.pos!=null && m.pos.customParams!=null ) ", "+m.pos.customParams.join(", ")
+			else "";
+		var type = Type.enumConstructor( m.type ).substr( 1 );
+		return '$type: ${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';
 	}
 }
