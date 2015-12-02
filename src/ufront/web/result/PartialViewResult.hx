@@ -143,17 +143,6 @@ class PartialViewResult extends ViewResult {
 			}
 		}
 
-		/**
-		Add `uf-partial-outgoing` class to each partial section, allowing you to use CSS to style the transitions.
-		**/
-		public static function startLoadingAnimations():Void {
-			var oldPartialNodes = document.querySelectorAll( "[data-uf-partial]" );
-			for ( i in 0...oldPartialNodes.length ) {
-				var oldPartialNode = Std.instance( oldPartialNodes.item(i), Element );
-				oldPartialNode.classList.add( 'uf-partial-outgoing' );
-			}
-		}
-
 		static function getAttr( elm:Element, name:String ):Null<String> {
 			if ( elm!=null ) {
 				var attributeNode = elm.attributes.getNamedItem( name );
@@ -162,4 +151,17 @@ class PartialViewResult extends ViewResult {
 			return null;
 		}
 	#end
+
+	/**
+	Add `uf-partial-outgoing` class to each partial section, allowing you to use CSS to style the transitions.
+	**/
+	public static function startLoadingAnimations():Void {
+		#if client
+			var oldPartialNodes = document.querySelectorAll( "[data-uf-partial]" );
+			for ( i in 0...oldPartialNodes.length ) {
+				var oldPartialNode = Std.instance( oldPartialNodes.item(i), Element );
+				oldPartialNode.classList.add( 'uf-partial-outgoing' );
+			}
+		#end
+	}
 }
