@@ -206,6 +206,7 @@ class DefaultUfrontClientConfiguration {
 			defaultLayout: null,
 			sessionImplementation: VoidSession,
 			requestMiddleware: [
+				#if (client && ufront_easyauth) new InlineEasyAuthClientMiddleware(), #end
 				#if pushstate new BrowserFileUploadMiddleware(), #end
 			],
 			responseMiddleware: [],
@@ -215,7 +216,11 @@ class DefaultUfrontClientConfiguration {
 				// We only ever *read* a T:UFAuthUser, any time we ask for one to write or check against the interface accepts any UFAuthUser.
 				// Because we're read only, we're safe, but Haxe doesn't think so.
 				// For now we'll cast our way out of this problem.
-				cast NobodyAuthHandler,
+				#if (ufront_easyauth && client)
+					cast EasyAuthClient
+				#else
+					cast NobodyAuthHandler
+				#end
 		}
 	}
 }
