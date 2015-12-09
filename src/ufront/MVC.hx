@@ -1,7 +1,34 @@
 package ufront;
 
 /**
-The `ufront.MVC` module contains typedefs for commonly imported types in the `ufront-mvc` package.
+Ufront-MVC is the core MVC framework used to handle web requests in Ufront.
+
+Ufront is a client / server web framework built with Haxe.
+MVC stands for Model / View / Controller, and is a common pattern in software design, especially for web applications.
+
+Ufront-MVC is the key library for building web applications on Ufront, and handles how to set up your app, view, controllers and APIs.
+The "Model" component (M in MVC) is usually provided by [Ufront-ORM](https://github.com/ufront/ufront-orm)
+
+### Features
+
+Ufront-MVC provides:
+
+- `Controller` - a simple way to respond to certain URI routes and requests, and return a result to the user.
+- `ViewResult` - a common way to render a HTML view for the user, with data, helpers, partials, and support for many different templating engines.
+- `UFApi` - easy separation of APIs that run on the server, and can be called from the server or the client (through remoting).
+- Dependency injection throughout thanks to `minject.Injector`
+- Easily extensible with `UFMiddleware`, `UFRequestHandler`, `UFLogHandler`, and `UFErrorHandler`
+- Other low level features including `UFHttpSession`, `UFAuthHandler`, `HttpContext`
+- Ufront-MVC is designed to work seamlessly on both client and server. Your APIs run on the server, and your controllers and views can be run from either the client or the server, with identical code.
+
+### Platform Support
+
+- Server side: Neko, PHP, NodeJS.
+- Client side: JS
+
+### Import shortcuts
+
+The `ufront.MVC` module contains typedefs for commonly imported types in the Ufront-MVC library.
 
 This allows you to use `import ufront.MVC;` or `using ufront.MVC` rather than having dozens of imports in your code.
 **/
