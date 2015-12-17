@@ -265,14 +265,16 @@ class ApiMacros {
 				@inject public function injectApi( injector:minject.Injector ) {
 					#if server
 						this.api =
-							try injector.getValue( $syncApiReference )
-							catch (e:Dynamic) throw ufront.web.HttpError.internalServerError( 'Failed to inject '+Type.getClassName($syncApiReference)+' into '+Type.getClassName(Type.getClass(this)), e );
+							try injector.getValueForType( $v{syncApiReference.toString()} )
+							catch (e:Dynamic) throw ufront.web.HttpError.internalServerError( 'Failed to inject '+Type.getClassName(_getClass())+' into '+Type.getClassName(Type.getClass(this)), e );
 					#end
 					this.className = $v{runtimeClassName};
 				}
+				static inline function _getClass():Class<Dynamic> return $syncApiReference; // see http://stackoverflow.com/questions/34306249/force-compiler-to-treat-identifier-as-package-name
 			}
 			tmp.fields[0].pos = cb.target.pos;
 			cb.addMember( tmp.fields[0] );
+			cb.addMember( tmp.fields[1] );
 		}
 	}
 
