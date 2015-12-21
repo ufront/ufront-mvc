@@ -99,24 +99,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 				replaceNode( document.body, newDoc.body );
 				window.scrollTo( 0, 0 );
 
-				// Re-run <script> with "uf-reload" attribute
-				// e.g. <script uf-reload>console.log("test");</script>
-				var scriptTags = document.getElementsByTagName('script');
-				for ( i in 0...scriptTags.length ) {
-					var node = scriptTags.item( i );
-					var reload = node.getAttribute( "uf-reload" );
-					if ( reload!=null && reload!="false" ) {
-						var script = document.createElement( 'script' );
-						script.setAttribute( "type", 'text/javascript' );
-						var src = node.getAttribute( "src" );
-						if( src!=null )
-							script.setAttribute("src", src);
-						script.innerHTML = node.innerHTML;
-						// Append (which will cause it to execute) and then remove immediately.
-						document.body.appendChild( script );
-						document.body.removeChild( document.body.lastChild );
-					}
-				}
+				reloadScripts(document);
 			}
 			else {
 				js.Browser.console.log( 'Cannot use ufront-client-mvc to render content type "$contentType". Redirecting to server for rendering this content.' );
@@ -155,8 +138,10 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 	- If `animationTimeout` is less than 0, then `oldNode` will be removed if (and when) the `transitionend` event is triggered.
 	**/
 	public static function replaceNode( oldNode:Null<Node>, newNode:Null<Node>, ?animationTimeout:Int=0 ) {
-		if ( newNode!=null )
+		if ( newNode!=null ) {
 			oldNode.parentNode.insertBefore( newNode, oldNode );
+			reloadScripts(Std.instance(newNode, Element));
+		}
 
 		var removed:Bool = false;
 		function removeOld() {
@@ -175,5 +160,26 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 			}
 		}
 		else removeOld();
+	}
+	
+	static function reloadScripts(e:Dynamic) {
+		// Re-run <script> with "uf-reload" attribute
+		// e.g. <script uf-reload>console.log("test");</script>
+		var scriptTags = e.getElementsByTagName('script');
+		for ( i in 0...scriptTags.length ) {
+			var node = scriptTags.item( i );
+			var reload = node.getAttribute( "uf-reload" );
+			if ( reload!=null && reload!="false" ) {
+				var script = document.createElement( 'script' );
+				script.setAttribute( "type", 'text/javascript' );
+				var src = node.getAttribute( "src" );
+				if( src!=null )
+					script.setAttribute("src", src);
+				script.innerHTML = node.innerHTML;
+				// Append (which will cause it to execute) and then remove immediately.
+				document.body.appendChild( script );
+				document.body.removeChild( document.body.lastChild );
+			}
+		}
 	}
 }
