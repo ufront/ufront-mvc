@@ -11,7 +11,7 @@ import ufront.log.OriginalTraceLogger;
 import ufront.app.*;
 import ufront.web.result.ActionResult;
 import ufront.web.result.WrappedResult;
-import ufront.core.MultiValueMap;
+import ufront.core.*;
 import minject.Injector;
 #if neko import neko.Web; #end
 #if php import php.Web; #end
@@ -86,7 +86,7 @@ class TestUtils {
 				var cookies = new MultiValueMap();
 				var query = new MultiValueMap();
 				var post = new MultiValueMap();
-				var headers = new MultiValueMap();
+				var headers = new CaseInsensitiveMultiValueMap();
 				@:privateAccess request.cookies.returns( cookies );
 				@:privateAccess request.query.returns( query );
 				@:privateAccess request.post.returns( post );

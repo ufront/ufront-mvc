@@ -2,7 +2,7 @@ package ufront.web.context;
 
 import utest.Assert;
 import ufront.web.context.HttpRequest;
-import ufront.core.MultiValueMap;
+import ufront.core.*;
 using mockatoo.Mockatoo;
 
 class HttpRequestTest {
@@ -33,13 +33,15 @@ class HttpRequestTest {
 	}
 
 	public function testIsMultiPart():Void {
-		var clientHeaders:MultiValueMap<String> = [ "Content-Type"=>"application/x-www-form-urlencoded; charset=UTF-8" ];
+		var clientHeaders = new CaseInsensitiveMultiValueMap();
+		clientHeaders.set( "Content-Type", "application/x-www-form-urlencoded; charset=UTF-8" );
 		var instance = HttpRequest.mock();
 		@:privateAccess instance.clientHeaders.returns( clientHeaders );
 		instance.isMultipart().callsRealMethod();
 		Assert.isFalse( instance.isMultipart() );
 
-		var clientHeaders:MultiValueMap<String> = [ "Content-Type"=>"multipart/form-data; boundary=something" ];
+		var clientHeaders = new CaseInsensitiveMultiValueMap();
+		clientHeaders.set( "Content-Type", "multipart/form-data; boundary=something" );
 		var instance = HttpRequest.mock();
 		@:privateAccess instance.clientHeaders.returns( clientHeaders );
 		instance.isMultipart().callsRealMethod();

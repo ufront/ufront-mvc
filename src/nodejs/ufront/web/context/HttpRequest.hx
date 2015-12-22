@@ -6,7 +6,7 @@ import ufront.web.context.HttpRequest.OnPartCallback;
 import ufront.web.context.HttpRequest.OnDataCallback;
 import ufront.web.context.HttpRequest.OnEndPartCallback;
 import ufront.web.UserAgent;
-import ufront.core.MultiValueMap;
+import ufront.core.*;
 import haxe.ds.StringMap;
 import ufront.core.AsyncTools;
 import ufront.web.HttpError;
@@ -109,7 +109,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 
 	override function get_clientHeaders() {
 		if ( clientHeaders==null )
-			clientHeaders = getMapFromObject( untyped req.headers );
+			clientHeaders = cast getMapFromObject( untyped req.headers );
 		return clientHeaders;
 	}
 
@@ -143,7 +143,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 		return authorization;
 	}
 
-	static function getMapFromObject( obj:Dynamic, ?prefix:String="", ?m:MultiValueMap<String> ):MultiValueMap<String> {
+	static function getMapFromObject( obj:Dynamic, ?prefix:String="", ?caseSensitive:Bool=true, ?m:MultiValueMap<String> ):MultiValueMap<String> {
 		if ( m==null )
 			m = new MultiValueMap();
 
@@ -154,9 +154,10 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 				// TODO: if we have q[]=1&q[]=2, how do we get both values?
 				// Perhaps using obj.forEach(), not sure how to do that from Haxe.
 				case TObject:
-					getMapFromObject( val, fieldName+".", m );
+					getMapFromObject( val, fieldName+".", caseSensitive, m );
 				default:
-					m.add( fieldName, StringTools.urlDecode(''+val) );
+					var name = (caseSensitive) ? fieldName : fieldName.toLowerCase();
+					m.add( name, StringTools.urlDecode(''+val) );
 			}
 		}
 

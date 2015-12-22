@@ -2,7 +2,7 @@ package ufront.web.context;
 import haxe.io.Bytes;
 import haxe.ds.StringMap;
 import ufront.web.upload.UFFileUpload;
-import ufront.core.MultiValueMap;
+import ufront.core.*;
 import ufront.web.HttpError;
 using tink.CoreApi;
 using StringTools;
@@ -193,8 +193,8 @@ class HttpRequest {
 	/**
 	The HTTP headers supplied by the client in this request.
 	**/
-	public var clientHeaders(get, null):MultiValueMap<String>;
-	function get_clientHeaders():MultiValueMap<String> return throw HttpError.abstractMethod();
+	public var clientHeaders(get, null):CaseInsensitiveMultiValueMap<String>;
+	function get_clientHeaders():CaseInsensitiveMultiValueMap<String> return throw HttpError.abstractMethod();
 
 	/**
 	Information about the User-Agent that made this request, based on the "User-Agent" HTTP header.

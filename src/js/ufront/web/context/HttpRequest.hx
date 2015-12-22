@@ -4,7 +4,7 @@ import haxe.io.Bytes;
 import ufront.web.upload.*;
 import ufront.web.UserAgent;
 import ufront.web.HttpError;
-import ufront.core.MultiValueMap;
+import ufront.core.*;
 import haxe.ds.StringMap;
 import ufront.web.context.HttpRequest.OnPartCallback;
 import ufront.web.context.HttpRequest.OnDataCallback;
@@ -114,7 +114,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 
 	override function get_clientHeaders() {
 		if ( clientHeaders==null ) {
-			clientHeaders = new StringMap();
+			clientHeaders = new CaseInsensitiveMultiValueMap();
 			// TODO: decide if we want to emulate any headers, such as `referrer` and `user-agent`, which we can fetch from the browser.
 		}
 		return clientHeaders;

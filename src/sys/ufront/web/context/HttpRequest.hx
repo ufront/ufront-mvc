@@ -11,7 +11,7 @@ import haxe.io.Bytes;
 import ufront.web.upload.*;
 import ufront.web.UserAgent;
 import ufront.web.HttpError;
-import ufront.core.MultiValueMap;
+import ufront.core.*;
 import haxe.ds.StringMap;
 import ufront.web.context.HttpRequest.OnPartCallback;
 import ufront.web.context.HttpRequest.OnDataCallback;
@@ -236,7 +236,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 
 	override function get_clientHeaders() {
 		if ( clientHeaders==null ) {
-			clientHeaders = new MultiValueMap();
+			clientHeaders = new CaseInsensitiveMultiValueMap();
 			#if php
 				// php.Web.getClientHeaders() uses `$_SERVER`, which mutates the header names. (Uppercased, replace `-` with `_`).
 				var headers:StringMap<String> = php.Lib.hashOfAssociativeArray( untyped __php__("apache_request_headers()") );
