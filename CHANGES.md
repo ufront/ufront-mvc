@@ -1,3 +1,8 @@
+Next release
+============
+
+- __Fixed:__ [CallJavascriptResult][] now functions correctly on the client side.
+
 1.1.0
 =====
 

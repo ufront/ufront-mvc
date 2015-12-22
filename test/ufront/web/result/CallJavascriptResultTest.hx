@@ -43,12 +43,20 @@ class CallJavascriptResultTest {
 	}
 
 	public function testExecuteResult():Void {
+		#if client
+			var window:Dynamic = js.Browser.window;
+			window.testJSCalled = false;
+		#end
+		callJavascriptResult1.addInlineJs("testJSCalled = true;");
+
 		var context = '/baseurl/'.mockHttpContext();
-		callJavascriptResult1.addInlineJs("alert(123);");
 		var future = callJavascriptResult1.executeResult( context.actionContext );
-		// Note, the future here will execute synchronously, but tink_core will not run the mapping function in `executeResult` unless we handle it.
-		// Lazy evaluation or something.
 		future.handle( function(_) {} );
-		Assert.equals( '<html><body><h1>Title</h1><div>Content</div><script type="text/javascript">alert(123);</script></body></html>', context.response.getBuffer() );
+
+		#if client
+			Assert.equals( true, window.testJSCalled );
+		#else
+			Assert.equals( '<html><body><h1>Title</h1><div>Content</div><script type="text/javascript">testJSCalled = true;</script></body></html>', context.response.getBuffer() );
+		#end
 	}
 }

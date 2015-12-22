@@ -2,6 +2,9 @@ package ufront.web.result;
 
 import ufront.web.context.*;
 import ufront.core.AsyncTools;
+#if client
+	import js.Browser.*;
+#end
 using tink.CoreApi;
 
 /**
@@ -19,6 +22,9 @@ public function showHomepage() {
     .addJsScriptToResult( "datepicker.jquery.js" );
 }
 ```
+
+On the server side, a `<script>` tag will be inserted before the closing `</body>` tag.
+On the client side, the scripts will be inserted into the DOM (triggering them to execute) and then removed immediately.
 **/
 class CallJavascriptResult<T:ActionResult> extends ActionResult implements WrappedResult<T> {
 
@@ -60,20 +66,53 @@ class CallJavascriptResult<T:ActionResult> extends ActionResult implements Wrapp
 	/**
 	Execute the result.
 
-	This will execute the original result, and then attempt to add the script just before the body tag.
+	This will execute the original result, and then add the scripts to be executed.
 
-	If the content type is not "text/html", this will have no effect - it will just execute the original result and ignore the scripts.
+	If the result is not does not have a content type of `text/html`, then any scripts wil be ignored.
+	If there are no scripts added, then the result will not be effected.
+
+	The scripts will be executed using `executeScripts`, with the appropriate behaviour for both client and server side code.
 	**/
 	override public function executeResult( actionContext:ActionContext ):Surprise<Noise,Error> {
 		return originalResult.executeResult( actionContext ) >> function(n:Noise) {
 			var response = actionContext.httpContext.response;
 			if( response.contentType=="text/html" && scripts.length>0 ) {
-				var newContent = insertScriptsBeforeBodyTag( response.getBuffer(), scripts );
-				response.clearContent();
-				response.write( newContent );
+				executeScripts( response, scripts );
 			}
 			return Noise;
 		};
+	}
+
+	/**
+	This will run a series of JS snippets.
+
+	On the server-side it will use `insertScriptsBeforeBodyTag`, and update the response content as required.
+
+	On the client side it will create the scripts as DOM objects and execute them immediately.
+	**/
+	public static function executeScripts( response:HttpResponse, scripts:Array<String> ) {
+		#if server
+			var newContent = insertScriptsBeforeBodyTag( response.getBuffer(), scripts );
+			response.clearContent();
+			response.write( newContent );
+		#else
+			var tmpDiv = document.createDivElement();
+			tmpDiv.innerHTML = scripts.join( "" );
+			for ( i in 0...tmpDiv.children.length ) {
+				// We have to recreate the script element to get it to execute.
+				// See http://stackoverflow.com/questions/22945884/domparser-appending-script-tags-to-head-body-but-not-executing
+				// TODO: DRY-ify this and HttpResponse for client-side JS.
+				var node = tmpDiv.children[i];
+				var script = document.createScriptElement();
+				script.setAttribute( "type", 'text/javascript' );
+				var src = node.getAttribute( "src" );
+				if( src!=null )
+					script.setAttribute("src", src);
+				script.innerHTML = node.innerHTML;
+				document.body.appendChild( script );
+				document.body.removeChild( script );
+			}
+		#end
 	}
 
 	/**
@@ -81,7 +120,7 @@ class CallJavascriptResult<T:ActionResult> extends ActionResult implements Wrapp
 
 	If there is no `</body>` substring, then the scripts will be inserted at the end of the content.
 	**/
-	public static function insertScriptsBeforeBodyTag( content:String, scripts:Array<String> ) {
+	public static function insertScriptsBeforeBodyTag( content:String, scripts:Array<String> ):String {
 		var script = scripts.join("");
 		var bodyCloseIndex = content.lastIndexOf( "</body>" );
 		if ( bodyCloseIndex==-1 ) {
