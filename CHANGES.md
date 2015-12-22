@@ -1,10 +1,14 @@
 Next release
 ============
 
+- __New:__ On Client JS, we've added `HttpRequest.reloadScripts( ?doc, ?elm )` to reload all scripts with the `uf-reload` tag.
+- __Improved:__ On Client JS, both `HttpRequest` and `PartialViewResult` now reload all `uf-reload` scripts by default.
 - __Fixed:__ [CallJavascriptResult][] now functions correctly on the client side.
+- __Fixed:__ [Issue 44][] - remoting APIs in a package named `api` failed to compile because of a naming conflict. Thanks @kevinresol for the workaround.
 - __Fixed:__ [Issue 45][] - remoting calls always used Multipart HTTP requests, which failed on NodeJS.
 
 [CallJavascriptResult]: http://api.ufront.net/ufront/web/result/CallJavascriptResult.html
+[Issue 44]: https://github.com/ufront/ufront-mvc/issues/44
 [Issue 45]: https://github.com/ufront/ufront-mvc/issues/45
 
 1.1.0

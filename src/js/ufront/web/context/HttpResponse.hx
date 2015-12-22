@@ -98,11 +98,10 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 				replaceNode( document.head, newDoc.head );
 				replaceNode( document.body, newDoc.body );
 				window.scrollTo( 0, 0 );
-
-				reloadScripts(document);
+				reloadScripts( document );
 			}
 			else {
-				js.Browser.console.log( 'Cannot use ufront-client-mvc to render content type "$contentType". Redirecting to server for rendering this content.' );
+				console.log( 'Cannot use ufront-client-mvc to render content type "$contentType". Redirecting to server for rendering this content.' );
 				document.location.reload();
 			}
 		}
@@ -140,7 +139,6 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 	public static function replaceNode( oldNode:Null<Node>, newNode:Null<Node>, ?animationTimeout:Int=0 ) {
 		if ( newNode!=null ) {
 			oldNode.parentNode.insertBefore( newNode, oldNode );
-			reloadScripts(Std.instance(newNode, Element));
 		}
 
 		var removed:Bool = false;
@@ -161,25 +159,36 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 		}
 		else removeOld();
 	}
-	
-	static function reloadScripts(e:Dynamic) {
-		// Re-run <script> with "uf-reload" attribute
-		// e.g. <script uf-reload>console.log("test");</script>
-		var scriptTags = e.getElementsByTagName('script');
-		for ( i in 0...scriptTags.length ) {
-			var node = scriptTags.item( i );
-			var reload = node.getAttribute( "uf-reload" );
-			if ( reload!=null && reload!="false" ) {
-				var script = document.createElement( 'script' );
-				script.setAttribute( "type", 'text/javascript' );
-				var src = node.getAttribute( "src" );
-				if( src!=null )
-					script.setAttribute("src", src);
-				script.innerHTML = node.innerHTML;
-				// Append (which will cause it to execute) and then remove immediately.
-				document.body.appendChild( script );
-				document.body.removeChild( document.body.lastChild );
+
+	/**
+	Re-execute any script elements which have the `uf-reload` attribute.
+
+	eg. `<script uf-reload>console.log("test");</script>`
+
+	You can specify either a `Document` or `Element` to search for scripts in.
+
+	@param doc The document containing the script tags we wish to reload.
+	@param elm The element containing the script tags we wish to reload.
+	**/
+	public static function reloadScripts( ?doc:Document, ?elm:Document ) {
+		function doReload( scriptTags:HTMLCollection ) {
+			for ( i in 0...scriptTags.length ) {
+				var node = scriptTags.item( i );
+				var reload = node.getAttribute( "uf-reload" );
+				if ( reload!=null && reload!="false" ) {
+					var script = document.createElement( 'script' );
+					script.setAttribute( "type", 'text/javascript' );
+					var src = node.getAttribute( "src" );
+					if( src!=null )
+						script.setAttribute("src", src);
+					script.innerHTML = node.innerHTML;
+					// Append (which will cause it to execute) and then remove immediately.
+					document.body.appendChild( script );
+					document.body.removeChild( script );
+				}
 			}
 		}
+		if ( doc!=null ) doReload( doc.getElementsByTagName('script') );
+		if ( elm!=null ) doReload( elm.getElementsByTagName('script') );
 	}
 }

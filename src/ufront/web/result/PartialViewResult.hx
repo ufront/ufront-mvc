@@ -4,7 +4,7 @@ package ufront.web.result;
 	import ufront.view.TemplateData;
 	import ufront.view.TemplatingEngines;
 	import ufront.web.context.ActionContext;
-	import js.ufront.web.context.HttpResponse.replaceNode;
+	import js.ufront.web.context.HttpResponse;
 	import js.Browser.*;
 	import js.html.*;
 #end
@@ -129,12 +129,13 @@ class PartialViewResult extends ViewResult {
 						timeout = PartialViewResult.transitionTimeout;
 
 					newPartialNode.classList.add( 'uf-partial-incoming' );
-					replaceNode( oldPartialNode, newPartialNode, timeout );
+					HttpResponse.replaceNode( oldPartialNode, newPartialNode, timeout );
 					window.setTimeout(function() {
 						newPartialNode.classList.remove( 'uf-partial-incoming' );
 					}, 1);
 				}
 				window.scrollTo( 0, 0 );
+				HttpResponse.reloadScripts( document );
 				res.preventFlushContent();
 			}
 			else {
