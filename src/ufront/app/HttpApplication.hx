@@ -543,6 +543,7 @@ class HttpApplication
 		app.use( express.Express.serveStatic(".") );
 		app.use( mw.BodyParser.json() );
 		app.use( mw.BodyParser.urlencoded({ extended: true }) );
+		app.post( "/", untyped __js__("require('multer')().array()"));
 		// TODO: check if we need to use a mw.BodyParser() middleware here.
 		var ufAppMiddleware:express.Middleware = function(req:express.Request,res:express.Response,next:express.Error->Void) {
 			var context:HttpContext =

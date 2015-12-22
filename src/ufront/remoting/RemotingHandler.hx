@@ -73,8 +73,8 @@ class RemotingHandler implements UFRequestHandler {
 
 	/** Check for the Haxe/Ufront Remoting HTTP headers and handle the request appropriately. **/
 	public function handleRequest( httpContext:HttpContext ):Surprise<Noise,Error> {
-		var doneTrigger = Future.trigger();
-		if ( httpContext.request.clientHeaders.exists("X-Haxe-Remoting") ) {
+		var doneTrigger = Future.trigger(); 
+		if ( httpContext.request.clientHeaders.exists("x-haxe-remoting") ) {
 
 			// Execute the request
 			var r = httpContext.response;
