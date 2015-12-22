@@ -5,6 +5,7 @@ import ufront.core.MultiValueMap;
 import haxe.Http;
 #if js
 	import js.html.*;
+	using StringTools;
 #end
 using ufront.core.AsyncTools;
 using tink.CoreApi;
@@ -21,7 +22,8 @@ TODO: make this an abstract rather than a class.
 class HttpWithUploads {
 	#if js
 		public var h:XMLHttpRequest;
-		public var formData:FormData;
+		var files:Array<{ postName:String, file:File, fileName:String }>;
+		var params:Array<{ name:String, val:String }>;
 	#else
 		public var h:Http;
 	#end
@@ -30,7 +32,8 @@ class HttpWithUploads {
 	public function new( url:String, async:Bool, ?timeout:Null<Float> ) {
 		#if js
 			this.h = new XMLHttpRequest();
-			this.formData = new FormData();
+			this.files = [];
+			this.params = [];
 			h.open( "POST", url, async );
 		#else
 			this.h = new Http( url );
@@ -57,7 +60,7 @@ class HttpWithUploads {
 
 	public function setParam( k:String, v:String ):Void {
 		#if js
-			formData.append( k, v );
+			params.push({ name:k, val:v });
 		#else
 			h.setParameter( k, v );
 		#end
@@ -68,7 +71,7 @@ class HttpWithUploads {
 			for ( postName in uploads.keys() ) for ( u in uploads.getAll(postName) ) {
 				var browserFileUpload = Std.instance( u, BrowserFileUpload );
 				if ( browserFileUpload!=null ) {
-					formData.append( postName, browserFileUpload.file, u.originalFileName );
+					files.push({ postName:postName, file:browserFileUpload.file, fileName:u.originalFileName });
 				}
 				// TODO: See if we can upload other types based on haxe.io.Bytes, rather than js.html.File.
 			}
@@ -103,7 +106,27 @@ class HttpWithUploads {
 
 	public function send():Void {
 		#if js
-			h.send( formData );
+			// FormData is the easiest way to send multipart requests including uploads.
+			// But if there are no uploads, we manually do a URL encoded request to avoid using a multipart request unnecessarily.
+			if ( this.files.length>0 ) {
+				var formData = new FormData();
+				for ( p in params )
+					formData.append( p.name, p.val );
+				for ( f in files )
+					formData.append( f.postName, f.file, f.fileName );
+				h.send( formData );
+			}
+			else {
+				// https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Forms/Sending_forms_through_JavaScript#Building_an_XMLHttpRequest_manually
+				var urlEncodedDataPairs = [];
+				for ( p in params ) {
+					urlEncodedDataPairs.push( p.name.urlEncode() + '=' + p.val.urlEncode() );
+				}
+				var urlEncodedData = urlEncodedDataPairs.join( '&' ).replace( '%20', '+' );
+				h.setRequestHeader( 'Content-Type', 'application/x-www-form-urlencoded' );
+				h.setRequestHeader( 'Content-Length', ''+urlEncodedData.length );
+				h.send( urlEncodedData );
+			}
 		#else
 			h.request( true );
 		#end

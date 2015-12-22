@@ -2,6 +2,10 @@ Next release
 ============
 
 - __Fixed:__ [CallJavascriptResult][] now functions correctly on the client side.
+- __Fixed:__ [Issue 45][] - remoting calls always used Multipart HTTP requests, which failed on NodeJS.
+
+[CallJavascriptResult]: http://api.ufront.net/ufront/web/result/CallJavascriptResult.html
+[Issue 45]: https://github.com/ufront/ufront-mvc/issues/45
 
 1.1.0
 =====
