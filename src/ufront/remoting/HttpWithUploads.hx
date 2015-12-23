@@ -124,7 +124,7 @@ class HttpWithUploads {
 				}
 				var urlEncodedData = urlEncodedDataPairs.join( '&' ).replace( '%20', '+' );
 				h.setRequestHeader( 'Content-Type', 'application/x-www-form-urlencoded' );
-				h.setRequestHeader( 'Content-Length', ''+urlEncodedData.length );
+				// h.setRequestHeader( 'Content-Length', ''+urlEncodedData.length ); // see http://stackoverflow.com/questions/7210507/ajax-post-error-refused-to-set-unsafe-header-connection
 				h.send( urlEncodedData );
 			}
 		#else
