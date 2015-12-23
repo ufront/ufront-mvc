@@ -19,8 +19,13 @@ An implementation for NodeJS would be easy to add - pull requests welcome!
 **/
 class FileViewEngine extends UFViewEngine {
 
-	public function new() {
-		super();
+	/**
+	Create a new FileViewEngine.
+
+	@param cachingEnabled Should we cache templates between requests? If not supplied, the value of `UFViewEngine.cacheEnabledByDefault` will be used by default.
+	**/
+	public function new( ?cachingEnabled=null ) {
+		super( cachingEnabled );
 	}
 
 	/** The script directory for your app. This value should be provided by dependency injection (A String named "scriptDirectory"). **/

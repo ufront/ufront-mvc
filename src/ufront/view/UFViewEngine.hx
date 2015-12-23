@@ -31,18 +31,35 @@ Details:
 **/
 class UFViewEngine {
 
+	/**
+	Should we enable view caching by default?
+
+	If caching is enabled, the templates will be loaded and parsed, ready to execute, and stored in memory between requests.
+
+	This will only have an effect on platforms that support maintaining static variables between requests, such as NodeJS, Client JS, or Neko when using `Web.cacheModule`.
+	On other platforms that do not support caching across requests, templates will only be cached during the same request.
+
+	By default, this is `true` normally, but `false` if being compiled in `-debug` mode.
+
+	To change the default behaviour, you can either change this static variable, or you can pass the `cachingEnabled` parameter to the constructor for each instance.
+	**/
+	public static var cacheEnabledByDefault = #if debug false #else true #end;
+
 	var engines:Array<TemplatingEngine>;
 	var cache:Map<String,Pair<String,UFTemplate>>;
 
 	/**
-		Create a new view engine.
-		The constructor is private, because this is an abstract class.
-		Please use one of the sub-class implementations.
+	Create a new view engine.
+	The constructor is private, because this is an abstract class.
+	Please use one of the sub-class implementations.
 
-		@param cachingEnabled Should we cache templates in memory so they are ready to re-execute? Default=true.
+	@param cachingEnabled Should we cache templates between requests? If not supplied, the value of `UFViewEngine.cacheEnabledByDefault` will be used by default.
 	**/
-	function new( cachingEnabled=true ) {
-		if ( cachingEnabled ) cache = new Map();
+	function new( ?cachingEnabled:Null<Bool> ) {
+		if ( cachingEnabled==null )
+			cachingEnabled = cacheEnabledByDefault;
+		if ( cachingEnabled )
+			cache = new Map();
 		engines = [];
 	}
 

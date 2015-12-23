@@ -12,8 +12,13 @@ This is especially useful when running applications client-side, as it allows yo
 **/
 class HttpViewEngine extends UFViewEngine {
 
-	public function new() {
-		super();
+	/**
+	Create a new HttpViewEngine.
+
+	@param cachingEnabled Should we cache templates between requests? If not supplied, the value of `UFViewEngine.cacheEnabledByDefault` will be used by default.
+	**/
+	public function new( ?cachingEnabled=null ) {
+		super( cachingEnabled );
 	}
 
 	/**
