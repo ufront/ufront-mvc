@@ -167,6 +167,7 @@ class MVC {}
 @:noDoc @:noUsing typedef PartialViewResult = ufront.web.result.PartialViewResult;
 @:noDoc @:noUsing typedef RedirectResult = ufront.web.result.RedirectResult;
 @:noDoc @:noUsing typedef ViewResult = ufront.web.result.ViewResult;
+@:noDoc @:noUsing typedef AddClientActionResult<R:ActionResult, T> = ufront.web.result.AddClientActionResult<R, T>;
 
 // `ufront.web.session` package
 @:noDoc @:noUsing typedef CacheSession = ufront.web.session.CacheSession;
