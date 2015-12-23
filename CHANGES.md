@@ -3,11 +3,16 @@ Next release
 
 - __New:__ On Client JS, we've added `HttpRequest.reloadScripts( ?doc, ?elm )` to reload all scripts with the `uf-reload` tag.
 - __New:__ We've added [CaseInsensitiveMultiValueMap][], and are now using that for `HttpRequest.clientHeaders`.
+- __New:__ Use the [multer][] library to parse multipart/form-data requests on NodeJS.
 - __Improved:__ On Client JS, both `HttpRequest` and `PartialViewResult` now reload all `uf-reload` scripts by default.
+- __Improved:__ Exposed option in [UFViewEngine][] to enable or disable view caching. The new default is that caching will be disabled in `-debug` mode, and enabled otherwise.
 - __Fixed:__ [CallJavascriptResult][] now functions correctly on the client side.
 - __Fixed:__ [Issue 44][] - remoting APIs in a package named `api` failed to compile because of a naming conflict. Thanks @kevinresol for the workaround.
 - __Fixed:__ [Issue 45][] - remoting calls always used Multipart HTTP requests, which failed on NodeJS.
+- __Fixed:__ Setting cookies on Client JS HttpResponse.
+- __Fixed:__ Added missing `AddClientActionResult` typedef to `ufront.MVC` import shortcut.
 
+[UFViewEngine]: http://api.ufront.net/ufront/view/UFViewEngine.html
 [CallJavascriptResult]: http://api.ufront.net/ufront/web/result/CallJavascriptResult.html
 [CaseInsensitiveMultiValueMap]: http://api.ufront.net/ufront/core/CaseInsensitiveMultiValueMap.html
 [Issue 44]: https://github.com/ufront/ufront-mvc/issues/44
