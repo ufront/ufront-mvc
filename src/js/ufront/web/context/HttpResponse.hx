@@ -51,7 +51,7 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 				for ( cookie in _cookies ) {
 					// So, document.cookie behaves like a String, but actually will process the description string and add a cookie.
 					// See http://www.quirksmode.org/js/cookies.html
-					document.cookie = cookie.description;
+					document.cookie = cookie.name + "=" + cookie.description;
 				}
 			}
 			catch ( e:Dynamic ) {
