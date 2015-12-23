@@ -11,13 +11,13 @@ It was designed this way to be flexible and integrate easily with existing templ
 
 For example, to use haxe's templating engine:
 
-```haxe TODO UPDATE THIS, maybe show erazor (one cast type) and Haxe (other cast, more complex fn)
+```haxe
 
 // Erazor:
 var tpl:UFTemplate = function (data:TemplateData) return new erazor.Template( tplString ).execute( data.toObject() );
 
 // Haxe Templating:
-// Note: because haxe.Template uses their own `macros`, which have an extra first argument, we would need to wrap the helpers first.
+// Note: because haxe.Template uses their own `macros`, which are slightly different to our helpers (they have an extra first argument), we need to wrap the helpers first.
 var tpl:UFTemplate = function (data:TemplateData, helpers:TemplateHelper) return new haxe.Template( tplString ).execute( data.toObject(), wrapHelpers(helpers) );
 ```
 

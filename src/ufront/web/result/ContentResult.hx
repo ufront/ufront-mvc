@@ -9,7 +9,7 @@ An `ActionResult` that prints specific `String` content to the client, optionall
 
 This works using `HttpResponse.write(content)` and `HttpResponse.contentType`.
 
-If the ContentType of the response is `text/html` then we will use `ContentResult.replaceVirtualLinks` to replace relative URIs in HTML `src`, `href` and `action` attributes.
+If the ContentType of the response is `text/html` then we will use `ContentResult.replaceVirtualLinks()` to replace virtual URIs in the HTML.
 **/
 class ContentResult extends ActionResult {
 

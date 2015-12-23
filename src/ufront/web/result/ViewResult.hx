@@ -178,7 +178,65 @@ We use a `UFViewEngine` to load our templates, and these support multiple templa
 You can view some available engines in `TemplatingEngines`, and it will be fairly easy to create a new templating engine if needed.
 You can use `UfrontApplication.addTemplatingEngine()` to add a new engine, which will then be available to your view results.
 
-### Partial URLs
+### Helpers
+
+You can use helpers in your views, and they will be passed to the template:
+
+```haxe
+myViewResult.addHelper( "markdown", function(md) return Markdown.markdownToHtml(md) );
+myViewResult.addHelpers([
+	"upper" => function(str:String) { return str.toUpperCase(); },
+	"trim" => function(str:String,len:Int) { return str.substr(0,len)+"..."; }
+]);
+ViewResult.globalHelpers['add'] = function(a:Int,b:Int) return a+b;
+```
+
+The syntax for calling helpers inside the views will depend on the templating engine you are using.
+
+### Partials
+
+You can include "partials" in your view results - separate templates that can be called from inside your view or your layout (or even other partials).
+
+```haxe
+myViewResult.addPartial("login", "forms/loginForm");
+myViewResult.addPartial("signup", "forms/signupForm.html", TemplatingEngines.erazor);
+myViewResult.addPartials([
+	"login" => "forms/loginForm.html",
+	"signup" => "forms/signupForm.html"
+], TemplatingEngines.haxe);
+myViewResult.addPartialString("btn", "<a href='::link::' class='btn'>::name::</a>", TemplatingEngines.haxe);
+ViewResult.globalPartials['menu'] = TFromEngine("menu.html", TemplatingEngines.erazor);
+```
+
+The partials will be loaded when the ViewResult is executed, and made available as a helper in your template, so you call a partial in the same way you call a helper.
+For example, using erazor:
+
+```html
+<div>
+	<div class="btn-toolbar">
+		@btn({ name: "Home", link: "/" })
+		@btn({ name: "Logout", link: "/logout/" })
+	</div>
+	<div>
+		@loginForm()
+		@signupForm()
+	</div>
+</div>
+```
+
+When each partial renders, it will render with `TemplateData` that includes:
+
+- Everything available to the main view and layout.
+- Any data passed to the partial.
+  See, for example, the "btn" partial in the examples.
+  The data that is passed to the partial is added with `TemplateData.setObject()`.
+- The data itself, passed as a variable named `__current__`.
+  This can be useful if the given argument is not an object or class instance, but a String or Array.
+
+Each partial will also render with all of the same helpers and partials as the main view and layout.
+This means that partials can render other sub-partials, as many levels deep as required.
+
+### Virtual URLs
 
 We will use `ContentResult.replaceVirtualLinks` to replace virtual URIs in HTML `src`, `href` and `action` attributes.
 
