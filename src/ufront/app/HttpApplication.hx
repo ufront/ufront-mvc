@@ -10,6 +10,7 @@ import ufront.auth.*;
 import ufront.log.Message;
 import haxe.PosInfos;
 import tink.core.Error.Pos;
+using haxe.io.Path;
 using tink.CoreApi;
 
 /**
@@ -544,7 +545,11 @@ class HttpApplication
 		app.use( mw.BodyParser.json() );
 		app.use( mw.BodyParser.urlencoded({ extended: true }) );
 		app.use( mw.CookieParser.create());
-		app.post( "/", untyped __js__("require('multer')().array()"));
+		
+		// TODO: omit the `dest` option so that files are kept in memory and not written to disk, the write job should be done in TmpFileUpload
+		var uploadPath = js.Node.__dirname + "/" + pathToContentDir.addTrailingSlash() + ufront.web.upload.TmpFileUploadMiddleware.subDir.addTrailingSlash();
+		app.post( "/*", untyped __js__("require('multer')({0}).any()", { dest:uploadPath }));
+		
 		// TODO: check if we need to use a mw.BodyParser() middleware here.
 		var ufAppMiddleware:express.Middleware = function(req:express.Request,res:express.Response,next:express.Error->Void) {
 			var context:HttpContext =
