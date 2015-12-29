@@ -79,6 +79,8 @@ class TmpFileUpload extends BaseUpload implements UFFileUpload {
 
 		#if (sys || nodejs)
 			try {
+				var directory = newFilePath.directory();
+				if ( !FileSystem.exists( directory ) ) FileSystem.createDirectory( directory );
 				File.copy( tmpFileName, newFilePath );
 				return SurpriseTools.success();
 			}
