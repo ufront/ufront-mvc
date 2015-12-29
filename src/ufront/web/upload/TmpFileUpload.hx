@@ -1,8 +1,10 @@
 package ufront.web.upload;
 
 import haxe.io.*;
-import sys.io.*;
-import sys.FileSystem;
+#if (sys || nodejs)
+	import sys.io.*;
+	import sys.FileSystem;
+#end
 import ufront.web.HttpError;
 import ufront.web.upload.UFFileUpload;
 using ufront.core.AsyncTools;
@@ -40,10 +42,14 @@ class TmpFileUpload extends BaseUpload implements UFFileUpload {
 		if ( this.attachedUpload!=null )
 			return this.attachedUpload.getBytes();
 
-		try {
-			return Success( File.getBytes(tmpFileName) ).asFuture();
-		}
-		catch ( e:Dynamic ) return Failure( HttpError.wrap(e,'Error during TmpFileUpload.getBytes()') ).asFuture();
+		#if (sys || nodejs)
+			try {
+				return Success( File.getBytes(tmpFileName) ).asFuture();
+			}
+			catch ( e:Dynamic ) return Failure( HttpError.wrap(e,'Error during TmpFileUpload.getBytes()') ).asFuture();
+		#else
+			return throw HttpError.notImplemented();
+		#end
 	}
 
 	/**
@@ -54,10 +60,14 @@ class TmpFileUpload extends BaseUpload implements UFFileUpload {
 		if ( this.attachedUpload!=null )
 			return this.attachedUpload.getString( encoding );
 
-		try {
-			return Success( File.getContent(tmpFileName) ).asFuture();
-		}
-		catch ( e:Dynamic ) return Failure( HttpError.wrap(e,"Error during TmpFileUpload.getString()") ).asFuture();
+		#if (sys || nodejs)
+			try {
+				return Success( File.getContent(tmpFileName) ).asFuture();
+			}
+			catch ( e:Dynamic ) return Failure( HttpError.wrap(e,"Error during TmpFileUpload.getString()") ).asFuture();
+		#else
+			return throw HttpError.notImplemented();
+		#end
 	}
 
 	/**
@@ -67,11 +77,15 @@ class TmpFileUpload extends BaseUpload implements UFFileUpload {
 		if ( this.attachedUpload!=null )
 			return this.attachedUpload.writeToFile( newFilePath );
 
-		try {
-			File.copy( tmpFileName, newFilePath );
-			return SurpriseTools.success();
-		}
-		catch ( e:Dynamic ) return Failure( HttpError.wrap(e,"Error during TmpFileUpload.writeToFile()") ).asFuture();
+		#if (sys || nodejs)
+			try {
+				File.copy( tmpFileName, newFilePath );
+				return SurpriseTools.success();
+			}
+			catch ( e:Dynamic ) return Failure( HttpError.wrap(e,"Error during TmpFileUpload.writeToFile()") ).asFuture();
+		#else
+			return throw HttpError.notImplemented();
+		#end
 	}
 
 	/**
@@ -145,10 +159,14 @@ class TmpFileUpload extends BaseUpload implements UFFileUpload {
 	After doing this, other functions that rely on the temporary file will no longer work.
 	**/
 	public function deleteTemporaryFile():Outcome<Noise,Error> {
-		try {
-			FileSystem.deleteFile( tmpFileName );
-			return Success( Noise );
-		}
-		catch ( e:Dynamic ) return Failure( HttpError.wrap(e,"Error during TmpFileUpload.deleteTmpFile()") );
+		#if (sys || nodejs)
+			try {
+				FileSystem.deleteFile( tmpFileName );
+				return Success( Noise );
+			}
+			catch ( e:Dynamic ) return Failure( HttpError.wrap(e,"Error during TmpFileUpload.deleteTmpFile()") );
+		#else
+			throw HttpError.notImplemented();
+		#end
 	}
 }
