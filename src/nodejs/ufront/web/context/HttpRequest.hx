@@ -157,7 +157,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 					getMapFromObject( val, fieldName+".", caseSensitive, m );
 				default:
 					var name = (caseSensitive) ? fieldName : fieldName.toLowerCase();
-					m.add( name, StringTools.urlDecode(''+val) );
+					m.add( name, name == "__x" ? '$val' : StringTools.urlDecode('$val') );
 			}
 		}
 
