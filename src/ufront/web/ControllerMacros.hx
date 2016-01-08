@@ -634,10 +634,16 @@ class ControllerMacros {
 			case SATInt:
 				var declaration = createVarDecl(
 					identName,
-					if(array) macro  @:pos(pos) $readExpr.map(function(a) return Std.parseInt(a))
+					if(array) macro @:pos(pos) $readExpr.map(function(a) return Std.parseInt(a))
 					else macro  @:pos(pos) Std.parseInt($readExpr)
 				);
-				var check = macro @:pos(pos) if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Int = "+$readExpr );
+				
+				var throwExpr = macro @:pos(pos) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Int = "+$readExpr );
+				
+				var check = array ?
+					macro @:pos(pos) for( i in $i{identName} ) if ( i==null ) $throwExpr :
+					macro @:pos(pos) if ( $i{identName}==null ) $throwExpr;
+					
 				return ( optional ) ? [declaration] : [declaration,check];
 			case SATFloat:
 				var declaration = createVarDecl(
@@ -645,7 +651,13 @@ class ControllerMacros {
 					if(array) macro @:pos(pos) $readExpr.map(function(a) return Std.parseFloat(a))
 					else macro @:pos(pos) Std.parseFloat($readExpr)
 				);
-				var check = macro @:pos(pos) if (Math.isNaN($i{identName})) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Float = "+$readExpr );
+				
+				var throwExpr = macro @:pos(pos) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Float = "+$readExpr );
+				
+				var check = array ? 
+					macro @:pos(pos) for( f in $i{identName} ) if ( Math.isNaN(f) ) $throwExpr : 
+					macro @:pos(pos) if (Math.isNaN($i{identName})) $throwExpr;
+					
 				return ( optional ) ? [declaration] : [declaration,check];
 			case SATBool:
 				var readStr = macro @:pos(pos) var v = $readExpr;
