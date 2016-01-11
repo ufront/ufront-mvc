@@ -96,6 +96,14 @@ class TmpFileUploadMiddleware implements UFMiddleware {
 							case Failure(f): return Failure( HttpError.wrap(f) );
 						}
 					});
+					
+			#elseif nodejs
+				var files:Array<Dynamic> = untyped ctx.request.req.files;
+				if( files!=null ) for( file in files ) {
+					var tmpFile = new TmpFileUpload( file.path, file.fieldname, file.originalname, file.size );
+					ctx.request.files.add( file.fieldname, tmpFile );
+				}
+				return SurpriseTools.success();
 			#else
 				return throw HttpError.notImplemented();
 			#end

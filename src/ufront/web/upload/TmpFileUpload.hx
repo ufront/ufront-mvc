@@ -1,7 +1,7 @@
 package ufront.web.upload;
 
 import haxe.io.*;
-#if sys
+#if (sys || nodejs)
 	import sys.io.*;
 	import sys.FileSystem;
 #end
@@ -42,7 +42,7 @@ class TmpFileUpload extends BaseUpload implements UFFileUpload {
 		if ( this.attachedUpload!=null )
 			return this.attachedUpload.getBytes();
 
-		#if sys
+		#if (sys || nodejs)
 			try {
 				return Success( File.getBytes(tmpFileName) ).asFuture();
 			}
@@ -60,7 +60,7 @@ class TmpFileUpload extends BaseUpload implements UFFileUpload {
 		if ( this.attachedUpload!=null )
 			return this.attachedUpload.getString( encoding );
 
-		#if sys
+		#if (sys || nodejs)
 			try {
 				return Success( File.getContent(tmpFileName) ).asFuture();
 			}
@@ -77,8 +77,10 @@ class TmpFileUpload extends BaseUpload implements UFFileUpload {
 		if ( this.attachedUpload!=null )
 			return this.attachedUpload.writeToFile( newFilePath );
 
-		#if sys
+		#if (sys || nodejs)
 			try {
+				var directory = newFilePath.directory();
+				if ( !FileSystem.exists( directory ) ) FileSystem.createDirectory( directory );
 				File.copy( tmpFileName, newFilePath );
 				return SurpriseTools.success();
 			}
@@ -159,7 +161,7 @@ class TmpFileUpload extends BaseUpload implements UFFileUpload {
 	After doing this, other functions that rely on the temporary file will no longer work.
 	**/
 	public function deleteTemporaryFile():Outcome<Noise,Error> {
-		#if sys
+		#if (sys || nodejs)
 			try {
 				FileSystem.deleteFile( tmpFileName );
 				return Success( Noise );
