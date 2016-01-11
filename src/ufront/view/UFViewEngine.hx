@@ -197,11 +197,12 @@ class UFViewEngine {
 			function (tplStr) {
 				try {
 					var tpl:UFTemplate = templatingEngine.factory(tplStr);
-					cache[path] = new Pair( templatingEngine.type, tpl );
+					if ( cache!=null )
+						cache[path] = new Pair( templatingEngine.type, tpl );
 					return Success( tpl );
 				}
 				catch ( e:Dynamic ) {
-					return Failure( Error.withData('Failed to pass template $finalPath using ${templatingEngine.type}', e) );
+					return Failure( Error.withData('Failed to parse template $finalPath using ${templatingEngine.type}', e) );
 				}
 			}
 	}
