@@ -80,6 +80,9 @@ class HttpResponse {
 	public var status:Int;
 
 	var _buff:StringBuf;
+	#if nodejs
+	var _bytesBuffer:haxe.io.BytesBuffer;
+	#end
 	var _headers:OrderedStringMap<String>;
 	var _cookies:StringMap<HttpCookie>;
 	var _flushedStatus:Bool;
@@ -163,6 +166,12 @@ class HttpResponse {
 	**/
 	public function clearContent():Void {
 		_buff = new StringBuf();
+		
+		#if nodejs
+		
+		_bytesBuffer = new haxe.io.BytesBuffer();
+		
+		#end
 	}
 
 	/**
@@ -191,7 +200,16 @@ class HttpResponse {
 	Write a number of bytes to the HTTP response.
 	**/
 	public function writeBytes( b:Bytes, pos:Int, len:Int ):Void {
+		
+		#if nodejs
+		
+		_bytesBuffer.addBytes(b, pos, len);
+		
+		#else
+		
 		_buff.add( b.getString(pos, len) );
+		
+		#end
 	}
 
 	/**
