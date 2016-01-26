@@ -60,7 +60,10 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 		// Write response content
 		if ( !_flushedContent ) {
 			_flushedContent = true;
-			res.end( _buff.toString() );
+			if(_bytesBuffer.length > 0)
+				untyped (res.end)( untyped js.node.Buffer.hxFromBytes(_bytesBuffer.getBytes()), 'binary' );
+			else
+				res.end( _buff.toString() );
 		}
 	}
 }
