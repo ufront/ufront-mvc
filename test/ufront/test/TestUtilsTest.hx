@@ -10,7 +10,6 @@ import minject.Injector;
 import tink.CoreApi;
 import ufront.core.AsyncTools;
 using ufront.test.TestUtils;
-using mockatoo.Mockatoo;
 
 class TestUtilsTest {
 	public function new() {}
@@ -42,8 +41,8 @@ class TestUtilsTest {
 		Assert.equals( "20", mock2.request.params["page"] );
 
 		var injector = new Injector();
-		var request = HttpRequest.mock();
-		@:privateAccess request.uri.returns( "/test/3/" );
+		var request = new MockHttpRequest();
+		request.setUri( "/test/3/" );
 		var response = new HttpResponse();
 		var session = new ufront.web.session.VoidSession();
 		var auth = new ufront.auth.YesBossAuthHandler();

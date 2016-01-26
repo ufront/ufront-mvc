@@ -3,8 +3,6 @@ package ufront.core;
 import utest.Assert;
 import ufront.core.Futuristic;
 import tink.CoreApi;
-import mockatoo.Mockatoo.*;
-using mockatoo.Mockatoo;
 
 class FuturisticTest {
     public var trigger:FutureTrigger<Int>;

@@ -119,9 +119,7 @@ class MVC {}
 @:noDoc @:noUsing typedef TestUtils = ufront.test.TestUtils.TestUtils;
 @:noDoc @:noUsing typedef NaturalLanguageTests = ufront.test.TestUtils.NaturalLanguageTests;
 @:noDoc @:noUsing typedef RequestTestContext = ufront.test.TestUtils.RequestTestContext;
-#if mockatoo
-	@:noDoc @:noUsing typedef Mockatoo = ufront.test.TestUtils.TMockatoo;
-#end
+@:noDoc @:noUsing typedef MockHttpRequest = ufront.test.MockHttpRequest;
 
 // `ufront.view` package
 @:noDoc @:noUsing typedef FileViewEngine = ufront.view.FileViewEngine;

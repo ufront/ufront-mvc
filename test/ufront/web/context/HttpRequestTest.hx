@@ -2,8 +2,8 @@ package ufront.web.context;
 
 import utest.Assert;
 import ufront.web.context.HttpRequest;
+import ufront.test.MockHttpRequest;
 import ufront.core.*;
-using mockatoo.Mockatoo;
 
 class HttpRequestTest {
 	public function new() {}
@@ -20,11 +20,10 @@ class HttpRequestTest {
 		var post:MultiValueMap<String> = ["post"=>["PostVal"],"letter"=>["P1","P2"]];
 		var query:MultiValueMap<String> = ["query"=>"QueryVal","letter"=>"Q"];
 		var cookies:MultiValueMap<String> = ["cookies"=>"CookieVal","letter"=>"C"];
-		var instance = HttpRequest.mock();
-		@:privateAccess instance.post.returns( post );
-		@:privateAccess instance.query.returns( query );
-		@:privateAccess instance.cookies.returns( cookies );
-		@:privateAccess instance.params.callsRealMethod();
+		var instance = new MockHttpRequest();
+		instance.setPost( post );
+		instance.setQuery( query );
+		instance.setCookies( cookies );
 		Assert.equals( "PostVal", instance.params["post"] );
 		Assert.equals( "QueryVal", instance.params["query"] );
 		Assert.equals( "CookieVal", instance.params["cookies"] );
@@ -35,16 +34,14 @@ class HttpRequestTest {
 	public function testIsMultiPart():Void {
 		var clientHeaders = new CaseInsensitiveMultiValueMap();
 		clientHeaders.set( "Content-Type", "application/x-www-form-urlencoded; charset=UTF-8" );
-		var instance = HttpRequest.mock();
-		@:privateAccess instance.clientHeaders.returns( clientHeaders );
-		instance.isMultipart().callsRealMethod();
+		var instance = new MockHttpRequest();
+		instance.setClientHeaders( clientHeaders );
 		Assert.isFalse( instance.isMultipart() );
 
 		var clientHeaders = new CaseInsensitiveMultiValueMap();
 		clientHeaders.set( "Content-Type", "multipart/form-data; boundary=something" );
-		var instance = HttpRequest.mock();
-		@:privateAccess instance.clientHeaders.returns( clientHeaders );
-		instance.isMultipart().callsRealMethod();
+		var instance = new MockHttpRequest();
+		instance.setClientHeaders( clientHeaders );
 		Assert.isTrue( instance.isMultipart() );
 	}
 }

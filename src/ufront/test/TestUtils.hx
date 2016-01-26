@@ -16,7 +16,6 @@ import minject.Injector;
 #if neko import neko.Web; #end
 #if php import php.Web; #end
 #if utest import utest.Assert; #end
-#if mockatoo using mockatoo.Mockatoo; #end
 using tink.CoreApi;
 using ufront.core.InjectionTools;
 using ufront.core.AsyncTools;
@@ -30,12 +29,12 @@ When you use static extension in this way, `NaturalLanguageTests` and `Mockatoo`
 
 The methods in `NaturalLanguageTests` are shortcuts to these methods, but named in a way to make your automated tests very readable when using static extension.
 
-Every `mock` function uses `Mockatoo` for mocking, see the [Github Readme](https://github.com/misprintt/mockatoo/) and [Developer Guide](https://github.com/misprintt/mockatoo/wiki/Developer-Guide) for more information.
+The requests are mocked using `MockHttpRequest` and `MockHttpResponse`.
 
-Please note both `utest` and `mockatoo` libraries must be included for these methods to be available.
+Please note the `utest` library must be included for these methods to be available.
 **/
 class TestUtils {
-	#if (utest && mockatoo && !macro)
+	#if (utest && !macro)
 		/**
 		Mock a HttpContext.
 
@@ -74,25 +73,16 @@ class TestUtils {
 				injector = new Injector();
 			}
 			if ( request==null ) {
-				request = HttpRequest.mock();
-				@:privateAccess request.uri.returns( uri );
-				@:privateAccess request.scriptDirectory.returns(
+				var mockRequest = new MockHttpRequest( uri );
+				mockRequest.setScriptDirectory(
 					#if (neko||php)
 						(Web.isModNeko) ? Web.getCwd() : "./"
 					#else
 						"./"
 					#end
 				);
-				var cookies = new MultiValueMap();
-				var query = new MultiValueMap();
-				var post = new MultiValueMap();
-				var headers = new CaseInsensitiveMultiValueMap();
-				@:privateAccess request.cookies.returns( cookies );
-				@:privateAccess request.query.returns( query );
-				@:privateAccess request.post.returns( post );
-				@:privateAccess request.params.callsRealMethod();
 
-				var paramsTarget = (method!=null && method.toUpperCase()=="POST") ? post : query;
+				var paramsTarget = (method!=null && method.toUpperCase()=="POST") ? mockRequest.post : mockRequest.query;
 				if ( params!=null ) {
 					for ( key in params.keys() ) {
 						for ( val in params.getAll(key) ) {
@@ -101,13 +91,11 @@ class TestUtils {
 					}
 				}
 
-				@:privateAccess request.httpMethod.returns( (method!=null) ? method.toUpperCase() : "GET" );
-				@:privateAccess request.clientHeaders.returns( headers );
-
+				mockRequest.setHttpMethod( (method!=null) ? method.toUpperCase() : "GET" );
+				request = mockRequest;
 			}
 			if ( response==null ) {
-				response = HttpResponse.spy();
-				response.flush().stub();
+				response = new MockHttpResponse();
 			}
 			if ( session==null && injector.hasMapping(UFHttpSession)==false ) {
 				session = new ufront.web.session.VoidSession();
@@ -637,7 +625,7 @@ class NaturalLanguageTests {
 		};
 	}
 
-	#if (utest && mockatoo && !macro)
+	#if (utest && !macro)
 
 		/**
 		Begin a test sentance for a page visit:
@@ -783,12 +771,6 @@ class NaturalLanguageTests {
 }
 
 #if !macro
-	#if mockatoo
-	/**
-	A shortcut to `Mockatoo` so that `using ufront.test.TestUtils;` implies `using mockatoo.Mockatoo` as well.
-	**/
-	typedef TMockatoo = mockatoo.Mockatoo;
-	#end
 
 	/**
 	A collection of objects which describes the context for the current test, and is passed through each of the functions in `TestUtils`.

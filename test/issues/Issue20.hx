@@ -5,7 +5,6 @@ import ufront.test.TestUtils.NaturalLanguageTests.*;
 using ufront.test.TestUtils;
 using ufront.core.InjectionTools;
 import minject.Injector;
-using mockatoo.Mockatoo;
 using tink.CoreApi;
 
 class Issue20 {
