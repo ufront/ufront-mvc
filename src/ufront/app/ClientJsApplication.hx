@@ -104,8 +104,8 @@ package ufront.app;
 
 			// Add the remoting connections.
 			if ( configuration.remotingPath!=null ) {
-				var syncRemotingConnection = HttpConnection.urlConnect( "/" );
-				var asyncRemotingConnection = HttpAsyncConnection.urlConnect( "/" );
+				var syncRemotingConnection = HttpConnection.urlConnect( configuration.remotingPath );
+				var asyncRemotingConnection = HttpAsyncConnection.urlConnect( configuration.remotingPath );
 				injector.map( Connection ).toValue( syncRemotingConnection );
 				injector.map( AsyncConnection ).toValue( asyncRemotingConnection );
 			}
