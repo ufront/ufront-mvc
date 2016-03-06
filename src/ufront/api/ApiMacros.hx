@@ -180,7 +180,7 @@ class ApiMacros {
 					switch member.kind {
 						case FFun(fun):
 							var remotingCall = buildSyncFnBody(member.name,fun.args,member.pos);
-							var returnsVoid = fun.ret==null || fun.ret.match(TPath({name:"Void"}));
+							var returnsVoid = fun.ret==null || fun.ret.match(TPath({name:"Void"} | {sub:"Void"});
 							var pos = member.pos;
 							fun.expr =
  								if ( returnsVoid ) macro @:pos(pos) $remotingCall;
