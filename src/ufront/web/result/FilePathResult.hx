@@ -1,6 +1,6 @@
 package ufront.web.result;
 
-#if sys
+#if (sys || nodejs)
 	import sys.io.File;
 	import sys.FileSystem;
 #end
@@ -27,7 +27,7 @@ class FilePathResult extends FileResult {
 
 	override function executeResult( actionContext:ActionContext ) {
 		super.executeResult( actionContext );
-		#if sys
+		#if (sys || nodejs)
 			if ( null!=fileName ) {
 				if ( !FileSystem.exists(fileName) )
 					throw HttpError.pageNotFound();
