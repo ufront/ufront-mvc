@@ -539,17 +539,35 @@ class HttpApplication
 
 	@param port The port to listen on (default 2987).
 	**/
-	public function listen( ?port:Int=2987 ):Void {
+	public function listen( ?port:Int=2987, ?options:ListenOptions ):Void {
+		if ( options == null ) options = {};
 		var app = new express.Express();
+		
+		// compression (enabled by default unless explicitly set to false)
+		if ( options.compression != false )
+			app.use( js.Lib.require('compression')() );
+			
+		// statics
 		app.use( express.Express.serveStatic(".") );
+		if ( options.statics != null ) for ( key in options.statics.keys() )
+			app.use( key, express.Express.serveStatic(options.statics[key]) );
+			
+		// parse body
 		app.use( mw.BodyParser.json() );
 		app.use( mw.BodyParser.urlencoded({ extended: true }) );
+		
+		// parse cookies
 		app.use( mw.CookieParser.create());
 		
+		// parse multipart
 		// TODO: omit the `dest` option so that files are kept in memory and not written to disk, the write job should be done in TmpFileUpload
 		var uploadPath = js.Node.__dirname + "/" + pathToContentDir.addTrailingSlash() + ufront.web.upload.TmpFileUploadMiddleware.subDir.addTrailingSlash();
-		app.post( "/*", untyped __js__("require('multer')({0}).any()", { dest:uploadPath }));
+		if ( options.multiparts == null)
+			app.post( "/*", js.Lib.require('multer')({ dest:uploadPath }).any());
+		else for ( route in options.multiparts )
+			app.post( route, js.Lib.require('multer')({ dest:uploadPath }).any());
 		
+		// Middleware that executes the ufront magics
 		// TODO: check if we need to use a mw.BodyParser() middleware here.
 		var ufAppMiddleware:express.Middleware = function(req:express.Request,res:express.Response,next:express.Error->Void) {
 			var context:HttpContext =
@@ -558,7 +576,16 @@ class HttpApplication
 			this.execute( context ).handle( function(result) next(null) );
 		};
 		app.use( ufAppMiddleware );
-		app.listen( port );
+		
+		// start listening
+		if(options.port != null)
+			app.listen( options.port );
+		else if(options.path != null)
+			app.listen( untyped options.path ); // untyped: should be fixed in express extern
+		else if(options.handle != null)
+			app.listen( options.handle );
+		else
+			app.listen( port );
 	}
 	#end
 
@@ -609,3 +636,35 @@ class HttpApplication
 		pathToContentDir = relativePath;
 	}
 }
+
+#if nodejs
+typedef ListenOptions = 
+{
+	/** The server will listen to this port number **/
+	@:optional var port:Int;
+	
+	/** Listen to an UNIX socket at this path (see nodejs HTTP doc for more info) **/
+	@:optional var path:String;
+	
+	/** Listen to a handle (see nodejs HTTP doc for more info) **/
+	@:optional var handle:Dynamic;
+	
+	/** Enable compression (enabled by default unless set to `false`) **/
+	@:optional var compression:Bool;
+	
+	/** 
+		Routes to serve static files
+		e.g. `['/files' => '../uf-content']`, nodejs will find static files in `../uf-content` when the url starts with `/files`
+		Default: ['.' => '.']
+	**/
+	@:optional var statics:Map<String, String>;
+	
+	/**
+		Routes that multipart (uploads) should be parsed/handled
+		e.g. ['/upload', '/savefile']
+		Default: ['/*'] (all routes)
+	**/
+	@:optional var multiparts:Array<String>;
+	
+}
+#end
