@@ -35,6 +35,7 @@ See the main [ufront](https://github.com/ufront/ufront) repo or the [ufront.net 
 
 - [API Documentation](http://api.ufront.net/)
 - [Ufront website](http://ufront.net) (including tutorials)
+- [ufront-nodejs-guide](https://github.com/kevinresol/ufront-nodejs-guide/)
 
 ### Contributions
 
