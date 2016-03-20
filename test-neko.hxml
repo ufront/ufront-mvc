@@ -1,0 +1,4 @@
+test-each.hxml
+-D server
+-neko build/neko_test.n
+-xml doc/neko.xml

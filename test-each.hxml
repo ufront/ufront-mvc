@@ -1,0 +1,18 @@
+## Generic for all targets
+
+-main TestAll
+
+# Things needed for ufront-mvc
+
+-lib compiletime
+-lib minject
+-lib tink_core
+-lib tink_macro
+-lib mockatoo
+-cp src
+
+# Things need for tests
+-lib erazor
+-lib utest
+# -lib detox
+-cp test

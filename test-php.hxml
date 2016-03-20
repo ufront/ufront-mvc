@@ -1,0 +1,6 @@
+test-each.hxml
+-php build
+-D server
+--php-lib php
+--php-front php_test.php
+-xml doc/php.xml

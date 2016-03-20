@@ -1,0 +1,4 @@
+test-each.hxml
+-lib nodejs
+-js build/test_js_node.js
+-xml doc/js_node.xml
