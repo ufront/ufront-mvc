@@ -101,7 +101,10 @@ class ApiMacros {
 	static function addApiListMetaToContext( cb:ClassBuilder ) {
 		var apis = [];
 		for ( member in cb ) {
-			var typeName = runtimeNameFromComplexType( member.getVar().sure().type );
+			var complexType = member.getVar().sure().type;
+			// resolve the type such that its package is known
+			complexType = Context.toComplexType(complexType.toType().sure());
+			var typeName = runtimeNameFromComplexType( complexType );
 			if ( typeName!=null )
 				apis.push( macro $v{typeName} );
 		}
