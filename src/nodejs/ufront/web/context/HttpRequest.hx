@@ -150,14 +150,17 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 		if ( obj!=null ) for ( fieldName in Reflect.fields(obj) ) {
 			var val = Reflect.field(obj,fieldName);
 			var fieldName = (prefix!="") ? '$prefix.$fieldName' : fieldName;
+			var name = (caseSensitive) ? fieldName : fieldName.toLowerCase();
 			switch Type.typeof( val ) {
 				// TODO: if we have q[]=1&q[]=2, how do we get both values?
 				// Perhaps using obj.forEach(), not sure how to do that from Haxe.
 				case TObject:
-					getMapFromObject( val, fieldName+".", caseSensitive, m );
+					getMapFromObject( val, name, caseSensitive, m );
 				default:
-					var name = (caseSensitive) ? fieldName : fieldName.toLowerCase();
-					m.add( name, name == "__x" ? '$val' : StringTools.urlDecode('$val') );
+					if(Std.is(val, Array)) for(v in (val:Array<Dynamic>))
+						m.add( name, StringTools.urlDecode('$v') );
+					else
+						m.add( name, name == "__x" ? '$val' : StringTools.urlDecode('$val') );
 			}
 		}
 
