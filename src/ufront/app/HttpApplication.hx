@@ -516,8 +516,30 @@ class HttpApplication
 		}
 		return Noise;
 	}
-
-	#if (php || neko || (js && !nodejs))
+	
+	#if tink_http
+	public function listen(#if nodejs port #end) {
+		var app = {
+			done: Future.trigger().asFuture(),
+			onError: function(e) trace(e),
+			serve: function(request) {
+				var context =
+					if ( pathToContentDir!=null ) HttpContext.createContext( request, this.injector, urlFilters, pathToContentDir )
+					else HttpContext.createContext( request, this.injector, urlFilters );
+				return this.execute( context ).map(function(o) return switch(o) {
+					case Success(_): cast(context.response, tink.ufront.web.context.HttpResponse).toTinkResponse();
+					case Failure(f): trace(f); ('$f':tink.http.Response.OutgoingResponse);
+				});
+			}
+		}
+		
+		var server = new Server({
+			#if nodejs port: port, #end
+			app: app,
+		});
+	}
+	
+	#elseif (php || neko || (js && !nodejs))
 	/**
 	Create a `HttpContext` for the current request and execute it.
 

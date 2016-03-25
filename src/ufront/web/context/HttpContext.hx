@@ -16,6 +16,11 @@ package ufront.web.context;
 	import ufront.web.url.filter.*;
 	import tink.CoreApi;
 	using ufront.core.InjectionTools;
+	
+	#if tink_http
+	import tink.http.Request;
+	import tink.http.Response;
+	#end
 #end
 
 /**
@@ -27,7 +32,13 @@ This `HttpContext` is used throughout the request lifecycle and different parts 
 **/
 class HttpContext {
 
-	#if (php || neko || (js && !nodejs))
+	#if tink_http
+		public static function createContext( req:IncomingRequest, ?appInjector:Injector, ?session:UFHttpSession, ?auth:UFAuthHandler, ?urlFilters:Array<UFUrlFilter>, ?relativeContentDir="uf-content" ) {
+			var request = new tink.ufront.web.context.HttpRequest(req);
+			var response = new tink.ufront.web.context.HttpResponse();
+			return new HttpContext( request, response, appInjector, session, auth, urlFilters, relativeContentDir );
+		}
+	#elseif (php || neko || (js && !nodejs))
 		/**
 		Create a HttpContext for the current environment.
 
