@@ -25,10 +25,9 @@ class StaticFileHandler implements UFRequestHandler {
 #if server
 		if(directory == null) directory = ctx.request.scriptDirectory;
 		
-		var request = cast(ctx.request, tink.ufront.web.context.HttpRequest);
-		var path = Path.join([directory, request.uri]);
+		var path = Path.join([directory, ctx.request.uri]);
 		
-		if(request.httpMethod != 'GET' || !FileSystem.exists(path)) return SurpriseTools.success();
+		if(ctx.request.httpMethod != 'GET' || !FileSystem.exists(path)) return SurpriseTools.success();
 		if(FileSystem.isDirectory(path)) return SurpriseTools.success(); // TODO: serve index files
 		
 		var bytes = File.getBytes(path);
