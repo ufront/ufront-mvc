@@ -25,4 +25,6 @@ class HttpResponse extends ufront.web.context.HttpResponse {
 			#if nodejs _bytesBuffer.length > 0 ? _bytesBuffer.getBytes() : #end Bytes.ofString(_buff.toString())
 		);
 	}
+	
+	override function flush() {}
 }

@@ -36,6 +36,7 @@ using Lambda;
 
 	@author Franco Ponticelli, Jason O'Neil
 **/
+@:allow(ufront)
 class HttpRequest extends ufront.web.context.HttpRequest {
 
 	var request:IncomingRequest;
@@ -57,13 +58,10 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 		}
 		return queryString;
 	}
+	
+	public function setPostString(v) postString = v;
 
 	override function get_postString() {
-		if ( postString==null ) {
-			postString = (httpMethod=="GET") ? "" : 'Web.getPostData()';
-			if ( postString==null )
-				postString = "";
-		}
 		return postString;
 	}
 
