@@ -91,6 +91,7 @@ class UfrontApplication extends HttpApplication {
 		}
 
 		// Set up our handlers, and the injections needed for them.
+		var staticFileHandler = new StaticFileHandler();
 		mvcHandler = new MVCHandler( configuration.indexController );
 		remotingHandler = new RemotingHandler();
 		if ( configuration.remotingApi!=null ) {
@@ -104,7 +105,7 @@ class UfrontApplication extends HttpApplication {
 
 		// Set up handlers and middleware
 		addRequestMiddleware( configuration.requestMiddleware );
-		addRequestHandler( [remotingHandler,mvcHandler] );
+		addRequestHandler( [remotingHandler,staticFileHandler,mvcHandler] );
 		addResponseMiddleware( configuration.responseMiddleware );
 		addErrorHandler( configuration.errorHandlers );
 
