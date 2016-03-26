@@ -47,7 +47,8 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 
 	override function get_queryString() {
 		if ( queryString==null ) {
-			queryString = PartialUrl.parse(request.header.uri).query.map(function(q) return q.name + '=' + q.value).join('&');
+			queryString = PartialUrl.parse(request.header.uri).query.map(function(q) return q.name + (q.value != null ? '=' + q.value : '')).join('&');
+			
 			if ( queryString==null )
 				queryString = "";
 
@@ -62,6 +63,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 	public function setPostString(v) postString = v;
 
 	override function get_postString() {
+		if(postString == null) postString = "";
 		return postString;
 	}
 
@@ -220,13 +222,13 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 
 	override function get_clientIP() {
 		if ( clientIP==null )
-			clientIP = request.clientIp;
+			clientIP = request.clientIp.indexOf('ffff') != -1 ? request.clientIp.split(':').pop() : request.clientIp;
 		return clientIP;
 	}
 
 	override function get_uri() {
 		if ( uri==null )
-			uri = request.header.uri;
+			uri = '/' + PartialUrl.parse(request.header.uri).segments.join('/').urlDecode();
 		return uri;
 	}
 
