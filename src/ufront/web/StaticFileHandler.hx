@@ -2,8 +2,11 @@ package ufront.web;
 
 import ufront.app.UFRequestHandler;
 import ufront.web.context.HttpContext;
+
+#if server
 import sys.FileSystem;
 import sys.io.File;
+#end
 
 using haxe.io.Path;
 using ufront.core.AsyncTools;
@@ -18,6 +21,8 @@ class StaticFileHandler implements UFRequestHandler {
 	}
 	
 	public function handleRequest( ctx:HttpContext ):Surprise<Noise,Error> {
+
+#if server
 		if(directory == null) directory = ctx.request.scriptDirectory;
 		
 		var request = cast(ctx.request, tink.ufront.web.context.HttpRequest);
@@ -30,7 +35,8 @@ class StaticFileHandler implements UFRequestHandler {
 		ctx.response.writeBytes(bytes, 0, bytes.length); // TODO: set content-type
 		ctx.response.contentType = getMime(path);
 		ctx.completion.set(CRequestHandlersComplete);
-		
+#end
+
 		return SurpriseTools.success();
 	}
 	
