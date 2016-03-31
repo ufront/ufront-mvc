@@ -648,15 +648,23 @@ class ControllerMacros {
 			case SATFloat:
 				var declaration = createVarDecl(
 					identName,
-					if(array) macro @:pos(pos) $readExpr.map(function(a) return Std.parseFloat(a))
-					else macro @:pos(pos) Std.parseFloat($readExpr)
+					if(array) macro @:pos(pos) $readExpr.map(function(a) {
+						var f = Std.parseFloat(a);
+						if(Math.isNaN(f)) f = null;
+						f;
+					})
+					else macro @:pos(pos) {
+						var f = Std.parseFloat($readExpr);
+						if(Math.isNaN(f)) f = null;
+						f;
+					}
 				);
 				
 				var throwExpr = macro @:pos(pos) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Float = "+$readExpr );
 				
 				var check = array ? 
-					macro @:pos(pos) for( f in $i{identName} ) if ( Math.isNaN(f) ) $throwExpr : 
-					macro @:pos(pos) if (Math.isNaN($i{identName})) $throwExpr;
+					macro @:pos(pos) for( f in $i{identName} ) if ( f == null ) $throwExpr : 
+					macro @:pos(pos) if ($i{identName} == null) $throwExpr;
 					
 				return ( optional ) ? [declaration] : [declaration,check];
 			case SATBool:
