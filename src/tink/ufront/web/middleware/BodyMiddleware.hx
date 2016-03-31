@@ -7,6 +7,7 @@ import tink.io.Sink;
 import tink.io.Pipe;
 import tink.io.Worker;
 
+using ufront.core.AsyncTools;
 using tink.CoreApi;
 
 class BodyMiddleware implements UFRequestMiddleware {
@@ -19,18 +20,24 @@ class BodyMiddleware implements UFRequestMiddleware {
 		
 		var request = cast(ctx.request, tink.ufront.web.context.HttpRequest);
 		
-		var buf = new BytesOutput();
+		// check Content-Type, don't try to parse multipart forms
+		return switch request.request.header.contentType() {
+			
+			case Success( { type: 'multipart' } ):
+				return SurpriseTools.success();
+				
+			default:
+				var buf = new BytesOutput();
+				return request.request.body
+					.pipeTo(Sink.ofOutput('HTTP request body buffer', buf, Worker.EAGER)) >>
+						function(x:PipeResult<Error, Error>) return switch x {
+							case AllWritten:
+								request.setPostString(buf.getBytes().toString());
+								Success(Noise);
+							default:
+								Success(Noise); // TODO: handle the error?
+						}
+		}
 		
-		// TODO: check Content-Type, don't try to parse multipart forms
-		
-		return request.request.body
-			.pipeTo(Sink.ofOutput('HTTP request body buffer', buf, Worker.EAGER)) >>
-				function(x:PipeResult<Error, Error>) return switch x {
-					case AllWritten:
-						request.setPostString(buf.getBytes().toString());
-						Success(Noise);
-					default:
-						Success(Noise); // TODO: handle the error?
-				}
 	}
 }
