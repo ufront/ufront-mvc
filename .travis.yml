@@ -8,6 +8,10 @@ os:
   - linux
   - osx
 
+matrix:
+  allow_failures:
+    - haxe: development
+
 sudo: required
 dist: trusty
 addons:
