@@ -13,6 +13,7 @@ import ufront.web.context.HttpRequest.OnDataCallback;
 import ufront.web.context.HttpRequest.OnEndPartCallback;
 import tink.http.Request;
 
+using haxe.io.Path;
 using ufront.core.AsyncTools;
 using tink.CoreApi;
 using StringTools;
