@@ -186,10 +186,10 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 			if ( httpMethod=="GET" ) {
 				post = new MultiValueMap();
 			}
-			else if ( isMultipart() ) {
-				if ( _parsed==false )
-					parseMultipart();
-			}
+			// else if ( isMultipart() ) {
+			// 	if ( _parsed==false )
+			// 		parseMultipart();
+			// }
 			else {
 				// if( clientHeaders['Content-Type'].startsWith('application/json') )
 				// 	request.body.asGoodSurprise()
