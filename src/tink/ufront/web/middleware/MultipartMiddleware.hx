@@ -78,13 +78,11 @@ class MultipartMiddleware implements UFRequestMiddleware {
 							}
 							true;
 						default:
-							untyped console.log('default');
 							false;
 					}
 				}) >>
 					function(_) return Future.ofMany(futures) >> 
 						function(_) {
-							js.Node.console.log('poststring', postString.join("&"));
 							request.setPostString(postString.join("&"));
 							return SurpriseTools.success();
 						}
