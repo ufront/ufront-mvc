@@ -9,6 +9,7 @@ import tink.http.Multipart;
 import tink.io.Buffer;
 import tink.io.Sink;
 import tink.io.Worker;
+import sys.FileSystem;
 
 using DateTools;
 using haxe.io.Path;
@@ -52,6 +53,7 @@ class MultipartMiddleware implements UFRequestMiddleware {
 									var filename = ext['filename'];
 									var dateStr = Date.now().format( "%Y%m%d-%H%M" );
 									var dir = ctx.contentDirectory + subDir.addTrailingSlash();
+									if(!FileSystem.exists(dir)) FileSystem.createDirectory(dir);
 									var tmpFilePath = dir + dateStr + "-" + Uuid.create() + ".tmp";
 									var out = new MultipartSink(tmpFilePath);
 									var future = chunk.body.pipeTo(out);
