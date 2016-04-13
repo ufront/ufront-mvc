@@ -59,6 +59,7 @@ class MultipartMiddleware implements UFRequestMiddleware {
 										case AllWritten:
 											var tmpFile = new TmpFileUpload( tmpFilePath, name, filename, out.size );
 											ctx.request.files.add( filename, tmpFile );
+											postString.push('$name=$filename');
 										default: // TODO: handle error?
 									});
 									futures.push(future);

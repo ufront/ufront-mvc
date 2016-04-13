@@ -236,8 +236,13 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 	override function get_clientHeaders() {
 		if ( clientHeaders==null ) {
 			clientHeaders = new CaseInsensitiveMultiValueMap();
-			for( header in request.header.fields )
-				clientHeaders.add( header.name, header.value );
+			for( header in request.header.fields ) {
+				// on nodejs, multiple header values of the same name are joined with ", "
+				// (see: https://nodejs.org/api/http.html#http_message_headers)
+				// we split them and add multiple entries to the MultiValueMap
+				#if nodejs for(value in (header.value:String).split(', ')) #end
+				clientHeaders.add( header.name, #if nodejs value #else header.value #end );
+			}
 		}
 		return clientHeaders;
 	}
@@ -254,11 +259,11 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 		if ( scriptDirectory==null )
 			scriptDirectory = 
 				#if (haxe_ver >= 3.3)
-					Sys.programPath().directory();
+					Sys.programPath().directory().addTrailingSlash();
 				#elseif nodejs
-					js.Node.__dirname + '/';
+					js.Node.__dirname.addTrailingSlash();
 				#elseif sys
-					Sys.getCwd();
+					Sys.getCwd().addTrailingSlash();
 				#end
 					
 		return scriptDirectory;
