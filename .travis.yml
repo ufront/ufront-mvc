@@ -26,7 +26,9 @@ install:
   - php -v
   # remove Xdebug to avoid:
   # PHP Fatal error:  Maximum function nesting level of '256' reached
-  - phpenv config-rm xdebug.ini
+  - if [ "${TRAVIS_OS_NAME}" = "linux" ]; then
+      phpenv config-rm xdebug.ini;
+    fi;
 
 script:
   - haxe test-neko.hxml && neko build/neko_test.n
