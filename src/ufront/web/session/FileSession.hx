@@ -301,10 +301,16 @@ class FileSession implements UFHttpSession {
 
 					// Either rename the old file, or create a blank file, to make sure we reserve our name.
 					setCookie( sessionID, expiry );
-					if ( oldSessionID!=null )
-						FileSystem.rename( getSessionFilePath(oldSessionID), file );
-					else
-						File.saveContent( file, "" );
+					if ( oldSessionID!=null ) {
+						var filePath = getSessionFilePath( oldSessionID );
+						// Check if the old file exists first.
+						// It may be deleted or just doesn't exist in a newly deployed server.
+						if (FileSystem.exists( filePath )) {
+							FileSystem.rename( filePath, file );
+							return Noise;
+						}
+					}
+					File.saveContent( file, "" );
 					return Noise;
 				});
 			#elseif nodejs
@@ -314,9 +320,10 @@ class FileSession implements UFHttpSession {
 					Fs.access( file, function(err) {
 						if ( err!=null ) {
 							// The file does not exist, so let's claim the name while we can.
-							if ( oldSessionID!=null )
+							if ( oldSessionID!=null ) {
+								// TODO: Check if the old file exists first.
 								Fs.rename( getSessionFilePath(oldSessionID), file, cb );
-							else
+							} else
 								Fs.writeFile( file, "", cb );
 						}
 						else tryNewID( cb );
