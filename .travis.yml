@@ -22,6 +22,9 @@ install:
   # https://github.com/ufront/erazor/commit/b2a110587ea42b0874f8dc4f947078d4d334e1bd
   - haxelib git erazor https://github.com/ufront/erazor.git
   - haxelib list
+  # remove Xdebug to avoid:
+  # PHP Fatal error:  Maximum function nesting level of '256' reached
+  - phpenv config-rm xdebug.ini
 
 script:
   - haxe test-neko.hxml && neko build/neko_test.n
