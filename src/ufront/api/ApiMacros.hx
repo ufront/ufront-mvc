@@ -434,7 +434,7 @@ class ApiMacros {
 			// It's really hard to give the correct error here, so we a) warn at the given error pos, and b) rethrow the original error.
 			// Though this will give the developer 2 positions to inspect, it's better than only giving them one, which might be the wrong one.
 			Context.warning( 'Failed to load type ${c.toString()}', pos );
-			return neko.Lib.rethrow( e );
+			return ufront.core.Utils.rethrow( e );
 		}
 	}
 
@@ -630,7 +630,7 @@ class ApiMacros {
 				}
 				catch ( e:Dynamic ) {
 					if ( e=="Type not found '"+fullName+"'" ) alreadyExists = false;
-					else neko.Lib.rethrow(e);
+					else ufront.core.Utils.rethrow(e);
 				}
 
 				// If it does not exist, create it now.
