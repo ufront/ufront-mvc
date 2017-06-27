@@ -1,13 +1,13 @@
 package ufront.cache;
 
 #if (ufront_orm && server)
+using tink.CoreApi;
 import ufront.cache.UFCache;
 import ufront.db.Object;
 import ufront.api.UFApi;
 import sys.db.Types;
 import sys.db.TableCreate;
 import ufront.core.Futuristic;
-using tink.CoreApi;
 
 /**
 A `UFCacheConnection` that works with `DBCache`, using a database table to store cache items.
