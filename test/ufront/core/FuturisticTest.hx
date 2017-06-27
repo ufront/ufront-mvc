@@ -1,8 +1,8 @@
 package ufront.core;
 
+import tink.CoreApi;
 import utest.Assert;
 import ufront.core.Futuristic;
-import tink.CoreApi;
 
 class FuturisticTest {
     public var trigger:FutureTrigger<Int>;
