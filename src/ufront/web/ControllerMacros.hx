@@ -364,8 +364,8 @@ class ControllerMacros {
 				try {
 					var type = argType.toType();
 					switch ( Context.follow(type) ) {
-						case TAbstract(a, _) if (a.toString() == "haxe.EnumFlags"):
-							SATEnumFlags;
+						case TAbstract(a, p) if (a.toString() == "haxe.EnumFlags"):
+							SATEnumFlags(argType);
 						case TEnum(e, _):
 							SATEnum(e.toString());
 						default:
@@ -632,12 +632,12 @@ class ControllerMacros {
 	**/
 	static function createReadExprForType( paramName:String, identName:String, readExpr:ExprOf<String>, type:RouteArgType, optional:Bool, array:Bool, pos:Pos ):Array<Expr> {
 		// Reification of `macro var $i{identName} = $readExpr` isn't working, so I'm using this helper
-		function createVarDecl( name:String, expr:Expr ) {
+		function createVarDecl( name:String, expr:Expr, ?type:ComplexType ) {
 			return {
 				expr: EVars([{
 					name: name,
 					expr: expr,
-					type: null
+					type: type
 				}]),
 				pos: pos
 			};
@@ -692,20 +692,22 @@ class ControllerMacros {
 				var check = macro @:pos(pos) if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Date = "+$readExpr );
 				return ( optional ) ? [declaration] : [declaration,check];
 			case SATEnum(en):
+				var enExpr = Context.parse(en, pos);
 				var declaration = createVarDecl(
 					identName,
-					if(array) macro @:pos(pos) $readExpr.map(function(a) return try { if (v.charCodeAt(0) >= '0'.code && v.charCodeAt(0) <= '9'.code) Type.createEnumIndex(en, Std.parseInt(a)); else Type.createEnum(en, a); } catch(e:Dynamic) null)
-					else macro @:pos(pos) try { if (v.charCodeAt(0) >= '0'.code && v.charCodeAt(0) <= '9'.code) Type.createEnumIndex(en, Std.parseInt(a)); else Type.createEnum(en, a); } catch(e:Dynamic) null
+					if(array) macro @:pos(pos) $readExpr.map(function(a) return try { if (a.charCodeAt(0) >= '0'.code && a.charCodeAt(0) <= '9'.code) Type.createEnumIndex($enExpr, Std.parseInt(a)); else Type.createEnum($enExpr, a); } catch(e:Dynamic) null)
+					else macro @:pos(pos) try { if (${readExpr}.charCodeAt(0) >= '0'.code && ${readExpr}.charCodeAt(0) <= '9'.code) Type.createEnumIndex($enExpr, Std.parseInt($readExpr)); else Type.createEnum($enExpr, $readExpr); } catch(e:Dynamic) null
 				);
-				var check = macro @:pos(pos) if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Date = "+$readExpr );
+				var check = macro @:pos(pos) if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":T = "+$readExpr );
 				return ( optional ) ? [declaration] : [declaration,check];
-			case SATEnumFlags:
+			case SATEnumFlags(en):
 				var declaration = createVarDecl(
 					identName,
-					if(array) macro @:pos(pos) $readExpr.map(function(a) return try Std.parseInt(a) catch(e:Dynamic) null)
-					else macro @:pos(pos) try Std.parseInt(a) catch(e:Dynamic) null
+					if(array) macro @:pos(pos) $readExpr.map(function(a) return try cast Std.parseInt(a) catch(e:Dynamic) null)
+					else macro @:pos(pos) try cast Std.parseInt($readExpr) catch(e:Dynamic) null,
+					en
 				);
-				var check = macro @:pos(pos) if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Date = "+$readExpr );
+				var check = macro @:pos(pos) if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":haxe.EnumFlags<T> = "+$readExpr );
 				return ( optional ) ? [declaration] : [declaration,check];
 		}
 	}
@@ -900,5 +902,5 @@ enum RouteArgType {
 	SATBool;
 	SATDate;
 	SATEnum( e:String );
-	SATEnumFlags;
+	SATEnumFlags( e:ComplexType );
 }
