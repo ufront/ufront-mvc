@@ -353,11 +353,25 @@ class ControllerMacros {
 			else if ( complexTypesUnify(argType, macro :Bool, p) || complexTypesUnify(argType, macro :Array<Bool>, p) ) SATBool;
 			else if ( complexTypesUnify(argType, macro :Date, p) || complexTypesUnify(argType, macro :Array<Date>, p) ) SATDate;
 			else {
-				var msg =
-					'Unsupported argument type $argName:${argType.toString()}'
-					+'\nOnly String, Int, Float, Bool, and Date arguments are supported (or arrays of these).';
-				Context.error( msg, p );
-				return null;
+				function err ():RouteArgType {
+					var msg =
+						'Unsupported argument type $argName:${argType.toString()}'
+						+'\nOnly String, Int, Float, Bool, Date and Enum arguments are supported (or arrays of these).';
+					Context.error( msg, p );
+					return null;
+				}
+
+				try {
+					var type = argType.toType();
+					switch ( Context.follow(type) ) {
+						case TEnum(e, _):
+							SATEnum(e.toString());
+						default:
+							err();
+					}
+				} catch (e:Dynamic) {
+					err();
+				}
 			}
 	}
 
@@ -675,6 +689,14 @@ class ControllerMacros {
 				);
 				var check = macro @:pos(pos) if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Date = "+$readExpr );
 				return ( optional ) ? [declaration] : [declaration,check];
+			case SATEnum(en):
+				var declaration = createVarDecl(
+					identName,
+					if(array) macro @:pos(pos) $readExpr.map(function(a) return try { if (v.charCodeAt(0) >= '0'.code && v.charCodeAt(0) <= '9'.code) Type.createEnumIndex(en, Std.parseInt(a)); else Type.createEnum(en, a); } catch(e:Dynamic) null)
+					else macro @:pos(pos) try { if (v.charCodeAt(0) >= '0'.code && v.charCodeAt(0) <= '9'.code) Type.createEnumIndex(en, Std.parseInt(a)); else Type.createEnum(en, a); } catch(e:Dynamic) null
+				);
+				var check = macro @:pos(pos) if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Date = "+$readExpr );
+				return ( optional ) ? [declaration] : [declaration,check];
 		}
 	}
 
@@ -867,4 +889,5 @@ enum RouteArgType {
 	SATFloat;
 	SATBool;
 	SATDate;
+	SATEnum( e:String );
 }
