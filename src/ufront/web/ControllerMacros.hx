@@ -364,6 +364,8 @@ class ControllerMacros {
 				try {
 					var type = argType.toType();
 					switch ( Context.follow(type) ) {
+						case TAbstract(a, _) if (a.toString() == "haxe.EnumFlags"):
+							SATEnumFlags;
 						case TEnum(e, _):
 							SATEnum(e.toString());
 						default:
@@ -697,6 +699,14 @@ class ControllerMacros {
 				);
 				var check = macro @:pos(pos) if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Date = "+$readExpr );
 				return ( optional ) ? [declaration] : [declaration,check];
+			case SATEnumFlags:
+				var declaration = createVarDecl(
+					identName,
+					if(array) macro @:pos(pos) $readExpr.map(function(a) return try Std.parseInt(a) catch(e:Dynamic) null)
+					else macro @:pos(pos) try Std.parseInt(a) catch(e:Dynamic) null
+				);
+				var check = macro @:pos(pos) if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Date = "+$readExpr );
+				return ( optional ) ? [declaration] : [declaration,check];
 		}
 	}
 
@@ -890,4 +900,5 @@ enum RouteArgType {
 	SATBool;
 	SATDate;
 	SATEnum( e:String );
+	SATEnumFlags;
 }
