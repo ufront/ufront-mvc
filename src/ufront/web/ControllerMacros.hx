@@ -356,7 +356,7 @@ class ControllerMacros {
 				function err ():RouteArgType {
 					var msg =
 						'Unsupported argument type $argName:${argType.toString()}'
-						+'\nOnly String, Int, Float, Bool, Date and Enum arguments are supported (or arrays of these).';
+						+'\nOnly String, Int, Float, Bool, Date, Enum and haxe.EnumFlags arguments are supported (or arrays of these).';
 					Context.error( msg, p );
 					return null;
 				}
@@ -364,9 +364,9 @@ class ControllerMacros {
 				try {
 					var type = argType.toType();
 					switch ( Context.follow(type) ) {
-						case TAbstract(a, p) if (a.toString() == "haxe.EnumFlags"):
+						case TAbstract(_.toString() => "haxe.EnumFlags", _) | TInst(_.toString() => "Array", Context.follow(_[0]) => TAbstract(_.toString() => "haxe.EnumFlags", _)):
 							SATEnumFlags(argType);
-						case TEnum(e, _):
+						case TEnum(e, _) | TInst(_.toString() => "Array", Context.follow(_[0]) => TEnum(e, _)):
 							SATEnum(e.toString());
 						default:
 							err();
