@@ -85,7 +85,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 
 	override function get_cookies() {
 		if ( cookies==null )
-			cookies = getMapFromObject( untyped req.cookies );
+			cookies = getMapFromObject( untyped req.headers.cookie );
 		return cookies;
 	}
 
