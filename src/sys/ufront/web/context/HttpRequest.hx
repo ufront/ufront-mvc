@@ -164,13 +164,7 @@ class HttpRequest extends ufront.web.context.HttpRequest {
 
 		// Finish everything up, check there are no errors, return accordingly.
 		if ( noParts==false ) doEndOfPart();
-		if ( callbackFutures.length>0 ) {
-			return Future.ofMany( callbackFutures ).flatMap( function(_) {
-				return
-					if ( errors.length==0 ) Success(Noise).asFuture()
-					else Failure(Error.withData('Error parsing multipart request data', errors)).asFuture();
-			});
-		}
+		if ( errors.length>0 ) return Failure(Error.withData('Error parsing multipart request data', errors)).asFuture();
 		else return Success(Noise).asFuture();
 	}
 
