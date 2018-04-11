@@ -686,8 +686,8 @@ class ControllerMacros {
 			case SATDate:
 				var declaration = createVarDecl(
 					identName,
-					if(array) macro @:pos(pos) $readExpr.map(function(a) return try Date.fromString(a) catch(e:Dynamic) null)
-					else macro @:pos(pos) try Date.fromString($readExpr) catch(e:Dynamic) null
+					if(array) macro @:pos(pos) $readExpr.map(function(a) return a != null && a != "" ? (try Date.fromString(a) catch(e:Dynamic) null) : null)
+					else macro @:pos(pos) $readExpr != null && $readExpr != "" ? (try Date.fromString($readExpr) catch(e:Dynamic) null) : null
 				);
 				var check = macro @:pos(pos) if ( $i{identName}==null ) throw ufront.web.HttpError.badRequest( "Could not parse parameter "+$v{paramName}+":Date = "+$readExpr );
 				return ( optional ) ? [declaration] : [declaration,check];
