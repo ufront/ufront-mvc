@@ -48,8 +48,11 @@ class FileLogger implements UFLogHandler implements UFInitRequired {
 	/** The relative or absolute path to the log file. **/
 	public var path(default,null):String;
 
-	public function new( path:String ) {
+	var messageFormatter:UFMessageFormatter;
+
+	public function new( path:String, ?messageFormatter:UFMessageFormatter ) {
 		this.path = path;
+		this.messageFormatter = messageFormatter == null ? new MessageFormatter() : messageFormatter;
 	}
 
 	public function init( app:HttpApplication ) {
@@ -76,9 +79,9 @@ class FileLogger implements UFLogHandler implements UFInitRequired {
 
 		var content = '${Date.now()} [${req.httpMethod}] [${req.uri}] from [$userDetails], response: [${res.status} ${res.contentType}]\n';
 		for( msg in context.messages )
-			content += '\t${format(msg)}\n';
+			content += '\t${messageFormatter.format(msg)}\n';
 		if ( appMessages!=null) for( msg in appMessages )
-			content += '\t${format(msg)}\n';
+			content += '\t${messageFormatter.format(msg)}\n';
 
 		#if sys
 			FileSystem.createDirectory( logFile.directory() );
@@ -92,9 +95,13 @@ class FileLogger implements UFLogHandler implements UFInitRequired {
 			return SurpriseTools.asBadSurprise( HttpError.notImplemented() );
 		#end
 	}
+}
 
-	/** Format a message in a suitable way for a text-only log file. **/
-	public static function format( msg:Message ):String {
+/** Format a message in a suitable way for a text-only log file. **/
+private class MessageFormatter implements UFMessageFormatter {
+	public function new(){}
+	
+	public function format( msg:Message ):String {
 		var msgStr = Std.string( msg.msg );
 		var text = REMOVENL.replace( msgStr, '\\n' );
 		var type = Type.enumConstructor( msg.type ).substr( 1 );
