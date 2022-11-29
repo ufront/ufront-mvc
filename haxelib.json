@@ -11,7 +11,7 @@
   "dependencies": {
     "compiletime": "2.8.0",
     "minject": "2.0.0-rc.1",
-    "tink_core": "2.0.2",
+    "tink_core": "",
     "tink_macro": "1.0.0"
   }
 }
