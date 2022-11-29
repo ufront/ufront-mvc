@@ -108,7 +108,7 @@ class BrowserFileUpload extends BaseUpload implements UFFileUpload {
 			var ft = Future.trigger();
 			var pos = 0;
 			function readNext() {
-				var final = false;
+				var isFinal = false;
 				var surprise:Surprise<Noise,Error>;
 				// Slice the current portion, and process it
 				var blob = file.slice( pos, pos+partSize );
@@ -117,7 +117,7 @@ class BrowserFileUpload extends BaseUpload implements UFFileUpload {
 					var binaryString:String = fr.result;
 					var bytes = Bytes.ofString( binaryString );
 					if ( bytes.length==0 )
-						final = true;
+						isFinal = true;
 					try {
 						surprise = onData( bytes, pos, bytes.length );
 					}
@@ -131,7 +131,7 @@ class BrowserFileUpload extends BaseUpload implements UFFileUpload {
 				// Once processing has finished, see if there is any more
 				surprise.handle(function(outcome) switch outcome {
 					case Success(_):
-						if ( final==false ) {
+						if ( isFinal==false ) {
 							pos += partSize;
 							readNext();
 						}
