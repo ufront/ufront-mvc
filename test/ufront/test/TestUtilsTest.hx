@@ -64,7 +64,7 @@ class TestUtilsTest {
 
 	function verifyTestRoute( testContext:RequestTestContext, shouldBeSuccess:Bool, ?p:PosInfos ) {
 		testContext.result.handle(function(outcome) switch outcome{
-			case Success(Noise):
+			case Success(_):
 				Assert.notNull( testContext.app, p );
 				Assert.notNull( testContext.context, p );
 				Assert.isTrue( shouldBeSuccess, p );
