@@ -61,8 +61,7 @@ class ServerConsoleLogger implements UFLogHandler {
 			untyped __call__( "error_log", message );
 		#elseif js
 			// We're choosing to include these all as one 'log', rather than separate 'log', 'warn', 'trace' and 'error' entries.
-			var console:js.html.Console = untyped console;
-			console.log( message );
+			js.html.Console.log( message );
 		#end
 	}
 }

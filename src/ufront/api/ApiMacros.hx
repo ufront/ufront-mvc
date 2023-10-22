@@ -531,18 +531,22 @@ class ApiMacros {
 		];
 	}
 
+	static function getTypeName( type:Type ):String {
+		var typeNameFull = type.toString();
+		var typeName = typeNameFull.substr( 0,typeNameFull.indexOf("<") );
+		return typeName;
+	}
+
 	static function getParamsFromComplexType( ct:ComplexType, flags:EnumFlags<ApiReturnType>, pos:Position ):Array<ComplexType> {
 		// Note we can't use the ComplexType parameters, in case the type is an alias and the type parameters
 		// have different meanings to those in Outcome, Future and Surprise.
 		function getParams(type:Type, expectedName:String):Array<Type> {
 			// Follow until we get to the expected type.
 			while ( type.match(TType(_,_)) ) {
-				var typeName = type.toString();
-				typeName = typeName.substr( 0, typeName.indexOf("<") );
-				if ( typeName!=expectedName ) {
-					type = type.reduce( true );
+				if ( getTypeName(type)==expectedName ) {
+					break;
 				}
-				else break;
+				type = type.reduce( true );
 			}
 			return switch type {
 				case TType(ref, params) if (ref.toString()==expectedName): params;
@@ -550,12 +554,12 @@ class ApiMacros {
 				case TEnum(ref, params) if (ref.toString()==expectedName): params;
 				case _:
 					Context.fatalError( 'Expected type ${type.toString()} to be a $expectedName', Context.currentPos() );
-			}
+			};
 		}
 		var params =
-			if ( flags.has(ARTFuture) && flags.has(ARTOutcome) ) getParams( toType(ct,pos), "tink.core.Surprise" );
-			else if ( flags.has(ARTFuture) ) getParams( toType(ct,pos), "tink.core.Future" );
-			else if ( flags.has(ARTOutcome) ) getParams( toType(ct,pos), "tink.core.Outcome" );
+			if ( flags.has(ARTFuture) && flags.has(ARTOutcome) ) getParams( toType(ct,pos), "tink.core.Surprise" )
+			else if ( flags.has(ARTFuture) ) getParams( toType(ct,pos), "tink.core.Future" )
+			else if ( flags.has(ARTOutcome) ) getParams( toType(ct,pos), "tink.core.Outcome" )
 			else [];
 		return [for (p in params) p.toComplex()];
 	}
@@ -593,17 +597,32 @@ class ApiMacros {
 		if ( unify(returnType,macro :StdTypes.Void,pos) ) {
 			returnFlags.set( ARTVoid );
 		}
-		else if ( unify(returnType,macro :tink.core.Future.Surprise<StdTypes.Dynamic,StdTypes.Dynamic>,pos) ) {
+		else if ( matchesType(returnType,"tink.core.Surprise",pos) ) {
 			returnFlags.set( ARTFuture );
 			returnFlags.set( ARTOutcome );
 		}
-		else if ( unify(returnType,macro :tink.core.Future<StdTypes.Dynamic>,pos) ) {
+		else if ( matchesType(returnType,"tink.core.Future",pos) ) {
 			returnFlags.set( ARTFuture );
 		}
 		else if ( unify(returnType,macro :tink.core.Outcome<StdTypes.Dynamic,StdTypes.Dynamic>,pos) ) {
 			returnFlags.set( ARTOutcome );
 		}
 		return returnFlags;
+	}
+
+	static function matchesType( complexType:ComplexType, expectedName:String, pos:tink.core.Error.Pos ):Bool {
+		var type = toType( complexType, pos );
+		var typeName = getTypeName( type );
+		// follow typedefs
+		while ( type.match(TType(_, _)) ) {
+			if ( typeName==expectedName ) {
+				// no need to continue, we found the expected type
+				return true;
+			}
+			type = type.reduce( true );
+			typeName = getTypeName( type );
+		}
+		return typeName==expectedName;
 	}
 
 	static function unify( complexType1:ComplexType, complexType2:ComplexType, pos:tink.core.Error.Pos ):Bool {

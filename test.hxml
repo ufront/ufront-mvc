@@ -3,5 +3,5 @@ test-neko.hxml
 test-php.hxml
 --next
 test-js-browser.hxml
-
-# TODO: test-js-node
+--next
+test-js-node.hxml

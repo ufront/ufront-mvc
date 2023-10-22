@@ -46,14 +46,20 @@ class RemotingUtil {
 						var s = new RemotingUnserializer(line.substr(3));
 						ret =
 							try s.unserialize()
-							catch(e:Dynamic) errors.push( RUnserializeFailed(remotingCallString, line.substr(3), '$e') )
+							catch(e:Dynamic) {
+								errors.push( RUnserializeFailed(remotingCallString, line.substr(3), '$e') );
+								continue;
+							}
 						;
 						hxrFound = true;
 					case "hxt":
 						var s = new RemotingUnserializer(line.substr(3));
 						var m:Message =
 							try s.unserialize()
-							catch(e:Dynamic) errors.push( RUnserializeFailed(remotingCallString, line.substr(3), '$e') )
+							catch(e:Dynamic) {
+								errors.push( RUnserializeFailed(remotingCallString, line.substr(3), '$e') );
+								continue;
+							}
 						;
 						#if js
 							var extras =
@@ -75,13 +81,19 @@ class RemotingUtil {
 						var s = new RemotingUnserializer(line.substr(3));
 						stack =
 							try s.unserialize()
-							catch(e:Dynamic) errors.push( RUnserializeFailed(remotingCallString, line.substr(3), '$e') )
+							catch(e:Dynamic) {
+								errors.push( RUnserializeFailed(remotingCallString, line.substr(3), '$e') );
+								continue;
+							}
 						;
 					case "hxe":
 						var s = new RemotingUnserializer(line.substr(3));
 						ret =
 							try s.unserialize()
-							catch(e:Dynamic) errors.push( RServerSideException(remotingCallString, e, stack) )
+							catch(e:Dynamic) {
+								errors.push( RServerSideException(remotingCallString, e, stack) );
+								continue;
+							}
 						;
 					default:
 						errors.push( RUnserializeFailed(remotingCallString, line, "Invalid line in response") );

@@ -604,6 +604,7 @@ whenISubmit([ "username"=>"admin", "password"=>"wrongpassword" ])
 **/
 class NaturalLanguageTests {
 
+	#if macro
 
 	/** Inject a value into the `HttpContext.injector`. This is an alias for `InjectionTools.injectValue()`. **/
 	public static macro function andInjectAValue<T>( context:haxe.macro.Expr.ExprOf<HttpContext>, cl, val, ?named ):haxe.macro.Expr.ExprOf<HttpContext> {
@@ -624,6 +625,7 @@ class NaturalLanguageTests {
 			$context;
 		};
 	}
+	#end
 
 	#if (utest && !macro)
 

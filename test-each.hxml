@@ -4,11 +4,14 @@
 
 # Things needed for ufront-mvc
 
+-lib hx3compat
 -lib compiletime
 -lib minject
 -lib tink_core
 -lib tink_macro
--lib mockatoo
+-lib mockatoo:git:https://github.com/DoclerLabs/mockatoo
+# this mockatoo fork depends on mconsole 1.6.1
+# available here: https://github.com/massive-oss/mconsole/releases/tag/1.6.1
 -cp src
 
 # Things need for tests

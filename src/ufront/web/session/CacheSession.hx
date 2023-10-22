@@ -243,11 +243,11 @@ class CacheSession implements UFHttpSession {
 
 		return
 			sessionIDSurprise
-			>> function(id:String):Noise {
+			>> (function(id:String):Noise {
 				this.sessionID = id;
 				return Noise;
-			}
-			>> function(_:Noise):Surprise<Noise,Error> {
+			})
+			>> (function(_:Noise):Surprise<Noise,Error> {
 				if ( regenerateFlag ) {
 					// Delete the old cached entry, and then we'll commit the new one.
 					commitFlag = true;
@@ -256,26 +256,26 @@ class CacheSession implements UFHttpSession {
 						else SurpriseTools.success();
 				}
 				return Future.sync( Success(Noise) );
-			}
-			>> function(_:Noise):Surprise<Noise,Error> {
+			})
+			>> (function(_:Noise):Surprise<Noise,Error> {
 				if ( commitFlag && sessionData!=null ) {
 					return cache.set( sessionID, sessionData ).changeSuccessToNoise().changeFailureToError();
 				}
 				return Future.sync( Success(Noise) );
-			}
-			>> function(_:Noise):Noise {
+			})
+			>> (function(_:Noise):Noise {
 				if ( expiryFlag && !closeFlag ) {
 					setCookie( sessionID, expiry );
 				}
 				return Noise;
-			}
-			>> function(_:Noise):Surprise<Noise,Error> {
+			})
+			>> (function(_:Noise):Surprise<Noise,Error> {
 				if ( closeFlag ) {
 					setCookie( "", -1 );
 					return cache.remove( sessionID ).changeFailureToError();
 				}
 				return Future.sync( Success(Noise) );
-			}
+			})
 			;
 	}
 
