@@ -26,19 +26,23 @@ __Client Behaviour__
 If running client-side, the message will be traced to the console directly using Javascript.
 **/
 class BrowserConsoleLogger implements UFLogHandler {
-	public function new() {}
+	var messageFormatter:UFMessageFormatter;
+	
+	public function new(?messageFormatter:UFMessageFormatter) {
+		this.messageFormatter = messageFormatter == null ? new MessageFormatter() : messageFormatter;
+	}
 
 	public function log( ctx:HttpContext, appMessages:Array<Message> ) {
 		#if server
 			if( ctx.response.contentType=="text/html" && !ctx.response.isRedirect() ) {
 				var results = [];
 				for( msg in ctx.messages )
-					results.push( formatMessage(msg) );
+					results.push( messageFormatter.format(msg) );
 
 				#if debug
 					if ( appMessages!=null) {
 						for( msg in appMessages )
-							results.push( formatMessage(msg) );
+							results.push( messageFormatter.format(msg) );
 					}
 				#end
 
@@ -57,24 +61,6 @@ class BrowserConsoleLogger implements UFLogHandler {
 		#end
 
 		return SurpriseTools.success();
-	}
-
-	/**
-	A helper to create a `console.log`, `console.info`, `console.warn` or `console.error` Javascript snippet.
-	When executed by the client, this snippet will send the given message to the client's browser console.
-	**/
-	static function formatMessage( m:Message ):String {
-		var type = switch (m.type) {
-			case MTrace: "log";
-			case MLog: "info";
-			case MWarning: "warn";
-			case MError: "error";
-		}
-		var extras =
-			if ( m.pos!=null && m.pos.customParams!=null ) ", "+m.pos.customParams.join(", ")
-			else "";
-		var msg = '${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';
-		return 'console.${type}(decodeURIComponent("${StringTools.urlEncode(msg)}"))';
 	}
 
 	#if client
@@ -105,4 +91,26 @@ class BrowserConsoleLogger implements UFLogHandler {
 			Reflect.callMethod( console, logMethod, params );
 		}
 	#end
+}
+
+/**
+A helper to create a `console.log`, `console.info`, `console.warn` or `console.error` Javascript snippet.
+When executed by the client, this snippet will send the given message to the client's browser console.
+**/
+private class MessageFormatter implements UFMessageFormatter {
+	public function new(){}
+	
+	public function format(m:Message):String {
+		var type = switch (m.type) {
+			case MTrace: "log";
+			case MLog: "info";
+			case MWarning: "warn";
+			case MError: "error";
+		}
+		var extras =
+			if ( m.pos!=null && m.pos.customParams!=null ) ", "+m.pos.customParams.join(", ")
+			else "";
+		var msg = '${m.pos.className}.${m.pos.methodName}(${m.pos.lineNumber}): ${m.msg}$extras';
+		return 'console.${type}(decodeURIComponent("${StringTools.urlEncode(msg)}"))';
+	}
 }
