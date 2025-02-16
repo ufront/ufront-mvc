@@ -451,7 +451,7 @@ class ApiMacros {
 		return params[0];
 	}
 
-	static function getClassTypeFromFirstTypeParam( cb:ClassBuilder ):Null<haxe.macro.Ref<ClassType>> {
+	static function getClassTypeFromFirstTypeParam( cb:ClassBuilder ):Null<haxe.macro.Type.Ref<ClassType>> {
 		switch getTypeFromFirstTypeParam(cb) {
 			case TInst(apiClassTypeRef,params):
 				return apiClassTypeRef;
