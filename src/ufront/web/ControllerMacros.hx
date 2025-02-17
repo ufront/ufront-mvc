@@ -802,9 +802,6 @@ class ControllerMacros {
 		else if ( returnType.unify((macro :tink.core.Future.Surprise<StdTypes.Dynamic,StdTypes.Dynamic>).toType()) ) {
 			flags.set(WRResultOrError);
 		}
-		else if ( returnType.unify((macro :tink.core.Future<ufront.web.result.ActionResult>).toType()) ) {
-			flags.set(WROutcome);
-		}
 		else if ( returnType.unify((macro :tink.core.Outcome<ufront.web.result.ActionResult,tink.core.Error>).toType()) ) {
 			flags.set(WRFuture);
 		}
@@ -814,6 +811,9 @@ class ControllerMacros {
 		}
 		else if ( returnType.unify((macro :ufront.web.result.ActionResult).toType()) ) {
 			flags.set(WRFuture);
+			flags.set(WROutcome);
+		}
+		else if ( returnType.unify((macro :tink.core.Future<ufront.web.result.ActionResult>).toType()) ) {
 			flags.set(WROutcome);
 		}
 		else if ( returnType.unify((macro :tink.core.Future<StdTypes.Dynamic>).toType()) ) {
