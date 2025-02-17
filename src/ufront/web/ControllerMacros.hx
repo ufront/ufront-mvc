@@ -816,6 +816,15 @@ class ControllerMacros {
 		else if ( returnType.unify((macro :tink.core.Future<ufront.web.result.ActionResult>).toType()) ) {
 			flags.set(WROutcome);
 		}
+		#if (tink_core >= version("1.18.0"))
+		// in tink_core 1.18.0 and up, Future unifies with anything so we can't
+		// rely on Context.unify
+		else {
+			flags.set(WRFutureUnknown);
+			flags.set(WROutcome);
+			flags.set(WRResultOrError);
+		}
+		#else
 		else if ( returnType.unify((macro :tink.core.Future<StdTypes.Dynamic>).toType()) ) {
 			flags.set(WROutcome);
 			flags.set(WRResultOrError);
@@ -826,6 +835,7 @@ class ControllerMacros {
 			flags.set(WROutcome);
 			flags.set(WRResultOrError);
 		}
+		#end
 		return flags;
 	}
 

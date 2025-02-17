@@ -281,7 +281,11 @@ class Controller {
 			return Future.sync( Success(actionResult) );
 		}
 		else {
-			var future:Future<Dynamic> = wrappingRequired.has(WRFuture) ? wrapInFuture( result ) : cast result;
+			var requiresFutureWrap = wrappingRequired.has(WRFuture)
+				#if (tink_core >= version("1.18.0"))
+				|| wrappingRequired.has(WRFutureUnknown) && !Future.isFuture(result)
+				#end;
+			var future:Future<Dynamic> = requiresFutureWrap ? wrapInFuture( result ) : cast result;
 			var surprise:Surprise<Dynamic,Dynamic> = wrappingRequired.has(WROutcome) ? wrapInOutcome( future ) : cast future;
 			var finalResult:Surprise<ActionResult,Error> = wrappingRequired.has(WRResultOrError) ? wrapResultOrError( surprise ) : cast surprise;
 			return finalResult;
