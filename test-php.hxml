@@ -1,6 +1,6 @@
 test-each.hxml
 -php build
 -D server
--D php-lib php
--D php-front php_test.php
+-D php-lib=php
+-D php-front=php_test.php
 -xml doc/php.xml
