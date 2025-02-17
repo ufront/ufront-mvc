@@ -38,7 +38,7 @@ class AsyncToolsTest {
 			return '$v1$v2$v3';
 		});
 		mappedFuture.handle(function(str) {
-			Assert.equals( 'Hello5Success(Noise)', str );
+			Assert.equals(#if (tink_core >= version("2.0.0")) 'Hello5Success(null)' #else 'Hello5Success(Noise)' #end, str);
 			done2();
 		});
 
