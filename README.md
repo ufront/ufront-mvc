@@ -1,7 +1,7 @@
 ufront-mvc
 ==========
 
-[![Build Status](https://travis-ci.org/ufront/ufront-mvc.svg?branch=master)](https://travis-ci.org/ufront/ufront-mvc)
+[![Test](https://github.com/ufront/ufront-mvc/actions/workflows/test.yml/badge.svg)](https://github.com/ufront/ufront-mvc/actions/workflows/test.yml)
 
 The `ufront-mvc` library is the core MVC framework used to handle web requests in Ufront.
 It provides:
