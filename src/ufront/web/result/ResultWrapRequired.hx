@@ -17,4 +17,8 @@ enum ResultWrapRequired {
 	It must be wrapped into the appropriate object.
 	**/
 	WRResultOrError;
+	#if (tink_core >= version("1.18.0"))
+	/* The return type could be synchronous or already a Future, but we're not sure. */
+	WRFutureUnknown;
+	#end
 }

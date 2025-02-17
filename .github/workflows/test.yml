@@ -1,0 +1,35 @@
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        runner: [windows-latest, ubuntu-latest, macos-13]
+        haxe-version: [latest, 4.3.6]
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: krdlab/setup-haxe@master
+        with:
+          haxe-version: ${{ matrix.haxe-version }}
+
+      - run: |
+          curl -sL https://github.com/massive-oss/mconsole/archive/refs/tags/1.6.1.zip -o mconsole-1.6.1.zip
+          haxelib install mconsole-1.6.1.zip
+          haxelib install hscript
+
+          haxelib install all --quiet --always --skip-dependencies
+          haxelib install minject 2.0.0-rc.1 && haxelib set minject 2.0.0-rc.1
+
+          haxelib list
+        name: install haxelibs
+
+      - run: |
+          haxe test-neko.hxml && neko build/neko_test.n
+          haxe test-php.hxml && php build/php_test.php
+          haxe test-js-browser.hxml
