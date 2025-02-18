@@ -247,8 +247,8 @@ class TestUtils {
 					if ( args!=null ) {
 						Assert.equals( args.length, ctx.args.length, 'Expected ${args.length} arguments for MVC action, but had ${ctx.args.length}', p );
 						for ( i in 0...args.length ) {
-							var expected = args[i];
-							var actual = ctx.args[i];
+							var expected = Std.string(args[i]);
+							var actual = Std.string(ctx.args[i]);
 							var recursive = true;
 							Assert.same( expected, actual, recursive, 'Expected argument ${i+1} for MVC action `$action()` to be `$expected`, but was `$actual`', p );
 						}
