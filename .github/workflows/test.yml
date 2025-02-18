@@ -4,7 +4,11 @@ on: [push, pull_request]
 
 jobs:
   test:
+    defaults:
+      run:
+        shell: bash
     strategy:
+      fail-fast: false
       matrix:
         runner: [windows-latest, ubuntu-latest, macos-13]
         haxe-version: [latest, 4.3.6]
@@ -21,15 +25,26 @@ jobs:
       - run: |
           curl -sL https://github.com/massive-oss/mconsole/archive/refs/tags/1.6.1.zip -o mconsole-1.6.1.zip
           haxelib install mconsole-1.6.1.zip
-          haxelib install hscript
+          haxelib install hscript --quiet
 
           haxelib install all --quiet --always --skip-dependencies
           haxelib install minject 2.0.0-rc.1 && haxelib set minject 2.0.0-rc.1
 
           haxelib list
-        name: install haxelibs
+        name: Install haxelibs
 
       - run: |
-          haxe test-neko.hxml && neko build/neko_test.n
-          haxe test-php.hxml && php build/php_test.php
+          set -e
+          haxe test-neko.hxml
+          neko build/neko_test.n
+        name: Test neko
+
+      - run: |
+          set -e
+          haxe test-php.hxml
+          php build/php_test.php
+        name: Test php
+
+      - run: |
           haxe test-js-browser.hxml
+        name: Test js build

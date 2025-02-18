@@ -5,6 +5,7 @@
 # Things needed for ufront-mvc
 
 -lib hx3compat
+-lib hx4compat:git:https://github.com/HaxeFoundation/hx4compat
 -lib compiletime
 -lib minject
 -lib tink_core
